@@ -2,7 +2,7 @@
 """
 from django.http import HttpResponse
 from django import forms
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 
 class CloudManForm(forms.Form):
     """Details needed to boot a setup and boot a CloudMan instance.
@@ -13,10 +13,10 @@ class CloudManForm(forms.Form):
     secret_key = forms.CharField(required=True)
 
 def home(request):
-    if require.method == "POST":
-        form = CloudManForm(require.POST)
+    if request.method == "POST":
+        form = CloudManForm(request.POST)
         if form.is_valid():
             return HttpResponse("Sweet")
     else:
         form = CloudManForm()
-    return render_to_response("home.html", {"form": form})
+    return render(request, "home.html", {"form": form})
