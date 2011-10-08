@@ -1,0 +1,15 @@
+/* Errors */
+div.error {
+    background: #ffc;
+    font-style: italic;
+}
+
+/* Table */
+table {
+    margin-top: -15px;
+    margin-left: -5px;
+}
+
+td {
+    padding: 15px 0 0 15px;
+}

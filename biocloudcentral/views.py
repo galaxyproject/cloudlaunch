@@ -16,6 +16,7 @@ def home(request):
     if request.method == "POST":
         form = CloudManForm(request.POST)
         if form.is_valid():
+            print form.cleaned_data
             return HttpResponse("Sweet")
     else:
         form = CloudManForm()

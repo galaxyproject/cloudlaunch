@@ -1,6 +1,26 @@
+<head>
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/formalize.css" />
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/home.css" />
+  <script src="{{ STATIC_URL }}js/jquery.js"></script>
+  <script src="{{ STATIC_URL }}js/jquery.formalize.js"></script>
+</head>
+
 <h2>BioCloudCentral</h2>
 
 <form action="/" method="post">{% csrf_token %}
-  {{ form.as_p }}
+  <table>
+  {% for field in form %}
+    <tr>
+      <td>{{ field.label_tag }}</td>
+      <td>{{ field }}</td>
+      <td> {% for error in field.errors %}
+             <div class="error">{{ error }}</div>
+           {% endfor %}
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
   <input type="submit" value="Submit" />
 </form>
