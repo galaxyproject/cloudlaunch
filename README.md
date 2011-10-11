@@ -12,7 +12,7 @@ build a local virtualenv, install the dependencies and start the server:
     $ virtualenv --no-site-packages .
     $ source bin/activate
     $ pip install -r requirements.txt
-    $ python hellodjango/manage.py runserver
+    $ python biocloudcentral/manage.py runserver
 
 Use git to commit changes and push to Heroku for live deployment:
 
