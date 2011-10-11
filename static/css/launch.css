@@ -26,6 +26,10 @@ div.label {
     padding: 1px;
 }
 
+a {
+    color: #933;
+}
+
 /* Table */
 table {
     margin-top: -15px;

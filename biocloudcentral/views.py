@@ -18,6 +18,8 @@ def home(request):
 class CloudManForm(forms.Form):
     """Details needed to boot a setup and boot a CloudMan instance.
     """
+    key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
+    target = "target='_blank'"
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification. "
                                    "This can be any name you choose.")
@@ -26,14 +28,17 @@ class CloudManForm(forms.Form):
                                "and your instance via ssh and FreeNX.")
     access_key = forms.CharField(required=True,
                                  help_text="Your Amazon Access Key ID. Available from "
-                                 "the security credentials page.")
+                                 "the <a href='{0}' {1}>security credentials page</a>.".format(
+                                     key_url, target))
     secret_key = forms.CharField(required=True,
                                  help_text="Your Amazon Secret Access Key. Also available "
-                                 "from the security credentials page.")
+                                 "from the <a href='{0}' {1}>security credentials page</a>.".format(
+                                     key_url, target))
     instance_type = forms.ChoiceField((("m1.large", "Large"),
                                        ("t1.micro", "Micro"),
                                        ("m1.xlarge", "Extra Large")),
-                                      help_text="Amazon instance type to start.")
+                            help_text="Amazon <a href='{0}' {1}>instance type</a> to start.".format(
+                                      "http://aws.amazon.com/ec2/#instance", target))
 
 def launch(request):
     """Configure and launch CloudBioLinux and CloudMan servers.

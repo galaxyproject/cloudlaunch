@@ -23,7 +23,11 @@
              <div class="error">{{ error }}</div>
            {% endfor %}
       </td>
-      <td><div class="help">{{ field.help_text }}</div></td>
+      <td><div class="help">
+          {% autoescape off %}
+          {{ field.help_text }}
+          {% endautoescape %}
+      </div></td>
     </tr>
   {% endfor %}
   </table>
