@@ -7,20 +7,27 @@
   <script src="{{ STATIC_URL }}js/jquery.formalize.js"></script>
 </head>
 
-<h2>BioCloudCentral</h2>
+<div class="banner">
+  <h2 class="banner">BioCloudCentral</h2>
+  Easily launch <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud">CloudMan</a> and
+  <a href="http://cloudbiolinux.org">CloudBioLinux</a> clusters
+</div>
 
-<form action="/" method="post">{% csrf_token %}
+<form action="/launch" method="post">{% csrf_token %}
   <table>
   {% for field in form %}
     <tr>
-      <td>{{ field.label_tag }}</td>
+      <td><div class="label">{{ field.label_tag }}</div></td>
       <td>{{ field }}</td>
       <td> {% for error in field.errors %}
              <div class="error">{{ error }}</div>
            {% endfor %}
       </td>
+      <td><div class="help">{{ field.help_text }}</div></td>
     </tr>
   {% endfor %}
   </table>
-  <input type="submit" value="Submit" />
+  <div class="submit">
+    <input type="submit" value="Submit" />
+  </div>
 </form>

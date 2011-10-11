@@ -1,7 +1,29 @@
-/* Errors */
+/* Header */
+div.banner {
+    padding: 10px 10px 35px 25px;
+}
+
+h2.banner {
+    margin-bottom: 3px;
+}
+
+/* Specialized text */
 div.error {
-    background: #ffc;
+    background: #C99;
     font-style: italic;
+    padding: 1px;
+}
+
+div.help {
+    background: #FFC;
+    border: 1px solid;
+    border-color: #EEE;
+    padding: 1px;
+    width: 300px;
+}
+
+div.label {
+    padding: 1px;
 }
 
 /* Table */
@@ -12,4 +34,8 @@ table {
 
 td {
     padding: 15px 0 0 15px;
+}
+
+div.submit {
+    padding: 0 0 0 15px;
 }
