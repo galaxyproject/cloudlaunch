@@ -132,10 +132,23 @@ INSTALLED_APPS = (
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(levelname)s] %(module)s:%(lineno)d %(asctime)s: %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'console': {
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'verbose'
         }
     },
     'loggers': {
@@ -144,5 +157,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
+        'biocloudcentral': {
+            'handlers':['console'],
+            'propagate': True,
+            'level':'DEBUG',
+        }
     }
 }
