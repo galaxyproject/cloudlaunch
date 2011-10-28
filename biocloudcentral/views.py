@@ -11,6 +11,64 @@ from boto.exception import EC2ResponseError
 
 log = logging.getLogger(__name__)
 
+CM_POLICY =  """{
+  "Statement": [
+    {
+      "Sid": "Stmt1319820532566",
+      "Action": [
+        "ec2:AttachVolume",
+        "ec2:CreateSnapshot",
+        "ec2:CreateTags",
+        "ec2:CreateVolume",
+        "ec2:DeleteSnapshot",
+        "ec2:DeleteTags",
+        "ec2:DeleteVolume",
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeInstanceAttribute",
+        "ec2:DescribeInstances",
+        "ec2:DescribeKeyPairs",
+        "ec2:DescribePlacementGroups",
+        "ec2:DescribeRegions",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeSnapshotAttribute",
+        "ec2:DescribeSnapshots",
+        "ec2:DescribeTags",
+        "ec2:DescribeVolumes",
+        "ec2:DetachVolume",
+        "ec2:GetConsoleOutput",
+        "ec2:Monitoring",
+        "ec2:MonitorInstances",
+        "ec2:RebootInstances",
+        "ec2:RunInstances",
+        "ec2:TerminateInstances"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Stmt1319820637269",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:DeleteObject",
+        "s3:GetBucketAcl",
+        "s3:GetBucketPolicy",
+        "s3:GetObject",
+        "s3:GetObjectAcl",
+        "s3:ListAllMyBuckets",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutBucketAcl",
+        "s3:PutBucketPolicy",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      "Effect": "Allow",
+      "Resource": "arn:aws:s3:::*"
+    }
+  ]
+}"""
+
 # ## Landing page with redirects
 
 def home(request):
@@ -49,9 +107,16 @@ def launch(request):
         form = CloudManForm(request.POST)
         if form.is_valid():
             print form.cleaned_data
+            rs = None
+            # Create security group & key pair with original creds and then
+            # create IAM identity that will run the cluster but have reduced
+            # set of priviledges
             ec2_conn = connect_ec2(form.cleaned_data['access_key'], form.cleaned_data['secret_key'])
             sg_name = create_cm_security_group(ec2_conn)
             kp_name = create_key_pair(ec2_conn)
+            a_key, s_key = create_iam_user(form.cleaned_data['access_key'], form.cleaned_data['secret_key'])
+            # Recreate EC2 connection with newly created creds
+            ec2_conn = connect_ec2(a_key, s_key)
             rs = run_instance(ec2_conn=ec2_conn, \
                               user_provided_data=form.cleaned_data, \
                               key_name=kp_name, \
@@ -84,6 +149,69 @@ def connect_ec2(a_key, s_key):
                           port=ec2_port,
                           path=ec2_conn_path)
     return ec2_conn
+
+def create_iam_user(a_key, s_key, group_name='BioCloudCentral', user_name='cloudman'):
+    """ Create IAM connection, setup IAM group, add a user to it, and create a
+        set of new credentials for that user.
+        
+        NOTE: There is a problem with this approach because, unless the user notes down
+        the secret key that is created as part of the user creation, they will
+        not be able to start the same cluster again (this is because a cluster
+        is identified by a user account and cluster name and this method creates
+        new creds each time it's invoked - see comment below).
+        
+        This method works only with AWS.
+    """
+    access_key = secret_key = None
+    try:
+        iam_conn = boto.connect_iam()
+        # Create an IAM group that will house users, first checking if such group exists
+        grps = iam_conn.get_all_groups()
+        iam_grp = None
+        for grp in grps.groups:
+            if grp.group_name == group_name:
+                iam_grp = grp
+                log.debug("Found IAM group %s" % grp.group_name)
+                break
+        if iam_grp is None:
+            log.debug("Creating IAM group %s" % group_name)
+            iam_grp = iam_conn.create_group(group_name)
+        # Create JSON policy and associate it with the group
+        cm_policy = CM_POLICY
+        cm_policy_name = '%sPolicy' % group_name
+        log.debug("Adding/updating IAM group %s policy: %s" % (group_name, cm_policy_name))
+        iam_conn.put_group_policy(group_name, cm_policy_name, cm_policy)
+        # If not existent, create user
+        usrs = iam_conn.get_all_users()
+        usr = None
+        for user in usrs.users:
+            if user.user_name == user_name:
+                usr = user
+                log.debug("Found IAM user %s" % user.user_name)
+                break
+        if usr is None:
+            log.debug("Creating IAM user %s" % user_name)
+            usr = iam_conn.create_user(user_name)
+        # Add user to the group (this does no harm if user is already member of the group)
+        iam_conn.add_user_to_group(group_name, user_name)
+        # Create access credentials for the user
+        # NOTE: The secret_key is accessible only when credentials are created
+        # so new credentials need to be created at each cluster instantiation
+        # (because we are not storing them in a local database or anything).
+        # Because the assumption can be made that this user is used only for
+        # CBL & CM clusters, all other keys could be deleted after which a new
+        # key could be created and used. This would not polute the user account.
+        # However, if another cluster is currently on that is using existing
+        # credentials, this approach would disable control of that cluster.
+        # Unfortunately it is impossible to continue and create new creds because
+        # only two sets of those are allowed per user...
+        log.debug("Creating new access credentials for IAM user '%s'" % user_name)
+        r = iam_conn.create_access_key(user_name)
+        access_key = r.access_key_id
+        secret_key = r.secret_access_key
+    except Exception, e:
+        log.error("Trouble dealing with IAM: %s" % e)
+    return access_key, secret_key
 
 def create_cm_security_group(ec2_conn, sg_name='CloudMan'):
     """ Create a security group with all authorizations required to run CloudMan.
