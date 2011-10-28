@@ -53,7 +53,7 @@ def launch(request):
             sg_name = create_cm_security_group(ec2_conn)
             kp_name = create_key_pair(ec2_conn)
             rs = run_instance(ec2_conn=ec2_conn, \
-                              instance_type=form.cleaned_data['instance_type'], \
+                              user_provided_data=form.cleaned_data, \
                               key_name=kp_name, \
                               security_groups=[sg_name])
             if rs is not None:
@@ -166,23 +166,31 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
     log.info("Created key pair '%s'" % kp.name)
     return kp.name
 
-def run_instance(ec2_conn, instance_type, image_id='ami-ad8e4ec4', kernel_id=None, ramdisk_id=None,
+def run_instance(ec2_conn, user_provided_data, image_id='ami-ad8e4ec4', kernel_id=None, ramdisk_id=None,
                  key_name='cloudman_key_pair', security_groups=['CloudMan']):
     """ Start an instance. If instance start was OK, return the ResultSet object
-    else return None.
+        else return None.
     """
     rs = None
-    rs = ec2_conn.run_instances(image_id=image_id,
-                                instance_type=instance_type,
-                                key_name=key_name,
-                                security_groups=security_groups,
-                                kernel_id=kernel_id,
-                                ramdisk_id=ramdisk_id)
+    instance_type = user_provided_data['instance_type']
+    # Remove 'instance_type' key from the dict before creating user data
+    del user_provided_data['instance_type']
+    ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems()])
     try:
-        if rs:
-            log.info("Started an instance with ID %s" % rs.instances[0].id)
-        else:
-            log.warning("Problem starting an instance?")
-    except Exception, e:
+        rs = ec2_conn.run_instances(image_id=image_id,
+                                    instance_type=instance_type,
+                                    key_name=key_name,
+                                    security_groups=security_groups,
+                                    user_data=ud,
+                                    kernel_id=kernel_id,
+                                    ramdisk_id=ramdisk_id)
+    except EC2ResponseError, e:
         log.error("Problem starting an instance: %s" % e)
+    if rs:
+        try:
+            log.info("Started an instance with ID %s" % rs.instances[0].id)
+        except Exception, e:
+            log.error("Problem with the started instance object: %s" % e)
+    else:
+        log.warning("Problem starting an instance?")
     return rs
