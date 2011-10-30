@@ -89,8 +89,8 @@ class CloudManForm(forms.Form):
                                    help_text="Name of your cluster used for identification. "
                                    "This can be any name you choose.")
     password = forms.CharField(widget=forms.PasswordInput(render_value=False),
-                               help_text="Password used to access the CloudMan web interface "
-                               "and your instance via ssh and FreeNX.")
+                               help_text="Your choice of password, for the CloudMan " \
+                               "web interface and accessing the Amazon instance via ssh or FreeNX.")
     access_key = forms.CharField(required=True,
                                  help_text="Your Amazon Access Key ID. Available from "
                                  "the <a href='{0}' {1}>security credentials page</a>.".format(
