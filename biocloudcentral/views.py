@@ -4,6 +4,8 @@ from django.http import HttpResponse
 from django import forms
 from django.shortcuts import render, redirect
 
+from boto.exception import EC2ResponseError
+
 from biocloudcentral.amazon.launch import (connect_ec2, create_iam_user,
                                            create_cm_security_group,
                                            create_key_pair, run_instance)
@@ -51,25 +53,71 @@ def launch(request):
         form = CloudManForm(request.POST)
         if form.is_valid():
             print form.cleaned_data
-            rs = None
-            # Create security group & key pair with original creds and then
-            # create IAM identity that will run the cluster but have reduced
-            # set of privileges
-            ec2_conn = connect_ec2(form.cleaned_data['access_key'], form.cleaned_data['secret_key'])
-            sg_name = create_cm_security_group(ec2_conn)
-            kp_name = create_key_pair(ec2_conn)
-            a_key, s_key = create_iam_user(form.cleaned_data['access_key'], form.cleaned_data['secret_key'])
-            # Recreate EC2 connection with newly created creds
-            ec2_conn = connect_ec2(a_key, s_key)
-            rs = run_instance(ec2_conn=ec2_conn, \
-                              user_provided_data=form.cleaned_data, \
-                              key_name=kp_name, \
-                              security_groups=[sg_name])
-            if rs is not None:
-                return HttpResponse('Started an instance with ID %s and IP <a href="http://%s/cloud" target="_blank">%s</a>' \
-                    % (rs.instances[0].id, rs.instances[0].public_dns_name, rs.instances[0].public_dns_name))
+            ec2_error = None
+            try:
+                # Create security group & key pair with original creds and then
+                # create IAM identity that will run the cluster but have reduced
+                # set of privileges
+                ec2_conn = connect_ec2(form.cleaned_data['access_key'],
+                                       form.cleaned_data['secret_key'])
+                sg_name = create_cm_security_group(ec2_conn)
+                kp_name = create_key_pair(ec2_conn)
+                a_key, s_key = create_iam_user(form.cleaned_data['access_key'],
+                                               form.cleaned_data['secret_key'])
+            except EC2ResponseError, ec2_error:
+                pass
+            # associate form data with session for starting instance
+            # and supplying download files
+            if ec2_error is None:
+                form.cleaned_data["access_key"] = a_key
+                form.cleaned_data["secret_key"] = s_key
+                form.cleaned_data["kp_name"] = kp_name
+                form.cleaned_data["sg_name"] = sg_name
+                request.session["ec2data"] = form.cleaned_data
+                return redirect("/monitor")
             else:
-                return HttpResponse('A problem starting an instance. Check AWS console.')
+                # XXX Need to clean this up with friendlier error message
+                return HttpResponse(str(ec2_error))
     else:
         form = CloudManForm()
     return render(request, "launch.html", {"form": form})
+
+def monitor(request):
+    """Monitor a launch request and return offline files for console re-runs.
+    """
+    ec2data = request.session.get("ec2data", {})
+    return render(request, "monitor.html", {"kp_name": ec2data.get("kp_name", ""),
+                                            "sg_name": ec2data.get("sg_name", "")})
+
+def runinstance(request):
+    """Run a CloudBioLinux/CloudMan instance with current session credentials.
+    """
+    form = request.session["ec2data"]
+    rs = None
+    # Recreate EC2 connection with newly created creds
+    ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
+    rs = run_instance(ec2_conn=ec2_conn,
+                      user_provided_data=form,
+                      key_name=form["kp_name"],
+                      security_groups=[form["sg_name"]])
+    if rs is not None:
+        return HttpResponse('Started an instance with ID %s and IP <a href="http://%s/cloud" target="_blank">%s</a>' \
+            % (rs.instances[0].id, rs.instances[0].public_dns_name, rs.instances[0].public_dns_name))
+    else:
+        return HttpResponse('A problem starting an instance. Check AWS console.')
+
+def userdata(request):
+    """Provide file download of user-data to re-start an instance.
+    """
+    ec2data = request.session["ec2data"]
+    response = HttpResponse(mimetype='text/plain')
+    response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
+        ec2data)
+    response.write("""
+      cluster_name : {cluster_name}
+      password: {password}
+      freenxpass: {password}
+      access_key: {access_key}
+      secret_key: {secret_key}
+    """.format(ec2data))
+    return response
