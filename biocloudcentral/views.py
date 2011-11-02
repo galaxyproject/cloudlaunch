@@ -26,6 +26,7 @@ class CloudManForm(forms.Form):
     """
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     target = "target='_blank'"
+    iam_url = "http://aws.amazon.com/iam/"
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification. "
                                    "This can be any name you choose.")
@@ -40,6 +41,10 @@ class CloudManForm(forms.Form):
                                  help_text="Your Amazon Secret Access Key. Also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
+    use_iam = forms.BooleanField(required=False, label="Use IAM", initial=True,
+                                 help_text="If checked, use <a href='{0}' {1}>AWS IAM</a> and "
+                                 "create a new set of access keys. Else, use the provided credentials "
+                                 "to start the cluster.".format(iam_url, target))
     instance_type = forms.ChoiceField((("m1.large", "Large"),
                                        ("t1.micro", "Micro"),
                                        ("m1.xlarge", "Extra Large")),
@@ -55,15 +60,21 @@ def launch(request):
             print form.cleaned_data
             ec2_error = None
             try:
-                # Create security group & key pair with original creds and then
-                # create IAM identity that will run the cluster but have reduced
-                # set of privileges
+                # Create security group & key pair with original creds and then,
+                # optionally, create IAM identity that will run the cluster but
+                # have reduced set of privileges
                 ec2_conn = connect_ec2(form.cleaned_data['access_key'],
                                        form.cleaned_data['secret_key'])
                 sg_name = create_cm_security_group(ec2_conn)
                 kp_name = create_key_pair(ec2_conn)
-                a_key, s_key = create_iam_user(form.cleaned_data['access_key'],
-                                               form.cleaned_data['secret_key'])
+                if form.cleaned_data['use_iam'] is True:
+                    a_key, s_key = create_iam_user(form.cleaned_data['access_key'],
+                                                   form.cleaned_data['secret_key'])
+                else:
+                    a_key = form.cleaned_data['access_key']
+                    s_key = form.cleaned_data['secret_key']
+                if a_key is None or s_key is None:
+                    ec2_error = "Could not generate IAM access keys. Not starting an instance."
             except EC2ResponseError, ec2_error:
                 pass
             # associate form data with session for starting instance
