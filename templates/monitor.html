@@ -17,6 +17,6 @@
       {% endif %}
  <li> Launching EC2 instance with ID {{ request.session.ec2data.instance_id }} and IP
       <a href="http://{{ request.session.ec2data.public_dns }}/cloud" target="_blank">{{ request.session.ec2data.public_dns }}</a>
- <li> Download user-data for starting this cluster directly from
+ <li> <a href="{% url ud %}" target="_blank">Download user-data</a> for starting this cluster directly from
       EC2 console
 </ul>

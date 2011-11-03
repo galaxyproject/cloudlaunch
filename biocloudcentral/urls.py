@@ -9,6 +9,7 @@ urlpatterns = patterns('',
     url(r'^$', 'biocloudcentral.views.home', name='home'),
     url(r'^launch$', 'biocloudcentral.views.launch', name='launch'),
     url(r'^monitor$', 'biocloudcentral.views.monitor', name='monitor'),
+    url(r'^ud$', 'biocloudcentral.views.userdata', name='ud'),
     # url(r'^biocloudcentral/', include('biocloudcentral.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:

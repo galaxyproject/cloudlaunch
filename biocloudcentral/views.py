@@ -11,6 +11,13 @@ from biocloudcentral.amazon.launch import (connect_ec2, create_iam_user,
                                            create_cm_security_group,
                                            create_key_pair, run_instance)
 
+# Keep user data file template here so no indentation in the file is introduced at print time
+UD = """cluster_name : {cluster_name}
+password: {password}
+freenxpass: {password}
+access_key: {access_key}
+secret_key: {secret_key}
+"""
 # ## Landing page with redirects
 
 def home(request):
@@ -128,12 +135,6 @@ def userdata(request):
     ec2data = request.session["ec2data"]
     response = HttpResponse(mimetype='text/plain')
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
-        ec2data)
-    response.write("""
-      cluster_name : {cluster_name}
-      password: {password}
-      freenxpass: {password}
-      access_key: {access_key}
-      secret_key: {secret_key}
-    """.format(ec2data))
+        **ec2data)
+    response.write(UD.format(**ec2data))
     return response
