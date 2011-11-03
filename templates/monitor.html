@@ -8,9 +8,15 @@
 <h2>BioCloudCentral</h2>
 
 <ul>
- <li> Created security group: {{ sg_name }}
- <li> Created key pair: {{ kp_name }}
- <li> Launching EC image
- <li> Download user-data for running cluster directly from
+ <li> Created security group: {{ request.session.ec2data.sg_name }}
+ <li> Created key pair: {{ request.session.ec2data.kp_name }}
+ <li> {% if use_iam %} 
+        Created new IAM access credentials 
+      {% else %}
+        Not using IAM but rather the provided credentials.
+      {% endif %}
+ <li> Launching EC2 instance with ID {{ request.session.ec2data.instance_id }} and IP
+      <a href="http://{{ request.session.ec2data.public_dns }}/cloud" target="_blank">{{ request.session.ec2data.public_dns }}</a>
+ <li> Download user-data for starting this cluster directly from
       EC2 console
 </ul>

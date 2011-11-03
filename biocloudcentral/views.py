@@ -1,6 +1,7 @@
 """Base views.
 """
 from django.http import HttpResponse
+from django.template import RequestContext
 from django import forms
 from django.shortcuts import render, redirect
 
@@ -85,7 +86,10 @@ def launch(request):
                 form.cleaned_data["kp_name"] = kp_name
                 form.cleaned_data["sg_name"] = sg_name
                 request.session["ec2data"] = form.cleaned_data
-                return redirect("/monitor")
+                if runinstance(request):
+                    return redirect("/monitor")
+                else:
+                    return HttpResponse("A problem starting EC2 instance. Check AWS console.")
             else:
                 # XXX Need to clean this up with friendlier error message
                 return HttpResponse(str(ec2_error))
@@ -96,9 +100,8 @@ def launch(request):
 def monitor(request):
     """Monitor a launch request and return offline files for console re-runs.
     """
-    ec2data = request.session.get("ec2data", {})
-    return render(request, "monitor.html", {"kp_name": ec2data.get("kp_name", ""),
-                                            "sg_name": ec2data.get("sg_name", "")})
+    # ec2data = request.session.get("ec2data", {})
+    return render(request, "monitor.html", context_instance=RequestContext(request))
 
 def runinstance(request):
     """Run a CloudBioLinux/CloudMan instance with current session credentials.
@@ -112,10 +115,12 @@ def runinstance(request):
                       key_name=form["kp_name"],
                       security_groups=[form["sg_name"]])
     if rs is not None:
-        return HttpResponse('Started an instance with ID %s and IP <a href="http://%s/cloud" target="_blank">%s</a>' \
-            % (rs.instances[0].id, rs.instances[0].public_dns_name, rs.instances[0].public_dns_name))
+        request.session['ec2data']['instance_id'] = rs.instances[0].id
+        request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
+        request.session['ec2data']['instance_state'] = rs.instances[0].state
+        return True
     else:
-        return HttpResponse('A problem starting an instance. Check AWS console.')
+        return False
 
 def userdata(request):
     """Provide file download of user-data to re-start an instance.
