@@ -253,3 +253,13 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-ad8e4ec4', kernel_i
     else:
         log.warning("Problem starting an instance?")
     return rs
+
+def instance_state(ec2_conn, instance_id):
+    rs = None
+    try:
+        rs = ec2_conn.get_all_instances([instance_id])
+        if rs is not None:
+            return rs[0].instances[0].update()
+    except Exception, e:
+        log.error("Problem updating instance '%s' state: %s" % (instance_id, e))
+        return None

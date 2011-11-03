@@ -2,6 +2,20 @@
   <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
   <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
   <script src="{{ STATIC_URL }}js/jquery.js"></script>
+  <script>
+    function update_instance_state() {
+        $.get("{% url inst_state %}",
+            function(data) {
+                $('#inst_state').html(data.instance_state);
+                if (data.instance_state != 'running') {
+                    window.setTimeout(function(){update_instance_state()}, 5000);
+                }
+            });
+    }
+    $(document).ready(function() {
+        update_instance_state();
+    });
+  </script>
   <title>BioCloudCentral</title>
 </head>
 
@@ -17,6 +31,7 @@
       {% endif %}
  <li> Launching EC2 instance with ID {{ request.session.ec2data.instance_id }} and IP
       <a href="http://{{ request.session.ec2data.public_dns }}/cloud" target="_blank">{{ request.session.ec2data.public_dns }}</a>
+      (instance state: <span id="inst_state">N/A</span>)
  <li> <a href="{% url ud %}" target="_blank">Download user-data</a> for starting this cluster directly from
       EC2 console
 </ul>

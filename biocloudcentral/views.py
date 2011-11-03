@@ -3,13 +3,15 @@
 from django.http import HttpResponse
 from django.template import RequestContext
 from django import forms
+from django.utils import simplejson
 from django.shortcuts import render, redirect
 
 from boto.exception import EC2ResponseError
 
 from biocloudcentral.amazon.launch import (connect_ec2, create_iam_user,
                                            create_cm_security_group,
-                                           create_key_pair, run_instance)
+                                           create_key_pair, run_instance,
+                                           instance_state)
 
 # Keep user data file template here so no indentation in the file is introduced at print time
 UD = """cluster_name : {cluster_name}
@@ -124,7 +126,6 @@ def runinstance(request):
     if rs is not None:
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
-        request.session['ec2data']['instance_state'] = rs.instances[0].state
         return True
     else:
         return False
@@ -138,3 +139,9 @@ def userdata(request):
         **ec2data)
     response.write(UD.format(**ec2data))
     return response
+
+def instancestate(request):
+    form = request.session["ec2data"]
+    ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
+    state = {'instance_state': instance_state(ec2_conn, form['instance_id'])}
+    return HttpResponse(simplejson.dumps(state), mimetype="application/json")
