@@ -213,9 +213,11 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
     kps = ec2_conn.get_all_key_pairs()
     for akp in kps:
         if akp.name == key_name:
-            kp = akp
             log.debug("Key pair '%s' already exists; not creating it again." % key_name)
-            return kp.name
+            return akp.name
+        else:
+            log.debug("Using first existing keypair: '%s'" % akp.name)
+            return akp.name
     try:
         kp = ec2_conn.create_key_pair(key_name)
     except EC2ResponseError, e:
