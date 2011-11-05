@@ -1,6 +1,7 @@
 <head>
   <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
   <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/monitor.css" />
   <script src="{{ STATIC_URL }}js/jquery.js"></script>
   <script>
     function update_instance_state() {
@@ -19,19 +20,50 @@
   <title>BioCloudCentral</title>
 </head>
 
-<h2>BioCloudCentral</h2>
+<div class="banner">
+  <h2 class="banner">BioCloudCentral</h2>
+</div>
 
-<ul>
- <li> Created security group: {{ request.session.ec2data.sg_name }}
- <li> Created key pair: {{ request.session.ec2data.kp_name }}
- <li> {% if use_iam %} 
-        Created new IAM access credentials 
-      {% else %}
-        Not using IAM but rather the provided credentials.
-      {% endif %}
- <li> Launching EC2 instance with ID {{ request.session.ec2data.instance_id }} and IP
-      <a href="http://{{ request.session.ec2data.public_dns }}/cloud" target="_blank">{{ request.session.ec2data.public_dns }}</a>
-      (instance state: <span id="inst_state">N/A</span>)
- <li> <a href="{% url ud %}" target="_blank">Download user-data</a> for starting this cluster directly from
-      EC2 console
-</ul>
+<div class="info">
+Congratulations, your Amazon EC2 instance is launching.
+Amazon is now charging you per hour for your new machine.
+Please use the
+<a href="https://console.aws.amazon.com/ec2/">EC2 console</a>
+to monitor the status while working, and to terminate
+when finished.
+</div>
+
+<table class="awstable">
+ <tr><td>Public IP</td>
+     <td><a href="http://{{ request.session.ec2data.public_dns }}/cloud"
+            target="_blank">{{ request.session.ec2data.public_dns }}</a>
+     </td>
+ </tr>
+ <tr><td>SSH and FreeNX access</td>
+     <td>ssh ubuntu@{{ request.session.ec2data.public_dns }} <br/>
+         (Use password from the entry form)</td>
+ </tr>
+ <tr><td>Instance state</td>
+     <td><span id="inst_state">Not available</span></td>
+ </tr>
+ <tr><td>Instance ID</td>
+     <td>{{ request.session.ec2data.instance_id }}</td>
+ </tr>
+ <tr><td>Security group</td>
+     <td>{{ request.session.ec2data.sg_name }}</td>
+ </tr>
+ <tr><td>Key pair</td>
+     <td>{{ request.session.ec2data.kp_name }}</td>
+ </tr>
+ <tr><td>Access credentials</td>
+     <td>{% if use_iam %} 
+           Created new IAM access credentials.
+         {% else %}
+           Using the provided credentials.
+         {% endif %}
+     </td>
+ </tr>
+</table>
+ <a class="button" href="{% url ud %}"
+    target="_blank">Download user-data</a>
+    to re-start this cluster later, directly from the EC2 console.
