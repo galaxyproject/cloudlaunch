@@ -15,6 +15,12 @@
   <a href="http://aws.amazon.com/">Amazon Web Services</a>
 </div>
 
+{% if form.non_field_errors|length > 0 %}
+  <div class="awserror error">Amazon connection problem: <br/>
+    {{ form.non_field_errors }}
+  </div>
+{% endif %}
+
 <form action="/launch" method="post">{% csrf_token %}
   <table>
   {% for field in form %}

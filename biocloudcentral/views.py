@@ -53,8 +53,8 @@ class CloudManForm(forms.Form):
                                      key_url, target))
     use_iam = forms.BooleanField(required=False, label="Use IAM", initial=True,
                                  help_text="If checked, use <a href='{0}' {1}>AWS IAM</a> and "
-                                 "create a new set of access keys. Else, use the provided credentials "
-                                 "to start the cluster.".format(iam_url, target))
+                                 "create a new set of access keys. Else, start the cluster "
+                                 "with the provided credentials.".format(iam_url, target))
     instance_type = forms.ChoiceField((("m1.large", "Large"),
                                        ("t1.micro", "Micro"),
                                        ("m1.xlarge", "Extra Large")),
@@ -98,10 +98,10 @@ def launch(request):
                 if runinstance(request):
                     return redirect("/monitor")
                 else:
-                    return HttpResponse("A problem starting EC2 instance. Check AWS console.")
+                    form.non_field_errors = "A problem starting EC2 instance. " \
+                                            "Check AWS console."
             else:
-                # XXX Need to clean this up with friendlier error message
-                return HttpResponse(str(ec2_error))
+                form.non_field_errors = ec2_error.error_message
     else:
         form = CloudManForm()
     return render(request, "launch.html", {"form": form})
