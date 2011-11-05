@@ -39,15 +39,19 @@ class CloudManForm(forms.Form):
     iam_url = "http://aws.amazon.com/iam/"
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification. "
-                                   "This can be any name you choose.")
-    password = forms.CharField(widget=forms.PasswordInput(render_value=False),
+                                   "This can be any name you choose.",
+                                   widget=forms.TextInput(attrs={"class": "input_large"}))
+    password = forms.CharField(widget=forms.PasswordInput(render_value=False,
+                                                          attrs={"class": "input_large"}),
                                help_text="Your choice of password, for the CloudMan " \
                                "web interface and accessing the Amazon instance via ssh or FreeNX.")
     access_key = forms.CharField(required=True,
+                                 widget=forms.TextInput(attrs={"class": "input_large"}),
                                  help_text="Your Amazon Access Key ID. Available from "
                                  "the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
     secret_key = forms.CharField(required=True,
+                                 widget=forms.TextInput(attrs={"class": "input_large"}),
                                  help_text="Your Amazon Secret Access Key. Also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
