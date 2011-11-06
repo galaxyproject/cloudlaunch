@@ -1,6 +1,7 @@
 """Setup and launch Amazon web service instances.
 """
 import logging
+import time
 
 import boto
 from boto.ec2.regioninfo import RegionInfo
@@ -140,6 +141,8 @@ def create_iam_user(a_key, s_key, group_name='BioCloudCentral', user_name='cloud
         r = iam_conn.create_access_key(user_name)
         access_key = r.access_key_id
         secret_key = r.secret_access_key
+        # wait for key to become active
+        time.sleep(5)
     except Exception, e:
         log.error("Trouble dealing with IAM: %s" % e)
     return access_key, secret_key

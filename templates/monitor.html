@@ -39,6 +39,9 @@ when finished.
 </div>
 
 <table class="awstable">
+ <tr><td>Instance state</td>
+     <td><span id="inst_state">Not available</span></td>
+ </tr>
  <tr><td>Public IP</td>
      <td><span id="cloud_url">
             <a href="http://{{ request.session.ec2data.public_dns }}/cloud"
@@ -48,9 +51,6 @@ when finished.
  <tr><td>SSH and FreeNX access</td>
      <td>ssh ubuntu@<span id="public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
          (Use password from the entry form)</td>
- </tr>
- <tr><td>Instance state</td>
-     <td><span id="inst_state">Not available</span></td>
  </tr>
  <tr><td>Instance ID</td>
      <td>{{ request.session.ec2data.instance_id }}</td>
