@@ -10,6 +10,11 @@
                 $('#inst_state').html(data.instance_state);
                 if (data.instance_state != 'running') {
                     window.setTimeout(function(){update_instance_state()}, 5000);
+                } else {
+                  $('#public_dns').html(data.public_dns);
+                  $('#cloud_url').html('<a href="http://' +
+                     data.public_dns + '/cloud" target="_blank">' +
+                     data.public_dns + '</a>');
                 }
             });
     }
@@ -28,19 +33,20 @@
 Congratulations, your Amazon EC2 instance is launching.
 Amazon is now charging you per hour for your new machine.
 Please use the
-<a href="https://console.aws.amazon.com/ec2/">EC2 console</a>
+<a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
 to monitor the status while working, and to terminate
 when finished.
 </div>
 
 <table class="awstable">
  <tr><td>Public IP</td>
-     <td><a href="http://{{ request.session.ec2data.public_dns }}/cloud"
-            target="_blank">{{ request.session.ec2data.public_dns }}</a>
+     <td><span id="cloud_url">
+            <a href="http://{{ request.session.ec2data.public_dns }}/cloud"
+               target="_blank">{{ request.session.ec2data.public_dns }}</a></span>
      </td>
  </tr>
  <tr><td>SSH and FreeNX access</td>
-     <td>ssh ubuntu@{{ request.session.ec2data.public_dns }} <br/>
+     <td>ssh ubuntu@<span id="public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
          (Use password from the entry form)</td>
  </tr>
  <tr><td>Instance state</td>
@@ -64,6 +70,5 @@ when finished.
      </td>
  </tr>
 </table>
- <a class="button" href="{% url ud %}"
-    target="_blank">Download user-data</a>
+ <a class="button" href="{% url ud %}">Download user-data</a>
     to re-start this cluster later, directly from the EC2 console.

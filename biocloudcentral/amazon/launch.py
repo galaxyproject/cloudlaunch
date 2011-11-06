@@ -261,7 +261,8 @@ def instance_state(ec2_conn, instance_id):
     try:
         rs = ec2_conn.get_all_instances([instance_id])
         if rs is not None:
-            return rs[0].instances[0].update()
+            return {"state": rs[0].instances[0].update(),
+                    "dns": rs[0].instances[0].public_dns_name}
     except Exception, e:
         log.error("Problem updating instance '%s' state: %s" % (instance_id, e))
-        return None
+        return {}

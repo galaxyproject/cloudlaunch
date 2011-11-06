@@ -14,7 +14,7 @@ from biocloudcentral.amazon.launch import (connect_ec2, create_iam_user,
                                            instance_state)
 
 # Keep user data file template here so no indentation in the file is introduced at print time
-UD = """cluster_name : {cluster_name}
+UD = """cluster_name: {cluster_name}
 password: {password}
 freenxpass: {password}
 access_key: {access_key}
@@ -89,8 +89,8 @@ def launch(request):
                     s_key = form.cleaned_data['secret_key']
                 if a_key is None or s_key is None:
                     ec2_error = "Could not generate IAM access keys. Not starting an instance."
-            except EC2ResponseError, ec2_error:
-                pass
+            except EC2ResponseError, err:
+                ec2_error = err.error_message
             # associate form data with session for starting instance
             # and supplying download files
             if ec2_error is None:
@@ -105,7 +105,7 @@ def launch(request):
                     form.non_field_errors = "A problem starting EC2 instance. " \
                                             "Check AWS console."
             else:
-                form.non_field_errors = ec2_error.error_message
+                form.non_field_errors = ec2_error
     else:
         form = CloudManForm()
     return render(request, "launch.html", {"form": form})
@@ -146,6 +146,9 @@ def userdata(request):
 
 def instancestate(request):
     form = request.session["ec2data"]
+    print form
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
-    state = {'instance_state': instance_state(ec2_conn, form['instance_id'])}
+    info = instance_state(ec2_conn, form["instance_id"])
+    state = {'instance_state': info.get("state", ""),
+             "public_dns": info.get("dns", "")}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
