@@ -8,10 +8,9 @@ from django.shortcuts import render, redirect
 
 from boto.exception import EC2ResponseError
 
-from biocloudcentral.amazon.launch import (connect_ec2, create_iam_user,
+from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
-                                           create_key_pair, run_instance,
-                                           instance_state)
+                                           create_key_pair, run_instance)
 
 # Keep user data file template here so no indentation in the file is introduced at print time
 UD = """cluster_name: {cluster_name}
@@ -55,10 +54,6 @@ class CloudManForm(forms.Form):
                                  help_text="Your Amazon Secret Access Key. Also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
-    use_iam = forms.BooleanField(required=False, label="Use IAM", initial=True,
-                                 help_text="If checked, use <a href='{0}' {1}>AWS IAM</a> and "
-                                 "create a new set of access keys. Else, start the cluster "
-                                 "with the provided credentials.".format(iam_url, target))
     instance_type = forms.ChoiceField((("m1.large", "Large"),
                                        ("t1.micro", "Micro"),
                                        ("m1.xlarge", "Extra Large")),
@@ -74,28 +69,16 @@ def launch(request):
             print form.cleaned_data
             ec2_error = None
             try:
-                # Create security group & key pair with original creds and then,
-                # optionally, create IAM identity that will run the cluster but
-                # have reduced set of privileges
+                # Create security group & key pair used when starting an instance
                 ec2_conn = connect_ec2(form.cleaned_data['access_key'],
                                        form.cleaned_data['secret_key'])
                 sg_name = create_cm_security_group(ec2_conn)
                 kp_name = create_key_pair(ec2_conn)
-                if form.cleaned_data['use_iam'] is True:
-                    a_key, s_key = create_iam_user(form.cleaned_data['access_key'],
-                                                   form.cleaned_data['secret_key'])
-                else:
-                    a_key = form.cleaned_data['access_key']
-                    s_key = form.cleaned_data['secret_key']
-                if a_key is None or s_key is None:
-                    ec2_error = "Could not generate IAM access keys. Not starting an instance."
             except EC2ResponseError, err:
                 ec2_error = err.error_message
             # associate form data with session for starting instance
             # and supplying download files
             if ec2_error is None:
-                form.cleaned_data["access_key"] = a_key
-                form.cleaned_data["secret_key"] = s_key
                 form.cleaned_data["kp_name"] = kp_name
                 form.cleaned_data["sg_name"] = sg_name
                 request.session["ec2data"] = form.cleaned_data
@@ -113,7 +96,6 @@ def launch(request):
 def monitor(request):
     """Monitor a launch request and return offline files for console re-runs.
     """
-    # ec2data = request.session.get("ec2data", {})
     return render(request, "monitor.html", context_instance=RequestContext(request))
 
 def runinstance(request):
@@ -121,7 +103,7 @@ def runinstance(request):
     """
     form = request.session["ec2data"]
     rs = None
-    # Recreate EC2 connection with newly created creds
+    # Create EC2 connection with provided creds
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
     rs = run_instance(ec2_conn=ec2_conn,
                       user_provided_data=form,
@@ -146,7 +128,6 @@ def userdata(request):
 
 def instancestate(request):
     form = request.session["ec2data"]
-    print form
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
     info = instance_state(ec2_conn, form["instance_id"])
     state = {'instance_state': info.get("state", ""),
