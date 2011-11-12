@@ -24,3 +24,9 @@ Use git to commit changes and push to Heroku for live deployment:
 [3]: http://cloudbiolinux.org
 [4]: http://devcenter.heroku.com/articles/django
 [5]: https://github.com/pypa/virtualenv
+
+## LICENSE
+
+The code is freely available under the [MIT license][l1].
+
+[l1]: http://www.opensource.org/licenses/mit-license.html
