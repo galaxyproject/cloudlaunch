@@ -20,7 +20,7 @@ Use git to commit changes and push to Heroku for live deployment:
     $ git push heroku master
 
 [1]: https://www.djangoproject.com/
-[2]: http://wiki.g2.bx.psu.edu/Admin/Cloud
+[2]: http://usecloudman.org
 [3]: http://cloudbiolinux.org
 [4]: http://devcenter.heroku.com/articles/django
 [5]: https://github.com/pypa/virtualenv
