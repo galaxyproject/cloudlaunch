@@ -91,7 +91,7 @@ def launch(request):
                 form.non_field_errors = ec2_error
     else:
         form = CloudManForm()
-    return render(request, "launch.html", {"form": form})
+    return render(request, "launch.html", {"form": form}, context_instance=RequestContext(request))
 
 def monitor(request):
     """Monitor a launch request and return offline files for console re-runs.
