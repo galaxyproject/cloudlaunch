@@ -62,7 +62,14 @@ your cluster, please use the CloudMan console.
      <td>{{ request.session.ec2data.sg_name }}</td>
  </tr>
  <tr><td>Key pair</td>
-     <td>{{ request.session.ec2data.kp_name }}</td>
+     <td>
+         {# Show the link to download key pair material only if a new key pair was created #}
+         {% ifnotequal request.session.ec2data.kp_material None %}
+            <a href="{% url kp %}">{{ request.session.ec2data.kp_name }}</a>
+         {% else %}
+            {{ request.session.ec2data.kp_name }}
+         {% endifnotequal %}
+     </td>
  </tr>
 </table>
  <a class="button" href="{% url ud %}">Download user-data</a>

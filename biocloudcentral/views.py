@@ -73,13 +73,14 @@ def launch(request):
                 ec2_conn = connect_ec2(form.cleaned_data['access_key'],
                                        form.cleaned_data['secret_key'])
                 sg_name = create_cm_security_group(ec2_conn)
-                kp_name = create_key_pair(ec2_conn)
+                kp_name, kp_material = create_key_pair(ec2_conn)
             except EC2ResponseError, err:
                 ec2_error = err.error_message
             # associate form data with session for starting instance
             # and supplying download files
             if ec2_error is None:
                 form.cleaned_data["kp_name"] = kp_name
+                form.cleaned_data["kp_material"] = kp_material
                 form.cleaned_data["sg_name"] = sg_name
                 request.session["ec2data"] = form.cleaned_data
                 if runinstance(request):
@@ -124,6 +125,14 @@ def userdata(request):
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
         **ec2data)
     response.write(UD.format(**ec2data))
+    return response
+    
+def keypair(request):
+    ec2data = request.session["ec2data"]
+    response = HttpResponse(mimetype='text/plain')
+    response['Content-Disposition'] = 'attachment; filename={kp_name}-key.pem'.format(
+        **ec2data)
+    response.write(ec2data['kp_material'])
     return response
 
 def instancestate(request):

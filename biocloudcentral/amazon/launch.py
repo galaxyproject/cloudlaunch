@@ -217,18 +217,21 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
     for akp in kps:
         if akp.name == key_name:
             log.debug("Key pair '%s' already exists; not creating it again." % key_name)
-            return akp.name
-        else:
-            log.debug("Using first existing keypair: '%s'" % akp.name)
-            return akp.name
+            return akp.name, None
+        # else:
+        # This cannot be enabled if we're wanting to ensure user's can access
+        # the instance via a keypair - need to ensure they can download the
+        # private key
+        #     log.debug("Using first existing keypair: '%s'" % akp.name)
+        #     return akp.name, None
     try:
         kp = ec2_conn.create_key_pair(key_name)
     except EC2ResponseError, e:
         log.error("Problem creating key pair '%s': %s" % (key_name, e))
-        return None
+        return None, None
     # print kp.material # This should probably be displayed to the user on the screen and allow them to save the key?
     log.info("Created key pair '%s'" % kp.name)
-    return kp.name
+    return kp.name, kp.material
 
 def run_instance(ec2_conn, user_provided_data, image_id='ami-cf945fa6',
                  kernel_id=None, ramdisk_id=None, key_name='cloudman_key_pair',

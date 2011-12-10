@@ -10,6 +10,7 @@ urlpatterns = patterns('',
     url(r'^launch$', 'biocloudcentral.views.launch', name='launch'),
     url(r'^monitor$', 'biocloudcentral.views.monitor', name='monitor'),
     url(r'^ud$', 'biocloudcentral.views.userdata', name='ud'),
+    url(r'^kp$', 'biocloudcentral.views.keypair', name='kp'),
     url(r'^state$', 'biocloudcentral.views.instancestate', name='inst_state'),
     # url(r'^biocloudcentral/', include('biocloudcentral.foo.urls')),
 
