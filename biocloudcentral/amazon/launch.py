@@ -243,7 +243,7 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-cf945fa6',
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
-    ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems()])
+    ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() if key != 'kp_material'])
     try:
         rs = ec2_conn.run_instances(image_id=image_id,
                                     instance_type=instance_type,
