@@ -14,7 +14,8 @@
                 if (data.instance_state != 'running') {
                     window.setTimeout(function(){update_instance_state()}, 5000);
                 } else {
-                  $('#public_dns').html(data.public_dns);
+                  $('#ssh_public_dns').html(data.public_dns);
+                  $('#nx_public_dns').html(data.public_dns);
                   $('#cloud_url').html('<a href="http://' +
                      data.public_dns + '/cloud" target="_blank">' +
                      data.public_dns + '</a>');
@@ -51,9 +52,17 @@ your cluster, please use the CloudMan console.
                target="_blank">{{ request.session.ec2data.public_dns }}</a></span>
      </td>
  </tr>
- <tr><td>SSH and FreeNX access</td>
-     <td>ssh ubuntu@<span id="public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
+ <tr><td>SSH access</td>
+     <td>ssh ubuntu@<span id="ssh_public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
          (Use password from the entry form)</td>
+ </tr>
+ <tr><td>FreeNX access</td>
+     <td>
+         User: ubuntu <br/>
+         Password: from the entry form<br/>
+         Host: <span id="nx_public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
+         Window Manager: GNOME<br/>
+     </td>
  </tr>
  <tr><td>Instance ID</td>
      <td>{{ request.session.ec2data.instance_id }}</td>
