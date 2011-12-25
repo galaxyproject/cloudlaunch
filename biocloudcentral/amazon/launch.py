@@ -235,7 +235,7 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
 
 def run_instance(ec2_conn, user_provided_data, image_id='ami-fb00ca92',
                  kernel_id=None, ramdisk_id=None, key_name='cloudman_key_pair',
-                 security_groups=['CloudMan']):
+                 security_groups=['CloudMan'], placement="us-east-1b"):
     """ Start an instance. If instance start was OK, return the ResultSet object
         else return None.
     """
@@ -251,7 +251,8 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-fb00ca92',
                                     security_groups=security_groups,
                                     user_data=ud,
                                     kernel_id=kernel_id,
-                                    ramdisk_id=ramdisk_id)
+                                    ramdisk_id=ramdisk_id,
+                                    placement=placement)
     except EC2ResponseError, e:
         log.error("Problem starting an instance: %s" % e)
     if rs:
