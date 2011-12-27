@@ -114,6 +114,7 @@ def runinstance(request):
     if rs is not None:
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
+        request.session['ec2data']['image_id'] = rs.instances[0].image_id
         return True
     else:
         return False
