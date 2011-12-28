@@ -2,6 +2,7 @@
 """
 import logging
 import time
+import datetime
 
 import boto
 from boto.ec2.regioninfo import RegionInfo
@@ -81,6 +82,7 @@ def connect_ec2(a_key, s_key):
     r = RegionInfo(name=region_name, endpoint=region_endpoint)
     ec2_conn = boto.connect_ec2(aws_access_key_id=a_key,
                           aws_secret_access_key=s_key,
+                          api_version='2011-11-01', # needed for availability zone support
                           is_secure=is_secure,
                           region=r,
                           port=ec2_port,
@@ -235,7 +237,7 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
 
 def run_instance(ec2_conn, user_provided_data, image_id='ami-fb00ca92',
                  kernel_id=None, ramdisk_id=None, key_name='cloudman_key_pair',
-                 security_groups=['CloudMan'], placement="us-east-1b"):
+                 security_groups=['CloudMan']):
     """ Start an instance. If instance start was OK, return the ResultSet object
         else return None.
     """
@@ -243,6 +245,7 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-fb00ca92',
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
+    placement = _find_placement(ec2_conn, instance_type)
     ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() if key != 'kp_material'])
     try:
         rs = ec2_conn.run_instances(image_id=image_id,
@@ -263,6 +266,24 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-fb00ca92',
     else:
         log.warning("Problem starting an instance?")
     return rs
+
+def _find_placement(ec2_conn, instance_type):
+    """Find a region zone that supports our requested instance type.
+
+    We need to check spot prices in the potential availability zones
+    for support before deciding on a region:
+
+    http://blog.piefox.com/2011/07/ec2-availability-zones-and-instance.html
+    """
+    base = ec2_conn.region.name
+    for loc_choice in ["b", "a", "c", "d"]:
+        cur_loc = "{base}{ext}".format(base=base, ext=loc_choice)
+        if len(ec2_conn.get_spot_price_history(instance_type=instance_type,
+                                               end_time=datetime.datetime.now().isoformat(),
+                                               availability_zone=cur_loc)) > 0:
+            return cur_loc
+    log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
+    return None
 
 def instance_state(ec2_conn, instance_id):
     rs = None
