@@ -276,10 +276,11 @@ def _find_placement(ec2_conn, instance_type):
     http://blog.piefox.com/2011/07/ec2-availability-zones-and-instance.html
     """
     base = ec2_conn.region.name
+    yesterday = datetime.datetime.now() - datetime.timedelta(1)
     for loc_choice in ["b", "a", "c", "d"]:
         cur_loc = "{base}{ext}".format(base=base, ext=loc_choice)
         if len(ec2_conn.get_spot_price_history(instance_type=instance_type,
-                                               end_time=datetime.datetime.now().isoformat(),
+                                               end_time=yesterday.isoformat(),
                                                availability_zone=cur_loc)) > 0:
             return cur_loc
     log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
