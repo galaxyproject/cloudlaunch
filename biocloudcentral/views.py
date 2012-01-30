@@ -57,6 +57,8 @@ class CloudManForm(forms.Form):
     instance_type = forms.ChoiceField((("m1.large", "Large"),
                                        ("t1.micro", "Micro"),
                                        ("m1.xlarge", "Extra Large")),
+                                       ("m2.xlarge", "High-Memory Extra Large")),
+                                       ("m2.4xlarge", "High-Memory Quadruple Extra Large")),
                             help_text="Amazon <a href='{0}' {1}>instance type</a> to start.".format(
                                       "http://aws.amazon.com/ec2/#instance", target))
 
