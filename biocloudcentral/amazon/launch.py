@@ -235,7 +235,7 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
     log.info("Created key pair '%s'" % kp.name)
     return kp.name, kp.material
 
-def run_instance(ec2_conn, user_provided_data, image_id='ami-fb00ca92',
+def run_instance(ec2_conn, user_provided_data, image_id='ami-3ea27f57',
                  kernel_id=None, ramdisk_id=None, key_name='cloudman_key_pair',
                  security_groups=['CloudMan']):
     """ Start an instance. If instance start was OK, return the ResultSet object
