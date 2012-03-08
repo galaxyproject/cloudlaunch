@@ -36,26 +36,30 @@ class CloudManForm(forms.Form):
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     target = "target='_blank'"
     iam_url = "http://aws.amazon.com/iam/"
+    textbox_size = "input_xlarge"
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification. "
                                    "This can be any name you choose.",
-                                   widget=forms.TextInput(attrs={"class": "input_large"}))
+                                   widget=forms.TextInput(attrs={"class": textbox_size}))
     password = forms.CharField(widget=forms.PasswordInput(render_value=False,
-                                                          attrs={"class": "input_large"}),
+                                                          attrs={"class": "input_xlarge"}),
                                help_text="Your choice of password, for the CloudMan " \
                                "web interface and accessing the Amazon instance via ssh or FreeNX.")
     access_key = forms.CharField(required=True,
-                                 widget=forms.TextInput(attrs={"class": "input_large"}),
+                                 widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Amazon Access Key ID. Available from "
                                  "the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
     secret_key = forms.CharField(required=True,
-                                 widget=forms.TextInput(attrs={"class": "input_large"}),
+                                 widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Amazon Secret Access Key. Also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
     instance_type = forms.ChoiceField((("m1.large", "Large"),
                                        ("t1.micro", "Micro"),
+                                       ("m1.small", "Small"),
+                                       ("c1.medium", "High-CPU Medium"),
+                                       ("m1.medium", "Medium"),
                                        ("m1.xlarge", "Extra Large"),
                                        ("m2.xlarge", "High-Memory Extra Large"),
                                        ("m2.4xlarge", "High-Memory Quadruple Extra Large")),
