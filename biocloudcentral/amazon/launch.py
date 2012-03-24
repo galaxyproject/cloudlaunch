@@ -8,6 +8,8 @@ import boto
 from boto.ec2.regioninfo import RegionInfo
 from boto.exception import EC2ResponseError
 
+from biocloudcentral import models
+
 log = logging.getLogger(__name__)
 
 CM_POLICY =  """{
@@ -69,20 +71,27 @@ CM_POLICY =  """{
 }"""
 
 # ## Cloud interaction methods
-def connect_ec2(a_key, s_key):
-    """ Create and return an EC2 connection object.
+def connect_ec2(a_key, s_key, cloud_pk):
+    """ Create and return an EC2-compatible connection object.
     """
+    cloud_info = models.Cloud.objects.get(pk=cloud_pk)
+    region_name = cloud_info.region_name
+    region_endpoint = cloud_info.region_endpoint
+    is_secure = cloud_info.is_secure
+    ec2_port = cloud_info.ec2_port if cloud_info.ec2_port != '' else None
+    ec2_conn_path = cloud_info.ec2_conn_path
     # Use variables for forward looking flexibility
     # AWS connection values
-    region_name = 'us-east-1'
-    region_endpoint = 'ec2.amazonaws.com'
-    is_secure = True
-    ec2_port = None
-    ec2_conn_path = '/'
+    # region_name = 'us-east-1'
+    # region_endpoint = 'ec2.amazonaws.com'
+    # is_secure = True
+    # ec2_port = None
+    # ec2_conn_path = '/'
     r = RegionInfo(name=region_name, endpoint=region_endpoint)
     ec2_conn = boto.connect_ec2(aws_access_key_id=a_key,
                           aws_secret_access_key=s_key,
-                          api_version='2011-11-01', # needed for availability zone support
+                          # api_version is needed for availability zone support for EC2
+                          api_version='2011-11-01' if region_name == 'us-east-1' else None,
                           is_secure=is_secure,
                           region=r,
                           port=ec2_port,

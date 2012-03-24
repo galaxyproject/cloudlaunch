@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect
 
 from boto.exception import EC2ResponseError
 
+from biocloudcentral import models
 from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
                                            create_key_pair, run_instance)
@@ -37,6 +38,8 @@ class CloudManForm(forms.Form):
     target = "target='_blank'"
     iam_url = "http://aws.amazon.com/iam/"
     textbox_size = "input_xlarge"
+    clouds = models.Cloud.objects.all()
+    cloud_choices = [(c.pk, c.name) for c in clouds]
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification. "
                                    "This can be any name you choose.",
@@ -45,6 +48,9 @@ class CloudManForm(forms.Form):
                                                           attrs={"class": "input_xlarge"}),
                                help_text="Your choice of password, for the CloudMan " \
                                "web interface and accessing the Amazon instance via ssh or FreeNX.")
+    cloud = forms.ChoiceField(cloud_choices,
+                              help_text="Choose from the available clouds. Note that the credentials "\
+                              "you provide below must match (ie, exist on) the chosen cloud.")
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Amazon Access Key ID. Available from "
@@ -77,7 +83,10 @@ def launch(request):
             try:
                 # Create security group & key pair used when starting an instance
                 ec2_conn = connect_ec2(form.cleaned_data['access_key'],
-                                       form.cleaned_data['secret_key'])
+                                       form.cleaned_data['secret_key'],
+                                       form.cleaned_data['cloud'])
+                print ec2_conn
+                return
                 sg_name = create_cm_security_group(ec2_conn)
                 kp_name, kp_material = create_key_pair(ec2_conn)
             except EC2ResponseError, err:

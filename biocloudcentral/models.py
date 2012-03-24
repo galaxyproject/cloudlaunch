@@ -17,13 +17,13 @@ class Cloud(models.Model):
     bucket_default = models.CharField(max_length=255, blank=True, null=True)
     region_name = models.CharField(max_length=100)
     region_endpoint = models.CharField(max_length=255)
-    ec2_port = models.CharField(max_length=6, blank=True, null=True, verbose_name="EC2 port")
+    ec2_port = models.IntegerField(max_length=6, blank=True, null=True, verbose_name="EC2 port")
     ec2_conn_path = models.CharField(max_length=255, default='/', verbose_name="EC2 conn path")
     cidr_range = models.CharField(max_length=25, blank=True, null=True, verbose_name="CIDR IP range", \
         help_text="Available IP range for all instances in this cloud in CIDR format")
     is_secure = models.BooleanField()
     s3_host = models.CharField(max_length=255)
-    s3_port = models.CharField(max_length=6, blank=True, null=True)
+    s3_port = models.IntegerField(max_length=6, blank=True, null=True)
     s3_conn_path = models.CharField(max_length=255, default='/')
         
     def __unicode__(self):
