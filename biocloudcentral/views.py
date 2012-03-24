@@ -85,8 +85,6 @@ def launch(request):
                 ec2_conn = connect_ec2(form.cleaned_data['access_key'],
                                        form.cleaned_data['secret_key'],
                                        form.cleaned_data['cloud'])
-                print ec2_conn
-                return
                 sg_name = create_cm_security_group(ec2_conn)
                 kp_name, kp_material = create_key_pair(ec2_conn)
             except EC2ResponseError, err:
