@@ -74,28 +74,22 @@ CM_POLICY =  """{
 def connect_ec2(a_key, s_key, cloud_pk):
     """ Create and return an EC2-compatible connection object.
     """
-    cloud_info = models.Cloud.objects.get(pk=cloud_pk)
-    region_name = cloud_info.region_name
-    region_endpoint = cloud_info.region_endpoint
-    is_secure = cloud_info.is_secure
-    ec2_port = cloud_info.ec2_port if cloud_info.ec2_port != '' else None
-    ec2_conn_path = cloud_info.ec2_conn_path
-    # Use variables for forward looking flexibility
+    ci = _get_cloud_info(cloud_pk)
     # AWS connection values
     # region_name = 'us-east-1'
     # region_endpoint = 'ec2.amazonaws.com'
     # is_secure = True
     # ec2_port = None
     # ec2_conn_path = '/'
-    r = RegionInfo(name=region_name, endpoint=region_endpoint)
+    r = RegionInfo(name=ci['region_name'], endpoint=ci['region_endpoint'])
     ec2_conn = boto.connect_ec2(aws_access_key_id=a_key,
                           aws_secret_access_key=s_key,
                           # api_version is needed for availability zone support for EC2
-                          api_version='2011-11-01' if region_name == 'us-east-1' else None,
-                          is_secure=is_secure,
+                          api_version='2011-11-01' if ci['cloud_type'] == 'ec2' else None,
+                          is_secure=ci['is_secure'],
                           region=r,
-                          port=ec2_port,
-                          path=ec2_conn_path)
+                          port=ci['ec2_port'],
+                          path=ci['ec2_conn_path'])
     return ec2_conn
 
 def create_iam_user(a_key, s_key, group_name='BioCloudCentral', user_name='cloudman'):
@@ -240,7 +234,9 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
     except EC2ResponseError, e:
         log.error("Problem creating key pair '%s': %s" % (key_name, e))
         return None, None
-    # print kp.material # This should probably be displayed to the user on the screen and allow them to save the key?
+    # TODO: kp.material should be displayed to the user on the screen
+    # and allow them to save the key
+    # print kp.material 
     log.info("Created key pair '%s'" % kp.name)
     return kp.name, kp.material
 
@@ -255,7 +251,8 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-500cd139',
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
     placement = _find_placement(ec2_conn, instance_type)
-    ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() if key != 'kp_material'])
+    # Compose user data
+    ud = _compose_user_data(user_provided_data)
     try:
         rs = ec2_conn.run_instances(image_id=image_id,
                                     instance_type=instance_type,
@@ -275,6 +272,27 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-500cd139',
     else:
         log.warning("Problem starting an instance?")
     return rs
+
+def _compose_user_data(user_provided_data):
+    ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() \
+        if key != 'kp_material'])
+    # Also include connection info about the selected cloud
+    ci = _get_cloud_info(user_provided_data['cloud'])
+    return ud.update(ci)
+
+def _get_cloud_info(cloud_pk):
+    cloud_info = models.Cloud.objects.get(pk=cloud_pk)
+    ci = {}
+    ci['cloud_type'] = cloud_info.cloud_type
+    ci['region_name'] = cloud_info.region_name
+    ci['region_endpoint'] = cloud_info.region_endpoint
+    ci['is_secure'] = cloud_info.is_secure
+    ci['ec2_port'] = cloud_info.ec2_port if cloud_info.ec2_port != '' else None
+    ci['ec2_conn_path'] = cloud_info.ec2_conn_path
+    ci['s3_host'] = cloud_info.s3_host
+    ci['s3_port'] = cloud_info.s3_port if cloud_info.s3_port != '' else None
+    ci['s3_conn_path'] = cloud_info.s3_conn_path
+    return ci
 
 def _find_placement(ec2_conn, instance_type):
     """Find a region zone that supports our requested instance type.

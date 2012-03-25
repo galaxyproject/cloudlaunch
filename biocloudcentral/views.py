@@ -118,7 +118,7 @@ def runinstance(request):
     form = request.session["ec2data"]
     rs = None
     # Create EC2 connection with provided creds
-    ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
+    ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
     rs = run_instance(ec2_conn=ec2_conn,
                       user_provided_data=form,
