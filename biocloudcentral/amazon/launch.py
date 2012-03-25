@@ -71,10 +71,10 @@ CM_POLICY =  """{
 }"""
 
 # ## Cloud interaction methods
-def connect_ec2(a_key, s_key, cloud_pk):
+def connect_ec2(a_key, s_key, cloud):
     """ Create and return an EC2-compatible connection object.
     """
-    ci = _get_cloud_info(cloud_pk)
+    ci = _get_cloud_info(cloud.pk)
     # AWS connection values
     # region_name = 'us-east-1'
     # region_endpoint = 'ec2.amazonaws.com'

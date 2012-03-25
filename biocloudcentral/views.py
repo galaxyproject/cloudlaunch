@@ -36,10 +36,7 @@ class CloudManForm(forms.Form):
     """
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     target = "target='_blank'"
-    iam_url = "http://aws.amazon.com/iam/"
     textbox_size = "input_xlarge"
-    clouds = models.Cloud.objects.all()
-    cloud_choices = [(c.pk, c.name) for c in clouds]
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification. "
                                    "This can be any name you choose.",
@@ -48,9 +45,10 @@ class CloudManForm(forms.Form):
                                                           attrs={"class": "input_xlarge"}),
                                help_text="Your choice of password, for the CloudMan " \
                                "web interface and accessing the Amazon instance via ssh or FreeNX.")
-    cloud = forms.ChoiceField(cloud_choices,
-                              help_text="Choose from the available clouds. Note that the credentials "\
-                              "you provide below must match (ie, exist on) the chosen cloud.")
+    cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
+                                   help_text="Choose from the available clouds. Note that the credentials "\
+                                   "you provide below must match (ie, exist on) the chosen cloud.",
+                                   widget=forms.Select(attrs={"class": textbox_size}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Amazon Access Key ID. Available from "
@@ -70,7 +68,8 @@ class CloudManForm(forms.Form):
                                        ("m2.xlarge", "High-Memory Extra Large"),
                                        ("m2.4xlarge", "High-Memory Quadruple Extra Large")),
                             help_text="Amazon <a href='{0}' {1}>instance type</a> to start.".format(
-                                      "http://aws.amazon.com/ec2/#instance", target))
+                                      "http://aws.amazon.com/ec2/#instance", target),
+                            widget=forms.Select(attrs={"class": textbox_size}))
 
 def launch(request):
     """Configure and launch CloudBioLinux and CloudMan servers.
