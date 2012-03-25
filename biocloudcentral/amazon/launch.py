@@ -250,7 +250,7 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-500cd139',
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
-    placement = _find_placement(ec2_conn, instance_type)
+    placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud_type'])
     # Compose user data
     ud = _compose_user_data(user_provided_data)
     try:
@@ -294,7 +294,7 @@ def _get_cloud_info(cloud_pk):
     ci['s3_conn_path'] = cloud_info.s3_conn_path
     return ci
 
-def _find_placement(ec2_conn, instance_type):
+def _find_placement(ec2_conn, instance_type, cloud_type):
     """Find a region zone that supports our requested instance type.
 
     We need to check spot prices in the potential availability zones
@@ -303,15 +303,16 @@ def _find_placement(ec2_conn, instance_type):
     http://blog.piefox.com/2011/07/ec2-availability-zones-and-instance.html
     """
     base = ec2_conn.region.name
-    yesterday = datetime.datetime.now() - datetime.timedelta(1)
-    for loc_choice in ["b", "a", "c", "d"]:
-        cur_loc = "{base}{ext}".format(base=base, ext=loc_choice)
-        if len(ec2_conn.get_spot_price_history(instance_type=instance_type,
-                                               end_time=yesterday.isoformat(),
-                                               availability_zone=cur_loc)) > 0:
-            return cur_loc
-    log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
-    return None
+    if cloud_type == 'ec2':
+        yesterday = datetime.datetime.now() - datetime.timedelta(1)
+        for loc_choice in ["b", "a", "c", "d"]:
+            cur_loc = "{base}{ext}".format(base=base, ext=loc_choice)
+            if len(ec2_conn.get_spot_price_history(instance_type=instance_type,
+                                                   end_time=yesterday.isoformat(),
+                                                   availability_zone=cur_loc)) > 0:
+                return cur_loc
+        log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
+    return base
 
 def instance_state(ec2_conn, instance_id):
     rs = None
