@@ -13,7 +13,8 @@ from boto.exception import EC2ResponseError
 from biocloudcentral import models
 from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
-                                           create_key_pair, run_instance)
+                                           create_key_pair, run_instance,
+                                           _get_cloud_info)
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +35,16 @@ def home(request):
         return redirect("https://biocloudcentral.herokuapp.com/launch")
 
 # ## CloudMan launch and configuration entry details
+
+class DynamicChoiceField(forms.ChoiceField):
+    """ Override the ChoiceField to allow AJAX-populated choices in the 
+        part of the form.
+    """
+    def valid_value(self, value):
+        # TODO: Add some validation code to ensure passed data is valid.
+        # Return True if value is valid else return False
+        return True
+    
 
 class CloudManForm(forms.Form):
     """Details needed to boot a setup and boot a CloudMan instance.
@@ -64,7 +75,7 @@ class CloudManForm(forms.Form):
                                  help_text="Your Amazon Secret Access Key. Also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
-    instance_type = forms.ChoiceField((("", "Choose cloud type first"),),
+    instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="Amazon <a href='{0}' {1}>instance type</a> to start.".format(
                                       "http://aws.amazon.com/ec2/#instance", target),
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
@@ -82,7 +93,7 @@ def launch(request):
                 ec2_conn = connect_ec2(form.cleaned_data['access_key'],
                                        form.cleaned_data['secret_key'],
                                        form.cleaned_data['cloud'])
-                sg_name = create_cm_security_group(ec2_conn)
+                sg_name = create_cm_security_group(ec2_conn, form.cleaned_data['cloud'])
                 kp_name, kp_material = create_key_pair(ec2_conn)
             except EC2ResponseError, err:
                 ec2_error = err.error_message
@@ -136,7 +147,9 @@ def userdata(request):
     response = HttpResponse(mimetype='text/plain')
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
         **ec2data)
-    response.write(UD.format(**ec2data))
+    ud1 = UD.format(**ec2data)
+    ud2 = _get_cloud_info(ec2data['cloud'], as_str=True)
+    response.write(ud1 + ud2)
     return response
     
 def keypair(request):
@@ -149,7 +162,7 @@ def keypair(request):
 
 def instancestate(request):
     form = request.session["ec2data"]
-    ec2_conn = connect_ec2(form["access_key"], form["secret_key"])
+    ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
     info = instance_state(ec2_conn, form["instance_id"])
     state = {'instance_state': info.get("state", ""),
              "public_dns": info.get("dns", "")}

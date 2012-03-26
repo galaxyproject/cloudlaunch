@@ -8,8 +8,6 @@ import boto
 from boto.ec2.regioninfo import RegionInfo
 from boto.exception import EC2ResponseError
 
-from biocloudcentral import models
-
 log = logging.getLogger(__name__)
 
 CM_POLICY =  """{
@@ -74,7 +72,7 @@ CM_POLICY =  """{
 def connect_ec2(a_key, s_key, cloud):
     """ Create and return an EC2-compatible connection object.
     """
-    ci = _get_cloud_info(cloud.pk)
+    ci = _get_cloud_info(cloud)
     # AWS connection values
     # region_name = 'us-east-1'
     # region_endpoint = 'ec2.amazonaws.com'
@@ -152,7 +150,7 @@ def create_iam_user(a_key, s_key, group_name='BioCloudCentral', user_name='cloud
         log.error("Trouble dealing with IAM: %s" % e)
     return access_key, secret_key
 
-def create_cm_security_group(ec2_conn, sg_name='CloudMan'):
+def create_cm_security_group(ec2_conn, cloud, sg_name='CloudMan'):
     """ Create a security group with all authorizations required to run CloudMan.
         If the group already exists, check its rules and add the missing ones.
         Return the name of the created security group.
@@ -186,16 +184,32 @@ def create_cm_security_group(ec2_conn, sg_name='CloudMan'):
             log.error("A problem with security group authorizations: %s" % e)
     # Add rule that allows communication between instances in the same SG
     g_rule_exists = False # Flag to indicate if group rule already exists
-    for rule in cmsg.rules:
-        for grant in rule.grants:
-            if grant.name == cmsg.name:
-                g_rule_exists = True
-                log.debug("Group rule already exists in the SG")
-        if g_rule_exists:
-            break
+    ci = _get_cloud_info(cloud)
+    cloud_type = ci['cloud_type']
+    # AWS allows grants to be named, thus allowing communication within a group.
+    # Other cloud middlewares do now support that functionality so resort to CIDR grant.
+    if cloud_type == 'ec2':
+        for rule in cmsg.rules:
+            for grant in rule.grants:
+                if grant.name == cmsg.name:
+                    g_rule_exists = True
+                    log.debug("Group rule already exists in the SG")
+            if g_rule_exists:
+                break
+    else:
+        for rule in cmsg.rules:
+            for grant in rule.grants:
+                if grant.cidr_ip == ci['cidr_range']:
+                    g_rule_exists = True
+                    log.debug("Group rule already exists in the SG")
+                if g_rule_exists:
+                    break
     if g_rule_exists is False: 
         try:
-            cmsg.authorize(src_group=cmsg)
+            if cloud_type == 'ec2':
+                cmsg.authorize(src_group=cmsg)
+            else:
+                cmsg.authorize(ip_protocol='tcp', from_port=1, to_port=65535, cidr_ip=ci['cidr_range'])
         except EC2ResponseError, e:
             log.error("A problem w/ security group authorization: %s" % e)
     log.info("Done configuring '%s' security group" % cmsg.name)
@@ -234,9 +248,6 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
     except EC2ResponseError, e:
         log.error("Problem creating key pair '%s': %s" % (key_name, e))
         return None, None
-    # TODO: kp.material should be displayed to the user on the screen
-    # and allow them to save the key
-    # print kp.material 
     log.info("Created key pair '%s'" % kp.name)
     return kp.name, kp.material
 
@@ -250,9 +261,10 @@ def run_instance(ec2_conn, user_provided_data, image_id='ami-500cd139',
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
-    placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud_type'])
+    placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud'].cloud_type)
     # Compose user data
     ud = _compose_user_data(user_provided_data)
+    print "ud when starting an instance: %s" % ud
     try:
         rs = ec2_conn.run_instances(image_id=image_id,
                                     instance_type=instance_type,
@@ -277,21 +289,24 @@ def _compose_user_data(user_provided_data):
     ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() \
         if key != 'kp_material'])
     # Also include connection info about the selected cloud
-    ci = _get_cloud_info(user_provided_data['cloud'])
-    return ud.update(ci)
+    ci = _get_cloud_info(user_provided_data['cloud'], as_str=True)
+    return ud + "\n" + ci
 
-def _get_cloud_info(cloud_pk):
-    cloud_info = models.Cloud.objects.get(pk=cloud_pk)
+def _get_cloud_info(cloud, as_str=False):
     ci = {}
-    ci['cloud_type'] = cloud_info.cloud_type
-    ci['region_name'] = cloud_info.region_name
-    ci['region_endpoint'] = cloud_info.region_endpoint
-    ci['is_secure'] = cloud_info.is_secure
-    ci['ec2_port'] = cloud_info.ec2_port if cloud_info.ec2_port != '' else None
-    ci['ec2_conn_path'] = cloud_info.ec2_conn_path
-    ci['s3_host'] = cloud_info.s3_host
-    ci['s3_port'] = cloud_info.s3_port if cloud_info.s3_port != '' else None
-    ci['s3_conn_path'] = cloud_info.s3_conn_path
+    ci['cloud_type'] = cloud.cloud_type
+    ci['bucket_default'] = cloud.bucket_default if cloud.bucket_default != '' else None
+    ci['region_name'] = cloud.region_name
+    ci['region_endpoint'] = cloud.region_endpoint
+    ci['is_secure'] = cloud.is_secure
+    ci['ec2_port'] = cloud.ec2_port if cloud.ec2_port != '' else None
+    ci['ec2_conn_path'] = cloud.ec2_conn_path
+    ci['cidr_range'] = cloud.cidr_range
+    ci['s3_host'] = cloud.s3_host
+    ci['s3_port'] = cloud.s3_port if cloud.s3_port != '' else None
+    ci['s3_conn_path'] = cloud.s3_conn_path
+    if as_str:
+        ci = "\n".join(['%s: %s' % (key, value) for key, value in ci.iteritems()])
     return ci
 
 def _find_placement(ec2_conn, instance_type, cloud_type):
