@@ -1,5 +1,7 @@
 """Base views.
 """
+import logging
+
 from django.http import HttpResponse
 from django.template import RequestContext
 from django import forms
@@ -12,6 +14,8 @@ from biocloudcentral import models
 from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
                                            create_key_pair, run_instance)
+
+log = logging.getLogger(__name__)
 
 # Keep user data file template here so no indentation in the file is introduced at print time
 UD = """cluster_name: {cluster_name}
@@ -48,7 +52,8 @@ class CloudManForm(forms.Form):
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
                                    help_text="Choose from the available clouds. Note that the credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
-                                   widget=forms.Select(attrs={"class": textbox_size}))
+                                   widget=forms.Select(attrs={"class": textbox_size, 
+                                     "onChange": "get_instance_types(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Amazon Access Key ID. Available from "
@@ -59,17 +64,10 @@ class CloudManForm(forms.Form):
                                  help_text="Your Amazon Secret Access Key. Also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
-    instance_type = forms.ChoiceField((("m1.large", "Large"),
-                                       ("t1.micro", "Micro"),
-                                       ("m1.small", "Small"),
-                                       ("c1.medium", "High-CPU Medium"),
-                                       ("m1.medium", "Medium"),
-                                       ("m1.xlarge", "Extra Large"),
-                                       ("m2.xlarge", "High-Memory Extra Large"),
-                                       ("m2.4xlarge", "High-Memory Quadruple Extra Large")),
+    instance_type = forms.ChoiceField((("", "Choose cloud type first"),),
                             help_text="Amazon <a href='{0}' {1}>instance type</a> to start.".format(
                                       "http://aws.amazon.com/ec2/#instance", target),
-                            widget=forms.Select(attrs={"class": textbox_size}))
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
 
 def launch(request):
     """Configure and launch CloudBioLinux and CloudMan servers.
@@ -156,3 +154,21 @@ def instancestate(request):
     state = {'instance_state': info.get("state", ""),
              "public_dns": info.get("dns", "")}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+
+def instancetypes(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            cloud_id = request.POST.get('cloud_id', '')
+            instance_types = []
+            if cloud_id != '':
+                its = models.InstanceType.objects.filter(cloud=cloud_id)
+                for it in its:
+                    instance_types.append((it.tech_name, \
+                        "{0} ({1})".format(it.pretty_name, it.description)))
+            state = {'instance_types': instance_types}
+        else:
+            log.error("Not a POST request")
+    else:
+        log.error("No XHR")
+    return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+    

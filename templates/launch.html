@@ -6,6 +6,32 @@
   <script src="{{ STATIC_URL }}js/jquery.js"></script>
   <script src="{{ STATIC_URL }}js/jquery.formalize.js"></script>
   <title>BioCloudCentral</title>
+  <script>
+    var csrf_token;
+    function get_instance_types(cloud_id) {
+        $.post("{% url inst_types %}",
+            {'cloud_id': cloud_id,
+             csrfmiddlewaretoken: csrf_token},
+            function(data) {
+                if (data.instance_types.length > 0) {
+                    var types = '';
+                    for (var i=0; i<data.instance_types.length; i++) {
+                        types += '<option value="' + data.instance_types[i][0] + '">'
+                            + data.instance_types[i][1] + "</option>";
+                    }
+                    $('#id_instance_type').html(types);
+                    $('#id_instance_type').removeAttr('disabled');
+                } else {
+                    $('#id_instance_type').attr('disabled', 'disabled');
+                    $('#id_instance_type').html("<option>Choose cloud type first</option>");
+                }
+            });
+    }
+    $(document).ready(function() {
+        // Along with this, must add a macthing csrf_token in the body
+        csrf_token = $('#csrf_token >div >input').attr("value");
+    });
+  </script>
 </head>
 
 <div class="banner">
@@ -62,4 +88,5 @@ Launching servers will incur
 from Amazon for their resources. By using this service you acknowledge your
 sole responsibility for any costs accrued.
 </p>
+<div id="csrf_token" style='display:none'>{% csrf_token %}</div>
 </div>

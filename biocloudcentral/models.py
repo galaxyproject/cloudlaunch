@@ -33,6 +33,22 @@ class Cloud(models.Model):
         ordering = ['cloud_type']
     
 
+class InstanceType(models.Model):
+    #automatically add timestamps when object is created 
+    added = models.DateTimeField(auto_now_add=True) 
+    #automatically add timestamps when object is updated
+    updated = models.DateTimeField(auto_now=True)
+    cloud = models.ForeignKey(Cloud)
+    pretty_name = models.CharField(max_length=100)
+    tech_name = models.CharField(max_length=100)
+    description = models.CharField(max_length=100)
+    
+    def __unicode__(self):
+        return u'%s' % (self.pretty_name)
+    
+    class Meta:
+        ordering = ['cloud']
+
 class Image(models.Model):
     #automatically add timestamps when object is created 
     added = models.DateTimeField(auto_now_add=True) 
