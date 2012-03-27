@@ -38,12 +38,15 @@
 </div>
 
 <div class="info">
-Congratulations, your Amazon EC2 cluster is launching.
-Amazon is now <a href="http://aws.amazon.com/ec2/#pricing" target="_blank">
-charging you per hour</a> for your new machine. You may use the
-<a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
-to monitor the status of your instance. Once the instance is running, to manage
-your cluster, please use the CloudMan console.
+Congratulations, your scalable analysis platform on the
+{{ request.session.ec2data.cloud_name }} cloud is launching!<br/>
+{% if request.session.ec2data.cloud_type == 'ec2' %}
+    Amazon is now <a href="http://aws.amazon.com/ec2/#pricing" target="_blank">
+    charging you per hour</a> for your new machine. You may use the
+    <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
+    to monitor the status of your instance. Once the instance is running, to manage
+    your platform, please use the CloudMan console.
+{% endif %}
 </div>
 
 <table class="awstable">
@@ -92,4 +95,4 @@ your cluster, please use the CloudMan console.
  </tr>
 </table>
  <a class="button" href="{% url ud %}">Download user-data</a>
-    to re-start this cluster later, directly from the EC2 console.
+    enabling you to re-start this cluster later, directly from the chosen cloud's web console.

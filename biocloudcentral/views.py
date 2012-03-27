@@ -67,17 +67,16 @@ class CloudManForm(forms.Form):
                                      "onChange": "get_instance_types(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
-                                 help_text="Your Amazon Access Key ID. Available from "
+                                 help_text="Your Access Key ID. For the Amazon cloud, available from "
                                  "the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
     secret_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
-                                 help_text="Your Amazon Secret Access Key. Also available "
+                                 help_text="Your Secret Access Key. For the Amazon cloud, also available "
                                  "from the <a href='{0}' {1}>security credentials page</a>.".format(
                                      key_url, target))
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
-                            help_text="Amazon <a href='{0}' {1}>instance type</a> to start.".format(
-                                      "http://aws.amazon.com/ec2/#instance", target),
+                            help_text="Instance type to start.",
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
 
 def launch(request):
@@ -103,6 +102,8 @@ def launch(request):
                 form.cleaned_data["kp_name"] = kp_name
                 form.cleaned_data["kp_material"] = kp_material
                 form.cleaned_data["sg_name"] = sg_name
+                form.cleaned_data["cloud_type"] = form.cleaned_data['cloud'].cloud_type
+                form.cleaned_data["cloud_name"] = form.cleaned_data['cloud'].name
                 request.session["ec2data"] = form.cleaned_data
                 if runinstance(request):
                     return redirect("/monitor")
