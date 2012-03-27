@@ -264,7 +264,6 @@ def run_instance(ec2_conn, user_provided_data, image_id,
     placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud'].cloud_type)
     # Compose user data
     ud = _compose_user_data(user_provided_data)
-    print "ud when starting an instance: %s" % ud
     try:
         rs = ec2_conn.run_instances(image_id=image_id,
                                     instance_type=instance_type,

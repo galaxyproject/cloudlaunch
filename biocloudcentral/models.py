@@ -1,5 +1,10 @@
 from django.db import models
 
+import biocloudcentral
+
+import logging
+log = logging.getLogger(__name__)
+
 class Cloud(models.Model):
     CLOUD_TYPES = (
         ('ec2', 'AWS EC2'),
@@ -61,10 +66,19 @@ class Image(models.Model):
     ramdisk_id = models.CharField(max_length=30, blank=True, null=True)
     
     def __unicode__(self):
-        return u'%s (on %s)' % (self.image_id, self.cloud.name)
+        return u'%s (on %s) %s' % (self.image_id, self.cloud.name, '*DEFAULT*' if self.default else '')
     
     def save(self, *args, **kwargs):
-        # TODO: ensure only 1 image is selected as the 'default' for the given cloud
+        # Ensure only 1 image is selected as the 'default' for the given cloud
+        # This is not atomic but don't know how to enforce it at the DB level directly...
+        if self.default is True:
+            try:
+                previous_default = biocloudcentral.models.Image.objects.get(cloud=self.cloud, default=True)
+                previous_default.default = False
+                previous_default.save()
+            except biocloudcentral.models.Image.DoesNotExist:
+                # This is the first entry so no default can exist
+                log.debug("Did not find previous default image; set {0} as default".format(self.image_id))
         return super(Image, self).save()
     
     class Meta:
