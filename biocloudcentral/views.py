@@ -171,9 +171,7 @@ def keypair(request):
 def instancestate(request):
     form = request.session["ec2data"]
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
-    info = instance_state(ec2_conn, form["instance_id"])
-    state = {'instance_state': info.get("state", ""),
-             "public_dns": info.get("dns", "")}
+    state = instance_state(ec2_conn, form["instance_id"])
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 def instancetypes(request):

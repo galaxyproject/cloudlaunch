@@ -3,6 +3,8 @@
 import logging
 import time
 import datetime
+from httplib import HTTP
+from urlparse import urlparse
 
 import boto
 from boto.ec2.regioninfo import RegionInfo
@@ -330,11 +332,40 @@ def _find_placement(ec2_conn, instance_type, cloud_type):
 
 def instance_state(ec2_conn, instance_id):
     rs = None
+    state = {'instance_state': "",
+             'public_dns': ""}
     try:
         rs = ec2_conn.get_all_instances([instance_id])
         if rs is not None:
-            return {"state": rs[0].instances[0].update(),
-                    "dns": rs[0].instances[0].public_dns_name}
+            inst_state = rs[0].instances[0].update()
+            public_dns = rs[0].instances[0].public_dns_name
+            if inst_state == 'running':
+                cm_url = "http://{dns}/cloud".format(dns=public_dns)
+                if _checkURL(cm_url) is True:
+                    state['public_dns'] = public_dns
+                    state['instance_state'] = inst_state
+                else:
+                    # Wait until the URL is accessible to display the IP
+                    state['instance_state'] = 'booting'
+            else:
+                state['instance_state']= inst_state
     except Exception, e:
         log.error("Problem updating instance '%s' state: %s" % (instance_id, e))
-        return {}
+    return state
+
+def _checkURL(url):
+    """ Check if a url is alive (returns code 200(OK) or 401 (unauthorized))
+    """
+    try:
+        p = urlparse(url)
+        h = HTTP(p[1])
+        h.putrequest('HEAD', p[2])
+        h.endheaders()
+        r = h.getreply()
+        if r[0] == 200 or r[0] == 401: # CloudMan UI is pwd protected so include 401
+            return True
+    except Exception:
+        # No response or no good response
+        pass
+    return False
+    
