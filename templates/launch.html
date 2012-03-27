@@ -31,12 +31,10 @@
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
         
-        // Force the first item in the clouds dropdown to be automatically
-        // selected. This should be coupled with how the clouds are entered
-        // to have the most common option selected by default.
-        if ($("#id_cloud option:selected").val() == 1) {
-            get_instance_types($("#id_cloud option:selected").val());
-        }
+        // Get instance types for the selected cloud on page load
+        // This also keeps the instance types selected after a submission
+        // of the form with errors
+        get_instance_types($("#id_cloud option:selected").val());
         
         // Toggle advanced startup options
         $('#toggle_advanced_startup_options').click(function(){
