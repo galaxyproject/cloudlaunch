@@ -64,17 +64,17 @@ class CloudManForm(forms.Form):
                                    help_text="Choose from the available clouds. Note that the credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
                                    widget=forms.Select(attrs={"class": textbox_size, 
-                                     "onChange": "get_instance_types(this.options[this.selectedIndex].value)"}))
+                                   "onChange": "get_instance_types(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Access Key ID. For the Amazon cloud, available from "
-                                 "the <a href='{0}' {1}>security credentials page</a>.".format(
+                                 "the <a href='{0}' {1} tabindex='-1'>security credentials page</a>.".format(
                                      key_url, target))
     secret_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Secret Access Key. For the Amazon cloud, also available "
-                                 "from the <a href='{0}' {1}>security credentials page</a>.".format(
-                                     key_url, target))
+                                 "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."\
+                                 .format(key_url, target))
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="Instance type to start.",
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
