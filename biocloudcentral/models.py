@@ -61,7 +61,7 @@ class Image(models.Model):
     ramdisk_id = models.CharField(max_length=30, blank=True, null=True)
     
     def __unicode__(self):
-        return u'%s (on %s)' % (self.image_id, self.cloud.region_name)
+        return u'%s (on %s)' % (self.image_id, self.cloud.name)
     
     def save(self, *args, **kwargs):
         # TODO: ensure only 1 image is selected as the 'default' for the given cloud

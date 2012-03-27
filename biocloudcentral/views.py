@@ -128,8 +128,16 @@ def runinstance(request):
     # Create EC2 connection with provided creds
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
+    try:
+        image = models.Image.objects.get(cloud=form['cloud'], default=True)
+    except models.Image.DoesNotExist:
+        log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
+        return False
     rs = run_instance(ec2_conn=ec2_conn,
                       user_provided_data=form,
+                      image_id=image.image_id,
+                      kernel_id=image.kernel_id if image.kernel_id != '' else None,
+                      ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
                       key_name=form["kp_name"],
                       security_groups=[form["sg_name"]])
     if rs is not None:
