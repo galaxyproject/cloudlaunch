@@ -113,7 +113,10 @@ def launch(request):
             else:
                 form.non_field_errors = ec2_error
     else:
-        form = CloudManForm()
+        # Select the first item in the clouds dropdown, thus potentially eliminating
+        # that click for the most commonly used cloud. This does assume the most used
+        # cloud is the first in the DB and that such an entry exists in the first place
+        form = CloudManForm(initial={'cloud': 1})
     return render(request, "launch.html", {"form": form}, context_instance=RequestContext(request))
 
 def monitor(request):
