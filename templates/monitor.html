@@ -3,6 +3,8 @@
   <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
   <link rel="stylesheet" href="{{ STATIC_URL }}css/monitor.css" />
   <script src="{{ STATIC_URL }}js/jquery.js"></script>
+  <script src="{{ STATIC_URL }}js/jquery.stopwatch.js"></script>
+  <script src="{{ STATIC_URL }}js/jintervals.js"></script>
   <script>
     function update_instance_state() {
         $.get("{% url inst_state %}",
@@ -19,11 +21,13 @@
                   $('#cloud_url').html('<a href="http://' +
                      data.public_dns + '/cloud" target="_blank">' +
                      data.public_dns + '</a>');
+                  $('#ttp').stopwatch().stopwatch('stop');
                 }
             });
     }
     $(document).ready(function() {
         update_instance_state();
+        $('#ttp').stopwatch({format: '{Minutes} and {seconds}'}).stopwatch('start');
     });
   </script>
   <title>BioCloudCentral</title>
@@ -45,6 +49,9 @@ your cluster, please use the CloudMan console.
 <table class="awstable">
  <tr><td>Instance state</td>
      <td><span id="inst_state">Not available</span></td>
+ </tr>
+ <tr><td>0 to an analysis platform in</td>
+     <td><span id="ttp">&nbsp;</span></td>
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
      <td><span id="cloud_url">
