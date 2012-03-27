@@ -38,8 +38,12 @@ div.help {
 
 div.label {
     padding: 1px;
+    width: 100px;
 }
 
+.form-row {
+    padding: 0 0 15px 10px;
+}
 a {
     color: #933;
 }

@@ -30,6 +30,17 @@
     $(document).ready(function() {
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
+        
+        // Toggle advanced startup options
+        $('#toggle_advanced_startup_options').click(function(){
+            if ($('#advanced_startup_options').is(":visible")){
+                $('#advanced_startup_options').hide();
+                $('#toggle_advanced_startup_options').text('Show advanced startup options');
+            }else{
+                $('#advanced_startup_options').show();
+                $('#toggle_advanced_startup_options').text("Hide advanced options");
+            }
+        });
     });
   </script>
 </head>
@@ -65,7 +76,26 @@
       </div></td>
     </tr>
   {% endfor %}
+    {# Add the initially hidden advanced startup options #}
+    <tr id="advanced_startup_options" style="display:none">
+        <td><div class="label">Post-start script</div></td>
+          <td>Not Yet Implemented</td>
+          <td> {% for error in field.errors %}
+                 <div class="error">{{ error }}</div>
+               {% endfor %}
+          </td>
+          <td><div class="help">
+              {% autoescape off %}
+              help text
+              {% endautoescape %}
+          </div></td>
+    </tr>
   </table>
+  <div id="toggle_advanced_startup_options_cont" class='form-row'>
+      <a id='toggle_advanced_startup_options' href="#">
+          Show advanced startup options
+      </a>
+  </div>
   <div class="submit">
     <input type="submit" value="Start an instance" />
   </div>
