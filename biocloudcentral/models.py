@@ -52,7 +52,7 @@ class InstanceType(models.Model):
         return u'%s' % (self.pretty_name)
     
     class Meta:
-        ordering = ['cloud', 'updated']
+        ordering = ['cloud', '-updated']
 
 class Image(models.Model):
     #automatically add timestamps when object is created 
