@@ -188,6 +188,7 @@ def create_cm_security_group(ec2_conn, cloud, sg_name='CloudMan'):
     g_rule_exists = False # Flag to indicate if group rule already exists
     ci = _get_cloud_info(cloud)
     cloud_type = ci['cloud_type']
+    cidr_range = ci.get('cidr_range', '')
     # AWS allows grants to be named, thus allowing communication within a group.
     # Other cloud middlewares do now support that functionality so resort to CIDR grant.
     if cloud_type == 'ec2':
@@ -201,7 +202,7 @@ def create_cm_security_group(ec2_conn, cloud, sg_name='CloudMan'):
     else:
         for rule in cmsg.rules:
             for grant in rule.grants:
-                if grant.cidr_ip == ci['cidr_range']:
+                if grant.cidr_ip == cidr_range:
                     g_rule_exists = True
                     log.debug("Group rule already exists in the SG")
                 if g_rule_exists:
@@ -211,7 +212,7 @@ def create_cm_security_group(ec2_conn, cloud, sg_name='CloudMan'):
             if cloud_type == 'ec2':
                 cmsg.authorize(src_group=cmsg)
             else:
-                cmsg.authorize(ip_protocol='tcp', from_port=1, to_port=65535, cidr_ip=ci['cidr_range'])
+                cmsg.authorize(ip_protocol='tcp', from_port=1, to_port=65535, cidr_ip=cidr_range)
         except EC2ResponseError, e:
             log.error("A problem w/ security group authorization: %s" % e)
     log.info("Done configuring '%s' security group" % cmsg.name)
@@ -260,7 +261,6 @@ def run_instance(ec2_conn, user_provided_data, image_id,
         else return None.
     """
     rs = None
-    return rs
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
@@ -288,12 +288,19 @@ def run_instance(ec2_conn, user_provided_data, image_id,
     return rs
 
 def _compose_user_data(user_provided_data):
-    # Remove post_start_script_url if empty
-    if 'post_start_script_url' in user_provided_data and user_provided_data['post_start_script_url'] == '':
-        del user_provided_data['post_start_script_url']
-    # Convert user_provided_data into the YAML format
-    ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() \
-        if key != 'kp_material'])
+    form_data = {}
+    # Do not include the following fields in the user data but do include
+    # any 'advanced startup fields' that might be added in the future
+    excluded_fields = ['sg_name', 'image_id', 'instance_id', 'kp_name', 'cloud', 'cloud_type',
+        'public_dns', 'cloud_name', 'cidr_range', 'kp_material']
+    for key, value in user_provided_data.iteritems():
+        if key not in excluded_fields:
+            form_data[key] = value
+    # If post_start_script_url is empty, do not include it in the user data
+    if 'post_start_script_url' in form_data and form_data['post_start_script_url'] == '':
+        del form_data['post_start_script_url']
+    # Convert form_data into the YAML format
+    ud = "\n".join(['%s: %s' % (key, value) for key, value in form_data.iteritems()])
     # Also include connection info about the selected cloud
     ci = _get_cloud_info(user_provided_data['cloud'], as_str=True)
     return ud + "\n" + ci
@@ -301,13 +308,17 @@ def _compose_user_data(user_provided_data):
 def _get_cloud_info(cloud, as_str=False):
     ci = {}
     ci['cloud_type'] = cloud.cloud_type
-    ci['bucket_default'] = cloud.bucket_default if cloud.bucket_default != '' else None
+    # bucket_default must not be included if it's blank - it conflicts with CloudMan's ec2autorun.py
+    if cloud.bucket_default != '':
+        ci['bucket_default'] = cloud.bucket_default
     ci['region_name'] = cloud.region_name
     ci['region_endpoint'] = cloud.region_endpoint
     ci['is_secure'] = cloud.is_secure
     ci['ec2_port'] = cloud.ec2_port if cloud.ec2_port != '' else None
     ci['ec2_conn_path'] = cloud.ec2_conn_path
-    ci['cidr_range'] = cloud.cidr_range
+    # Include cidr_range only if not empty
+    if cloud.cidr_range != '':
+        ci['cidr_range'] = cloud.cidr_range
     ci['s3_host'] = cloud.s3_host
     ci['s3_port'] = cloud.s3_port if cloud.s3_port != '' else None
     ci['s3_conn_path'] = cloud.s3_conn_path

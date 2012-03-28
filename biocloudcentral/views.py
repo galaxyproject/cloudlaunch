@@ -160,15 +160,7 @@ def userdata(request):
     response = HttpResponse(mimetype='text/plain')
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
         **ec2data)
-    # Do not include the following fields in the downloadable user data but do
-    # include any advanced startup fields that might be added in the future
-    form_data = {}
-    extra_fields = ['sg_name', 'image_id', 'instance_id', 'kp_name', 'public_dns', 'cloud_name',
-        'cidr_range', 'kp_material']
-    for key, value in ec2data.iteritems():
-        if key not in extra_fields:
-            form_data[key] = value
-    ud = _compose_user_data(form_data)
+    ud = _compose_user_data(ec2data)
     response.write(ud)
     return response
     
