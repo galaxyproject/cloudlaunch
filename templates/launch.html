@@ -67,34 +67,40 @@
 <form action="/launch" method="post">{% csrf_token %}
   <table>
   {% for field in form %}
-    <tr>
-      <td><div class="label">{{ field.label_tag }}</div></td>
-      <td>{{ field }}</td>
-      <td> {% for error in field.errors %}
-             <div class="error">{{ error }}</div>
-           {% endfor %}
-      </td>
-      <td><div class="help">
-          {% autoescape off %}
-          {{ field.help_text }}
-          {% endautoescape %}
-      </div></td>
-    </tr>
-  {% endfor %}
-    {# Add the initially hidden advanced startup options #}
-    <tr id="advanced_startup_options" style="display:none">
-        <td><div class="label">Post-start script</div></td>
-          <td>Not Yet Implemented</td>
+    {% if field.field.required %}
+        <tr>
+          <td><div class="label">{{ field.label_tag }}</div></td>
+          <td>{{ field }}</td>
           <td> {% for error in field.errors %}
                  <div class="error">{{ error }}</div>
                {% endfor %}
           </td>
           <td><div class="help">
               {% autoescape off %}
-              help text
+              {{ field.help_text }}
               {% endautoescape %}
           </div></td>
-    </tr>
+        </tr>
+    {% endif %}
+  {% endfor %}
+    {# Add the not required fields as the advanced startup options #}
+    {% for field in form %}
+      {% if not field.field.required %}
+        <tr id="advanced_startup_options" style="display:none">
+              <td><div class="label">{{ field.label_tag }}</div></td>
+              <td>{{ field }}</td>
+              <td> {% for error in field.errors %}
+                     <div class="error">{{ error }}</div>
+                   {% endfor %}
+              </td>
+              <td><div class="help">
+                  {% autoescape off %}
+                  {{ field.help_text }}
+                  {% endautoescape %}
+              </div></td>
+        </tr>
+      {% endif %}
+    {% endfor %}
   </table>
   <div id="toggle_advanced_startup_options_cont" class='form-row'>
       <a id='toggle_advanced_startup_options' href="#">

@@ -50,6 +50,7 @@ class CloudManForm(forms.Form):
     """Details needed to boot a setup and boot a CloudMan instance.
     """
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
+    ud_url = "http://wiki.g2.bx.psu.edu/Admin/Cloud/UserData"
     target = "target='_blank'"
     textbox_size = "input_xlarge"
     cluster_name = forms.CharField(required=True,
@@ -61,7 +62,7 @@ class CloudManForm(forms.Form):
                                help_text="Your choice of password, for the CloudMan " \
                                "web interface and accessing the Amazon instance via ssh or FreeNX.")
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
-                                   help_text="Choose from the available clouds. Note that the credentials "\
+                                   help_text="Choose from the available clouds. The credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
                                    widget=forms.Select(attrs={"class": textbox_size, 
                                    "onChange": "get_instance_types(this.options[this.selectedIndex].value)"}))
@@ -76,8 +77,14 @@ class CloudManForm(forms.Form):
                                  "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."\
                                  .format(key_url, target))
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
-                            help_text="Instance type to start.",
+                            help_text="Type (ie, virtual hardware configuration) of the instance to start.",
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    post_start_script_url = forms.CharField(required=False,
+                              label="Post-start script",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="Post-start script URL. See <a href='{0}' {1} tabindex='-1'>"
+                              "CloudMan's wiki</a> for a detailed description of this option."\
+                              .format(ud_url, target))
 
 def launch(request):
     """Configure and launch CloudBioLinux and CloudMan servers.

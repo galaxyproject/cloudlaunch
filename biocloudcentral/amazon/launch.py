@@ -287,6 +287,10 @@ def run_instance(ec2_conn, user_provided_data, image_id,
     return rs
 
 def _compose_user_data(user_provided_data):
+    # Remove post_start_script_url if empty
+    if 'post_start_script_url' in user_provided_data and user_provided_data['post_start_script_url'] == '':
+        del user_provided_data['post_start_script_url']
+    # Convert user_provided_data into the YAML format
     ud = "\n".join(['%s: %s' % (key, value) for key, value in user_provided_data.iteritems() \
         if key != 'kp_material'])
     # Also include connection info about the selected cloud
