@@ -14,17 +14,10 @@ from biocloudcentral import models
 from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
                                            create_key_pair, run_instance,
-                                           _get_cloud_info)
+                                           _compose_user_data)
 
 log = logging.getLogger(__name__)
 
-# Keep user data file template here so no indentation in the file is introduced at print time
-UD = """cluster_name: {cluster_name}
-password: {password}
-freenxpass: {password}
-access_key: {access_key}
-secret_key: {secret_key}
-"""
 # ## Landing page with redirects
 
 def home(request):
@@ -166,9 +159,16 @@ def userdata(request):
     response = HttpResponse(mimetype='text/plain')
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
         **ec2data)
-    ud1 = UD.format(**ec2data)
-    ud2 = _get_cloud_info(ec2data['cloud'], as_str=True)
-    response.write(ud1 + ud2)
+    # Do not include the following fields in the downloadable user data but do
+    # include any advanced startup fields that might be added in the future
+    form_data = {}
+    extra_fields = ['sg_name', 'image_id', 'instance_id', 'kp_name', 'public_dns', 'cloud_name',
+        'cidr_range', 'kp_material']
+    for key, value in ec2data.iteritems():
+        if key not in extra_fields:
+            form_data[key] = value
+    ud = _compose_user_data(form_data)
+    response.write(ud)
     return response
     
 def keypair(request):
