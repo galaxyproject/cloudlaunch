@@ -1,4 +1,4 @@
-"""Setup and launch Amazon web service instances.
+"""Setup and launch web service instances.
 """
 import logging
 import time
@@ -260,6 +260,7 @@ def run_instance(ec2_conn, user_provided_data, image_id,
         else return None.
     """
     rs = None
+    return rs
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']

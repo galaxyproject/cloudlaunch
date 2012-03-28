@@ -53,7 +53,7 @@ class CloudManForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput(render_value=False,
                                                           attrs={"class": "input_xlarge"}),
                                help_text="Your choice of password, for the CloudMan " \
-                               "web interface and accessing the Amazon instance via ssh or FreeNX.")
+                               "web interface and accessing the instance via ssh or FreeNX.")
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
                                    help_text="Choose from the available clouds. The credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
@@ -108,8 +108,9 @@ def launch(request):
                 if runinstance(request):
                     return redirect("/monitor")
                 else:
-                    form.non_field_errors = "A problem starting EC2 instance. " \
-                                            "Check AWS console."
+                    form.non_field_errors = "A problem starting your instance. " \
+                                            "Check the {0} cloud's console."\
+                                            .format(form.cleaned_data['cloud'].name)
             else:
                 form.non_field_errors = ec2_error
     else:
