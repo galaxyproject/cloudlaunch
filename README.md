@@ -16,13 +16,15 @@ build a local virtualenv and install the dependencies:
     $ pip install -r requirements.txt
 
 Next, create a PostgreSQL database (remember to change the port, username, and password
-as well as to match those to what you put into your [biocloudcentral/settings.py][6])
-and apply the database migrations:
+as well as to match those to what you put into your [biocloudcentral/settings.py][6]),
+apply the database migrations, and, optionally, preload your database with the AWS
+information:
 
     $ sudo su postgres -c "psql --port #### -c \"CREATE ROLE afgane LOGIN CREATEDB PASSWORD 'password'\""
     $ createdb --username afgane --port #### biocloudcentral
     $ python biocloudcentral/manage.py syncdb
     $ python biocloudcentral/manage.py migrate biocloudcentral
+    $ python biocloudcentral/manage.py loaddata biocloudcentral/aws_db_data.json
 
 Finally, start the web server:
 
