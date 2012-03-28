@@ -75,7 +75,7 @@ class CloudManForm(forms.Form):
     post_start_script_url = forms.CharField(required=False,
                               label="Post-start script",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
-                              help_text="Post-start script URL. See <a href='{0}' {1} tabindex='-1'>"
+                              help_text="A URL to the post-start script. See <a href='{0}' {1} tabindex='-1'>"
                               "CloudMan's wiki</a> for a detailed description of this option."\
                               .format(ud_url, target))
 
