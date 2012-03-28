@@ -57,7 +57,7 @@ Congratulations, your scalable analysis platform on the
      <td><span id="ttp">&nbsp;</span></td>
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
-     <td><span id="cloud_url">
+     <td><span id="cloud_url">Not available
             <a href="http://{{ request.session.ec2data.public_dns }}/cloud"
                target="_blank">{{ request.session.ec2data.public_dns }}</a></span>
      </td>
@@ -94,5 +94,9 @@ Congratulations, your scalable analysis platform on the
      </td>
  </tr>
 </table>
- <a class="button" href="{% url ud %}">Download user-data</a>
-    enabling you to re-start this cluster later, directly from the chosen cloud's web console.
+<div class="note">
+    <a class="button" href="{% url ud %}">Download user-data</a>
+    enabling you to <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
+    re-start this platform</a> later, directly from the {{ request.session.ec2data.cloud_name }}
+    cloud's web console or via its API.
+</div>

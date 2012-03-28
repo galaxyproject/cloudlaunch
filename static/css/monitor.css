@@ -18,6 +18,12 @@ div.info {
     margin-top: -25px;
 }
 
+div.note {
+    padding: 1px;
+    width: 400px;
+    margin-left: 15px;
+}
+
 a {
     color: #933;
 }
@@ -30,7 +36,6 @@ a.button {
  display: inline-block;
  font-weight: bold;
  line-height: 25px;
- margin-left: 15px;
  text-decoration: none;
  padding: 0 5px;
 }
