@@ -8,8 +8,8 @@
   <title>BioCloudCentral</title>
   <script>
     var csrf_token;
-    function get_instance_types(cloud_id) {
-        $.post("{% url inst_types %}",
+    function get_dynamic_fields(cloud_id) {
+        $.post("{% url dynamic_fields %}",
             {'cloud_id': cloud_id,
              csrfmiddlewaretoken: csrf_token},
             function(data) {
@@ -25,6 +25,26 @@
                     $('#id_instance_type').attr('disabled', 'disabled');
                     $('#id_instance_type').html("<option>Choose cloud type first</option>");
                 }
+                if (data.image_ids.length > 0) {
+                    var ids = '';
+                    for (var i=0; i<data.image_ids.length; i++) {
+                        // Ensure the default image is initially selected
+                        // The assumption here is that the default image is marked
+                        // as having '*' character in the description field (this
+                        // char is automatically added in views.py->dynamicfields)
+                        var selected = '';
+                        if (data.image_ids[i][1].indexOf('*') > -1) {
+                            selected = 'selected="selected"';
+                        }
+                        ids += '<option value="' + data.image_ids[i][0] + '" ' + selected + '>'
+                            + data.image_ids[i][1] + "</option>";
+                    }
+                    $('#id_image_id').html(ids);
+                    $('#id_image_id').removeAttr('disabled');
+                } else {
+                    $('#id_image_id').attr('disabled', 'disabled');
+                    $('#id_image_id').html("<option>Choose cloud type first</option>");
+                }
             });
     }
     $(document).ready(function() {
@@ -34,15 +54,15 @@
         // Get instance types for the selected cloud on page load
         // This also keeps the instance types selected after a submission
         // of the form with errors
-        get_instance_types($("#id_cloud option:selected").val());
+        get_dynamic_fields($("#id_cloud option:selected").val());
         
         // Toggle advanced startup options
         $('#toggle_advanced_startup_options').click(function(){
-            if ($('#advanced_startup_options').is(":visible")){
-                $('#advanced_startup_options').hide();
+            if ($('.advanced_startup_options').is(":visible")){
+                $('.advanced_startup_options').hide();
                 $('#toggle_advanced_startup_options').text('Show advanced startup options');
             }else{
-                $('#advanced_startup_options').show();
+                $('.advanced_startup_options').show();
                 $('#toggle_advanced_startup_options').text("Hide advanced options");
             }
         });
@@ -86,7 +106,7 @@
     {# Add the not required fields as the advanced startup options #}
     {% for field in form %}
       {% if not field.field.required %}
-        <tr id="advanced_startup_options" style="display:none">
+        <tr class="advanced_startup_options" style="display:none">
               <td><div class="label">{{ field.label_tag }}</div></td>
               <td>{{ field }}</td>
               <td> {% for error in field.errors %}

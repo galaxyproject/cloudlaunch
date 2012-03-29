@@ -58,7 +58,7 @@ class CloudManForm(forms.Form):
                                    help_text="Choose from the available clouds. The credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
                                    widget=forms.Select(attrs={"class": textbox_size, 
-                                   "onChange": "get_instance_types(this.options[this.selectedIndex].value)"}))
+                                   "onChange": "get_dynamic_fields(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
                                  help_text="Your Access Key ID. For the Amazon cloud, available from "
@@ -78,7 +78,12 @@ class CloudManForm(forms.Form):
                               help_text="A URL to the post-start script. See <a href='{0}' {1} tabindex='-1'>"
                               "CloudMan's wiki</a> for a detailed description of this option."\
                               .format(ud_url, target))
-
+    image_id = DynamicChoiceField((("", "Choose cloud type first"),),
+                            help_text="The machine image to start (* indicates the default machine image).",
+                            label="Image ID",
+                            required=False,
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    
 def launch(request):
     """Configure and launch CloudBioLinux and CloudMan servers.
     """
@@ -133,11 +138,14 @@ def runinstance(request):
     # Create EC2 connection with provided creds
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
-    try:
-        image = models.Image.objects.get(cloud=form['cloud'], default=True)
-    except models.Image.DoesNotExist:
-        log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
-        return False
+    if form['image_id']:
+        image = models.Image.objects.get(pk=form['image_id'])
+    else:
+        try:
+            image = models.Image.objects.get(cloud=form['cloud'], default=True)
+        except models.Image.DoesNotExist:
+            log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
+            return False
     rs = run_instance(ec2_conn=ec2_conn,
                       user_provided_data=form,
                       image_id=image.image_id,
@@ -178,17 +186,26 @@ def instancestate(request):
     state = instance_state(ec2_conn, form["instance_id"])
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
-def instancetypes(request):
+def dynamicfields(request):
     if request.is_ajax():
         if request.method == 'POST':
             cloud_id = request.POST.get('cloud_id', '')
-            instance_types = []
+            instance_types, image_ids = [], []
             if cloud_id != '':
+                # Get instance types for the given cloud
                 its = models.InstanceType.objects.filter(cloud=cloud_id)
                 for it in its:
                     instance_types.append((it.tech_name, \
                         "{0} ({1})".format(it.pretty_name, it.description)))
-            state = {'instance_types': instance_types}
+                # Get Image IDs for the given cloud
+                iids = models.Image.objects.filter(cloud=cloud_id)
+                for iid in iids:
+                    image_ids.append((iid.pk, \
+                        "{0} ({1}){default}".format(iid.image_id, iid.description,
+                        default="*" if iid.default is True else '')))
+                
+            state = {'instance_types': instance_types,
+                     'image_ids': image_ids}
         else:
             log.error("Not a POST request")
     else:
