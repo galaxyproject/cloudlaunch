@@ -349,7 +349,8 @@ def _find_placement(ec2_conn, instance_type, cloud_type):
 def instance_state(ec2_conn, instance_id):
     rs = None
     state = {'instance_state': "",
-             'public_dns': ""}
+             'public_dns': "",
+             'placement': ""}
     try:
         rs = ec2_conn.get_all_instances([instance_id])
         if rs is not None:
@@ -360,6 +361,7 @@ def instance_state(ec2_conn, instance_id):
                 if _checkURL(cm_url) is True:
                     state['public_dns'] = public_dns
                     state['instance_state'] = inst_state
+                    state['placement'] = rs[0].instances[0].placement
                 else:
                     # Wait until the URL is accessible to display the IP
                     state['instance_state'] = 'booting'

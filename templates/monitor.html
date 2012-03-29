@@ -18,6 +18,7 @@
                 } else {
                   $('#ssh_public_dns').html(data.public_dns);
                   $('#nx_public_dns').html(data.public_dns);
+                  $('#placement').html(data.placement);
                   $('#cloud_url').html('<a href="http://' +
                      data.public_dns + '/cloud" target="_blank">' +
                      data.public_dns + '</a>');
@@ -92,6 +93,9 @@ Congratulations, your scalable analysis platform on the
             {{ request.session.ec2data.kp_name }}
          {% endifnotequal %}
      </td>
+ </tr>
+ <tr><td>Placement (zone)</td>
+     <td id="placement">Not available</td>
  </tr>
 </table>
 <div class="note">
