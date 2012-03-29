@@ -61,6 +61,7 @@ class Image(models.Model):
     updated = models.DateTimeField(auto_now=True)
     cloud = models.ForeignKey(Cloud)
     image_id = models.CharField(max_length=30)
+    description = models.CharField(max_length=255)
     default = models.BooleanField(help_text="Use as the default image for the selected cloud")
     kernel_id = models.CharField(max_length=30, blank=True, null=True)
     ramdisk_id = models.CharField(max_length=30, blank=True, null=True)
@@ -83,4 +84,21 @@ class Image(models.Model):
     
     class Meta:
         ordering = ['cloud']
+    
+
+class DataBucket(models.Model):
+    #automatically add timestamps when object is created 
+    added = models.DateTimeField(auto_now_add=True) 
+    #automatically add timestamps when object is updated
+    updated = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=63) # S3 bucket names should be between 3 and 63 characters long
+    public = models.BooleanField(default=True)
+    description = models.CharField(max_length=255)
+    cloud = models.ForeignKey(Cloud) # In the future, it may be possible to use other object stores as well
+    
+    def __unicode__(self):
+        return u'{0}'.format(self.name)
+        
+    class Meta:
+        ordering = ['cloud', 'name']
     
