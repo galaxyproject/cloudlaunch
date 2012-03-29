@@ -17,7 +17,7 @@ DATABASES = {
         'NAME': 'biocloudcentral',       # Or path to database file if using sqlite3.
         'USER': 'afgane',                # Not used with sqlite3.
         'PASSWORD': 'fu5yOj2sn',         # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'HOST': 'localhost',             # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '5910',                  # Set to empty string for default. Not used with sqlite3.
     }
 }
