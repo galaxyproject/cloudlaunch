@@ -47,6 +47,34 @@
                 }
             });
     }
+    function get_placements() {
+        $('#id_placement').attr('disabled', 'disabled');
+        $('#id_placement').html("<option>Fetching data...</option>");
+        var jqxhr = $.post("{% url get_placements %}",
+            {'cloud_id': $('#id_cloud').val(),
+             'a_key': $('#id_access_key').val(),
+             's_key': $('#id_secret_key').val(),
+             'instance_type': $('#id_instance_type').val(),
+             csrfmiddlewaretoken: csrf_token})
+            .success(function(data) {
+                if (data.placements.length > 0) {
+                    var placements = '';
+                    for (var i=0; i<data.placements.length; i++) {
+                        placements += '<option value="' + data.placements[i] + '">'
+                            + data.placements[i] + "</option>";
+                    }
+                    $('#id_placement').html(placements);
+                    $('#id_placement').removeAttr('disabled');
+                } else {
+                    $('#id_placement').attr('disabled', 'disabled');
+                    $('#id_placement').html("<option>Click refresh to update</option>");
+                }
+            })
+            .error(function(){
+                $('#id_placement').attr('disabled', 'disabled');
+                $('#id_placement').html("<option>Error during the refresh; check fields</option>");
+            });
+    }
     $(document).ready(function() {
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
@@ -108,7 +136,16 @@
     {% for field in form %}
       {% if not field.field.required %}
         <tr class="advanced_startup_options" style="display:none">
-              <td><div class="label">{{ field.label_tag }}</div></td>
+              <td>
+                  <div class="label">
+                      {{ field.label_tag }}
+                      <span class="refresh_cont">
+                          {% if field.label == 'Placement' %}
+                            <a class="refresh_link" href="#" onClick="get_placements()"></a>
+                          {% endif %}
+                      </span>
+                  </div>
+               </td>
               <td>{{ field }}</td>
               <td> {% for error in field.errors %}
                      <div class="error">{{ error }}</div>

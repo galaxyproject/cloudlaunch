@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     url(r'^kp$', 'biocloudcentral.views.keypair', name='kp'),
     url(r'^state$', 'biocloudcentral.views.instancestate', name='inst_state'),
     url(r'^dynamic-fields$', 'biocloudcentral.views.dynamicfields', name='dynamic_fields'),
+    url(r'^get-placements$', 'biocloudcentral.views.get_placements', name='get_placements'),
     # url(r'^biocloudcentral/', include('biocloudcentral.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:

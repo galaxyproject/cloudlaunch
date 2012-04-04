@@ -256,7 +256,7 @@ def create_key_pair(ec2_conn, key_name='cloudman_key_pair'):
 
 def run_instance(ec2_conn, user_provided_data, image_id,
                  kernel_id=None, ramdisk_id=None, key_name='cloudman_key_pair',
-                 security_groups=['CloudMan']):
+                 security_groups=['CloudMan'], placement=''):
     """ Start an instance. If instance start was OK, return the ResultSet object
         else return None.
     """
@@ -264,7 +264,8 @@ def run_instance(ec2_conn, user_provided_data, image_id,
     instance_type = user_provided_data['instance_type']
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
-    placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud'].cloud_type)
+    if placement == '':
+        placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud'].cloud_type)
     # Compose user data
     ud = _compose_user_data(user_provided_data)
     try:
@@ -292,7 +293,7 @@ def _compose_user_data(user_provided_data):
     # Do not include the following fields in the user data but do include
     # any 'advanced startup fields' that might be added in the future
     excluded_fields = ['sg_name', 'image_id', 'instance_id', 'kp_name', 'cloud', 'cloud_type',
-        'public_dns', 'cloud_name', 'cidr_range', 'kp_material']
+        'public_dns', 'cloud_name', 'cidr_range', 'kp_material', 'placement']
     for key, value in user_provided_data.iteritems():
         if key not in excluded_fields:
             form_data[key] = value
@@ -326,25 +327,38 @@ def _get_cloud_info(cloud, as_str=False):
         ci = "\n".join(['%s: %s' % (key, value) for key, value in ci.iteritems()])
     return ci
 
-def _find_placement(ec2_conn, instance_type, cloud_type):
+def _find_placement(ec2_conn, instance_type, cloud_type, get_all=False):
     """Find a region zone that supports our requested instance type.
+    
+    :type get_all: bool
+    :param get_all: If True, return all placements/zones where the given
+                    instance type is available. Else, return a single zone
+                    where the instance type is available.
 
     We need to check spot prices in the potential availability zones
     for support before deciding on a region:
 
     http://blog.piefox.com/2011/07/ec2-availability-zones-and-instance.html
     """
-    base = ec2_conn.region.name
+    zones = []
     if cloud_type == 'ec2':
+        base = ec2_conn.region.name
         yesterday = datetime.datetime.now() - datetime.timedelta(1)
         for loc_choice in ["b", "a", "c", "d"]:
             cur_loc = "{base}{ext}".format(base=base, ext=loc_choice)
             if len(ec2_conn.get_spot_price_history(instance_type=instance_type,
                                                    end_time=yesterday.isoformat(),
                                                    availability_zone=cur_loc)) > 0:
-                return cur_loc
+                if get_all is True:
+                    zones.append(cur_loc)
+                else:
+                    return cur_loc
+    else:
+        for zone in ec2_conn.get_all_zones():
+            zones.append(zone.name)
+    if len(zones) == 0:
         log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
-    return base
+    return zones
 
 def instance_state(ec2_conn, instance_id):
     rs = None

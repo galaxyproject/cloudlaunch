@@ -14,7 +14,7 @@ from biocloudcentral import models
 from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
                                            create_key_pair, run_instance,
-                                           _compose_user_data)
+                                           _compose_user_data, _find_placement)
 
 log = logging.getLogger(__name__)
 
@@ -71,6 +71,11 @@ class CloudManForm(forms.Form):
                                  .format(key_url, target))
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="Type (ie, virtual hardware configuration) of the instance to start.",
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    placement = DynamicChoiceField((("", "Fill above fields & click refresh to fetch"),),
+                            help_text="A specific placement zone where your instance will run. This "
+                            "requires you have filled out the previous 4 fields!",
+                            required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     post_start_script_url = forms.CharField(required=False,
                               label="Post-start script",
@@ -152,7 +157,8 @@ def runinstance(request):
                       kernel_id=image.kernel_id if image.kernel_id != '' else None,
                       ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
                       key_name=form["kp_name"],
-                      security_groups=[form["sg_name"]])
+                      security_groups=[form["sg_name"]],
+                      placement=form['placement'])
     if rs is not None:
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
@@ -203,7 +209,6 @@ def dynamicfields(request):
                     image_ids.append((iid.pk, \
                         "{0} ({1}){default}".format(iid.image_id, iid.description,
                         default="*" if iid.default is True else '')))
-                
             state = {'instance_types': instance_types,
                      'image_ids': image_ids}
         else:
@@ -211,4 +216,23 @@ def dynamicfields(request):
     else:
         log.error("No XHR")
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
-    
+
+def get_placements(request):
+    if request.is_ajax():
+        if request.method == 'POST':
+            cloud_id = request.POST.get('cloud_id', '')
+            a_key = request.POST.get('a_key', '')
+            s_key = request.POST.get('s_key', '')
+            inst_type = request.POST.get('instance_type', '')
+            placements = []
+            if cloud_id != '' and a_key != '' and s_key != '' and inst_type != '':
+                # Needed to get the cloud connection
+                cloud = models.Cloud.objects.get(pk=cloud_id)
+                ec2_conn = connect_ec2(a_key, s_key, cloud)
+                placements = _find_placement(ec2_conn, inst_type, cloud.cloud_type, get_all=True)
+                state = {'placements': placements}
+        else:
+            log.error("Not a POST request")
+    else:
+        log.error("No XHR")
+    return HttpResponse(simplejson.dumps(state), mimetype="application/json")

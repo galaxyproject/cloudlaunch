@@ -66,3 +66,12 @@ td {
 div.submit {
     padding: 0 0 25px 25px;
 }
+.refresh_cont {
+    float: right;
+}
+.refresh_link {
+    background-image: url("../images/refresh.png");
+    background-repeat: no-repeat;
+    background-position: right center;
+    padding-right: 20px;
+}
