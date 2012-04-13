@@ -2,9 +2,11 @@
   <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
   <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
   <link rel="stylesheet" href="{{ STATIC_URL }}css/monitor.css" />
+  <link rel="stylesheet" href="{{ STATIC_URL }}css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
   <script src="{{ STATIC_URL }}js/jquery.js"></script>
   <script src="{{ STATIC_URL }}js/jquery.stopwatch.js"></script>
   <script src="{{ STATIC_URL }}js/jintervals.js"></script>
+  <script src="{{ STATIC_URL }}js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
   <script>
     function update_instance_state() {
         $.get("{% url inst_state %}",
@@ -23,12 +25,18 @@
                      data.public_dns + '/cloud" target="_blank">' +
                      data.public_dns + '</a>');
                   $('#ttp').stopwatch().stopwatch('stop');
+                  $('#video_link_cont').html("");
                 }
             });
     }
     $(document).ready(function() {
         update_instance_state();
         $('#ttp').stopwatch({format: '{Minutes} and {seconds}'}).stopwatch('start');
+        $("a[rel^='prettyPhoto']").prettyPhoto({
+            default_width: 640,
+            default_height: 480,
+            social_tools: false,
+        });
     });
   </script>
   <title>BioCloudCentral</title>
@@ -98,6 +106,12 @@ Congratulations, your scalable analysis platform on the
      <td id="placement">Not available</td>
  </tr>
 </table>
+<span id="video_link_cont">
+    What is happening now?
+    <a href="http://youtu.be/lFm9iO3EMSc" rel="prettyPhoto" title="">Watch an example video</a>
+    for the non-cloud case.
+</span>
+
 <div class="note">
     <a class="button" href="{% url ud %}">Download user-data</a>
     enabling you to <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">

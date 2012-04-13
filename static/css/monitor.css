@@ -1,3 +1,6 @@
+body {
+    color: #333;
+}
 /* Header */
 div.banner {
     padding: 10px 10px 35px 25px;
@@ -60,6 +63,7 @@ table.awstable {
   border-collapse: collapse;
   border: 1px solid #333;
   color: #000;
+  float: left;
 }
 
 .awstable th, .awstable td {
@@ -67,4 +71,8 @@ table.awstable {
   padding: 0.5em;
   text-align: left;
   color: #2C3143;
+}
+#video_link_cont {
+    float: left;
+    padding: 48px 0 0 20px;
 }
