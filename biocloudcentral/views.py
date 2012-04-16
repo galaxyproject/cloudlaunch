@@ -83,6 +83,12 @@ class CloudManForm(forms.Form):
                               help_text="A URL to the post-start script. See <a href='{0}' {1} tabindex='-1'>"
                               "CloudMan's wiki</a> for a detailed description of this option."\
                               .format(ud_url, target))
+    worker_post_start_script_url = forms.CharField(required=False,
+                              label="Worker post-start script",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="A URL to the post-start script for worker nodes. See "
+                              "<a href='{0}' {1} tabindex='-1'>CloudMan's wiki</a> for the description."\
+                              .format(ud_url, target))
     image_id = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="The machine image to start (* indicates the default machine image).",
                             label="Image ID",

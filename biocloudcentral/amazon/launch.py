@@ -297,9 +297,11 @@ def _compose_user_data(user_provided_data):
     for key, value in user_provided_data.iteritems():
         if key not in excluded_fields:
             form_data[key] = value
-    # If post_start_script_url is empty, do not include it in the user data
-    if 'post_start_script_url' in form_data and form_data['post_start_script_url'] == '':
-        del form_data['post_start_script_url']
+    # If post start scripts are empty, do not include them in the user data
+    psss = ['post_start_script_url', 'worker_post_start_script_url']
+    for pss in psss:
+        if pss in form_data and form_data[pss] == '':
+            del form_data[pss]
     # Convert form_data into the YAML format
     ud = "\n".join(['%s: %s' % (key, value) for key, value in form_data.iteritems()])
     # Also include connection info about the selected cloud
