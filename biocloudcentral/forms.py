@@ -1,0 +1,74 @@
+from django import forms
+from biocloudcentral import models
+
+class DynamicChoiceField(forms.ChoiceField):
+    """ Override the ChoiceField to allow AJAX-populated choices in the 
+        part of the form.
+    """
+    def valid_value(self, value):
+        # TODO: Add some validation code to ensure passed data is valid.
+        # Return True if value is valid else return False
+        return True
+    
+
+class CloudManForm(forms.Form):
+    """Details needed to boot a setup and boot a CloudMan instance.
+    """
+    key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
+    ud_url = "http://wiki.g2.bx.psu.edu/Admin/Cloud/UserData"
+    target = "target='_blank'"
+    textbox_size = "input_xlarge"
+    cluster_name = forms.CharField(required=True,
+                                   help_text="Name of your cluster used for identification. "
+                                   "This can be any name you choose.",
+                                   widget=forms.TextInput(attrs={"class": textbox_size}))
+    password = forms.CharField(widget=forms.PasswordInput(render_value=False,
+                                                          attrs={"class": "input_xlarge"}),
+                               help_text="Your choice of password, for the CloudMan " \
+                               "web interface and accessing the instance via ssh or FreeNX.")
+    cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
+                                   help_text="Choose from the available clouds. The credentials "\
+                                   "you provide below must match (ie, exist on) the chosen cloud.",
+                                   widget=forms.Select(attrs={"class": textbox_size, 
+                                   "onChange": "get_dynamic_fields(this.options[this.selectedIndex].value)"}))
+    access_key = forms.CharField(required=True,
+                                 widget=forms.TextInput(attrs={"class": textbox_size}),
+                                 help_text="Your Access Key ID. For the Amazon cloud, available from "
+                                 "the <a href='{0}' {1} tabindex='-1'>security credentials page</a>.".format(
+                                     key_url, target))
+    secret_key = forms.CharField(required=True,
+                                 widget=forms.TextInput(attrs={"class": textbox_size}),
+                                 help_text="Your Secret Access Key. For the Amazon cloud, also available "
+                                 "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."\
+                                 .format(key_url, target))
+    instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
+                            help_text="Type (ie, virtual hardware configuration) of the instance to start.",
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    placement = DynamicChoiceField((("", "Fill above fields & click refresh to fetch"),),
+                            help_text="A specific placement zone where your instance will run. This "
+                            "requires you have filled out the previous 4 fields!",
+                            required=False,
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    bucket_default = forms.CharField(required=False,
+                              label="Default bucket",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="The default bucket to use. See <a href='{0}' {1} tabindex='-1'>"
+                              "CloudMan's wiki</a> for a detailed description of this option."\
+                              .format(ud_url, target))
+    post_start_script_url = forms.CharField(required=False,
+                              label="Post-start script",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="A URL to the post-start script. See <a href='{0}' {1} tabindex='-1'>"
+                              "CloudMan's wiki</a> for a detailed description of this option."\
+                              .format(ud_url, target))
+    worker_post_start_script_url = forms.CharField(required=False,
+                              label="Worker post-start script",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="A URL to the post-start script for worker nodes. See "
+                              "<a href='{0}' {1} tabindex='-1'>CloudMan's wiki</a> for the description."\
+                              .format(ud_url, target))
+    image_id = DynamicChoiceField((("", "Choose cloud type first"),),
+                            help_text="The machine image to start (* indicates the default machine image).",
+                            label="Image ID",
+                            required=False,
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
