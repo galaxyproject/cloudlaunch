@@ -77,6 +77,12 @@ class CloudManForm(forms.Form):
                             "requires you have filled out the previous 4 fields!",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    bucket_default = forms.CharField(required=False,
+                              label="Default bucket",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="The default bucket to use. See <a href='{0}' {1} tabindex='-1'>"
+                              "CloudMan's wiki</a> for a detailed description of this option."\
+                              .format(ud_url, target))
     post_start_script_url = forms.CharField(required=False,
                               label="Post-start script",
                               widget=forms.TextInput(attrs={"class": textbox_size}),

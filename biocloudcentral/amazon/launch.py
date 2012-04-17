@@ -297,11 +297,16 @@ def _compose_user_data(user_provided_data):
     for key, value in user_provided_data.iteritems():
         if key not in excluded_fields:
             form_data[key] = value
-    # If post start scripts are empty, do not include them in the user data
-    psss = ['post_start_script_url', 'worker_post_start_script_url']
+    # If following keys are empty, do not include them in the user data
+    psss = ['post_start_script_url', 'worker_post_start_script_url', 'bucket_default']
     for pss in psss:
         if pss in form_data and form_data[pss] == '':
             del form_data[pss]
+    # Check if bucket_default is defined for the given cloud and include
+    # it if it was not provided by the user in the instance request form
+    # but do so only if it's blank - blank conflicts with CloudMan's ec2autorun.py
+    if 'bucket_default' not in form_data and user_provided_data['cloud'].bucket_default != '':
+        form_data['bucket_default'] = user_provided_data['cloud'].bucket_default
     # Convert form_data into the YAML format
     ud = "\n".join(['%s: %s' % (key, value) for key, value in form_data.iteritems()])
     # Also include connection info about the selected cloud
@@ -311,9 +316,6 @@ def _compose_user_data(user_provided_data):
 def _get_cloud_info(cloud, as_str=False):
     ci = {}
     ci['cloud_type'] = cloud.cloud_type
-    # bucket_default must not be included if it's blank - it conflicts with CloudMan's ec2autorun.py
-    if cloud.bucket_default != '':
-        ci['bucket_default'] = cloud.bucket_default
     ci['region_name'] = cloud.region_name
     ci['region_endpoint'] = cloud.region_endpoint
     ci['is_secure'] = cloud.is_secure
