@@ -103,6 +103,13 @@ def runinstance(request):
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
+        # Add an entry to the Usage table
+        u = models.Usage(cloud_name=form["cloud_name"],
+                         cloud_type=form["cloud_type"],
+                         image_id=image.image_id,
+                         instance_type=form["instance_type"],
+                         user_id=form["access_key"])
+        u.save()
         return True
     else:
         return False

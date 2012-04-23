@@ -102,3 +102,27 @@ class DataBucket(models.Model):
     class Meta:
         ordering = ['cloud', 'name']
     
+
+class Usage(models.Model):
+    """ Keep some usage information - not only beneficial but turns out
+        required data for grants and thus keeping this project going...
+    """
+    #automatically add timestamps when object is created 
+    added = models.DateTimeField(auto_now_add=True) 
+    #automatically add timestamps when object is updated
+    updated = models.DateTimeField(auto_now=True)
+    cloud_name = models.CharField(max_length=100)
+    cloud_type = models.CharField(max_length=30)
+    image_id = models.CharField(max_length=30)
+    instance_type = models.CharField(max_length=100)
+    user_id = models.CharField(max_length=100)
+    
+    def __unicode__(self):
+        return u'{pk} | {add} | {name} | {ctype} | {iid} | {itype} | {user}'\
+            .format(pk=self.pk, add=self.added, name=self.cloud_name, ctype=self.cloud_type,\
+            iid=self.image_id, itype=self.instance_type, user=self.user_id)
+        
+    class Meta:
+        ordering = ['updated', 'cloud_type']
+        verbose_name_plural = 'Usage'
+    
