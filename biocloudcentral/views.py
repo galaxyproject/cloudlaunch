@@ -80,6 +80,7 @@ def runinstance(request):
     """
     form = request.session["ec2data"]
     rs = None
+    instance_type = form['instance_type']
     # Create EC2 connection with provided creds
     ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
@@ -104,12 +105,15 @@ def runinstance(request):
         request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
         # Add an entry to the Usage table
-        u = models.Usage(cloud_name=form["cloud_name"],
-                         cloud_type=form["cloud_type"],
-                         image_id=image.image_id,
-                         instance_type=form["instance_type"],
-                         user_id=form["access_key"])
-        u.save()
+        try:
+            u = models.Usage(cloud_name=form["cloud_name"],
+                             cloud_type=form["cloud_type"],
+                             image_id=image.image_id,
+                             instance_type=instance_type,
+                             user_id=form["access_key"])
+            u.save()
+        except Exception, e:
+            log.debug("Trouble saving Usage data: {0}".format(e))
         return True
     else:
         return False
