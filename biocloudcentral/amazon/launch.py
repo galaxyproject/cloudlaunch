@@ -293,7 +293,7 @@ def _compose_user_data(user_provided_data):
     # Do not include the following fields in the user data but do include
     # any 'advanced startup fields' that might be added in the future
     excluded_fields = ['sg_name', 'image_id', 'instance_id', 'kp_name', 'cloud', 'cloud_type',
-        'public_dns', 'cloud_name', 'cidr_range', 'kp_material', 'placement']
+        'public_dns', 'cidr_range', 'kp_material', 'placement']
     for key, value in user_provided_data.iteritems():
         if key not in excluded_fields:
             form_data[key] = value
