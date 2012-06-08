@@ -28,7 +28,6 @@ def home(request):
         return redirect("https://biocloudcentral.herokuapp.com/launch")
 
 # ## CloudMan launch and configuration entry details
-
 def launch(request):
     """Configure and launch CloudBioLinux and CloudMan servers.
     """

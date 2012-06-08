@@ -67,6 +67,13 @@ class CloudManForm(forms.Form):
                               help_text="A URL to the post-start script for worker nodes. See "
                               "<a href='{0}' {1} tabindex='-1'>CloudMan's wiki</a> for the description."\
                               .format(ud_url, target))
+    share_string = forms.CharField(required=False,
+                              label="Shared cluster string",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="A share string to use for deriving this cluster instance."
+                              "See <a href='https://bitbucket.org/galaxy/cloudman/wiki/SharedInstances'>"
+                              "this page</a> for a list of public shared instances."\
+                              .format(ud_url, target))
     image_id = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="The machine image to start (* indicates the default machine image).",
                             label="Image ID",
