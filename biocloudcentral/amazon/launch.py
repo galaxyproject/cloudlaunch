@@ -297,11 +297,11 @@ def _compose_user_data(user_provided_data):
     for key, value in user_provided_data.iteritems():
         if key not in excluded_fields:
             form_data[key] = value
-    # If following keys are empty, do not include them in the user data
-    psss = ['post_start_script_url', 'worker_post_start_script_url', 'bucket_default']
-    for pss in psss:
-        if pss in form_data and form_data[pss] == '':
-            del form_data[pss]
+    # If the following user data keys are empty, do not include them in the request user data
+    udkeys = ['post_start_script_url', 'worker_post_start_script_url', 'bucket_default', 'share_string']
+    for udkey in udkeys:
+        if udkey in form_data and form_data[udkey] == '':
+            del form_data[udkey]
     # Check if bucket_default is defined for the given cloud and include
     # it if it was not provided by the user in the instance request form
     # but do so only if it's blank - blank conflicts with CloudMan's ec2autorun.py
