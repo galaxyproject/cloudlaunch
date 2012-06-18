@@ -359,7 +359,10 @@ def _find_placement(ec2_conn, instance_type, cloud_type, get_all=False):
                     return cur_loc
     else:
         for zone in ec2_conn.get_all_zones():
-            zones.append(zone.name)
+            if get_all is True:
+                zones.append(zone.name)
+            else:
+                return zone.name
     if len(zones) == 0:
         log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
     return zones
