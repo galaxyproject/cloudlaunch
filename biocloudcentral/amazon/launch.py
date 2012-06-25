@@ -376,7 +376,7 @@ def instance_state(ec2_conn, instance_id):
         rs = ec2_conn.get_all_instances([instance_id])
         if rs is not None:
             inst_state = rs[0].instances[0].update()
-            public_dns = rs[0].instances[0].public_dns_name
+            public_dns = rs[0].instances[0].ip_address #public_dns_name
             if inst_state == 'running':
                 cm_url = "http://{dns}/cloud".format(dns=public_dns)
                 if _checkURL(cm_url) is True:

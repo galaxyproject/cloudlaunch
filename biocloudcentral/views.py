@@ -101,7 +101,7 @@ def runinstance(request):
                       placement=form['placement'])
     if rs is not None:
         request.session['ec2data']['instance_id'] = rs.instances[0].id
-        request.session['ec2data']['public_dns'] = rs.instances[0].public_dns_name
+        request.session['ec2data']['public_dns'] = rs.instances[0].ip_address #public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
         # Add an entry to the Usage table
         try:
