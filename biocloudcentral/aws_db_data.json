@@ -140,15 +140,30 @@
     }
   }, 
   {
+    "pk": 4, 
+    "model": "biocloudcentral.image", 
+    "fields": {
+      "updated": "2012-06-26 07:11:27", 
+      "added": "2012-06-26 07:11:27", 
+      "kernel_id": "", 
+      "default": true, 
+      "ramdisk_id": "", 
+      "image_id": "ami-46d4792f", 
+      "description": "CloudBioLinux and CloudMan Ubuntu 12.04: 27 June 2012", 
+      "cloud": 1
+    }
+  }, 
+  {
     "pk": 5, 
     "model": "biocloudcentral.image", 
     "fields": {
       "updated": "2012-03-26 19:41:27", 
       "added": "2012-03-26 19:41:27", 
       "kernel_id": "", 
-      "default": true, 
+      "default": false, 
       "ramdisk_id": "", 
-      "image_id": "ami-500cd139", 
+      "image_id": "ami-500cd139",
+      "description": "CloudBioLinux and CloudMan Ubuntu 11.10: 5 March 2012",
       "cloud": 1
     }
   }, 
@@ -161,7 +176,8 @@
       "kernel_id": "", 
       "default": false, 
       "ramdisk_id": "", 
-      "image_id": "ami-31bc7758", 
+      "image_id": "ami-da58aab3",
+      "description": "Galaxy CloudMan on Ubuntu 10.04: 22 March 2011",
       "cloud": 1
     }
   }
