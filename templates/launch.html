@@ -65,14 +65,17 @@
                     }
                     $('#id_placement').html(placements);
                     $('#id_placement').removeAttr('disabled');
+                } else if (data.error) {
+                    $('#id_placement').attr('disabled', 'disabled');
+                    $('#id_placement').html("<option>" + data.error + "</option>");
                 } else {
                     $('#id_placement').attr('disabled', 'disabled');
                     $('#id_placement').html("<option>Click refresh to update</option>");
                 }
             })
-            .error(function(){
+            .error(function(data){
                 $('#id_placement').attr('disabled', 'disabled');
-                $('#id_placement').html("<option>Error during the refresh; check fields</option>");
+                $('#id_placement').html("<option>" + data.error + "</option>");
             });
     }
     $(document).ready(function() {

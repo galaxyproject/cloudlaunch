@@ -14,7 +14,7 @@ from biocloudcentral import models
 from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
                                            create_cm_security_group,
                                            create_key_pair, run_instance,
-                                           _compose_user_data, _find_placement)
+                                           _compose_user_data, _find_placements)
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +34,6 @@ def launch(request):
     if request.method == "POST":
         form = forms.CloudManForm(request.POST)
         if form.is_valid():
-            print form.cleaned_data
             ec2_error = None
             try:
                 # Create security group & key pair used when starting an instance
@@ -54,12 +53,14 @@ def launch(request):
                 form.cleaned_data["cloud_type"] = form.cleaned_data['cloud'].cloud_type
                 form.cleaned_data["cloud_name"] = form.cleaned_data['cloud'].name
                 request.session["ec2data"] = form.cleaned_data
-                if runinstance(request):
+                error_msg = runinstance(request)
+                if error_msg is None:
                     return redirect("/monitor")
                 else:
                     form.non_field_errors = "A problem starting your instance. " \
-                                            "Check the {0} cloud's console."\
-                                            .format(form.cleaned_data['cloud'].name)
+                                            "Check the {0} cloud's console: {1}"\
+                                            .format(form.cleaned_data['cloud'].name,
+                                                    error_msg)
             else:
                 form.non_field_errors = ec2_error
     else:
@@ -91,15 +92,16 @@ def runinstance(request):
         except models.Image.DoesNotExist:
             log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
             return False
-    rs = run_instance(ec2_conn=ec2_conn,
-                      user_provided_data=form,
-                      image_id=image.image_id,
-                      kernel_id=image.kernel_id if image.kernel_id != '' else None,
-                      ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
-                      key_name=form["kp_name"],
-                      security_groups=[form["sg_name"]],
-                      placement=form['placement'])
-    if rs is not None:
+    ec2run = run_instance(ec2_conn=ec2_conn,
+                          user_provided_data=form,
+                          image_id=image.image_id,
+                          kernel_id=image.kernel_id if image.kernel_id != '' else None,
+                          ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
+                          key_name=form["kp_name"],
+                          security_groups=[form["sg_name"]],
+                          placement=form['placement'])
+    if ec2run["rs"] is not None:
+        rs = ec2run["rs"]
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_dns'] = rs.instances[0].ip_address #public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
@@ -113,9 +115,7 @@ def runinstance(request):
             u.save()
         except Exception, e:
             log.debug("Trouble saving Usage data: {0}".format(e))
-        return True
-    else:
-        return False
+    return ec2run["error"]
 
 def userdata(request):
     """Provide file download of user-data to re-start an instance.
@@ -167,7 +167,7 @@ def dynamicfields(request):
         log.error("No XHR")
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
-def get_placements(request):
+def _get_placement_inner(request):
     if request.is_ajax():
         if request.method == 'POST':
             cloud_id = request.POST.get('cloud_id', '')
@@ -175,14 +175,29 @@ def get_placements(request):
             s_key = request.POST.get('s_key', '')
             inst_type = request.POST.get('instance_type', '')
             placements = []
-            if cloud_id != '' and a_key != '' and s_key != '' and inst_type != '':
+            if cloud_id != '' and a_key != '' and s_key != '':
                 # Needed to get the cloud connection
                 cloud = models.Cloud.objects.get(pk=cloud_id)
                 ec2_conn = connect_ec2(a_key, s_key, cloud)
-                placements = _find_placement(ec2_conn, inst_type, cloud.cloud_type, get_all=True)
-                state = {'placements': placements}
+                placements = _find_placements(ec2_conn, inst_type)
+                return {'placements': placements}
         else:
             log.error("Not a POST request")
     else:
         log.error("No XHR")
+    return {"error": "Please specify access and secret keys", "placements": []}
+
+def get_placements(request):
+    try:
+        state = _get_placement_inner(request)
+    except Exception, e:
+        log.exception("Problem retrieving availability zones")
+        msg = str(e)
+        if msg.startswith("EC2ResponseError"):
+            msg = msg.split("<Message>")[-1].split("</Message>")[0]
+            # handle standard error cases
+            if msg.startswith("The request signature we calculated does not match"):
+                msg = "Access and secret keys not accepted"
+        state = {"error": msg, "placements": []}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+

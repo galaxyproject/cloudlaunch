@@ -265,9 +265,10 @@ def run_instance(ec2_conn, user_provided_data, image_id,
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
     if placement == '':
-        placement = _find_placement(ec2_conn, instance_type, user_provided_data['cloud'].cloud_type)
+        placement = _find_placements(ec2_conn, instance_type)[0]
     # Compose user data
     ud = _compose_user_data(user_provided_data)
+    msg = None
     try:
         rs = ec2_conn.run_instances(image_id=image_id,
                                     instance_type=instance_type,
@@ -279,14 +280,16 @@ def run_instance(ec2_conn, user_provided_data, image_id,
                                     placement=placement)
     except EC2ResponseError, e:
         log.error("Problem starting an instance: %s" % e)
+        msg = str(e)
     if rs:
         try:
             log.info("Started an instance with ID %s" % rs.instances[0].id)
         except Exception, e:
+            msg = str(e)
             log.error("Problem with the started instance object: %s" % e)
     else:
         log.warning("Problem starting an instance?")
-    return rs
+    return {"rs": rs, "error": msg}
 
 def _compose_user_data(user_provided_data):
     form_data = {}
@@ -331,13 +334,10 @@ def _get_cloud_info(cloud, as_str=False):
         ci = "\n".join(['%s: %s' % (key, value) for key, value in ci.iteritems()])
     return ci
 
-def _find_placement(ec2_conn, instance_type, cloud_type, get_all=False):
-    """Find a region zone that supports our requested instance type.
-    
-    :type get_all: bool
-    :param get_all: If True, return all placements/zones where the given
-                    instance type is available. Else, return a single zone
-                    where the instance type is available.
+def _find_placements(ec2_conn, instance_type=None):
+    """Find region zones that supports our requested instance type.
+
+    If instance_type is None, finds all zones that are currently available.
 
     We need to check spot prices in the potential availability zones
     for support before deciding on a region:
@@ -345,26 +345,21 @@ def _find_placement(ec2_conn, instance_type, cloud_type, get_all=False):
     http://blog.piefox.com/2011/07/ec2-availability-zones-and-instance.html
     """
     zones = []
-    if cloud_type == 'ec2':
-        base = ec2_conn.region.name
-        yesterday = datetime.datetime.now() - datetime.timedelta(1)
-        for loc_choice in ["b", "a", "c", "d"]:
-            cur_loc = "{base}{ext}".format(base=base, ext=loc_choice)
-            if len(ec2_conn.get_spot_price_history(instance_type=instance_type,
-                                                   end_time=yesterday.isoformat(),
-                                                   availability_zone=cur_loc)) > 0:
-                if get_all is True:
-                    zones.append(cur_loc)
-                else:
-                    return cur_loc
-    else:
-        for zone in ec2_conn.get_all_zones():
-            if get_all is True:
+    yesterday = datetime.datetime.now() - datetime.timedelta(1)
+    back_compatible_zone = "us-east-1b"
+    for zone in ec2_conn.get_all_zones():
+        if zone.state in ["available"]:
+            if (instance_type is None or
+                len(ec2_conn.get_spot_price_history(instance_type=instance_type,
+                                                    end_time=yesterday.isoformat(),
+                                                    availability_zone=zone.name)) > 0):
                 zones.append(zone.name)
-            else:
-                return zone.name
+    zones.sort()
+    if back_compatible_zone in zones:
+        zones = [back_compatible_zone] + [z for z in zones if z != back_compatible_zone] 
     if len(zones) == 0:
         log.error("Did not find availabilty zone in {0} for {1}".format(base, instance_type))
+        zones.append(back_compatible_zone)
     return zones
 
 def instance_state(ec2_conn, instance_id):
