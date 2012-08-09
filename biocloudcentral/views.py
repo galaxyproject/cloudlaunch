@@ -179,7 +179,7 @@ def _get_placement_inner(request):
                 # Needed to get the cloud connection
                 cloud = models.Cloud.objects.get(pk=cloud_id)
                 ec2_conn = connect_ec2(a_key, s_key, cloud)
-                placements = _find_placements(ec2_conn, inst_type)
+                placements = _find_placements(ec2_conn, inst_type, cloud.cloud_type)
                 return {'placements': placements}
         else:
             log.error("Not a POST request")
