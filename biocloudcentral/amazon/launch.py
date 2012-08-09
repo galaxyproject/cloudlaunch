@@ -265,7 +265,7 @@ def run_instance(ec2_conn, user_provided_data, image_id,
     # Remove 'instance_type' key from the dict before creating user data
     del user_provided_data['instance_type']
     if placement == '':
-        placement = _find_placements(ec2_conn, instance_type)[0]
+        placement = _find_placements(ec2_conn, instance_type, user_provided_data['cloud'].cloud_type)[0]
     # Compose user data
     ud = _compose_user_data(user_provided_data)
     msg = None
@@ -334,7 +334,7 @@ def _get_cloud_info(cloud, as_str=False):
         ci = "\n".join(['%s: %s' % (key, value) for key, value in ci.iteritems()])
     return ci
 
-def _find_placements(ec2_conn, instance_type=None):
+def _find_placements(ec2_conn, instance_type=None, cloud_type='ec2'):
     """Find region zones that supports our requested instance type.
 
     If instance_type is None, finds all zones that are currently available.
@@ -349,10 +349,13 @@ def _find_placements(ec2_conn, instance_type=None):
     back_compatible_zone = "us-east-1b"
     for zone in ec2_conn.get_all_zones():
         if zone.state in ["available"]:
-            if (instance_type is None or
-                len(ec2_conn.get_spot_price_history(instance_type=instance_type,
-                                                    end_time=yesterday.isoformat(),
-                                                    availability_zone=zone.name)) > 0):
+            # Non EC2 clouds may not support get_spot_price_history
+            if instance_type is not None and cloud_type == 'ec2':
+                if (len(ec2_conn.get_spot_price_history(instance_type=instance_type,
+                                                        end_time=yesterday.isoformat(),
+                                                        availability_zone=zone.name)) > 0):
+                    zones.append(zone.name)
+            else:
                 zones.append(zone.name)
     zones.sort()
     if back_compatible_zone in zones:
