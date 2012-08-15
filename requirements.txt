@@ -4,3 +4,6 @@ psycopg2==2.4.2
 boto>=2.1.1
 python-memcached>=1.47
 wsgiref==0.1.2
+requests==0.13.6
+simplejson==2.6.1
+blend>=0.1

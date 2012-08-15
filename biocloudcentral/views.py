@@ -11,10 +11,7 @@ from boto.exception import EC2ResponseError
 
 from biocloudcentral import forms
 from biocloudcentral import models
-from biocloudcentral.amazon.launch import (connect_ec2, instance_state,
-                                           create_cm_security_group,
-                                           create_key_pair, run_instance,
-                                           _compose_user_data, _find_placements)
+from blend.cloudman.launch import CloudManLaunch
 
 log = logging.getLogger(__name__)
 
@@ -37,12 +34,10 @@ def launch(request):
             ec2_error = None
             try:
                 # Create security group & key pair used when starting an instance
-                ec2_conn = connect_ec2(form.cleaned_data['access_key'],
-                                       form.cleaned_data['secret_key'],
-                                       form.cleaned_data['cloud'])
-                sg_name = create_cm_security_group(ec2_conn, form.cleaned_data['cloud'])
-                kp_name, kp_material = create_key_pair(ec2_conn)
-            except EC2ResponseError, err:
+                cml = CloudManLaunch(form.cleaned_data['access_key'], form.cleaned_data['secret_key'], form.cleaned_data['cloud'])
+                sg_name = cml.create_cm_security_group()
+                kp_name, kp_material = cml.create_key_pair()
+            except EC2ResponseError, err: # TODO: Exception handling replacement?
                 ec2_error = err.error_message
             # associate form data with session for starting instance
             # and supplying download files
@@ -81,8 +76,8 @@ def runinstance(request):
     form = request.session["ec2data"]
     rs = None
     instance_type = form['instance_type']
-    # Create EC2 connection with provided creds
-    ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
+    # Create cloudman connection with provided creds
+    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])    
     form["freenxpass"] = form["password"]
     if form['image_id']:
         image = models.Image.objects.get(pk=form['image_id'])
@@ -92,18 +87,19 @@ def runinstance(request):
         except models.Image.DoesNotExist:
             log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
             return False
-    ec2run = run_instance(ec2_conn=ec2_conn,
-                          user_provided_data=form,
-                          image_id=image.image_id,
-                          kernel_id=image.kernel_id if image.kernel_id != '' else None,
-                          ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
-                          key_name=form["kp_name"],
-                          security_groups=[form["sg_name"]],
-                          placement=form['placement'])
-    if ec2run["rs"] is not None:
-        rs = ec2run["rs"]
+    result = cml.launch(form['cluster_name'], # TODO: Custom cluster name?
+                        image_id=image.image_id,
+                        instance_type=instance_type,
+                        password=form["password"],
+                        kernel_id=image.kernel_id if image.kernel_id != '' else None,
+                        ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
+                        key_name=form["kp_name"],
+                        security_groups=[form["sg_name"]],
+                        placement=form['placement'])
+    if result["rs"] is not None:
+        rs = result["rs"]
         request.session['ec2data']['instance_id'] = rs.instances[0].id
-        request.session['ec2data']['public_dns'] = rs.instances[0].ip_address #public_dns_name
+        request.session['ec2data']['public_ip'] = rs.instances[0].ip_address #public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
         # Add an entry to the Usage table
         try:
@@ -115,7 +111,7 @@ def runinstance(request):
             u.save()
         except Exception, e:
             log.debug("Trouble saving Usage data: {0}".format(e))
-    return ec2run["error"]
+    return result["error"]
 
 def userdata(request):
     """Provide file download of user-data to re-start an instance.
@@ -124,7 +120,9 @@ def userdata(request):
     response = HttpResponse(mimetype='text/plain')
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
         **ec2data)
-    ud = _compose_user_data(ec2data)
+    form = request.session["ec2data"]
+    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])
+    ud = cml._compose_user_data(ec2data)
     response.write(ud)
     return response
     
@@ -138,8 +136,8 @@ def keypair(request):
 
 def instancestate(request):
     form = request.session["ec2data"]
-    ec2_conn = connect_ec2(form["access_key"], form["secret_key"], form['cloud'])
-    state = instance_state(ec2_conn, form["instance_id"])
+    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])
+    state = cml.get_status(form["instance_id"])
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 def dynamicfields(request):
@@ -178,8 +176,8 @@ def _get_placement_inner(request):
             if cloud_id != '' and a_key != '' and s_key != '':
                 # Needed to get the cloud connection
                 cloud = models.Cloud.objects.get(pk=cloud_id)
-                ec2_conn = connect_ec2(a_key, s_key, cloud)
-                placements = _find_placements(ec2_conn, inst_type, cloud.cloud_type)
+                cml = CloudManLaunch(a_key, s_key, cloud)
+                cml._find_placements(cml.ec2_conn, inst_type, cloud.cloud_type)
                 return {'placements': placements}
         else:
             log.error("Not a POST request")
