@@ -18,12 +18,12 @@
                 if (data.instance_state != 'running') {
                     window.setTimeout(function(){update_instance_state()}, 5000);
                 } else {
-                  $('#ssh_public_dns').html(data.public_dns);
-                  $('#nx_public_dns').html(data.public_dns);
+                  $('#ssh_public_ip').html(data.public_ip);
+                  $('#nx_public_ip').html(data.public_ip);
                   $('#placement').html(data.placement);
                   $('#cloud_url').html('<a href="http://' +
-                     data.public_dns + '/cloud" target="_blank">' +
-                     data.public_dns + '</a>');
+                     data.public_ip + '/cloud" target="_blank">' +
+                     data.public_ip + '</a>');
                   $('#ttp').stopwatch().stopwatch('stop');
                   $('#video_link_cont').html("");
                 }
@@ -67,19 +67,19 @@ Congratulations, your scalable analysis platform on the
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
      <td><span id="cloud_url">Not available
-            <a href="http://{{ request.session.ec2data.public_dns }}/cloud"
-               target="_blank">{{ request.session.ec2data.public_dns }}</a></span>
+            <a href="http://{{ request.session.ec2data.public_ip }}/cloud"
+               target="_blank">{{ request.session.ec2data.public_ip }}</a></span>
      </td>
  </tr>
  <tr><td>SSH access</td>
-     <td>ssh ubuntu@<span id="ssh_public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
+     <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
          (Use password from the entry form)</td>
  </tr>
  <tr><td>FreeNX access</td>
      <td>
          User: ubuntu <br/>
          Password: from the entry form<br/>
-         Host: <span id="nx_public_dns">{{ request.session.ec2data.public_dns }}</span><br/>
+         Host: <span id="nx_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
          Window Manager: GNOME<br/>
      </td>
  </tr>
