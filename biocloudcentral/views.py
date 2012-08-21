@@ -31,33 +31,17 @@ def launch(request):
     if request.method == "POST":
         form = forms.CloudManForm(request.POST)
         if form.is_valid():
-            ec2_error = None
-            try:
-                # Create security group & key pair used when starting an instance
-                cml = CloudManLaunch(form.cleaned_data['access_key'], form.cleaned_data['secret_key'], form.cleaned_data['cloud'])
-                sg_name = cml.create_cm_security_group()
-                kp_name, kp_material = cml.create_key_pair()
-            except EC2ResponseError, err: # TODO: Exception handling replacement?
-                ec2_error = err.error_message
-            # associate form data with session for starting instance
-            # and supplying download files
-            if ec2_error is None:
-                form.cleaned_data["kp_name"] = kp_name
-                form.cleaned_data["kp_material"] = kp_material
-                form.cleaned_data["sg_name"] = sg_name
-                form.cleaned_data["cloud_type"] = form.cleaned_data['cloud'].cloud_type
-                form.cleaned_data["cloud_name"] = form.cleaned_data['cloud'].name
-                request.session["ec2data"] = form.cleaned_data
-                error_msg = runinstance(request)
-                if error_msg is None:
-                    return redirect("/monitor")
-                else:
-                    form.non_field_errors = "A problem starting your instance. " \
-                                            "Check the {0} cloud's console: {1}"\
-                                            .format(form.cleaned_data['cloud'].name,
-                                                    error_msg)
+            request.session["ec2data"] = form.cleaned_data
+            request.session["ec2data"]['cloud_name'] = form.cleaned_data['cloud'].name
+            request.session["ec2data"]['cloud_type'] = form.cleaned_data['cloud'].cloud_type
+            response = runinstance(request)
+            if response['error'] == '':
+                return redirect("/monitor")
             else:
-                form.non_field_errors = ec2_error
+                form.non_field_errors = "A problem starting your instance. "\
+                                        "Check the {0} cloud's console: {1}"\
+                                        .format(form.cleaned_data['cloud'].name,
+                                                response['error'])
     else:
         # Select the first item in the clouds dropdown, thus potentially eliminating
         # that click for the most commonly used cloud. This does assume the most used
@@ -77,7 +61,7 @@ def runinstance(request):
     rs = None
     instance_type = form['instance_type']
     # Create cloudman connection with provided creds
-    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])    
+    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
     if form['image_id']:
         image = models.Image.objects.get(pk=form['image_id'])
@@ -87,20 +71,22 @@ def runinstance(request):
         except models.Image.DoesNotExist:
             log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
             return False
-    result = cml.launch(form['cluster_name'], # TODO: Custom cluster name?
+    response = cml.launch(cluster_name=form['cluster_name'],
                         image_id=image.image_id,
                         instance_type=instance_type,
                         password=form["password"],
                         kernel_id=image.kernel_id if image.kernel_id != '' else None,
                         ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
-                        key_name=form["kp_name"],
-                        security_groups=[form["sg_name"]],
                         placement=form['placement'])
-    if result["rs"] is not None:
-        rs = result["rs"]
+    if response["rs"] is not None:
+        rs = response["rs"]
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_ip'] = rs.instances[0].ip_address #public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
+        request.session['ec2data']['kp_name'] = response['kp_name']
+        request.session['ec2data']['kp_material'] = response['kp_material']
+        request.session['ec2data']['sg_name'] = response['sg_names'][0]
+
         # Add an entry to the Usage table
         try:
             u = models.Usage(cloud_name=form["cloud_name"],
@@ -111,7 +97,7 @@ def runinstance(request):
             u.save()
         except Exception, e:
             log.debug("Trouble saving Usage data: {0}".format(e))
-    return result["error"]
+    return response
 
 def userdata(request):
     """Provide file download of user-data to re-start an instance.
