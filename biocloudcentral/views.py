@@ -35,7 +35,7 @@ def launch(request):
             request.session["ec2data"]['cloud_name'] = form.cleaned_data['cloud'].name
             request.session["ec2data"]['cloud_type'] = form.cleaned_data['cloud'].cloud_type
             response = runinstance(request)
-            if response['error'] == '':
+            if not response['error']:
                 return redirect("/monitor")
             else:
                 form.non_field_errors = "A problem starting your instance. "\
