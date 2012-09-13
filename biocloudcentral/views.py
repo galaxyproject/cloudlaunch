@@ -1,13 +1,12 @@
 """Base views.
 """
+import copy
 import logging
 
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils import simplejson
 from django.shortcuts import render, redirect
-
-from boto.exception import EC2ResponseError
 
 from biocloudcentral import forms
 from biocloudcentral import models
@@ -71,14 +70,23 @@ def runinstance(request):
         except models.Image.DoesNotExist:
             log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
             return False
+    # Compose kwargs from form data making sure the named arguments are not included
+    kwargs = copy.deepcopy(form)
+    for key in form.iterkeys():
+        if key in ['cluster_name', 'image_id', 'instance_type', 'password',
+                'placement', 'access_key', 'secret_key', 'cloud']:
+            del kwargs[key]
     response = cml.launch(cluster_name=form['cluster_name'],
                         image_id=image.image_id,
                         instance_type=instance_type,
                         password=form["password"],
                         kernel_id=image.kernel_id if image.kernel_id != '' else None,
                         ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
-                        placement=form['placement'])
-    if response["rs"] is not None:
+                        placement=form['placement'],
+                        **kwargs)
+    if response["error"]:
+        return response
+    elif response["rs"]:
         rs = response["rs"]
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_ip'] = rs.instances[0].ip_address #public_dns_name
