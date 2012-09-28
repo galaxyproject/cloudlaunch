@@ -74,6 +74,12 @@ class CloudManForm(forms.Form):
                               "See <a href='https://bitbucket.org/galaxy/cloudman/wiki/SharedInstances'>"
                               "this page</a> for a list of public shared instances."\
                               .format(ud_url, target))
+    extra_user_data = forms.CharField(required=False,
+                                label="Extra User-Data",
+                                widget=forms.widgets.Textarea(attrs={"class": textbox_size}),
+                                help_text="Pass advanced properties to CloudMan via the the cloud" \
+                                "infrastructure's user-data mechanism. Properties should be in YAML" \
+                                "formatted key-value pairs.")
     image_id = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="The machine image to start (* indicates the default machine image).",
                             label="Image ID",
