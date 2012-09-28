@@ -2,6 +2,8 @@ bin
 build
 include
 lib
+man
+local
 .Python
 *.pyc
 biocloudcentral/local_settings.py
