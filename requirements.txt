@@ -5,3 +5,4 @@ boto>=2.1.1
 python-memcached>=1.47
 wsgiref==0.1.2
 blend-lib>=0.1
+pyyaml

@@ -3,6 +3,8 @@
 import copy
 import logging
 
+import yaml
+
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils import simplejson
@@ -57,6 +59,14 @@ def runinstance(request):
     """Run a CloudBioLinux/CloudMan instance with current session credentials.
     """
     form = request.session["ec2data"]
+
+    # Handle extra_user_data
+    extra_user_data = form['extra_user_data']
+    if extra_user_data:
+        for key, value in yaml.load(extra_user_data).iteritems():
+            form[key] = value
+    del form['extra_user_data']
+
     rs = None
     instance_type = form['instance_type']
     # Create cloudman connection with provided creds
@@ -74,7 +84,7 @@ def runinstance(request):
     kwargs = copy.deepcopy(form)
     for key in form.iterkeys():
         if key in ['cluster_name', 'image_id', 'instance_type', 'password',
-                'placement', 'access_key', 'secret_key', 'cloud']:
+                   'placement', 'access_key', 'secret_key', 'cloud']:
             del kwargs[key]
     response = cml.launch(cluster_name=form['cluster_name'],
                         image_id=image.image_id,
