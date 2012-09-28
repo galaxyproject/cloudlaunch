@@ -187,3 +187,9 @@ LOGGING = {
         }
     }
 }
+
+# Allow settings to overriden in a biocloudcentral/local_settings.py
+try:
+    from local_settings import *
+except ImportError, e:
+    pass

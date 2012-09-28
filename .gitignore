@@ -4,3 +4,4 @@ include
 lib
 .Python
 *.pyc
+biocloudcentral/local_settings.py
