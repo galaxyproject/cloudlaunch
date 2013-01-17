@@ -35,7 +35,14 @@ def launch(request):
             request.session["ec2data"] = form.cleaned_data
             request.session["ec2data"]['cloud_name'] = form.cleaned_data['cloud'].name
             request.session["ec2data"]['cloud_type'] = form.cleaned_data['cloud'].cloud_type
-            response = runinstance(request)
+            # Temp code (Jan 2013) - until Queensland Cloud is operational allow only
+            # test account to launch instances
+            if request.session["ec2data"]['cloud_name'] == 'Qld Test Cloud' and \
+                form.cleaned_data.get('access_key', '') != 'b2b2057ab3644f508ff6ff20d914f74e':
+                response = {'error': "*You cannot use {0} cloud yet; it is available only for " \
+                    "testing at the moment.*".format(request.session["ec2data"]['cloud_name'])}
+            else:
+                response = runinstance(request)
             if not response['error']:
                 return redirect("/monitor")
             else:
