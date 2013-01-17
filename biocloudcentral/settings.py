@@ -1,5 +1,6 @@
 # Django settings for biocloudcentral project.
 import os
+import dj_database_url
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -11,16 +12,17 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'biocloudcentral',       # Or path to database file if using sqlite3.
-        'USER': 'afgane',                # Not used with sqlite3.
-        'PASSWORD': 'fu5yOj2sn',         # Not used with sqlite3.
-        'HOST': 'localhost',             # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '5910',                  # Set to empty string for default. Not used with sqlite3.
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+#         'NAME': 'biocloudcentral',       # Or path to database file if using sqlite3.
+#         'USER': 'afgane',                # Not used with sqlite3.
+#         'PASSWORD': 'fu5yOj2sn',         # Not used with sqlite3.
+#         'HOST': 'localhost',             # Set to empty string for localhost. Not used with sqlite3.
+#         'PORT': '5910',                  # Set to empty string for default. Not used with sqlite3.
+#     }
+# }
+DATABASES = {'default': dj_database_url.config()}
 
 CACHES = {
     'default': {
@@ -188,8 +190,8 @@ LOGGING = {
     }
 }
 
-# Allow settings to overriden in a biocloudcentral/local_settings.py
+# Allow settings to be overridden in a biocloudcentral/settings_local.py
 try:
-    from local_settings import *
+    from settings_local import *
 except ImportError, e:
     pass
