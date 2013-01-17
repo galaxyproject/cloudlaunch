@@ -159,7 +159,7 @@ def dynamicfields(request):
                 iids = models.Image.objects.filter(cloud=cloud_id)
                 for iid in iids:
                     image_ids.append((iid.pk, \
-                        "{0} ({1}){default}".format(iid.image_id, iid.description,
+                        "{0} ({1}){default}".format(iid.description, iid.image_id,
                         default="*" if iid.default is True else '')))
             state = {'instance_types': instance_types,
                      'image_ids': image_ids}

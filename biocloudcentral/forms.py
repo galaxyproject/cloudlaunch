@@ -2,14 +2,14 @@ from django import forms
 from biocloudcentral import models
 
 class DynamicChoiceField(forms.ChoiceField):
-    """ Override the ChoiceField to allow AJAX-populated choices in the 
+    """ Override the ChoiceField to allow AJAX-populated choices in the
         part of the form.
     """
     def valid_value(self, value):
         # TODO: Add some validation code to ensure passed data is valid.
         # Return True if value is valid else return False
         return True
-    
+
 
 class CloudManForm(forms.Form):
     """Details needed to boot a setup and boot a CloudMan instance.
@@ -29,7 +29,7 @@ class CloudManForm(forms.Form):
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
                                    help_text="Choose from the available clouds. The credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
-                                   widget=forms.Select(attrs={"class": textbox_size, 
+                                   widget=forms.Select(attrs={"class": textbox_size,
                                    "onChange": "get_dynamic_fields(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": textbox_size}),
@@ -82,6 +82,6 @@ class CloudManForm(forms.Form):
                                 "formatted key-value pairs.")
     image_id = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="The machine image to start (* indicates the default machine image).",
-                            label="Image ID",
+                            label="Image",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
