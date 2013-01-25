@@ -214,6 +214,7 @@ def get_placements(request):
                 log.debug("Got here 3")
                 msg = str(e) + " inner is: " + str(inner)
                 log.debug("Got here 4")
+        log.debug("Got here 4.5; msg: {0}".format(msg))
         state = {"error": msg, "placements": []}
         log.debug("Got here 5")
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
