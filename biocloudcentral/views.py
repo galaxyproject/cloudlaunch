@@ -202,11 +202,19 @@ def get_placements(request):
     except Exception, e:
         log.exception("Problem retrieving availability zones")
         msg = str(e)
+        log.debug("Got here 1")
         if msg.startswith("EC2ResponseError"):
-            msg = msg.split("<Message>")[-1].split("</Message>")[0]
-            # handle standard error cases
-            if msg.startswith("The request signature we calculated does not match"):
-                msg = "Access and secret keys not accepted"
+            try:
+                msg = msg.split("<Message>")[-1].split("</Message>")[0]
+                # handle standard error cases
+                if msg.startswith("The request signature we calculated does not match"):
+                    msg = "Access and secret keys not accepted"
+                    log.debug("Got here 2")
+            except Exception, inner:
+                log.debug("Got here 3")
+                msg = str(e) + " inner is: " + str(inner)
+                log.debug("Got here 4")
         state = {"error": msg, "placements": []}
+        log.debug("Got here 5")
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
