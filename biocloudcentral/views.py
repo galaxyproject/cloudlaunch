@@ -209,4 +209,3 @@ def get_placements(request):
                 msg = "Access and secret keys not accepted"
         state = {"error": msg, "placements": []}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
-
