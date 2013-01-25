@@ -12,7 +12,7 @@ from django.shortcuts import render, redirect
 
 from biocloudcentral import forms
 from biocloudcentral import models
-from blend.cloudman.launch import CloudManLaunch
+from bioblend.cloudman.launch import CloudManLauncher
 
 log = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ def runinstance(request):
     rs = None
     instance_type = form['instance_type']
     # Create cloudman connection with provided creds
-    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])
+    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
     if form['image_id']:
         image = models.Image.objects.get(pk=form['image_id'])
@@ -106,7 +106,7 @@ def runinstance(request):
     elif response["rs"]:
         rs = response["rs"]
         request.session['ec2data']['instance_id'] = rs.instances[0].id
-        request.session['ec2data']['public_ip'] = rs.instances[0].ip_address #public_dns_name
+        request.session['ec2data']['public_ip'] = rs.instances[0].ip_address  # public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
         request.session['ec2data']['kp_name'] = response['kp_name']
         request.session['ec2data']['kp_material'] = response['kp_material']
@@ -132,7 +132,7 @@ def userdata(request):
     response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
         **ec2data)
     form = request.session["ec2data"]
-    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])
+    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
     ud = cml._compose_user_data(ec2data)
     response.write(ud)
     return response
@@ -147,7 +147,7 @@ def keypair(request):
 
 def instancestate(request):
     form = request.session["ec2data"]
-    cml = CloudManLaunch(form["access_key"], form["secret_key"], form['cloud'])
+    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
     state = cml.get_status(form["instance_id"])
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
@@ -187,7 +187,7 @@ def _get_placement_inner(request):
             if cloud_id != '' and a_key != '' and s_key != '':
                 # Needed to get the cloud connection
                 cloud = models.Cloud.objects.get(pk=cloud_id)
-                cml = CloudManLaunch(a_key, s_key, cloud)
+                cml = CloudManLauncher(a_key, s_key, cloud)
                 placements = cml._find_placements(cml.ec2_conn, inst_type, cloud.cloud_type)
                 return {'placements': placements}
         else:
