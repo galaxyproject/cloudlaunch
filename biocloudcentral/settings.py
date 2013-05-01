@@ -100,6 +100,9 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'takj3d3$gv%^ulsdsp_q0-458%&rb7@#utq_%1g+*_9zp@ub09'
 
+# Base URL of django app to redirect root (/) requests to.
+REDIRECT_BASE = "https://biocloudcentral.herokuapp.com/"
+
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',

@@ -12,7 +12,9 @@ from django.shortcuts import render, redirect
 
 from biocloudcentral import forms
 from biocloudcentral import models
+from biocloudcentral.settings import REDIRECT_BASE
 from bioblend.cloudman.launch import CloudManLauncher
+
 
 log = logging.getLogger(__name__)
 
@@ -20,10 +22,13 @@ log = logging.getLogger(__name__)
 
 def home(request):
     launch_url = request.build_absolute_uri("/launch")
-    if launch_url.startswith(("http://127.0.0.1", "http://localhost")):
+    if launch_url.startswith(("http://127.0.0.1", "http://localhost")) or not REDIRECT_BASE:
         return redirect("/launch")
     else:
-        return redirect("https://biocloudcentral.herokuapp.com/launch")
+        redirect_base = REDIRECT_BASE
+        if not redirect_base.endswith("/"):
+            redirect_base = "%s/" % redirect_base
+        return redirect("%slaunch" % redirect_base)
 
 # ## CloudMan launch and configuration entry details
 def launch(request):
