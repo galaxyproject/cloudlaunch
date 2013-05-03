@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
   <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
@@ -100,7 +102,7 @@
     });
   </script>
 </head>
-
+<body>
 <div class="banner">
   <h2 class="banner">BioCloudCentral</h2>
   Easily launch <a href="http://usecloudman.org">CloudMan</a>,
@@ -202,3 +204,5 @@ sole responsibility for any costs accrued.
 </p>
 <div id="csrf_token" style='display:none'>{% csrf_token %}</div>
 </div>
+</body>
+</html>
