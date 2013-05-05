@@ -1,9 +1,6 @@
-<head>
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/monitor.css" />
+{% extends "base.html" %}
+{% block extra_head %}
   <link rel="stylesheet" href="{{ STATIC_URL }}css/prettyPhoto.css" type="text/css" media="screen" charset="utf-8" />
-  <script src="{{ STATIC_URL }}js/jquery.js"></script>
   <script src="{{ STATIC_URL }}js/jquery.stopwatch.js"></script>
   <script src="{{ STATIC_URL }}js/jintervals.js"></script>
   <script src="{{ STATIC_URL }}js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
@@ -36,29 +33,30 @@
             default_width: 640,
             default_height: 480,
             social_tools: false,
+        }).tooltip({
+            placement: "bottom",
         });
     });
   </script>
-  <title>BioCloudCentral</title>
-</head>
+{% endblock %}
+{% block content %}  
 
-<div class="banner">
-  <h2 class="banner">BioCloudCentral</h2>
-</div>
-
-<div class="info">
+<span class="lead text-success">
 Congratulations, your scalable analysis platform on the
-{{ request.session.ec2data.cloud_name }} cloud is launching!<br/>
+{{ request.session.ec2data.cloud_name }} cloud is launching!</span>
 {% if request.session.ec2data.cloud_type == 'ec2' %}
+  <p>
     Amazon is now <a href="http://aws.amazon.com/ec2/#pricing" target="_blank">
     charging you per hour</a> for your new machine. You may use the
     <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
     to monitor the status of your instance. Once the instance is running, to manage
     your platform, please use the CloudMan console.
+  </p>
 {% endif %}
-</div>
+</p>
 
-<table class="awstable">
+<div class="row">
+<table class="table table-bordered table-striped span6">
  <tr><td>Instance state</td>
      <td><span id="inst_state">Not available</span></td>
  </tr>
@@ -106,23 +104,18 @@ Congratulations, your scalable analysis platform on the
      <td id="placement">Not available</td>
  </tr>
 </table>
-<span id="video_link_cont">
+<span id="video_link_cont" class="span4">
     What is happening now?
-    <a href="http://youtu.be/lFm9iO3EMSc" rel="prettyPhoto" title="">
+    <a href="http://youtu.be/lFm9iO3EMSc" title="This is a time lapse video of physically building a compute cluster. The analysis platform being built for you right now will functionally be equivalent to such a cluster - just built considerably quicker and is more accessible." data-toggle="tooltip" rel="prettyPhoto" title="">
         Watch an example video
-        <span>
-            This is a time lapse video of physically building a compute cluster.
-            The analysis platform being built for you right now 
-            will functionally be equivalent to such a cluster -
-            just built considerably quicker and is more accessible.
-        </span>
     </a>
     for the non-cloud case.
 </span>
-
-<div class="note">
-    <a class="button" href="{% url ud %}">Download user-data</a>
-    enabling you to <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
+</div>
+<div class="well">
+    <a class="btn btn-success" href="{% url ud %}">Download user-data</a>
+    This enables you to <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
     re-start this platform</a> later, directly from the {{ request.session.ec2data.cloud_name }}
     cloud's web console or via its API.
 </div>
+{% endblock %}

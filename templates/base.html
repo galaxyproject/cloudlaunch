@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+{% load bootstrap_toolkit %}
+<html lang="en">
+  <head>
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+      }
+
+      #video_link_cont {
+        float: left;
+        padding: 48px 0 0 20px;
+      }
+    </style>
+    <!--[if lt IE 9]>
+    <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <script src="{{ STATIC_URL }}js/jquery.js"></script>
+    <script type='text/javascript' src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+    <title>BioCloudCentral</title>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">BioCloudCentral</a>
+          <ul class="nav">
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </body>
+</html>

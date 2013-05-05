@@ -1,11 +1,5 @@
-<head>
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/reset.css" />
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/text.css" />
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/formalize.css" />
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/launch.css" />
-  <script src="{{ STATIC_URL }}js/jquery.js"></script>
-  <script src="{{ STATIC_URL }}js/jquery.formalize.js"></script>
-  <title>BioCloudCentral</title>
+{% extends "base.html" %}
+{% block extra_head %}
   <script>
     var csrf_token;
     function get_dynamic_fields(cloud_id) {
@@ -88,92 +82,75 @@
         get_dynamic_fields($("#id_cloud option:selected").val());
         
         // Toggle advanced startup options
-        $('#toggle_advanced_startup_options').click(function(){
-            if ($('.advanced_startup_options').is(":visible")){
-                $('.advanced_startup_options').hide();
-                $('#toggle_advanced_startup_options').text('Show advanced startup options');
-            }else{
-                $('.advanced_startup_options').show();
-                $('#toggle_advanced_startup_options').text("Hide advanced options");
-            }
+        $('#hide_advanced_startup_options').click(function(){
+            $('.advanced_startup_options').hide();
+            $('#hide_advanced_startup_options').hide();
+            $('#show_advanced_startup_options').show();
         });
+        $('#show_advanced_startup_options').click(function(){
+            $('.advanced_startup_options').show();
+            $('#hide_advanced_startup_options').show();
+            $('#show_advanced_startup_options').hide();
+        });
+        $("input,select,textarea").addClass("input-xlarge");
     });
   </script>
-</head>
+{% endblock %}
+{% block content %}
 
-<div class="banner">
-  <h2 class="banner">BioCloudCentral</h2>
-  Easily launch <a href="http://usecloudman.org">CloudMan</a>,
-  <a href="http://cloudbiolinux.org">CloudBioLinux</a> and
-  <a href="http://wiki.g2.bx.psu.edu/">Galaxy</a>
-  platforms on Cloud Computing resources (including 
-  <a href="http://aws.amazon.com/">Amazon Web Services</a>).
-</div>
+    <div class="well">
+      <h2>BioCloudCentral</h2>
+      <p>
+        Easily launch <a href="http://usecloudman.org">CloudMan</a>,
+        <a href="http://cloudbiolinux.org">CloudBioLinux</a> and
+        <a href="http://wiki.g2.bx.psu.edu/">Galaxy</a>
+        platforms on Cloud Computing resources (including 
+        <a href="http://aws.amazon.com/">Amazon Web Services</a>).
+      </p>
+    </div>
 
 {% if form.non_field_errors|length > 0 %}
-  <div class="awserror error">Cloud connection problem: <br/>
+  <div class="alert alert-error">Cloud connection problem: <br/>
     {{ form.non_field_errors }}
   </div>
 {% endif %}
 
-<form action="/launch" method="post">{% csrf_token %}
-  <table>
+<form action="/launch" method="post" class="form-horizontal">
+  {% csrf_token %}
   {% for field in form %}
-    {% if field.field.required %}
-        <tr>
-          <td><div class="label">{{ field.label_tag }}</div></td>
-          <td>{{ field }}</td>
-          <td> {% for error in field.errors %}
-                 <div class="error">{{ error }}</div>
-               {% endfor %}
-          </td>
-          <td><div class="help">
-              {% autoescape off %}
-              {{ field.help_text }}
-              {% endautoescape %}
-          </div></td>
-        </tr>
+    {% if not field.field.required %}
+       <span class="advanced_startup_options" style="display:none">
+    {% endif %}
+      <div class="control-group{% if field.errors %} error{% endif %}{% if field.field.required %} required{% endif %}">
+        <label class="control-label"{% if field.auto_id and input_type != "multicheckbox" and input_type != "radioset" %} for="{{ field.auto_id }}"{% endif %}>{{ field.label }}
+        </label>
+        <div class="controls{% if float %} controls-row{% endif %}">
+           {{ field }}
+           {% if field.label == 'Placement' %}
+           <a class="refresh_link" href="#" onClick="get_placements()" style="padding-left: 5px; padding-right: 5px;"><i class="icon-refresh"></i></a>
+           {% endif %}
+           {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}
+           {% include "bootstrap_toolkit/field_help.html" with display="block" %}
+        </div>
+      </div>
+    {% if not field.field.required %}
+      </span>
     {% endif %}
   {% endfor %}
-    {# Add the not required fields as the advanced startup options #}
-    {% for field in form %}
-      {% if not field.field.required %}
-        <tr class="advanced_startup_options" style="display:none">
-              <td>
-                  <div class="label">
-                      {{ field.label_tag }}
-                      <span class="refresh_cont">
-                          {% if field.label == 'Placement' %}
-                            <a class="refresh_link" href="#" onClick="get_placements()"></a>
-                          {% endif %}
-                      </span>
-                  </div>
-               </td>
-              <td>{{ field }}</td>
-              <td> {% for error in field.errors %}
-                     <div class="error">{{ error }}</div>
-                   {% endfor %}
-              </td>
-              <td><div class="help">
-                  {% autoescape off %}
-                  {{ field.help_text }}
-                  {% endautoescape %}
-              </div></td>
-        </tr>
-      {% endif %}
-    {% endfor %}
-  </table>
-  <div id="toggle_advanced_startup_options_cont" class='form-row'>
-      <a id='toggle_advanced_startup_options' href="#">
-          Show advanced startup options
-      </a>
-  </div>
-  <div class="submit">
-    <input type="submit" value="Start an instance" />
-  </div>
+  <p>
+    <a id="hide_advanced_startup_options" style="display: none;" href="#">
+      <i class="icon-remove-circle"></i>
+      Hide advanced options
+    </a>    
+    <a id="show_advanced_startup_options" href="#">
+      <i class="icon-wrench"></i>
+      Show advanced startup options
+    </a>
+  </p>
+  <input class="btn btn-large btn-primary" type="submit" value="Start an instance" />
 </form>
 
-<div class="about">
+<footer class="well">
 <p>
 This website is an open service developed by the
 <a href="http://cloudbiolinux.org">CloudBioLinux</a> and
@@ -202,3 +179,4 @@ sole responsibility for any costs accrued.
 </p>
 <div id="csrf_token" style='display:none'>{% csrf_token %}</div>
 </div>
+{% endblock %}

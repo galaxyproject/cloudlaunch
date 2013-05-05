@@ -7,3 +7,4 @@ wsgiref==0.1.2
 bioblend>=0.2.1
 pyyaml
 dj-database-url
+django-bootstrap-toolkit
