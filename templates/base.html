@@ -2,8 +2,7 @@
 {% load bootstrap_toolkit %}
 <html lang="en">
   <head>
-    {% bootstrap_stylesheet_tag %}
-    {% bootstrap_stylesheet_tag "responsive" %} 
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -18,7 +17,7 @@
     <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
     <script src="{{ STATIC_URL }}js/jquery.js"></script>
-    {% bootstrap_javascript_tag %}
+    <script type='text/javascript' src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
     <title>BioCloudCentral</title>
     {% block extra_head %}{% endblock %}
   </head>
