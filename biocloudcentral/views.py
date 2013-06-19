@@ -2,7 +2,6 @@
 """
 import copy
 import logging
-
 import yaml
 
 from django.http import HttpResponse
@@ -151,9 +150,12 @@ def keypair(request):
     return response
 
 def instancestate(request):
-    form = request.session["ec2data"]
-    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
-    state = cml.get_status(form["instance_id"])
+    if 'ec2data' in request.session:
+        form = request.session["ec2data"]
+        cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
+        state = cml.get_status(form["instance_id"])
+    else:
+        state = {'instance_state': 'Not available', }
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 def dynamicfields(request):

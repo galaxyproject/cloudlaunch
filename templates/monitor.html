@@ -5,24 +5,45 @@
   <script src="{{ STATIC_URL }}js/jintervals.js"></script>
   <script src="{{ STATIC_URL }}js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
   <script>
+
+    function update_ui(data) {
+        console.log(data.instance_state);
+        if (data.instance_state == 'running') {
+            $('#inst_state').html("Ready to use - click the IP below to access");
+        }
+        else if (data.instance_state != '') {
+            $('#inst_state').html(data.instance_state +
+                " <img src='{{ STATIC_URL}}images/spinner.gif'/>");
+        }
+        else {
+            $('#inst_state').html("Not available");
+        }
+        if (data.instance_state != 'running') {
+            window.setTimeout(function(){update_instance_state()}, 5000);
+        } else {
+          $('#ssh_public_ip').html(data.public_ip);
+          $('#nx_public_ip').html(data.public_ip);
+          $('#placement').html(data.placement);
+          $('#cloud_url').html('<a href="http://' +
+             data.public_ip + '/cloud" target="_blank">' +
+             data.public_ip + '</a>');
+          $('#ttp').stopwatch().stopwatch('stop');
+          $('#video_link_cont').html("");
+        }
+    }
     function update_instance_state() {
-        $.get("{% url inst_state %}",
-            function(data) {
-                console.log(data.instance_state);
-                if (data.instance_state != '') {
-                    $('#inst_state').html(data.instance_state);
-                }
-                if (data.instance_state != 'running') {
+        $.ajax({
+            url: "{% url inst_state %}",
+            timeout: 4000,
+            }).done(function(data) {
+                update_ui(data);
+            }).fail(function(data, textStatus){
+                if(textStatus == 'timeout') {
+                    // Instance is probably alive but the web server not up yet
+                    // so keep checking
                     window.setTimeout(function(){update_instance_state()}, 5000);
                 } else {
-                  $('#ssh_public_ip').html(data.public_ip);
-                  $('#nx_public_ip').html(data.public_ip);
-                  $('#placement').html(data.placement);
-                  $('#cloud_url').html('<a href="http://' +
-                     data.public_ip + '/cloud" target="_blank">' +
-                     data.public_ip + '</a>');
-                  $('#ttp').stopwatch().stopwatch('stop');
-                  $('#video_link_cont').html("");
+                    alert("Failure! Check the cloud console.");
                 }
             });
     }
@@ -39,21 +60,23 @@
     });
   </script>
 {% endblock %}
-{% block content %}  
+{% block content %}
 
-<span class="lead text-success">
-Congratulations, your scalable analysis platform on the
-{{ request.session.ec2data.cloud_name }} cloud is launching!</span>
-{% if request.session.ec2data.cloud_type == 'ec2' %}
-  <p>
-    Amazon is now <a href="http://aws.amazon.com/ec2/#pricing" target="_blank">
-    charging you per hour</a> for your new machine. You may use the
-    <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
-    to monitor the status of your instance. Once the instance is running, to manage
-    your platform, please use the CloudMan console.
-  </p>
-{% endif %}
-</p>
+<div class="page-header">
+    <span class="lead text-success">
+    Congratulations, your scalable analysis platform on the
+    {{ request.session.ec2data.cloud_name }} cloud is launching!</span>
+    {% if request.session.ec2data.cloud_type == 'ec2' %}
+      <p>
+        Amazon is now <a href="http://aws.amazon.com/ec2/#pricing" target="_blank">
+        charging you per hour</a> for your new machine. You may use the
+        <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
+        to monitor the status of your instance. Once the instance is running, to manage
+        your platform, please use the CloudMan console.
+      </p>
+    {% endif %}
+    </p>
+</div>
 
 <div class="row">
 <table class="table table-bordered table-striped span6">
@@ -64,7 +87,7 @@ Congratulations, your scalable analysis platform on the
      <td><span id="ttp">&nbsp;</span></td>
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
-     <td><span id="cloud_url">Not available
+     <td><span id="cloud_url">
             <a href="http://{{ request.session.ec2data.public_ip }}/cloud"
                target="_blank">{{ request.session.ec2data.public_ip }}</a></span>
      </td>
@@ -101,7 +124,7 @@ Congratulations, your scalable analysis platform on the
      </td>
  </tr>
  <tr><td>Placement (zone)</td>
-     <td id="placement">Not available</td>
+     <td id="placement">Not (yet) available</td>
  </tr>
 </table>
 <span id="video_link_cont" class="span4">
