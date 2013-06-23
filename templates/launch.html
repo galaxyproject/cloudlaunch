@@ -45,7 +45,8 @@
         $('#id_placement').attr('disabled', 'disabled');
         $('#id_placement').html("<option>Fetching data...</option>");
         var jqxhr = $.post("{% url get_placements %}",
-            {'cloud_id': $('#id_cloud').val(),
+            {'cluster_name': $('#id_cluster_name').val(),
+             'cloud_id': $('#id_cloud').val(),
              'a_key': $('#id_access_key').val(),
              's_key': $('#id_secret_key').val(),
              'instance_type': $('#id_instance_type').val(),

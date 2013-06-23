@@ -186,6 +186,7 @@ def dynamicfields(request):
 def _get_placement_inner(request):
     if request.is_ajax():
         if request.method == 'POST':
+            cluster_name = request.POST.get('cluster_name', '')
             cloud_id = request.POST.get('cloud_id', '')
             a_key = request.POST.get('a_key', '')
             s_key = request.POST.get('s_key', '')
@@ -195,7 +196,8 @@ def _get_placement_inner(request):
                 # Needed to get the cloud connection
                 cloud = models.Cloud.objects.get(pk=cloud_id)
                 cml = CloudManLauncher(a_key, s_key, cloud)
-                placements = cml._find_placements(cml.ec2_conn, inst_type, cloud.cloud_type)
+                placements = cml.find_placements(cml.ec2_conn, inst_type,
+                    cloud.cloud_type, cluster_name)
                 return {'placements': placements}
         else:
             log.error("Not a POST request")
