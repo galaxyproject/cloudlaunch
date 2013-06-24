@@ -18,14 +18,6 @@ class CloudManForm(forms.Form):
     ud_url = "http://wiki.g2.bx.psu.edu/Admin/Cloud/UserData"
     target = "target='_blank'"
     textbox_size = "input_xlarge"
-    cluster_name = forms.CharField(required=True,
-                                   help_text="Name of your cluster used for identification. "
-                                   "This can be any name you choose.",
-                                   widget=forms.TextInput(attrs={"class": textbox_size}))
-    password = forms.CharField(widget=forms.PasswordInput(render_value=False,
-                                                          attrs={"class": "input_xlarge"}),
-                               help_text="Your choice of password, for the CloudMan " \
-                               "web interface and accessing the instance via ssh or FreeNX.")
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
                                    help_text="Choose from the available clouds. The credentials "\
                                    "you provide below must match (ie, exist on) the chosen cloud.",
@@ -41,6 +33,14 @@ class CloudManForm(forms.Form):
                                  help_text="Your Secret Access Key. For the Amazon cloud, also available "
                                  "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."\
                                  .format(key_url, target))
+    cluster_name = forms.CharField(required=True,
+                                   help_text="Name of your cluster used for identification and "
+                                   "relaunching. This can be any name you choose.",
+                                   widget=forms.TextInput(attrs={"class": textbox_size}))
+    password = forms.CharField(widget=forms.PasswordInput(render_value=False,
+                                                          attrs={"class": "input_xlarge"}),
+                               help_text="Your choice of password, for the CloudMan " \
+                               "web interface and accessing the instance via ssh or FreeNX.")
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="Type (ie, virtual hardware configuration) of the instance to start.",
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
