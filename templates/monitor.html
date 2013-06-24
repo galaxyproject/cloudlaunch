@@ -4,6 +4,12 @@
   <script src="{{ STATIC_URL }}js/jquery.stopwatch.js"></script>
   <script src="{{ STATIC_URL }}js/jintervals.js"></script>
   <script src="{{ STATIC_URL }}js/jquery.prettyPhoto.js" type="text/javascript" charset="utf-8"></script>
+  <style type="text/css">
+      .pwd_sh_link {
+        cursor: pointer;
+        text-decoration: underline;
+      }
+  </style>
   <script>
 
     function update_ui(data) {
@@ -57,6 +63,17 @@
         }).tooltip({
             placement: "bottom",
         });
+
+        $(".pwd").hide();
+        $(".pwd_sh_link").click(function(e){
+            if ($(".pwd").is(':visible')) {
+                $(".pwd").hide();
+                $(".pwd_sh_link").html("show");
+            } else {
+                $(".pwd").show();
+                $(".pwd_sh_link").html("hide");
+            }
+        });
     });
   </script>
 {% endblock %}
@@ -80,8 +97,8 @@
 
 <div class="row">
 <table class="table table-bordered table-striped span6">
- <tr><td>Instance state</td>
-     <td><span id="inst_state">Not available</span></td>
+ <tr><td class="span5">Instance state</td>
+     <td class="span7"><span id="inst_state">Not available</span></td>
  </tr>
  <tr><td>0 to an analysis platform in</td>
      <td><span id="ttp">&nbsp;</span></td>
@@ -94,12 +111,13 @@
  </tr>
  <tr><td>SSH access</td>
      <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
-         (Use password from the entry form)</td>
+         (Use key pair or password from the entry form;
+         <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
  </tr>
  <tr><td>FreeNX access</td>
      <td>
          User: ubuntu <br/>
-         Password: from the entry form<br/>
+         Password: from the entry form (<span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)<br/>
          Host: <span id="nx_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
          Window Manager: GNOME<br/>
      </td>

@@ -115,6 +115,7 @@ def runinstance(request):
         request.session['ec2data']['kp_name'] = response['kp_name']
         request.session['ec2data']['kp_material'] = response['kp_material']
         request.session['ec2data']['sg_name'] = response['sg_names'][0]
+        request.session['ec2data']['password'] = form['password']
 
         # Add an entry to the Usage table
         try:
