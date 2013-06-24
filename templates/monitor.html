@@ -83,13 +83,20 @@
     <span class="lead text-success">
     Congratulations, your scalable analysis platform on the
     {{ request.session.ec2data.cloud_name }} cloud is launching!</span>
+    <p>
+        The process of launching an instance takes a few minutes. Once the
+        instance and the necessary services are running, a link to the
+        instance will be shown (in <i>Public IP</i> field). To manage
+        your newly created platform, please use the
+        <a href="http://usecloudman.org" target="_blank">CloudMan</a> console
+        from the shown link.
+    </p>
     {% if request.session.ec2data.cloud_type == 'ec2' %}
       <p>
         Amazon is now <a href="http://aws.amazon.com/ec2/#pricing" target="_blank">
         charging you per hour</a> for your new machine. You may use the
         <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
-        to monitor the status of your instance. Once the instance is running, to manage
-        your platform, please use the CloudMan console.
+        to monitor the status of your instance.
       </p>
     {% endif %}
     </p>
@@ -114,7 +121,7 @@
          (Use key pair or password from the entry form;
          <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
  </tr>
- <tr><td>FreeNX access</td>
+ <tr><td>FreeNX remote desktop access</td>
      <td>
          User: ubuntu <br/>
          Password: from the entry form (<span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)<br/>
