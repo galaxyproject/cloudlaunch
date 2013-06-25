@@ -219,3 +219,58 @@ def get_placements(request):
                 msg = "Access and secret keys not accepted"
         state = {"error": msg, "placements": []}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+
+
+def get_clusters(request):
+    """
+    Retrieve a list of clusters associated with a given cloud account and
+    return this list in JSON.
+    """
+    sample_cluster = [{'cluster_name': u'v1_to_v2-TMP',
+ 'persistent_data': {'cluster_type': 'Galaxy',
+  'deployment_version': 2,
+  'filesystems': [{'ids': [u'snap-5b030634'],
+    'kind': 'snapshot',
+    'mount_point': '/mnt/galaxyIndices',
+    'name': 'galaxyIndices',
+    'roles': ['galaxyIndices']},
+   {'ids': [u'vol-0e468454'],
+    'kind': 'volume',
+    'mount_point': '/mnt/galaxyData',
+    'name': 'galaxyData',
+    'roles': ['galaxyTools', 'galaxyData']}],
+  'persistent_data_version': 3,
+  'services': [{'name': 'Migration', 'roles': ['Migration']},
+   {'name': 'SGE', 'roles': ['SGE']},
+   {'name': 'HTCondor', 'roles': ['HTCondor']},
+   {'name': 'Hadoop', 'roles': ['Hadoop']},
+   {'name': 'Postgres', 'roles': ['Postgres']},
+   {'home': '/mnt/galaxyData/galaxy-app',
+    'name': 'Galaxy',
+    'roles': ['Galaxy']}],
+  'tags': {u'i-31d1745c': {'Name': 'master: v1_to_v2-TMP',
+    'clusterName': u'v1_to_v2-TMP',
+    'role': 'master'},
+   u'vol-0e468454': {'Name': 'galaxyDataFS',
+    'bucketName': 'cm-f8b927b9bee7f63ab3401b0f2f7bc2aa',
+    'clusterName': u'v1_to_v2-TMP',
+    'filesystem': 'galaxyData',
+    'roles': 'galaxyTools,galaxyData'},
+   u'vol-1451934e': {'Name': 'galaxyIndicesFS',
+    'bucketName': 'cm-f8b927b9bee7f63ab3401b0f2f7bc2aa',
+    'clusterName': u'v1_to_v2-TMP',
+    'filesystem': 'galaxyIndices',
+    'roles': 'galaxyIndices'},
+   u'vol-38569462': {'Name': 'galaxyToolsFS',
+    'bucketName': 'cm-f8b927b9bee7f63ab3401b0f2f7bc2aa',
+    'clusterName': u'v1_to_v2-TMP',
+    'filesystem': 'galaxyTools',
+    'roles': 'galaxyTools'},
+   u'vol-c64f8d9c': {'clusterName': u'v1_to_v2-TMP'},
+   u'vol-c870b292': {'Name': 'galaxyIndicesFS',
+    'bucketName': 'cm-f8b927b9bee7f63ab3401b0f2f7bc2aa',
+    'clusterName': u'v1_to_v2-TMP',
+    'filesystem': 'galaxyIndices',
+    'roles': 'galaxyIndices'}}},
+ 'zone': ''}]
+    return HttpResponse(simplejson.dumps(sample_cluster), mimetype="application/json")

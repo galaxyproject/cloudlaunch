@@ -33,10 +33,14 @@ class CloudManForm(forms.Form):
                                  help_text="Your Secret Access Key. For the Amazon cloud, also available "
                                  "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."\
                                  .format(key_url, target))
-    cluster_name = forms.CharField(required=True,
-                                   help_text="Name of your cluster used for identification and "
-                                   "relaunching. This can be any name you choose.",
-                                   widget=forms.TextInput(attrs={"class": textbox_size}))
+    # cluster_name = forms.CharField(required=True,
+    #                                help_text="Name of your cluster used for identification and "
+    #                                "relaunching. This can be any name you choose.",
+    #                                widget=forms.TextInput(attrs={"class": textbox_size}))
+    cluster_name = DynamicChoiceField((("", "Provide cloud credentials first"),),
+                            help_text="Choose a previously existing "
+                              "cluster or provide a new name for a new cluster.",
+                            widget=forms.Select(attrs={"class": textbox_size}))
     password = forms.CharField(widget=forms.PasswordInput(render_value=False,
                                                           attrs={"class": "input_xlarge"}),
                                help_text="Your choice of password, for the CloudMan " \
