@@ -74,11 +74,16 @@
             });
     }
     function get_clusters() {
-      // When credential entry is complete, submit to get info about existing clusters
+      // When credential entry is complete, submit to get info about existing
+      // clusters and populate ``#id_cluster_name`` field, converting it into
+      // a ``select2`` type field
       $("#id_access_key, #id_secret_key").bind("paste input propertychange", function(){
           s_key_el = $("#id_secret_key");
           a_key_el = $("#id_access_key");
+          c_name_el = $('#id_cluster_name');
           if ((s_key_el.val().length === 40 || s_key_el.val().length === 36) && (a_key_el.val().length === 20 || a_key_el.val().length === 32)){
+              c_name_el.attr('disabled', 'disabled');
+              c_name_el.attr('value', "Fetching data... please wait");
               // Get info about existing clusters and update fields
               var jqxhr = $.post("{% url get_clusters %}",
                   {'cloud_id': $('#id_cloud').val(),
@@ -87,71 +92,29 @@
                    csrfmiddlewaretoken: csrf_token})
                   .success(function(data) {
                     if (data.length > 0) {
-                      var clusters = '';
+                      var clusters = Array();
                       for (var i=0; i<data.length; i++) {
-                          clusters += '<option value="' + data[i].cluster_name + '">'
-                              + data[i].cluster_name + "</option>";
+                        clusters.push({'id': i, 'text': data[i].cluster_name});
+                      }
                     }
-                    $('#id_cluster_name').html(clusters);
-                    replace_select_inputs(0, 200, $("#id_cluster_name"));
-                  }
+                    c_name_el.removeAttr('disabled');
+                    var options = { width: "resolve",
+                        closeOnSelect: !c_name_el.is("[MULTIPLE]"),
+                        createSearchChoice: function(term) {
+                            return {
+                                id: term,
+                                text: term + ' (new)'
+                            };
+                        },
+                        data: clusters
+                      };
+                    return c_name_el.select2(options);
                   })
                   .error(function(data){
-                    alert("get_clusters error");
+                    alert("Error retrieving the list of existing clusters.");
                   });
           }
       });
-    }
-
-    $.fn.refresh_select2 = function() {
-        var select_elt = $(this);
-        var options = { width: "resolve",
-                        closeOnSelect: !select_elt.is("[MULTIPLE]")
-                      };
-        return select_elt.select2(options);
-    }
-
-    // Replace select box with a text input box + autocomplete.
-    function replace_select_inputs(min_length, max_length, select_elts) {
-        // To do replace, the select2 plugin must be loaded.
-        //
-        // Adapted code from Galaxy
-
-        if (!jQuery.fn.select2) {
-            return;
-        }
-
-        // Set default for min_length and max_length
-        if (min_length === undefined) {
-            min_length = 20;
-        }
-        if (max_length === undefined) {
-            max_length = 3000;
-        }
-
-        select_elts = select_elts || $('select');
-
-        select_elts.each( function() {
-            var select_elt = $(this);
-            // Make sure that options is within range.
-            var num_options = select_elt.find('option').length;
-            if ( (num_options < min_length) || (num_options > max_length) ) {
-                return;
-            }
-
-            if (select_elt.hasClass("no-autocomplete")) {
-                return;
-            }
-
-            /* Replaced jQuery.autocomplete with select2, notes:
-             * - multiple selects are supported
-             * - the original element is updated with the value, convert_to_values should not be needed
-             * - events are fired when updating the original element, so refresh_on_change should just work
-             *
-             * - should we still sort dbkey fields here?
-             */
-            select_elt.refresh_select2();
-        });
     }
     $(document).ready(function() {
         // Along with this, must add a macthing csrf_token in the body
@@ -177,6 +140,9 @@
             $('.advanced_startup_options').show();
             $('#hide_advanced_startup_options').show();
             $('#show_advanced_startup_options').hide();
+        });
+        $(".refresh_link").click(function(event){
+            event.preventDefault();
         });
         $("input,select,textarea").addClass("input-xlarge");
 
