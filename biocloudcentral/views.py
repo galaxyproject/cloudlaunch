@@ -109,6 +109,7 @@ def runinstance(request):
         return response
     elif response["rs"]:
         rs = response["rs"]
+        request.session['ec2data']['cluster_name'] = response['cluster_name']
         request.session['ec2data']['instance_id'] = rs.instances[0].id
         request.session['ec2data']['public_ip'] = rs.instances[0].ip_address  # public_dns_name
         request.session['ec2data']['image_id'] = rs.instances[0].image_id
