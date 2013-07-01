@@ -13,9 +13,13 @@
   <script>
 
     function update_ui(data) {
-        console.log(data.instance_state);
+        // console.log(data.instance_state);
         if (data.instance_state == 'running') {
             $('#inst_state').html("Ready to use - click the IP below to access");
+        }
+        else if (data.instance_state == 'error') {
+            $('#inst_state').html(data.instance_state +
+              "<i class='icon-bell'></i>");
         }
         else if (data.instance_state != '') {
             $('#inst_state').html(data.instance_state +
