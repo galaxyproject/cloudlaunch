@@ -94,7 +94,8 @@
                     if (data.length > 0) {
                       var clusters = Array();
                       for (var i=0; i<data.length; i++) {
-                        clusters.push({'id': i, 'text': data[i].cluster_name});
+                        clusters.push({'id': data[i].cluster_name,
+                          'text': data[i].cluster_name});
                       }
                     }
                     c_name_el.removeAttr('disabled');
