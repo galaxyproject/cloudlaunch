@@ -157,7 +157,7 @@ def instancestate(request):
         cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
         state = cml.get_status(form["instance_id"])
     else:
-        state = {'instance_state': 'Not available', }
+        state = {'instance_state': 'Not available'}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 def dynamicfields(request):

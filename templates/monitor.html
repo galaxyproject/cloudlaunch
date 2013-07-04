@@ -37,6 +37,8 @@
           $('#cloud_url').html('<a href="http://' +
              data.public_ip + '/cloud" target="_blank">' +
              data.public_ip + '</a>');
+          $('#copy-ip').attr("data-clipboard-text", data.public_ip);
+          $('#copy-ip').show();
           $('#ttp').stopwatch().stopwatch('stop');
           $('#video_link_cont').html("");
         }
@@ -68,6 +70,7 @@
             placement: "bottom",
         });
 
+        // Toggle password text
         $(".pwd").hide();
         $(".pwd_sh_link").click(function(e){
             if ($(".pwd").is(':visible')) {
@@ -80,6 +83,12 @@
         });
     });
   </script>
+  <style type="text/css">
+      #copy-ip.copy-ip-hover {
+        color: #08c;
+        background-color: #cccccc \9;
+      }
+    </style>
 {% endblock %}
 {% block content %}
 
@@ -115,9 +124,14 @@
      <td><span id="ttp">&nbsp;</span></td>
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
-     <td><span id="cloud_url">
-            <a href="http://{{ request.session.ec2data.public_ip }}/cloud"
-               target="_blank">{{ request.session.ec2data.public_ip }}</a></span>
+     <td>
+      <span id="cloud_url">
+        <a href="http://{{ request.session.ec2data.public_ip }}/cloud"
+          target="_blank">{{ request.session.ec2data.public_ip }}</a>
+      </span>
+      <button id="copy-ip" class="pull-right btn btn-mini" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard">
+        Copy IP
+      </button>
      </td>
  </tr>
  <tr><td>SSH access</td>
@@ -173,4 +187,7 @@
     re-start this platform</a> later, directly from the {{ request.session.ec2data.cloud_name }}
     cloud's web console or via its API.
 </div>
+
+<script src="{{ STATIC_URL }}js/ZeroClipboard.min.js"></script>
+<script src="{{ STATIC_URL }}js/ZeroMain.js"></script>
 {% endblock %}
