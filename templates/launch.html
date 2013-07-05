@@ -91,8 +91,8 @@
                    's_key': s_key_el.val(),
                    csrfmiddlewaretoken: csrf_token})
                   .success(function(data) {
+                    var clusters = Array();
                     if (data.length > 0) {
-                      var clusters = Array();
                       for (var i=0; i<data.length; i++) {
                         clusters.push({'id': data[i].cluster_name,
                           'text': data[i].cluster_name});
