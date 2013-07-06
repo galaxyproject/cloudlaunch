@@ -85,12 +85,18 @@
               c_name_el.attr('disabled', 'disabled');
               c_name_el.attr('value', "Fetching data... please wait");
               // Get info about existing clusters and update fields
-              var jqxhr = $.post("{% url get_clusters %}",
-                  {'cloud_id': $('#id_cloud').val(),
+              var jqxhr = $.ajax({
+                url: "{% url get_clusters %}",
+                type: "post",
+                data: {'cloud_id': $('#id_cloud').val(),
                    'a_key': a_key_el.val(),
                    's_key': s_key_el.val(),
-                   csrfmiddlewaretoken: csrf_token})
-                  .success(function(data) {
+                   csrfmiddlewaretoken: csrf_token},
+                beforeSend: function(){
+                  $('#abort_clusters_fetch').show();
+                },
+                success: function(data) {
+                    $('#abort_clusters_fetch').hide();
                     var clusters = Array();
                     if (data.length > 0) {
                       for (var i=0; i<data.length; i++) {
@@ -110,13 +116,15 @@
                         data: clusters
                       };
                     return c_name_el.select2(options);
-                  })
-                  .error(function(data){
+                },
+                error: function(data){
                     // If anything goes wrong (also see #abort_clusters_fetch),
                     // allow the user to provide a cluster name
                     c_name_el.removeAttr('disabled');
                     c_name_el.attr("value", "Enter any name you like");
-                  });
+                    $('#abort_clusters_fetch').hide();
+                }
+              });
               // Fetching clusters can take a while so allow a user to abort
               // the request (note that this does not cancel the request on the
               // server size).
@@ -199,7 +207,7 @@
             <a class="refresh_link" href="#" onClick="get_placements()" style="padding-left: 5px; padding-right: 5px;"><i class="icon-refresh"></i></a>
           {% endif %}
           {% if field.label == 'Cluster name' %}
-            <i id="abort_clusters_fetch" class="icon-remove" style="cursor: pointer"></i>
+            <i id="abort_clusters_fetch" class="icon-remove" style="cursor: pointer; display: none"></i>
           {% endif %}
           {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}
           {% autoescape off %}
