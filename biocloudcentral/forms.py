@@ -41,7 +41,7 @@ class CloudManForm(forms.Form):
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification and "
                                    "relaunching. If creating a new cluster, type any name you prefer.",
-                                   widget=forms.TextInput(attrs={"class": textbox_size,
+                                   widget=forms.TextInput(attrs={"class": 'input-xxlarge',
                                     "type": "hidden", "value": "Provide cloud credentials first",
                                     "disabled": "disabled"}))
     # A simple drop down element
@@ -50,7 +50,7 @@ class CloudManForm(forms.Form):
     #                           "cluster or provide a new name for a new cluster.",
     #                         widget=forms.Select(attrs={"class": textbox_size}))
     password = forms.CharField(widget=forms.PasswordInput(render_value=False,
-                                                          attrs={"class": "input_xlarge"}),
+                                                          attrs={"class": textbox_size}),
                                help_text="Your choice of password, for the CloudMan " \
                                "web interface and accessing the instance via ssh or FreeNX.")
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
