@@ -101,8 +101,7 @@
                     if (data.length > 0) {
                       for (var i=0; i<data.length; i++) {
                         clusters.push({'id': data[i].cluster_name,
-                          'text': data[i].cluster_name + '\n(' +
-                            data[i].bucket_name + ')',});
+                          'text': data[i].cluster_name});
                       }
                     }
                     c_name_el.removeAttr('disabled');
