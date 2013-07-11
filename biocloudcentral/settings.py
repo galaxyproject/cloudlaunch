@@ -2,6 +2,12 @@
 import os
 import dj_database_url
 
+# Celery setup
+import djcelery
+djcelery.setup_loader()
+BROKER_URL = 'django://'
+
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -151,6 +157,8 @@ INSTALLED_APPS = (
     'south',
     'bootstrap_toolkit',
     'biocloudcentral',
+    'djcelery',
+    'kombu.transport.django',
 )
 
 # A sample logging configuration. The only tangible logging
