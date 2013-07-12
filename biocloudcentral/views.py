@@ -4,6 +4,8 @@ import copy
 import logging
 import yaml
 
+from celery.result import AsyncResult
+
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.utils import simplejson
@@ -11,6 +13,7 @@ from django.shortcuts import render, redirect
 
 from biocloudcentral import forms
 from biocloudcentral import models
+from biocloudcentral import tasks
 from biocloudcentral.settings import REDIRECT_BASE
 from bioblend.cloudman.launch import CloudManLauncher
 
@@ -215,15 +218,37 @@ def get_placements(request):
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 
-def get_clusters(request):
+def fetch_clusters(request):
     """
-    Retrieve a list of clusters associated with a given cloud account and
-    return this list in JSON.
+    Intiate retrieval of a list of clusters associated with a given account on
+    a given cloud. Returns a JSON with a ``task_id`` key to be used to get the
+    status and the actual list of clusters (via ``fetch_clusters_status`` method).
     """
     cloud_id = request.POST.get('cloud_id', '')
     a_key = request.POST.get('a_key', '')
     s_key = request.POST.get('s_key', '')
     cloud = models.Cloud.objects.get(pk=cloud_id)
-    cml = CloudManLauncher(a_key, s_key, cloud)
-    clusters_list = cml.get_clusters_pd()
-    return HttpResponse(simplejson.dumps(clusters_list), mimetype="application/json")
+    # Queue the task and return the task ID
+    r = tasks.fetch_clusters.delay(cloud, a_key, s_key)
+    task_id = {'task_id': r.id}
+    return HttpResponse(simplejson.dumps(task_id), mimetype="application/json")
+
+
+def update_clusters(request):
+    """
+    Given a task ID as part of the ``request`` (as ``request_id``), check on the
+    status of a job retrieving clusters' persistent data. Return a JSON with the
+    following fields:
+        ``task_id``: return the job request ID
+        ``ready``: ``True`` if the job has completed; ``False`` otherwise
+        ``clusters_list``: a list of clusters' persistent data (if the job
+            has completed) or an empty list otherwise
+    """
+    task_id = request.POST.get('task_id', '')
+    result = AsyncResult(task_id)
+    r = {'task_id': task_id,
+         'ready': result.ready(),
+         'clusters_list': []}
+    if result.ready():
+        r['clusters_list'] = result.get()
+    return HttpResponse(simplejson.dumps(r), mimetype="application/json")

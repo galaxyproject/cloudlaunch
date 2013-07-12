@@ -73,7 +73,49 @@
                 $('#id_placement').html("<option>" + data.error + "</option>");
             });
     }
-    function get_clusters() {
+
+    function update_clusters(task_id) {
+      // Given a task_id, keep polling for the status of the given task. Once
+      // the task is ready, populate appropriate field
+      var jqxhr = $.ajax({
+        url: "{% url update_clusters %}",
+        type: "post",
+        data: {'task_id': task_id,
+               csrfmiddlewaretoken: csrf_token},
+        success: function(data){
+          if (data.ready === true){
+            $('#abort_clusters_fetch').hide();
+            var clusters = Array();
+            if (data.clusters_list.length > 0) {
+              for (var i=0; i<data.clusters_list.length; i++) {
+                clusters.push({'id': data.clusters_list[i].cluster_name,
+                  'text': data.clusters_list[i].cluster_name});
+              }
+              c_name_el.removeAttr('disabled');
+              var options = { width: "resolve",
+                  closeOnSelect: !c_name_el.is("[MULTIPLE]"),
+                  createSearchChoice: function(term) {
+                      return {
+                          id: term,
+                          text: term + ' (new)'
+                      };
+                  },
+                  data: clusters
+                };
+              return c_name_el.select2(options);
+            } else {
+              c_name_el.removeAttr('disabled');
+              c_name_el.attr("value", "No exiting clusters; enter any desired name");
+            }
+          }
+          else {
+            // Keep polling for task status
+            window.setTimeout(function(){update_clusters(task_id)}, 5000);
+          }
+        }
+      });
+    }
+    function fetch_clusters() {
       // When credential entry is complete, submit to get info about existing
       // clusters and populate ``#id_cluster_name`` field, converting it into
       // a ``select2`` type field
@@ -86,7 +128,7 @@
               c_name_el.attr('value', "Fetching data... please wait");
               // Get info about existing clusters and update fields
               var jqxhr = $.ajax({
-                url: "{% url get_clusters %}",
+                url: "{% url fetch_clusters %}",
                 type: "post",
                 data: {'cloud_id': $('#id_cloud').val(),
                    'a_key': a_key_el.val(),
@@ -96,26 +138,8 @@
                   $('#abort_clusters_fetch').show();
                 },
                 success: function(data) {
-                    $('#abort_clusters_fetch').hide();
-                    var clusters = Array();
-                    if (data.length > 0) {
-                      for (var i=0; i<data.length; i++) {
-                        clusters.push({'id': data[i].cluster_name,
-                          'text': data[i].cluster_name});
-                      }
-                    }
-                    c_name_el.removeAttr('disabled');
-                    var options = { width: "resolve",
-                        closeOnSelect: !c_name_el.is("[MULTIPLE]"),
-                        createSearchChoice: function(term) {
-                            return {
-                                id: term,
-                                text: term + ' (new)'
-                            };
-                        },
-                        data: clusters
-                      };
-                    return c_name_el.select2(options);
+                  // Call the update method only after a few seconds
+                  window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
                 },
                 error: function(data){
                     // If anything goes wrong (also see #abort_clusters_fetch),
@@ -144,7 +168,7 @@
         get_dynamic_fields($("#id_cloud option:selected").val());
 
         // Get cluster info on form fill
-        get_clusters()
+        fetch_clusters()
 
         // Toggle advanced startup options
         $('#hide_advanced_startup_options').click(function(event){
