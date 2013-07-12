@@ -2,6 +2,7 @@
 {% block extra_head %}
   <script>
     var csrf_token;
+    var abort_fetch = false;
     function get_dynamic_fields(cloud_id) {
         $.post("{% url dynamic_fields %}",
             {'cloud_id': cloud_id,
@@ -74,46 +75,76 @@
             });
     }
 
+    function enable_fields(){
+      // If something goes wrong or want to cancel cluster list fetch, enable
+      // the user to provide values in the fields
+      c_name_el.removeAttr('disabled');
+      c_name_el.attr("value", "Enter any desired name");
+      $('#abort_clusters_fetch').hide();
+    }
+
     function update_clusters(task_id) {
       // Given a task_id, keep polling for the status of the given task. Once
       // the task is ready, populate appropriate field
-      var jqxhr = $.ajax({
-        url: "{% url update_clusters %}",
-        type: "post",
-        data: {'task_id': task_id,
-               csrfmiddlewaretoken: csrf_token},
-        success: function(data){
-          if (data.ready === true){
-            $('#abort_clusters_fetch').hide();
-            var clusters = Array();
-            if (data.clusters_list.length > 0) {
-              for (var i=0; i<data.clusters_list.length; i++) {
-                clusters.push({'id': data.clusters_list[i].cluster_name,
-                  'text': data.clusters_list[i].cluster_name});
+      console.log("abort_fetch: " + abort_fetch);
+      if (abort_fetch === false) {
+        c_name_el = $('#id_cluster_name');
+        var jqxhr = $.ajax({
+          url: "{% url update_clusters %}",
+          type: "post",
+          data: {'task_id': task_id,
+                 csrfmiddlewaretoken: csrf_token},
+          beforeSend: function(){
+            $('#abort_clusters_fetch').show();
+          },
+          success: function(data){
+            if (data.ready === true){
+              $('#abort_clusters_fetch').hide();
+              var clusters = Array();
+              if (data.clusters_list.length > 0) {
+                for (var i=0; i<data.clusters_list.length; i++) {
+                  clusters.push({'id': data.clusters_list[i].cluster_name,
+                    'text': data.clusters_list[i].cluster_name});
+                }
+                c_name_el.removeAttr('disabled');
+                var options = { width: "resolve",
+                    closeOnSelect: !c_name_el.is("[MULTIPLE]"),
+                    createSearchChoice: function(term) {
+                        return {
+                            id: term,
+                            text: term + ' (new)'
+                        };
+                    },
+                    data: clusters
+                  };
+                return c_name_el.select2(options);
+              } else {
+                c_name_el.removeAttr('disabled');
+                c_name_el.attr("value", "No exiting clusters; enter any desired name");
               }
-              c_name_el.removeAttr('disabled');
-              var options = { width: "resolve",
-                  closeOnSelect: !c_name_el.is("[MULTIPLE]"),
-                  createSearchChoice: function(term) {
-                      return {
-                          id: term,
-                          text: term + ' (new)'
-                      };
-                  },
-                  data: clusters
-                };
-              return c_name_el.select2(options);
-            } else {
-              c_name_el.removeAttr('disabled');
-              c_name_el.attr("value", "No exiting clusters; enter any desired name");
             }
+            else {
+              // Keep polling for task status
+              window.setTimeout(function(){update_clusters(task_id)}, 5000);
+            }
+          },
+          error: function(){
+              // If anything goes wrong (also see #abort_clusters_fetch),
+              // allow the user to provide a cluster name
+              enable_fields();
           }
-          else {
-            // Keep polling for task status
-            window.setTimeout(function(){update_clusters(task_id)}, 5000);
-          }
-        }
-      });
+        });
+        // Fetching clusters can take a while so allow a user to abort
+        // the request (note that this does not cancel the request on the
+        // server size).
+        $("#abort_clusters_fetch").click(function(){
+          abort_fetch = true;
+          var jqxhr = $.post("{% url revoke_fetch_clusters %}",
+              {'task_id': task_id,
+               csrfmiddlewaretoken: csrf_token})
+          enable_fields();
+        });
+      }
     }
     function fetch_clusters() {
       // When credential entry is complete, submit to get info about existing
@@ -134,26 +165,16 @@
                    'a_key': a_key_el.val(),
                    's_key': s_key_el.val(),
                    csrfmiddlewaretoken: csrf_token},
-                beforeSend: function(){
-                  $('#abort_clusters_fetch').show();
-                },
                 success: function(data) {
                   // Call the update method only after a few seconds
-                  window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
+                  // window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
+                  update_clusters(data.task_id);
                 },
                 error: function(data){
                     // If anything goes wrong (also see #abort_clusters_fetch),
                     // allow the user to provide a cluster name
-                    c_name_el.removeAttr('disabled');
-                    c_name_el.attr("value", "Enter any name you like");
-                    $('#abort_clusters_fetch').hide();
+                    enable_fields();
                 }
-              });
-              // Fetching clusters can take a while so allow a user to abort
-              // the request (note that this does not cancel the request on the
-              // server size).
-              $("#abort_clusters_fetch").click(function(){
-                jqxhr.abort();
               });
           }
       });

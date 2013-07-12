@@ -5,6 +5,7 @@ import logging
 import yaml
 
 from celery.result import AsyncResult
+from celery.task.control import revoke
 
 from django.http import HttpResponse
 from django.template import RequestContext
@@ -252,3 +253,19 @@ def update_clusters(request):
     if result.ready():
         r['clusters_list'] = result.get()
     return HttpResponse(simplejson.dumps(r), mimetype="application/json")
+
+
+def revoke_fetch_clusters(request):
+    """
+    Revoke a task with ``task_id`` that's to be provided as part of the ``request``.
+    When a worker receives a revoke request it will skip executing the task. In
+    case a task is executing, it will kill it.
+
+    .. Note::
+      Revoking a task works only with a *proper* messaging backend; it does not
+      work with Kombu.
+    """
+    task_id = request.POST.get('task_id', '')
+    revoke(task_id, terminate=True, signal='SIGKILL')
+    # Always report that a task has been revoked
+    return HttpResponse(simplejson.dumps({'revoked': True}), mimetype="application/json")

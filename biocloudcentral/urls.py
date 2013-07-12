@@ -17,6 +17,8 @@ urlpatterns = patterns('',
     url(r'^fetch-clusters$', 'biocloudcentral.views.fetch_clusters', name='fetch_clusters'),
     url(r'^update-clusters$', 'biocloudcentral.views.update_clusters',
         name='update_clusters'),
+    url(r'^revoke-fetch-clusters$', 'biocloudcentral.views.revoke_fetch_clusters',
+        name='revoke_fetch_clusters'),
     # url(r'^biocloudcentral/', include('biocloudcentral.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
