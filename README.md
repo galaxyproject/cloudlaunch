@@ -26,9 +26,11 @@ information:
     $ python biocloudcentral/manage.py migrate biocloudcentral
     $ python biocloudcentral/manage.py loaddata biocloudcentral/aws_db_data.json
 
-Finally, start the web server:
+Finally, start the web server and the Celery workers (probably in two separate
+tabs):
 
     $ python biocloudcentral/manage.py runserver
+    $ python biocloudcentral/manage.py celeryd --concurrency 3 --loglevel=info
 
 Use git to commit changes and push to Heroku for live deployment:
 
