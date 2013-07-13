@@ -1,6 +1,7 @@
 from django import forms
 from biocloudcentral import models
 
+
 class DynamicChoiceField(forms.ChoiceField):
     """ Override the ChoiceField to allow AJAX-populated choices in the
         part of the form.
@@ -19,19 +20,19 @@ class CloudManForm(forms.Form):
     target = "target='_blank'"
     textbox_size = "input_xlarge"
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
-                                   help_text="Choose from the available clouds. The credentials "\
+                                   help_text="Choose from the available clouds. The credentials "
                                    "you provide below must match (ie, exist on) the chosen cloud.",
-                                   widget=forms.Select(attrs={"class": textbox_size,
+                                   widget=forms.Select(attrs={"class": "%s disableable" % textbox_size,
                                    "onChange": "get_dynamic_fields(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
-                                 widget=forms.TextInput(attrs={"class": textbox_size}),
+                                 widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
                                  help_text="Your Access Key ID. For the Amazon cloud, available from "
                                  "the <a href='{0}' {1} tabindex='-1'>security credentials page</a>.".format(
                                      key_url, target))
     secret_key = forms.CharField(required=True,
-                                 widget=forms.TextInput(attrs={"class": textbox_size}),
+                                 widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
                                  help_text="Your Secret Access Key. For the Amazon cloud, also available "
-                                 "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."\
+                                 "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
                                  .format(key_url, target))
     # A simple text input element
     # cluster_name = forms.CharField(required=True,
@@ -41,7 +42,7 @@ class CloudManForm(forms.Form):
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification and "
                                    "relaunching. If creating a new cluster, type any name you prefer.",
-                                   widget=forms.TextInput(attrs={"class": textbox_size,
+                                   widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size,
                                     "type": "hidden", "value": "Provide cloud credentials first",
                                     "disabled": "disabled"}))
     # A simple drop down element
@@ -51,7 +52,7 @@ class CloudManForm(forms.Form):
     #                         widget=forms.Select(attrs={"class": textbox_size}))
     password = forms.CharField(widget=forms.PasswordInput(render_value=False,
                                                           attrs={"class": textbox_size}),
-                               help_text="Your choice of password, for the CloudMan " \
+                               help_text="Your choice of password, for the CloudMan "
                                "web interface and accessing the instance via ssh or FreeNX.")
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="Type (ie, virtual hardware configuration) of the instance to start.",

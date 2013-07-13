@@ -75,28 +75,32 @@
             });
     }
 
+    function disable_fields(){
+      // Make all form fields with class ``disableable`` disabled.
+      f_elts = $('.disableable');
+      f_elts.attr('disabled', 'disabled');
+    }
+
     function enable_fields(){
       // If something goes wrong or want to cancel cluster list fetch, enable
-      // the user to provide values in the fields
-      c_name_el.removeAttr('disabled');
-      c_name_el.attr("value", "Enter any desired name");
+      // the user to provide values in the fields by enabling all fields with
+      // ``disableable`` class.
+      f_elts = $('.disableable');
+      f_elts.removeAttr('disabled');
+      $('#id_cluster_name');.attr("value", "Enter any desired name");
       $('#abort_clusters_fetch').hide();
     }
 
     function update_clusters(task_id) {
-      // Given a task_id, keep polling for the status of the given task. Once
-      // the task is ready, populate appropriate field
-      console.log("abort_fetch: " + abort_fetch);
+      // Given a ``task_id``, keep polling for the status of the given task.
+      // Once the task is ready, populate appropriate field.
       if (abort_fetch === false) {
-        c_name_el = $('#id_cluster_name');
+        var c_name_el = $('#id_cluster_name');
         var jqxhr = $.ajax({
           url: "{% url update_clusters %}",
           type: "post",
           data: {'task_id': task_id,
                  csrfmiddlewaretoken: csrf_token},
-          beforeSend: function(){
-            $('#abort_clusters_fetch').show();
-          },
           success: function(data){
             if (data.ready === true){
               $('#abort_clusters_fetch').hide();
@@ -116,15 +120,16 @@
                         };
                     },
                     data: clusters
-                  };
+                };
+                enable_fields();
                 return c_name_el.select2(options);
               } else {
-                c_name_el.removeAttr('disabled');
+                enable_fields();
                 c_name_el.attr("value", "No exiting clusters; enter any desired name");
               }
             }
             else {
-              // Keep polling for task status
+              // Keep polling for task status every few seconds
               window.setTimeout(function(){update_clusters(task_id)}, 5000);
             }
           },
@@ -147,16 +152,15 @@
       }
     }
     function fetch_clusters() {
-      // When credential entry is complete, submit to get info about existing
-      // clusters and populate ``#id_cluster_name`` field, converting it into
-      // a ``select2`` type field
+      // When credential entry is complete, automatically initiate retrieval of
+      // existing clusters. Note that this will call ``update_clusters``
+      // method, which will keep updating the status of this, possibly long, action.
       $("#id_access_key, #id_secret_key").bind("paste input propertychange", function(){
-          s_key_el = $("#id_secret_key");
-          a_key_el = $("#id_access_key");
-          c_name_el = $('#id_cluster_name');
+          var s_key_el = $("#id_secret_key");
+          var a_key_el = $("#id_access_key");
+          var c_name_el = $('#id_cluster_name');
           if ((s_key_el.val().length === 40 || s_key_el.val().length === 36) && (a_key_el.val().length === 20 || a_key_el.val().length === 32)){
-              c_name_el.attr('disabled', 'disabled');
-              c_name_el.attr('value', "Fetching data... please wait");
+              abort_fetch = false;  // Reset flag on
               // Get info about existing clusters and update fields
               var jqxhr = $.ajax({
                 url: "{% url fetch_clusters %}",
@@ -165,6 +169,11 @@
                    'a_key': a_key_el.val(),
                    's_key': s_key_el.val(),
                    csrfmiddlewaretoken: csrf_token},
+                beforeSend: function(){
+                  $('#abort_clusters_fetch').show();
+                  disable_fields();
+                  c_name_el.attr('value', "Fetching data... please wait");
+                },
                 success: function(data) {
                   // Call the update method only after a few seconds
                   // window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
