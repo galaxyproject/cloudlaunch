@@ -146,7 +146,9 @@
                     data: clusters
                 };
                 enable_fields();
-                return c_name_el.select2(options);
+                c_name_el.select2(options);
+                // If choosing an existing cluster, look for placement automatically
+                c_name_el.attr("onChange", get_placements());
               } else {
                 enable_fields();
                 c_name_el.attr("value", "No exiting clusters; enter any desired name");
