@@ -3,6 +3,7 @@
   <script>
     var csrf_token;
     var abort_fetch = false;
+    var clusters_list = Array(); // A list of existing clusters for the given cloud+acct
     function get_dynamic_fields(cloud_id) {
         $.post("{% url dynamic_fields %}",
             {'cloud_id': cloud_id,
@@ -45,34 +46,55 @@
     function get_placements() {
         $('#id_placement').attr('disabled', 'disabled');
         $('#id_placement').html("<option>Fetching data...</option>");
-        var jqxhr = $.post("{% url get_placements %}",
-            {'cluster_name': $('#id_cluster_name').val(),
-             'cloud_id': $('#id_cloud').val(),
-             'a_key': $('#id_access_key').val(),
-             's_key': $('#id_secret_key').val(),
-             'instance_type': $('#id_instance_type').val(),
-             csrfmiddlewaretoken: csrf_token})
-            .success(function(data) {
-                if (data.placements.length > 0) {
-                    var placements = '';
-                    for (var i=0; i<data.placements.length; i++) {
-                        placements += '<option value="' + data.placements[i] + '">'
-                            + data.placements[i] + "</option>";
-                    }
-                    $('#id_placement').html(placements);
-                    $('#id_placement').removeAttr('disabled');
-                } else if (data.error) {
-                    $('#id_placement').attr('disabled', 'disabled');
-                    $('#id_placement').html("<option>" + data.error + "</option>");
-                } else {
-                    $('#id_placement').attr('disabled', 'disabled');
-                    $('#id_placement').html("<option>Click refresh to update</option>");
-                }
-            })
-            .error(function(data){
-                $('#id_placement').attr('disabled', 'disabled');
-                $('#id_placement').html("<option>" + data.error + "</option>");
-            });
+        // Let's first lookup if we have placement in the clusters_list
+        var placement_found = false;
+        if (clusters_list.length > 0) {
+          // Look for placement for the given cluster name
+          var cluster_name = $('#id_cluster_name').val();
+          for (i=0; i<clusters_list.length; i++) {
+            if (cluster_name == clusters_list[i].cluster_name) {
+              if (clusters_list[i].placement != null) {
+                placement = '<option value="' + clusters_list[i].placement + '">'
+                            + clusters_list[i].placement + "</option>";
+                $('#id_placement').html(placement);
+                $('#id_placement').removeAttr('disabled');
+                placement_found = true;
+              }
+            }
+          }
+        }
+        // If no cached placement was found, go look for it
+        if (placement_found === false) {
+          var jqxhr = $.post("{% url get_placements %}",
+              {// If not available cached, probably does not exist so don't look for it
+               //'cluster_name': $('#id_cluster_name').val(),
+               'cloud_id': $('#id_cloud').val(),
+               'a_key': $('#id_access_key').val(),
+               's_key': $('#id_secret_key').val(),
+               'instance_type': $('#id_instance_type').val(),
+               csrfmiddlewaretoken: csrf_token})
+              .success(function(data) {
+                  if (data.placements.length > 0) {
+                      var placements = '';
+                      for (var i=0; i<data.placements.length; i++) {
+                          placements += '<option value="' + data.placements[i] + '">'
+                              + data.placements[i] + "</option>";
+                      }
+                      $('#id_placement').html(placements);
+                      $('#id_placement').removeAttr('disabled');
+                  } else if (data.error) {
+                      $('#id_placement').attr('disabled', 'disabled');
+                      $('#id_placement').html("<option>" + data.error + "</option>");
+                  } else {
+                      $('#id_placement').attr('disabled', 'disabled');
+                      $('#id_placement').html("<option>Click refresh to update</option>");
+                  }
+              })
+              .error(function(data){
+                  $('#id_placement').attr('disabled', 'disabled');
+                  $('#id_placement').html("<option>" + data.error + "</option>");
+              });
+            }
     }
 
     function disable_fields(){
@@ -87,7 +109,7 @@
       // ``disableable`` class.
       f_elts = $('.disableable');
       f_elts.removeAttr('disabled');
-      $('#id_cluster_name');.attr("value", "Enter any desired name");
+      $('#id_cluster_name').attr("value", "Enter any desired name");
       $('#abort_clusters_fetch').hide();
     }
 
@@ -106,6 +128,8 @@
               $('#abort_clusters_fetch').hide();
               var clusters = Array();
               if (data.clusters_list.length > 0) {
+                // Keep the list of clusters to reuse for placement
+                clusters_list = data.clusters_list;
                 for (var i=0; i<data.clusters_list.length; i++) {
                   clusters.push({'id': data.clusters_list[i].cluster_name,
                     'text': data.clusters_list[i].cluster_name});
