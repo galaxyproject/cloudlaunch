@@ -6,7 +6,7 @@ South==0.7.3
 amqp==1.0.12
 anyjson==0.3.3
 billiard==2.7.3.31
-bioblend==0.3.2
+bioblend==0.3.3
 boto==2.9.6
 celery==3.0.21
 dj-database-url==0.2.1
