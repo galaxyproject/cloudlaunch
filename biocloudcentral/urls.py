@@ -1,3 +1,4 @@
+import settings
 from django.conf.urls.defaults import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
@@ -29,4 +30,8 @@ urlpatterns = patterns('',
 
     # Include CBLtweaker app
     url(r'^cbltweaker', include('biocloudcentral.cbltweaker.urls')),
+
+    # Needed to be able to run this app with gunicorn and have it serve static content
+    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': settings.STATICFILES_DIRS[0], 'show_indexes': True}),
 )
