@@ -165,6 +165,8 @@
               }
             }
             else {
+
+              c_name_el.attr('value', data.wait_text);
               // Keep polling for task status every few seconds
               window.setTimeout(function(){update_clusters(task_id)}, 5000);
             }

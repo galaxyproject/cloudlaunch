@@ -3,6 +3,7 @@
 import copy
 import logging
 import yaml
+from random import randint
 
 from celery.result import AsyncResult
 from celery.task.control import revoke
@@ -148,6 +149,7 @@ def keypair(request):
     response.write(ec2data['kp_material'])
     return response
 
+
 def instancestate(request):
     if 'ec2data' in request.session:
         form = request.session["ec2data"]
@@ -156,6 +158,7 @@ def instancestate(request):
     else:
         state = {'instance_state': 'Not available'}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+
 
 def dynamicfields(request):
     if request.is_ajax():
@@ -182,6 +185,7 @@ def dynamicfields(request):
         log.error("No XHR")
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
+
 def _get_placement_inner(request):
     if request.is_ajax():
         if request.method == 'POST':
@@ -203,6 +207,7 @@ def _get_placement_inner(request):
     else:
         log.error("No XHR")
     return {"error": "Please specify access and secret keys", "placements": []}
+
 
 def get_placements(request):
     try:
@@ -247,9 +252,13 @@ def update_clusters(request):
     """
     task_id = request.POST.get('task_id', '')
     result = AsyncResult(task_id)
+    fetching_data_text_list = ['Fetching data... please wait', 'Fetching data...',
+        'Still fetching data...', 'Hopefully done soon!']
+    fdt = fetching_data_text_list[randint(0, len(fetching_data_text_list) - 1)]
     r = {'task_id': task_id,
          'ready': result.ready(),
-         'clusters_list': []}
+         'clusters_list': [],
+         'wait_text': fdt}
     if result.ready():
         r['clusters_list'] = result.get()
     return HttpResponse(simplejson.dumps(r), mimetype="application/json")
