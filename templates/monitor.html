@@ -13,7 +13,7 @@
   <script>
 
     function update_ui(data) {
-        // console.log(data.instance_state);
+        // Depending on instance state, update appropriate UI elements
         if (data.instance_state == 'running') {
             $('#inst_state').html("Ready to use - click the IP below to access");
         }
@@ -29,7 +29,7 @@
             $('#inst_state').html("Not available");
         }
         if (data.instance_state != 'running') {
-            window.setTimeout(function(){update_instance_state()}, 5000);
+            window.setTimeout(function(){update_instance_state(data.task_id)}, 5000);
         } else {
           $('#ssh_public_ip').html(data.public_ip);
           $('#nx_public_ip').html(data.public_ip);
@@ -43,24 +43,30 @@
           $('#video_link_cont').html("");
         }
     }
-    function update_instance_state() {
+    function update_instance_state(task_id) {
+        // Keep polling the server for instance state
         $.ajax({
             url: "{% url inst_state %}",
-            timeout: 4000,
+            type: "post",
+            data: {'task_id': task_id,
+                   csrfmiddlewaretoken: csrf_token},
             }).done(function(data) {
                 update_ui(data);
             }).fail(function(data, textStatus){
                 if(textStatus == 'timeout') {
                     // Instance is probably alive but the web server not up yet
                     // so keep checking
-                    window.setTimeout(function(){update_instance_state()}, 5000);
+                    window.setTimeout(function(){update_instance_state(task_id)}, 5000);
                 } else {
                     alert("Failure! Check the cloud console.");
                 }
             });
     }
     $(document).ready(function() {
-        update_instance_state();
+        // Along with this, must add a macthing csrf_token in the body
+        csrf_token = $('#csrf_token >div >input').attr("value");
+
+        update_instance_state('');
         $('#ttp').stopwatch({format: '{Minutes} and {seconds}'}).stopwatch('start');
         $("a[rel^='prettyPhoto']").prettyPhoto({
             default_width: 640,
@@ -125,10 +131,7 @@
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
      <td>
-      <span id="cloud_url">
-        <a href="http://{{ request.session.ec2data.public_ip }}/cloud"
-          target="_blank">{{ request.session.ec2data.public_ip }}</a>
-      </span>
+      <span id="cloud_url"></span>
       <button id="copy-ip" class="pull-right btn btn-mini" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
         Copy IP
       </button>
@@ -190,4 +193,5 @@
 
 <script src="{{ STATIC_URL }}js/ZeroClipboard.min.js"></script>
 <script src="{{ STATIC_URL }}js/ZeroMain.js"></script>
+<div id="csrf_token" style='display:none'>{% csrf_token %}</div>
 {% endblock %}

@@ -151,10 +151,26 @@ def keypair(request):
 
 
 def instancestate(request):
-    if 'ec2data' in request.session:
+    task_id = request.POST.get('task_id', None)
+    state = {'task_id': None, 'instance_state': 'pending'}  # Reset info to be sent
+    if task_id:
+        # If we have a running task, check on instance state
+        result = AsyncResult(task_id)
+        if result.ready():
+            state = result.get()
+            state['task_id'] = None  # Reset but make sure it exists
+        else:
+            # If task not ready, send back the task_id
+            state['task_id'] = task_id
+    elif 'ec2data' in request.session:
+        # We have no task ID, so start a task to get instance state
         form = request.session["ec2data"]
-        cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
-        state = cml.get_status(form["instance_id"])
+        cloud = form['cloud']
+        a_key = form["access_key"]
+        s_key = form["secret_key"]
+        instance_id = form["instance_id"]
+        r = tasks.instance_state.delay(cloud, a_key, s_key, instance_id)
+        state['task_id'] = r.id
     else:
         state = {'instance_state': 'Not available'}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")

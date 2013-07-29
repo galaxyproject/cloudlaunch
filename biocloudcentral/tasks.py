@@ -22,3 +22,12 @@ def fetch_clusters(cloud, a_key, s_key):
     """
     cml = CloudManLauncher(a_key, s_key, cloud)
     return cml.get_clusters_pd()
+
+
+@task()
+def instance_state(cloud, a_key, s_key, instance_id):
+    """
+    Check on the state of an instance until and return the state.
+    """
+    cml = CloudManLauncher(a_key, s_key, cloud)
+    return cml.get_status(instance_id)
