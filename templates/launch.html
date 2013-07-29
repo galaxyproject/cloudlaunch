@@ -265,6 +265,13 @@
         $('#start_btn').click(function() {
           $(this).button('loading');
         });
+
+        // On text field focus, select all text
+        $(':text').focus(function(){
+            $(this).one('mouseup', function(event){
+                event.preventDefault();
+            }).select();
+        });
     });
   </script>
 {% endblock %}
