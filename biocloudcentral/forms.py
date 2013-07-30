@@ -41,10 +41,9 @@ class CloudManForm(forms.Form):
     #                                widget=forms.TextInput(attrs={"class": textbox_size}))
     cluster_name = forms.CharField(required=True,
                                    help_text="Name of your cluster used for identification and "
-                                   "relaunching. If creating a new cluster, type any name you prefer.",
+                                   "relaunching. If creating a new cluster, type any name you like.",
                                    widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size,
-                                    "type": "hidden", "value": "Provide cloud credentials first",
-                                    "disabled": "disabled"}))
+                                    "type": "hidden", "value": "Enter a cluster name or fetch existing"}))
     # A simple drop down element
     # cluster_name = DynamicChoiceField((("", "Provide cloud credentials first"),),
     #                         help_text="Choose a previously existing "

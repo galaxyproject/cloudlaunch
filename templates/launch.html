@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block extra_head %}
+<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
   <script>
     var csrf_token;
     var abort_fetch = false;
@@ -111,6 +112,7 @@
       // Make all form fields with class ``disableable`` disabled.
       f_elts = $('.disableable');
       f_elts.attr('disabled', 'disabled');
+      $('#fetch_clusters_btn').hide();
     }
 
     function enable_fields(){
@@ -121,6 +123,7 @@
       f_elts.removeAttr('disabled');
       $('#id_cluster_name').attr("value", "Enter any desired name");
       $('#abort_clusters_fetch').hide();
+      $('#fetch_clusters_btn').show();
     }
 
     function update_clusters(task_id) {
@@ -165,7 +168,6 @@
               }
             }
             else {
-
               c_name_el.attr('value', data.wait_text);
               // Keep polling for task status every few seconds
               window.setTimeout(function(){update_clusters(task_id)}, 5000);
@@ -190,41 +192,41 @@
       }
     }
     function fetch_clusters() {
-      // When credential entry is complete, automatically initiate retrieval of
-      // existing clusters. Note that this will call ``update_clusters``
-      // method, which will keep updating the status of this, possibly long, action.
-      $("#id_access_key, #id_secret_key").bind("paste input propertychange", function(){
-          var s_key_el = $("#id_secret_key");
-          var a_key_el = $("#id_access_key");
-          var c_name_el = $('#id_cluster_name');
-          if ((s_key_el.val().length === 40 || s_key_el.val().length === 36) && (a_key_el.val().length === 20 || a_key_el.val().length === 32)){
-              abort_fetch = false;  // Reset flag on
-              // Get info about existing clusters and update fields
-              var jqxhr = $.ajax({
-                url: "{% url fetch_clusters %}",
-                type: "post",
-                data: {'cloud_id': $('#id_cloud').val(),
-                   'a_key': a_key_el.val(),
-                   's_key': s_key_el.val(),
-                   csrfmiddlewaretoken: csrf_token},
-                beforeSend: function(){
-                  $('#abort_clusters_fetch').show();
-                  disable_fields();
-                  c_name_el.attr('value', "Fetching data... please wait");
-                },
-                success: function(data) {
-                  // Call the update method only after a few seconds
-                  // window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
-                  update_clusters(data.task_id);
-                },
-                error: function(data){
-                    // If anything goes wrong (also see #abort_clusters_fetch),
-                    // allow the user to provide a cluster name
-                    enable_fields();
-                }
-              });
-          }
-      });
+      // Initiate retrieval of existing clusters. Note that this will call
+      // ``update_clusters`` method, which will keep updating the status of this,
+      // possibly long, action.
+      var s_key_el = $("#id_secret_key");
+      var a_key_el = $("#id_access_key");
+      var c_name_el = $('#id_cluster_name');
+      if (s_key_el.val().length > 0 && a_key_el.val().length > 0){
+          abort_fetch = false;  // Reset flag on
+          // Get info about existing clusters and update fields
+          var jqxhr = $.ajax({
+            url: "{% url fetch_clusters %}",
+            type: "post",
+            data: {'cloud_id': $('#id_cloud').val(),
+               'a_key': a_key_el.val(),
+               's_key': s_key_el.val(),
+               csrfmiddlewaretoken: csrf_token},
+            beforeSend: function(){
+              $('#abort_clusters_fetch').show();
+              disable_fields();
+              c_name_el.attr('value', "Fetching data... please wait");
+            },
+            success: function(data) {
+              // Call the update method only after a few seconds
+              // window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
+              update_clusters(data.task_id);
+            },
+            error: function(data){
+                // If anything goes wrong (also see #abort_clusters_fetch),
+                // allow the user to provide a cluster name
+                enable_fields();
+            }
+          });
+      } else {
+        c_name_el.attr('value', "Enter cloud credentials first");
+      }
     }
     $(document).ready(function() {
         // Along with this, must add a macthing csrf_token in the body
@@ -234,9 +236,6 @@
         // This also keeps the instance types selected after a submission
         // of the form with errors
         get_dynamic_fields($("#id_cloud option:selected").val());
-
-        // Get cluster info on form fill
-        fetch_clusters()
 
         // Toggle advanced startup options
         $('#hide_advanced_startup_options').click(function(event){
@@ -251,12 +250,20 @@
             $('#hide_advanced_startup_options').show();
             $('#show_advanced_startup_options').hide();
         });
-        $(".refresh_link").click(function(event){
-            event.preventDefault();
-        });
         $("input,select,textarea").addClass("input-xlarge");
 
-        // Add a tooltip to #abort_clusters_fetch
+        // Allow the user to fetch a list of existing clusters
+        $('#fetch_clusters_btn').click(function(){ fetch_clusters(); });
+        $('#fetch_clusters_btn').tooltip({"placement": "right",
+          'title': 'Fetch existing clusters (note that this may take a while)'});
+
+        $('#get_placements_btn').click(function(event){
+          event.preventDefault();
+          get_placements(true);
+        });
+        $('#get_placements_btn').tooltip({"placement": "right",
+          'title': 'Fetch available cluster placement options'});
+
         $('#abort_clusters_fetch').tooltip({"placement": "right",
           'title': 'Abort cluster fetch request'});
 
@@ -302,11 +309,12 @@
         </label>
         <div class="controls{% if float %} controls-row{% endif %}">
           {{ field }}
-          {% if field.label == 'Placement' %}
-            <a class="refresh_link" href="#" onClick="get_placements(true)" style="padding-left: 5px; padding-right: 5px;"><i class="icon-refresh"></i></a>
-          {% endif %}
           {% if field.label == 'Cluster name' %}
-            <i id="abort_clusters_fetch" class="icon-remove" style="cursor: pointer; display: none"></i>
+            <i id="fetch_clusters_btn" class="icon-list-ul action-icons"></i>
+            <i id="abort_clusters_fetch" class="icon-remove action-icons" style="display: none"></i>
+          {% endif %}
+          {% if field.label == 'Placement' %}
+            <i id="get_placements_btn" class="icon-location-arrow action-icons"></i>
           {% endif %}
           {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}
           {% autoescape off %}
