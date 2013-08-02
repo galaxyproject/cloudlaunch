@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 
 # ## Landing page with redirects
 
+
 def home(request):
     launch_url = request.build_absolute_uri("/launch")
     if launch_url.startswith(("http://127.0.0.1", "http://localhost")) or not REDIRECT_BASE:
@@ -34,24 +35,30 @@ def home(request):
             redirect_base = "%s/" % redirect_base
         return redirect("%slaunch" % redirect_base)
 
-# ## CloudMan launch and configuration entry details
+
 def launch(request):
-    """Configure and launch CloudBioLinux and CloudMan servers.
+    """
+    Initiate launching of an instance. Given an empty request, render the
+    ``launch`` page. Given a ``POST`` request, initiate a background task to
+    launch an instance and return JSON with the task ID and ``ready`` status sttribute
+    set to ``false``.
     """
     if request.method == "POST":
-        form = forms.CloudManForm(request.POST)
-        if form.is_valid():
+        data = {'task_id': '', 'ready': '', 'error': ''}
+        form = forms.CloudManForm(data=request.POST)
+        if form.is_valid() and request.is_ajax:
             request.session["ec2data"] = form.cleaned_data
             request.session["ec2data"]['cloud_name'] = form.cleaned_data['cloud'].name
             request.session["ec2data"]['cloud_type'] = form.cleaned_data['cloud'].cloud_type
-            response = runinstance(request)
-            if not response['error']:
-                return redirect("/monitor")
-            else:
-                form.non_field_errors = "A problem starting your instance. "\
-                                        "Check the {0} cloud's console: {1}"\
-                                        .format(form.cleaned_data['cloud'].name,
-                                                response['error'])
+            # Initiate a background task now
+            form = request.session["ec2data"]
+            r = tasks.run_instance.delay(form)
+            data['task_id'] = r.id
+            data['ready'] = False
+        else:
+            # FIXME: make sure form errors are captured and propagaed back
+            data['error'] = dict([(k, [unicode(e) for e in v]) for k, v in form.errors.items()])
+        return HttpResponse(simplejson.dumps(data), mimetype="application/json")
     else:
         # Select the first item in the clouds dropdown, thus potentially eliminating
         # that click for the most commonly used cloud. This does assume the most used
@@ -59,10 +66,54 @@ def launch(request):
         form = forms.CloudManForm(initial={'cloud': 1})
     return render(request, "launch.html", {"form": form}, context_instance=RequestContext(request))
 
+
+def launch_status(request):
+    """
+    Given a task ID of a launch process/task, check if the task has completed.
+    Return a JSON object with the following keys: ``task_id``, ``ready``, and
+    ``error``
+    """
+    task_id = request.POST.get('task_id', '')
+    r = {'task_id': '', 'ready': '', 'error': ''}
+    if task_id:
+        r['task_id'] = task_id
+        result = AsyncResult(task_id)
+        r['ready'] = result.ready()
+        if r['ready']:  # The task completed; let's get the outcome
+            # Set session data based on the task result
+            # TODO: this should always return JSON and not mess with the session
+            #       Then, need to redo how monitor page is displayed...
+            response = result.get()
+            if response.get("error", ""):
+                r['error'] = response['error']
+            else:
+                request.session['ec2data']['cluster_name'] = response['cluster_name']
+                request.session['ec2data']['instance_id'] = response['instance_id']
+                request.session['ec2data']['public_ip'] = response['instance_ip']
+                request.session['ec2data']['image_id'] = response['image_id']
+                request.session['ec2data']['kp_name'] = response['kp_name']
+                request.session['ec2data']['kp_material'] = response['kp_material']
+                request.session['ec2data']['sg_name'] = response['sg_names'][0]
+                request.session['ec2data']['password'] = response['password']
+                # Add an entry to the Usage table now
+                try:
+                    u = models.Usage(cloud_name=response["cloud_name"],
+                                     cloud_type=response["cloud_type"],
+                                     image_id=response['image_id'],
+                                     instance_type=response['instance_type'],
+                                     user_id=response["access_key"])
+                    u.save()
+                except Exception, e:
+                    log.debug("Trouble saving Usage data: {0}".format(e))
+    return HttpResponse(simplejson.dumps(r), mimetype="application/json")
+
+
 def monitor(request):
-    """Monitor a launch request and return offline files for console re-runs.
+    """
+    Monitor a launch request and return offline files for console re-runs.
     """
     return render(request, "monitor.html", context_instance=RequestContext(request))
+
 
 def runinstance(request):
     """Run a CloudBioLinux/CloudMan instance with current session credentials.
@@ -128,6 +179,7 @@ def runinstance(request):
             log.debug("Trouble saving Usage data: {0}".format(e))
     return response
 
+
 def userdata(request):
     """Provide file download of user-data to re-start an instance.
     """
@@ -140,6 +192,7 @@ def userdata(request):
     ud = cml._compose_user_data(ec2data)
     response.write(ud)
     return response
+
 
 def keypair(request):
     ec2data = request.session["ec2data"]
@@ -185,12 +238,12 @@ def dynamicfields(request):
                 # Get instance types for the given cloud
                 its = models.InstanceType.objects.filter(cloud=cloud_id)
                 for it in its:
-                    instance_types.append((it.tech_name, \
+                    instance_types.append((it.tech_name,
                         "{0} ({1})".format(it.pretty_name, it.description)))
                 # Get Image IDs for the given cloud
                 iids = models.Image.objects.filter(cloud=cloud_id)
                 for iid in iids:
-                    image_ids.append((iid.pk, \
+                    image_ids.append((iid.pk,
                         "{0} ({1}){default}".format(iid.description, iid.image_id,
                         default="*" if iid.default is True else '')))
             state = {'instance_types': instance_types,

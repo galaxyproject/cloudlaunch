@@ -57,9 +57,9 @@
                     // Instance is probably alive but the web server not up yet
                     // so keep checking
                     window.setTimeout(function(){update_instance_state(task_id)}, 5000);
-                } else {
-                    alert("Failure! Check the cloud console.");
-                }
+                } //else {
+                    //alert("Failure! Check the cloud console.");
+                //}
             });
     }
     $(document).ready(function() {

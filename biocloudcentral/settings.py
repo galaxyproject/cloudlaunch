@@ -40,6 +40,9 @@ CACHES = {
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
+# Required because of the way we're redirecting from launch to monitor pages
+SESSION_SAVE_EVERY_REQUEST = True
+
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # although not all choices may be available on all operating systems.

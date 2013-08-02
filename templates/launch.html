@@ -228,6 +228,48 @@
         c_name_el.attr('value', "Enter cloud credentials first");
       }
     }
+
+    function update_launch_status(data){
+      console.log("In update_launch_status; task: " + data.task_id + "; ready: " + data.ready);
+      // Get an update on task status
+      $.ajax({
+        url: "{% url launch_status %}",
+        type: "post",
+        data: {'task_id': data.task_id,
+               csrfmiddlewaretoken: csrf_token},
+        success: function(data){
+         if (data.error != "") {
+            $('#error_container').text("Error launching an instance: " + data.error);
+            $('#error_container').addClass('alert alert-error');
+          }
+          else if (data.ready === true){
+            // Redirect to monitor page
+            window.location.href="/monitor";
+          }
+          else if (data.ready === false){
+            // The task is not ready yet, so keep polling
+            window.setTimeout(function(){update_launch_status(data)}, 5000);
+          }
+        }
+      });
+    }
+
+    function launch_instance(){
+      $.ajax({
+        url: "{% url launch %}",
+        type: "post",
+        data: {'form': $("#launch-form").serialize(),
+               csrfmiddlewaretoken: csrf_token},
+        beforeSend: function(){
+            $('#abort_clusters_fetch').show();
+            disable_fields();
+        },
+        success: function(data){
+          update_launch_status(data);
+        }
+      });
+
+    }
     $(document).ready(function() {
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
@@ -271,6 +313,31 @@
         $('#start_btn').button();
         $('#start_btn').click(function() {
           $(this).button('loading');
+          // launch_instance();
+        });
+        $('#launch-form').submit(function(event){
+          event.preventDefault();
+          sd = $("#launch-form").serialize();
+
+          $.ajax({
+            url: $('#launch-form').attr('action'),
+            type: $('#launch-form').attr('method'),
+            data: sd,
+            cache: 'false',
+            dataType: 'json',
+            async: 'true',
+            beforeSend: function(){
+                $('#abort_clusters_fetch').show();
+                disable_fields();
+            },
+            success: function(data){
+              update_launch_status(data);
+            },
+            error: function(data){
+              alert("Launch failed: " + data);
+            }
+          });
+
         });
 
         // On text field focus, select all text
@@ -292,13 +359,15 @@
         <a href="http://aws.amazon.com/">Amazon Web Services</a>).
       </small></h2>
     </div>
-{% if form.non_field_errors|length > 0 %}
-  <div class="alert alert-error">Cloud connection problem: <br/>
-    {{ form.non_field_errors }}
-  </div>
-{% endif %}
+<div id="error_container">
+  {% if form.non_field_errors|length > 0 %}
+    <div class="alert alert-error">Cloud connection problem: <br/>
+      {{ form.non_field_errors }}
+    </div>
+  {% endif %}
+</div>
 
-<form action="/launch" method="post" class="form-horizontal">
+<form id="launch-form" action="{% url launch %}" method="post" class="form-horizontal">
   {% csrf_token %}
   {% for field in form %}
     {% if not field.field.required %}

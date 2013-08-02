@@ -9,6 +9,7 @@ urlpatterns = patterns('',
     # Examples:
     url(r'^$', 'biocloudcentral.views.home', name='home'),
     url(r'^launch$', 'biocloudcentral.views.launch', name='launch'),
+    url(r'^launch-status$', 'biocloudcentral.views.launch_status', name='launch_status'),
     url(r'^monitor$', 'biocloudcentral.views.monitor', name='monitor'),
     url(r'^ud$', 'biocloudcentral.views.userdata', name='ud'),
     url(r'^kp$', 'biocloudcentral.views.keypair', name='kp'),
