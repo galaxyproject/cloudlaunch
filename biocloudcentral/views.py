@@ -205,7 +205,8 @@ def keypair(request):
 
 def instancestate(request):
     task_id = request.POST.get('task_id', None)
-    state = {'task_id': None, 'instance_state': 'pending'}  # Reset info to be sent
+    instance_state = request.POST.get('instance_state', 'pending')  # Preserve current state
+    state = {'task_id': None, 'instance_state': instance_state}  # Reset info to be sent
     if task_id:
         # If we have a running task, check on instance state
         result = AsyncResult(task_id)

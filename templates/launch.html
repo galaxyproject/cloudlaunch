@@ -230,7 +230,6 @@
     }
 
     function update_launch_status(data){
-      console.log("In update_launch_status; task: " + data.task_id + "; ready: " + data.ready);
       // Get an update on task status
       $.ajax({
         url: "{% url launch_status %}",
@@ -255,20 +254,34 @@
     }
 
     function launch_instance(){
-      $.ajax({
-        url: "{% url launch %}",
-        type: "post",
-        data: {'form': $("#launch-form").serialize(),
-               csrfmiddlewaretoken: csrf_token},
-        beforeSend: function(){
-            $('#abort_clusters_fetch').show();
-            disable_fields();
-        },
-        success: function(data){
-          update_launch_status(data);
-        }
+      // Initiate the process of launching an instance
+      $('#start_btn').button();
+      $('#start_btn').click(function() {
+        $(this).button('loading');
       });
+      $('#launch-form').submit(function(event){
+        event.preventDefault();
+        sd = $("#launch-form").serialize();
 
+        $.ajax({
+          url: $('#launch-form').attr('action'),
+          type: $('#launch-form').attr('method'),
+          data: sd,
+          cache: 'false',
+          dataType: 'json',
+          async: 'true',
+          beforeSend: function(){
+              $('#abort_clusters_fetch').show();
+              disable_fields();
+          },
+          success: function(data){
+            update_launch_status(data);
+          },
+          error: function(data){
+            alert("Launch failed: " + data);
+          }
+        });
+      });
     }
     $(document).ready(function() {
         // Along with this, must add a macthing csrf_token in the body
@@ -309,36 +322,8 @@
         $('#abort_clusters_fetch').tooltip({"placement": "right",
           'title': 'Abort cluster fetch request'});
 
-        // Handle form submission
-        $('#start_btn').button();
-        $('#start_btn').click(function() {
-          $(this).button('loading');
-          // launch_instance();
-        });
-        $('#launch-form').submit(function(event){
-          event.preventDefault();
-          sd = $("#launch-form").serialize();
-
-          $.ajax({
-            url: $('#launch-form').attr('action'),
-            type: $('#launch-form').attr('method'),
-            data: sd,
-            cache: 'false',
-            dataType: 'json',
-            async: 'true',
-            beforeSend: function(){
-                $('#abort_clusters_fetch').show();
-                disable_fields();
-            },
-            success: function(data){
-              update_launch_status(data);
-            },
-            error: function(data){
-              alert("Launch failed: " + data);
-            }
-          });
-
-        });
+        // Get ready to handle instance launch form submission
+        launch_instance()
 
         // On text field focus, select all text
         $(':text').focus(function(){

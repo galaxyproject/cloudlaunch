@@ -29,7 +29,7 @@
             $('#inst_state').html("Not available");
         }
         if (data.instance_state != 'running') {
-            window.setTimeout(function(){update_instance_state(data.task_id)}, 5000);
+            window.setTimeout(function(){update_instance_state(data.task_id, data.instance_state)}, 5000);
         } else {
           $('#ssh_public_ip').html(data.public_ip);
           $('#nx_public_ip').html(data.public_ip);
@@ -43,12 +43,13 @@
           $('#video_link_cont').html("");
         }
     }
-    function update_instance_state(task_id) {
+    function update_instance_state(task_id, instance_state) {
         // Keep polling the server for instance state
         $.ajax({
             url: "{% url inst_state %}",
             type: "post",
             data: {'task_id': task_id,
+                   'instance_state': instance_state,
                    csrfmiddlewaretoken: csrf_token},
             }).done(function(data) {
                 update_ui(data);
@@ -56,7 +57,7 @@
                 if(textStatus == 'timeout') {
                     // Instance is probably alive but the web server not up yet
                     // so keep checking
-                    window.setTimeout(function(){update_instance_state(task_id)}, 5000);
+                    window.setTimeout(function(){update_instance_state(task_id, instance_state)}, 5000);
                 } //else {
                     //alert("Failure! Check the cloud console.");
                 //}
@@ -66,7 +67,7 @@
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
 
-        update_instance_state('');
+        update_instance_state('', '');
         $('#ttp').stopwatch({format: '{Minutes} and {seconds}'}).stopwatch('start');
         $("a[rel^='prettyPhoto']").prettyPhoto({
             default_width: 640,
