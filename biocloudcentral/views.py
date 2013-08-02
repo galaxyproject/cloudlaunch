@@ -1,8 +1,6 @@
 """Base views.
 """
-import copy
 import logging
-import yaml
 from random import randint
 
 from celery.result import AsyncResult
@@ -113,71 +111,6 @@ def monitor(request):
     Monitor a launch request and return offline files for console re-runs.
     """
     return render(request, "monitor.html", context_instance=RequestContext(request))
-
-
-def runinstance(request):
-    """Run a CloudBioLinux/CloudMan instance with current session credentials.
-    """
-    form = request.session["ec2data"]
-
-    # Handle extra_user_data
-    extra_user_data = form['extra_user_data']
-    if extra_user_data:
-        for key, value in yaml.load(extra_user_data).iteritems():
-            form[key] = value
-    del form['extra_user_data']
-
-    rs = None
-    instance_type = form['instance_type']
-    # Create cloudman connection with provided creds
-    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
-    form["freenxpass"] = form["password"]
-    if form['image_id']:
-        image = models.Image.objects.get(pk=form['image_id'])
-    else:
-        try:
-            image = models.Image.objects.get(cloud=form['cloud'], default=True)
-        except models.Image.DoesNotExist:
-            log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
-            return False
-    # Compose kwargs from form data making sure the named arguments are not included
-    kwargs = copy.deepcopy(form)
-    for key in form.iterkeys():
-        if key in ['cluster_name', 'image_id', 'instance_type', 'password',
-                   'placement', 'access_key', 'secret_key', 'cloud']:
-            del kwargs[key]
-    response = cml.launch(cluster_name=form['cluster_name'],
-                        image_id=image.image_id,
-                        instance_type=instance_type,
-                        password=form["password"],
-                        kernel_id=image.kernel_id if image.kernel_id != '' else None,
-                        ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
-                        placement=form['placement'],
-                        **kwargs)
-    if response["error"]:
-        return response
-    elif response["rs"]:
-        rs = response["rs"]
-        request.session['ec2data']['cluster_name'] = form['cluster_name']
-        request.session['ec2data']['instance_id'] = rs.instances[0].id
-        request.session['ec2data']['public_ip'] = rs.instances[0].ip_address  # public_dns_name
-        request.session['ec2data']['image_id'] = rs.instances[0].image_id
-        request.session['ec2data']['kp_name'] = response['kp_name']
-        request.session['ec2data']['kp_material'] = response['kp_material']
-        request.session['ec2data']['sg_name'] = response['sg_names'][0]
-        request.session['ec2data']['password'] = form['password']
-
-        # Add an entry to the Usage table
-        try:
-            u = models.Usage(cloud_name=form["cloud_name"],
-                             cloud_type=form["cloud_type"],
-                             image_id=image.image_id,
-                             instance_type=instance_type,
-                             user_id=form["access_key"])
-            u.save()
-        except Exception, e:
-            log.debug("Trouble saving Usage data: {0}".format(e))
-    return response
 
 
 def userdata(request):
