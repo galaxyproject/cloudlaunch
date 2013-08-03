@@ -242,6 +242,9 @@
             window.location.href="/monitor";
           }
           else if (data.ready === false){
+            // Update #starting_updates to give the user an indication things
+            // are happening
+            $('#starting_updates').text(data.starting_updates)
             // The task is not ready yet, so keep polling
             window.setTimeout(function(){update_launch_status(data)}, 5000);
           }
@@ -268,6 +271,7 @@
           async: 'true',
           beforeSend: function(){
               disable_fields();
+              $('#starting_updates').show();
           },
           success: function(data){
             if (data.form_errors != "" || data.error != "") {
@@ -405,6 +409,9 @@
   <button id="start_btn" class="btn btn-large btn-primary" data-loading-text="Starting..." type="submit">
     Start an instance
   </button>
+  <span id="starting_updates" class="muted" style="display:none; padding-left:20px">
+    Really starting
+  </span>
 </form>
 
 <footer class="well">

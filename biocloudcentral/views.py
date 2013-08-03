@@ -42,7 +42,7 @@ def launch(request):
     attribute set to ``false``.
     """
     if request.method == "POST":
-        data = {'task_id': '', 'ready': False, 'error': ''}
+        data = {'task_id': '', 'ready': False, 'error': '', 'form_errors': ''}
         form = forms.CloudManForm(data=request.POST)
         if form.is_valid() and request.is_ajax:
             request.session["ec2data"] = form.cleaned_data
@@ -67,11 +67,11 @@ def launch(request):
 def launch_status(request):
     """
     Given a task ID of a launch process/task, check if the task has completed.
-    Return a JSON object with the following keys: ``task_id``, ``ready``, and
-    ``error``
+    Return a JSON object with the following keys: ``task_id``, ``ready``,
+    ``error``, and ``starting_text``.
     """
     task_id = request.POST.get('task_id', '')
-    r = {'task_id': '', 'ready': '', 'error': ''}
+    r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': ''}
     if task_id:
         r['task_id'] = task_id
         result = AsyncResult(task_id)
@@ -102,6 +102,11 @@ def launch_status(request):
                     u.save()
                 except Exception, e:
                     log.debug("Trouble saving Usage data: {0}".format(e))
+        else:
+            starting_text_list = ['Starting an instance... please wait', 'Really starting!',
+                'Still starting.', 'Hopefully done soon!']
+            st = starting_text_list[randint(0, len(starting_text_list) - 1)]
+            r['starting_text'] = st
     return HttpResponse(simplejson.dumps(r), mimetype="application/json")
 
 
