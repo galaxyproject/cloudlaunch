@@ -38,11 +38,11 @@ def launch(request):
     """
     Initiate launching of an instance. Given an empty request, render the
     ``launch`` page. Given a ``POST`` request, initiate a background task to
-    launch an instance and return JSON with the task ID and ``ready`` status sttribute
-    set to ``false``.
+    launch an instance and return JSON with the task ID and ``ready`` status
+    attribute set to ``false``.
     """
     if request.method == "POST":
-        data = {'task_id': '', 'ready': '', 'error': ''}
+        data = {'task_id': '', 'ready': False, 'error': ''}
         form = forms.CloudManForm(data=request.POST)
         if form.is_valid() and request.is_ajax:
             request.session["ec2data"] = form.cleaned_data
@@ -52,10 +52,9 @@ def launch(request):
             form = request.session["ec2data"]
             r = tasks.run_instance.delay(form)
             data['task_id'] = r.id
-            data['ready'] = False
         else:
-            # FIXME: make sure form errors are captured and propagaed back
-            data['error'] = dict([(k, [unicode(e) for e in v]) for k, v in form.errors.items()])
+            # Make sure form errors are captured and propagaed back
+            data['form_errors'] = [(k, [unicode(e) for e in v]) for k, v in form.errors.items()]
         return HttpResponse(simplejson.dumps(data), mimetype="application/json")
     else:
         # Select the first item in the clouds dropdown, thus potentially eliminating

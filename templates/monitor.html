@@ -67,7 +67,7 @@
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
 
-        update_instance_state('', '');
+        update_instance_state('', 'pending');  // Set state to pending right away
         $('#ttp').stopwatch({format: '{Minutes} and {seconds}'}).stopwatch('start');
         $("a[rel^='prettyPhoto']").prettyPhoto({
             default_width: 640,

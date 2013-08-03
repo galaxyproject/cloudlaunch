@@ -237,11 +237,7 @@
         data: {'task_id': data.task_id,
                csrfmiddlewaretoken: csrf_token},
         success: function(data){
-         if (data.error != "") {
-            $('#error_container').text("Error launching an instance: " + data.error);
-            $('#error_container').addClass('alert alert-error');
-          }
-          else if (data.ready === true){
+         if (data.ready === true){
             // Redirect to monitor page
             window.location.href="/monitor";
           }
@@ -271,13 +267,28 @@
           dataType: 'json',
           async: 'true',
           beforeSend: function(){
-              $('#abort_clusters_fetch').show();
               disable_fields();
           },
           success: function(data){
-            update_launch_status(data);
+            if (data.form_errors != "" || data.error != "") {
+              enable_fields();
+              $('#start_btn').button("reset");
+              $('#error_container').html("Error launching an instance <br/>" + data.error);
+              $('#error_container').addClass('alert alert-error');
+              for (i=0; i<data.form_errors.length; i++){
+                // Mark the label for missing field as being in error state
+                $("label[for='id_" + data.form_errors[i][0] + "']").parent().addClass('error');
+                // Add the error message inline with the errored field
+                $("#id_" + data.form_errors[i][0]).after(" <span class='help-inline error'>"
+                  + data.form_errors[i][1] + "</span>");
+              }
+            }
+            else {
+              update_launch_status(data);
+            }
           },
           error: function(data){
+            enable_fields();
             alert("Launch failed: " + data);
           }
         });
