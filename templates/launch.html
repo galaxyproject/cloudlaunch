@@ -319,6 +319,8 @@
             $('.advanced_startup_options').show();
             $('#hide_advanced_startup_options').show();
             $('#show_advanced_startup_options').hide();
+            // By default, custom image ID el. is hidden
+            $('#id_custom_image_id').parent().parent().hide();
         });
         $("input,select,textarea").addClass("input-xlarge");
 
@@ -345,6 +347,13 @@
             $(this).one('mouseup', function(event){
                 event.preventDefault();
             }).select();
+        });
+
+        // On selecting image option, conditionally toggle visibility of custom
+        // image text field
+        $('#id_image_id').change(function(){
+           var isCustom = $(this).val() == 0;
+           $('#id_custom_image_id').parent().parent().toggle(isCustom);
         });
     });
   </script>

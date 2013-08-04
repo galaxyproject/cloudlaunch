@@ -171,7 +171,7 @@ def dynamicfields(request):
     if request.is_ajax():
         if request.method == 'POST':
             cloud_id = request.POST.get('cloud_id', '')
-            instance_types, image_ids = [], []
+            instance_types, image_ids = [], [(0, 'Custom image')]
             if cloud_id != '':
                 # Get instance types for the given cloud
                 its = models.InstanceType.objects.filter(cloud=cloud_id)

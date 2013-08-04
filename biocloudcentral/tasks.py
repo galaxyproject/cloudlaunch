@@ -46,24 +46,36 @@ def run_instance(form):
     """
     Run a CloudBioLinux/CloudMan instance with current session credentials.
     """
+    err_msg = None
+    kernel_id = None
+    ramdisk_id = None
     # Handle extra_user_data
     extra_user_data = form['extra_user_data']
     if extra_user_data:
         for key, value in yaml.load(extra_user_data).iteritems():
             form[key] = value
     del form['extra_user_data']
-
     instance_type = form['instance_type']
     # Create cloudman connection with provided creds
     cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
     if form['image_id']:
-        image = models.Image.objects.get(pk=form['image_id'])
+        if form['image_id'] == '0':
+            image_id = form['custom_image_id']
+        else:
+            image = models.Image.objects.get(pk=form['image_id'])
+            image_id = image.image_id
+            image.kernel_id if image.kernel_id != '' else None
+            image.ramdisk_id if image.ramdisk_id != '' else None
     else:
         try:
             image = models.Image.objects.get(cloud=form['cloud'], default=True)
+            image_id = image.image_id
+            image.kernel_id if image.kernel_id != '' else None
+            image.ramdisk_id if image.ramdisk_id != '' else None
         except models.Image.DoesNotExist:
-            log.error("Cannot find an image to launch for cloud {0}".format(form['cloud']))
+            err_msg = "Cannot find an image to launch for cloud {0}".format(form['cloud'])
+            log.error(err_msg)
             return False
     # Compose kwargs from form data making sure the named arguments are not included
     kwargs = copy.deepcopy(form)
@@ -72,11 +84,11 @@ def run_instance(form):
                    'placement', 'access_key', 'secret_key', 'cloud']:
             del kwargs[key]
     response = cml.launch(cluster_name=form['cluster_name'],
-                        image_id=image.image_id,
+                        image_id=image_id,
                         instance_type=instance_type,
                         password=form["password"],
-                        kernel_id=image.kernel_id if image.kernel_id != '' else None,
-                        ramdisk_id=image.ramdisk_id if image.ramdisk_id != '' else None,
+                        kernel_id=kernel_id,
+                        ramdisk_id=ramdisk_id,
                         placement=form['placement'],
                         **kwargs)
     # Keep these parts of the form as part of the response
@@ -86,5 +98,6 @@ def run_instance(form):
     response['cloud_type'] = form['cloud_type']
     response['access_key'] = form['access_key']
     response['instance_type'] = form['instance_type']
-    response['image_id'] = image.image_id
+    response['image_id'] = image_id
+    response['error'] = err_msg
     return response

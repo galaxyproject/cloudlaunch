@@ -97,3 +97,8 @@ class CloudManForm(forms.Form):
                             label="Image",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    custom_image_id = forms.CharField(required=False,
+                              label="Custom image ID",
+                              widget=forms.TextInput(attrs={"class": textbox_size}),
+                              help_text="Having selected 'Custom image' in the previous drop down,"
+                              "provide desired maching image ID (e.g., ami-da5532cs)")
