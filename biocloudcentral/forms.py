@@ -3,8 +3,9 @@ from biocloudcentral import models
 
 
 class DynamicChoiceField(forms.ChoiceField):
-    """ Override the ChoiceField to allow AJAX-populated choices in the
-        part of the form.
+    """
+    Override the ChoiceField to allow AJAX-populated choices in the part of the
+    form.
     """
     def valid_value(self, value):
         # TODO: Add some validation code to ensure passed data is valid.
@@ -13,7 +14,8 @@ class DynamicChoiceField(forms.ChoiceField):
 
 
 class CloudManForm(forms.Form):
-    """Details needed to boot a setup and boot a CloudMan instance.
+    """
+    Details needed to boot a setup and boot a CloudMan instance.
     """
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     ud_url = "http://wiki.g2.bx.psu.edu/Admin/Cloud/UserData"
@@ -65,32 +67,32 @@ class CloudManForm(forms.Form):
                               label="Default bucket",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
                               help_text="The default bucket to use. See <a href='{0}' {1} tabindex='-1'>"
-                              "CloudMan's wiki</a> for a detailed description of this option."\
+                              "CloudMan's wiki</a> for a detailed description of this option."
                               .format(ud_url, target))
     post_start_script_url = forms.CharField(required=False,
                               label="Post-start script",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
                               help_text="A URL to the post-start script. See <a href='{0}' {1} tabindex='-1'>"
-                              "CloudMan's wiki</a> for a detailed description of this option."\
+                              "CloudMan's wiki</a> for a detailed description of this option."
                               .format(ud_url, target))
     worker_post_start_script_url = forms.CharField(required=False,
                               label="Worker post-start script",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
                               help_text="A URL to the post-start script for worker nodes. See "
-                              "<a href='{0}' {1} tabindex='-1'>CloudMan's wiki</a> for the description."\
+                              "<a href='{0}' {1} tabindex='-1'>CloudMan's wiki</a> for the description."
                               .format(ud_url, target))
     share_string = forms.CharField(required=False,
                               label="Shared cluster string",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
                               help_text="A share string to use for deriving this cluster instance."
                               "See <a href='https://bitbucket.org/galaxy/cloudman/wiki/SharedInstances'>"
-                              "this page</a> for a list of public shared instances."\
+                              "this page</a> for a list of public shared instances."
                               .format(ud_url, target))
     extra_user_data = forms.CharField(required=False,
                                 label="Extra User-Data",
                                 widget=forms.widgets.Textarea(attrs={"class": textbox_size}),
-                                help_text="Pass advanced properties to CloudMan via the the cloud" \
-                                "infrastructure's user-data mechanism. Properties should be in YAML" \
+                                help_text="Pass advanced properties to CloudMan via the the cloud"
+                                "infrastructure's user-data mechanism. Properties should be in YAML"
                                 "formatted key-value pairs.")
     image_id = DynamicChoiceField((("", "Choose cloud type first"),),
                             help_text="The machine image to start (* indicates the default machine image).",

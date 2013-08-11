@@ -5,6 +5,7 @@ import biocloudcentral
 import logging
 log = logging.getLogger(__name__)
 
+
 class Cloud(models.Model):
     CLOUD_TYPES = (
         ('ec2', 'AWS EC2'),
@@ -22,9 +23,12 @@ class Cloud(models.Model):
     bucket_default = models.CharField(max_length=255, blank=True, null=True)
     region_name = models.CharField(max_length=100)
     region_endpoint = models.CharField(max_length=255)
-    ec2_port = models.IntegerField(max_length=6, blank=True, null=True, verbose_name="EC2 port")
-    ec2_conn_path = models.CharField(max_length=255, default='/', verbose_name="EC2 conn path")
-    cidr_range = models.CharField(max_length=25, blank=True, null=True, verbose_name="CIDR IP range", \
+    ec2_port = models.IntegerField(max_length=6, blank=True, null=True,
+        verbose_name="EC2 port")
+    ec2_conn_path = models.CharField(max_length=255, default='/',
+        verbose_name="EC2 conn path")
+    cidr_range = models.CharField(max_length=25, blank=True, null=True,
+        verbose_name="CIDR IP range",
         help_text="Available IP range for all instances in this cloud in CIDR format")
     is_secure = models.BooleanField()
     s3_host = models.CharField(max_length=255)
@@ -54,6 +58,7 @@ class InstanceType(models.Model):
     class Meta:
         ordering = ['cloud', '-updated']
 
+
 class Image(models.Model):
     #automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
@@ -67,19 +72,23 @@ class Image(models.Model):
     ramdisk_id = models.CharField(max_length=30, blank=True, null=True)
 
     def __unicode__(self):
-        return u'[%s] %s (%s) %s' % (self.cloud.name, self.description, self.image_id, '*DEFAULT*' if self.default else '')
+        return (u'[%s] %s (%s) %s' %
+            (self.cloud.name, self.description, self.image_id,
+            '*DEFAULT*' if self.default else ''))
 
     def save(self, *args, **kwargs):
         # Ensure only 1 image is selected as the 'default' for the given cloud
         # This is not atomic but don't know how to enforce it at the DB level directly...
         if self.default is True:
             try:
-                previous_default = biocloudcentral.models.Image.objects.get(cloud=self.cloud, default=True)
+                previous_default = biocloudcentral.models.Image.objects.get(
+                    cloud=self.cloud, default=True)
                 previous_default.default = False
                 previous_default.save()
             except biocloudcentral.models.Image.DoesNotExist:
                 # This is the first entry so no default can exist
-                log.debug("Did not find previous default image; set {0} as default".format(self.image_id))
+                log.debug("Did not find previous default image; set {0} as default"
+                    .format(self.image_id))
         return super(Image, self).save()
 
     class Meta:
@@ -91,10 +100,10 @@ class DataBucket(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     #automatically add timestamps when object is updated
     updated = models.DateTimeField(auto_now=True)
-    name = models.CharField(max_length=63) # S3 bucket names should be between 3 and 63 characters long
+    name = models.CharField(max_length=63)  # S3 buckets can be between 3 and 63 characters long
     public = models.BooleanField(default=True)
     description = models.CharField(max_length=255)
-    cloud = models.ForeignKey(Cloud) # In the future, it may be possible to use other object stores as well
+    cloud = models.ForeignKey(Cloud)  # Allow use of other object stores as well
 
     def __unicode__(self):
         return u'{0}'.format(self.name)
@@ -119,10 +128,9 @@ class Usage(models.Model):
 
     def __unicode__(self):
         return u'{pk} | {add} | {name} | {ctype} | {iid} | {itype} | {user}'\
-            .format(pk=self.pk, add=self.added, name=self.cloud_name, ctype=self.cloud_type,\
+            .format(pk=self.pk, add=self.added, name=self.cloud_name, ctype=self.cloud_type,
             iid=self.image_id, itype=self.instance_type, user=self.user_id)
 
     class Meta:
         ordering = ['updated', 'cloud_type']
         verbose_name_plural = 'Usage'
-

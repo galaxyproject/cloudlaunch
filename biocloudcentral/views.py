@@ -1,4 +1,5 @@
-"""Base views.
+"""
+Base views.
 """
 import logging
 from random import randint
@@ -24,6 +25,9 @@ log = logging.getLogger(__name__)
 
 
 def home(request):
+    """
+    Render the home page, redirecting to ``/launch``
+    """
     launch_url = request.build_absolute_uri("/launch")
     if launch_url.startswith(("http://127.0.0.1", "http://localhost")) or not REDIRECT_BASE:
         return redirect("/launch")
@@ -118,7 +122,9 @@ def monitor(request):
 
 
 def userdata(request):
-    """Provide file download of user-data to re-start an instance.
+    """
+    Provide file download of user-data to enable re-start an instance from
+    cloud's console or the API.
     """
     ec2data = request.session["ec2data"]
     response = HttpResponse(mimetype='text/plain')
@@ -132,6 +138,10 @@ def userdata(request):
 
 
 def keypair(request):
+    """
+    Provide file download of the private part of key pair whose generation was
+    initiated on the cloud provider at instance launch time.
+    """
     ec2data = request.session["ec2data"]
     response = HttpResponse(mimetype='text/plain')
     response['Content-Disposition'] = 'attachment; filename={kp_name}-key.pem'.format(
@@ -141,6 +151,14 @@ def keypair(request):
 
 
 def instancestate(request):
+    """
+    Give a POST request with ``task_id`` and ``instance_state`` fields, return
+    JSON with updated value (given the task has completed or the same as provided)
+    value for the ``instance_state`` field and the same value for the ``task_id``.
+    ``task_id`` is to correspond to the ID of the background task.
+    If instance state is not available, return ``Not available`` as the value
+    for ``instance_state``.
+    """
     task_id = request.POST.get('task_id', None)
     instance_state = request.POST.get('instance_state', 'pending')  # Preserve current state
     state = {'task_id': None, 'instance_state': instance_state}  # Reset info to be sent
@@ -168,6 +186,11 @@ def instancestate(request):
 
 
 def dynamicfields(request):
+    """
+    Given ``cloud_id`` (as a PK in the local DB) in a POST request, return a
+    JSON with ``instance_types`` and ``image_ids`` containing pertinent info
+    about those attributes for the selected cloud.
+    """
     if request.is_ajax():
         if request.method == 'POST':
             cloud_id = request.POST.get('cloud_id', '')
@@ -194,6 +217,13 @@ def dynamicfields(request):
 
 
 def _get_placement_inner(request):
+    """
+    Perform the actual work of figuring out the possible cluster placement.
+
+    .. seealso::
+
+     See :ref:`get_placements`.
+    """
     if request.is_ajax():
         if request.method == 'POST':
             cluster_name = request.POST.get('cluster_name', '')
@@ -217,6 +247,18 @@ def _get_placement_inner(request):
 
 
 def get_placements(request):
+    """
+    Return s JSON with the following two keys: ``placement`` as a list  of
+    placement options for the chosen cloud and instance; and ``error`` as a
+    string with an error message (given there is one).
+    The POST request must contain the following fields: ``cluster_name``,
+    ``cloud_id`` (as a PK in the local DB), ``a_key``, ``s_key``, and
+    ``instance_type``.
+
+    .. note::
+        This request may take a while and the length depends on the number of
+        existing clusters under the given account.
+    """
     try:
         state = _get_placement_inner(request)
     except Exception, e:
