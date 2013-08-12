@@ -244,7 +244,7 @@
           else if (data.ready === false){
             // Update #starting_updates to give the user an indication things
             // are happening
-            $('#starting_updates').text(data.starting_updates)
+            $('#starting_updates').text(data.starting_text);
             // The task is not ready yet, so keep polling
             window.setTimeout(function(){update_launch_status(data)}, 5000);
           }
