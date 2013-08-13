@@ -1,4 +1,3 @@
-# import time
 import yaml
 import copy
 import logging
@@ -83,14 +82,15 @@ def run_instance(form):
         if key in ['cluster_name', 'image_id', 'instance_type', 'password',
                    'placement', 'access_key', 'secret_key', 'cloud']:
             del kwargs[key]
-    response = cml.launch(cluster_name=form['cluster_name'],
-                        image_id=image_id,
-                        instance_type=instance_type,
-                        password=form["password"],
-                        kernel_id=kernel_id,
-                        ramdisk_id=ramdisk_id,
-                        placement=form['placement'],
-                        **kwargs)
+    if not err_msg:
+        response = cml.launch(cluster_name=form['cluster_name'],
+                            image_id=image_id,
+                            instance_type=instance_type,
+                            password=form["password"],
+                            kernel_id=kernel_id,
+                            ramdisk_id=ramdisk_id,
+                            placement=form['placement'],
+                            **kwargs)
     # Keep these parts of the form as part of the response
     response['cluster_name'] = form['cluster_name']
     response['password'] = form['password']

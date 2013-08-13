@@ -237,11 +237,17 @@
         data: {'task_id': data.task_id,
                csrfmiddlewaretoken: csrf_token},
         success: function(data){
-         if (data.ready === true){
+         if (data.error != "") {
+            enable_fields();
+            $('#start_btn').button("reset");
+            $('#error_container').html("Error launching an instance <br/>" + data.error);
+            $('#error_container').addClass('alert alert-error');
+         }
+         else if (data.ready === true){
             // Redirect to monitor page
             window.location.href="/monitor";
           }
-          else if (data.ready === false){
+          else{
             // Update #starting_updates to give the user an indication things
             // are happening
             $('#starting_updates').text(data.starting_text);
