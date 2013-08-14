@@ -104,8 +104,8 @@
     Congratulations, your scalable analysis platform on the
     {{ request.session.ec2data.cloud_name }} cloud is launching!</span>
     <p>
-        The process of launching an instance takes a few minutes. Once the
-        instance and the necessary services are running, a link to the
+        The process of launching an instance of the platform takes a few minutes.
+        Once the instance and the necessary services are running, a link to the
         instance will be shown (in <i>Public IP</i> field). To manage
         your newly created platform, please use the
         <a href="http://usecloudman.org" target="_blank">CloudMan</a> console
@@ -123,12 +123,12 @@
 </div>
 
 <div class="row">
-<table class="table table-bordered table-striped span6">
+<table class="table table-bordered table-striped span7">
+ <tr><td>From zero to an analysis platform in</td>
+     <td><span id="ttp">&nbsp;</span></td>
+ </tr>
  <tr><td class="span5">Instance state</td>
      <td class="span7"><span id="inst_state">Not available</span></td>
- </tr>
- <tr><td>0 to an analysis platform in</td>
-     <td><span id="ttp">&nbsp;</span></td>
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
      <td>
@@ -138,12 +138,12 @@
       </button>
      </td>
  </tr>
- <tr><td>SSH access</td>
+ <tr><td>For command line SSH access use</td>
      <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
          (Use key pair or password from the entry form;
          <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
  </tr>
- <tr><td>FreeNX remote desktop access</td>
+ <tr><td>For FreeNX remote desktop access</td>
      <td>
          User: ubuntu <br/>
          Password: from the entry form (<span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)<br/>
@@ -178,18 +178,26 @@
  </tr>
 </table>
 <span id="video_link_cont" class="span4">
-    What is happening now?
-    <a href="http://youtu.be/lFm9iO3EMSc" title="This is a time lapse video of physically building a compute cluster. The analysis platform being built for you right now will functionally be equivalent to such a cluster - just built considerably quicker and is more accessible." data-toggle="tooltip" rel="prettyPhoto" title="">
+    <b>What is happening now? Why is this taking so long?</b><br/>
+    A compute cluster with all of the neccesary services is being built on the fly.
+    <a href="http://youtu.be/lFm9iO3EMSc" title="This is a time lapse video of physically building a compute cluster. The analysis platform being built for you right now will functionally be equivalent to such a cluster - just built considerably quicker and is more accessible. (The video will play in an overlay window and will not navigate you away from this page)" data-toggle="tooltip" rel="prettyPhoto" title="">
         Watch an example video
     </a>
-    for the non-cloud case.
+    of what this means for the non-cloud case.
 </span>
 </div>
 <div class="well">
-    <a class="btn btn-success" href="{% url ud %}">Download user-data</a>
-    This enables you to <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
-    re-start this platform</a> later, directly from the {{ request.session.ec2data.cloud_name }}
-    cloud's web console or via its API.
+    User data contains information necesary to recreate this particular cloud
+    platform. After terminating the platform instance, unless deleted, you can
+    easily recreate it from this website by using the same credentials
+    and cluster name. If you would like to recreate the platform manually from
+    the {{ request.session.ec2data.cloud_name }} cloud's  web console or directly
+    via the cloud's API, you will need the user-data in the downloaded format.
+    See <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
+    this page</a> for more information.
+    <div style="padding-top: 10px">
+      <a class="btn btn-success" href="{% url ud %}">Download user-data</a>
+    </div>
 </div>
 
 <script src="{{ STATIC_URL }}js/ZeroClipboard.min.js"></script>
