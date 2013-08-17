@@ -7,6 +7,9 @@ log = logging.getLogger(__name__)
 
 
 class Cloud(models.Model):
+    """
+    Cloud connection properties. These are tailored for use with boto library.
+    """
     CLOUD_TYPES = (
         ('ec2', 'AWS EC2'),
         ('openstack', 'OpenStack'),
@@ -43,6 +46,10 @@ class Cloud(models.Model):
 
 
 class InstanceType(models.Model):
+    """
+    Instance type properties. Each instance is linked to a cloud and available
+    instances need to be defined for each cloud.
+    """
     #automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
     #automatically add timestamps when object is updated
@@ -60,6 +67,10 @@ class InstanceType(models.Model):
 
 
 class Image(models.Model):
+    """
+    Machine image properties for a cloud. Available images need to be defined
+    for each cloud.
+    """
     #automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
     #automatically add timestamps when object is updated
@@ -96,6 +107,11 @@ class Image(models.Model):
 
 
 class DataBucket(models.Model):
+    """
+    Keep info about available object store bucket.
+
+    Not currently used.
+    """
     #automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
     #automatically add timestamps when object is updated
@@ -113,8 +129,8 @@ class DataBucket(models.Model):
 
 
 class Usage(models.Model):
-    """ Keep some usage information - not only beneficial but turns out
-        required data for grants and thus keeping this project going...
+    """
+    Keep some usage information about instances that are being launched.
     """
     #automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
