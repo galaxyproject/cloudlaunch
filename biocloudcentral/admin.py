@@ -21,10 +21,13 @@ admin.site.register(DataBucket)
 
 class UsageAdmin(admin.ModelAdmin):
     model = Usage
+    # Enable column-based display&filtering of entries
+    list_display = ('added', 'cloud_name', 'cloud_type', 'image_id', 'instance_type', 'user_id')
     # Enable filtering of displayed entries
     list_filter = ('added', 'cloud_name', 'cloud_type', 'image_id', 'instance_type', 'user_id',)
     # Enable hierarchical navigation by date
     date_hierarchy = 'added'
+    ordering = ('-added',)
     # Add search
     search_fields = ['image_id', 'instance_type', 'user_id']
 
