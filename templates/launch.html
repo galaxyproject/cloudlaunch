@@ -108,19 +108,31 @@
             }
     }
 
-    function disable_fields(){
-      // Make all form fields with class ``disableable`` disabled.
-      f_elts = $('.disableable');
-      f_elts.attr('disabled', 'disabled');
-      $('#fetch_clusters_btn').hide();
+    function disable_fields(all){
+      // Disable inptu fields. Parameter ``all`` (default value is ``true``)
+      // indicates that all the input fields should be disabled. If the provided
+      // argument is set to ``false``, only fields with class ``disableable``
+      // are disabled
+      all = typeof all !== 'undefined' ? all : true;  // Set a default value for the arg
+      if (all != true){
+        // Make all form fields with class ``disableable`` disabled.
+        f_elts = $('.disableable');
+        f_elts.attr('disabled', 'disabled');
+        $('#fetch_clusters_btn').hide();
+      } else {
+        // Disable all input fields
+        $('#launch-form :input').each(function(){
+          $(this).attr('disabled', 'disabled');
+        })
+      }
     }
 
     function enable_fields(){
-      // If something goes wrong or want to cancel cluster list fetch, enable
-      // the user to provide values in the fields by enabling all fields with
-      // ``disableable`` class.
-      f_elts = $('.disableable');
-      f_elts.removeAttr('disabled');
+      // When enabling fields, enable all of the form input fields
+      $('#launch-form :input').each(function(){
+          $(this).removeAttr('disabled');
+      })
+      // A bit tailored for the fetch clusters call but shouldn't hurt anything
       $('#id_cluster_name').attr("value", "Enter any desired name");
       $('#abort_clusters_fetch').hide();
       $('#fetch_clusters_btn').show();
@@ -210,7 +222,7 @@
                csrfmiddlewaretoken: csrf_token},
             beforeSend: function(){
               $('#abort_clusters_fetch').show();
-              disable_fields();
+              disable_fields(false);
               c_name_el.attr('value', "Fetching data... please wait");
             },
             success: function(data) {
