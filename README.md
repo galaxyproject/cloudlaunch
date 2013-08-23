@@ -6,7 +6,7 @@ run it locally - either way, it takes about 2 minutes to go from nothing to
 a configured cluster-in-the-cloud and a scalable analysis platform on top of
 cloud resources.
 
-### Installing
+### Installing the app
 
 This [Django][1] application can be run locally, on a dedicated server or deployed
 on [Heroku][4]. To run locally or on a dedicated server, start by installing Python
@@ -32,7 +32,7 @@ If not already installed, do so and then create a database (remember to change t
 password and match it to what you put into your [biocloudcentral/settings.py][6]
 file).
 
-    $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE bcc LOGIN CREATEDB PASSWORD 'password'\""
+    $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE ubuntu LOGIN CREATEDB PASSWORD 'password'\""
     $ createdb --username bcc --port 5432 biocloudcentral
 
 Finally, apply the database migrations, and, optionally, preload your database
@@ -44,7 +44,7 @@ with the details about [AWS instances][9]:
     $ python biocloudcentral/manage.py migrate kombu.transport.django
     $ python biocloudcentral/manage.py loaddata biocloudcentral/aws_db_data.json
 
-### Deploying locally
+### Running locally
 
 Simply start the web server and the Celery workers (in two separate tabs or
 [screen][10] sessions):
@@ -63,6 +63,50 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
 
     $ git remote add heroku git@heroku.com:biocloudcentral.git
     $ git push heroku master
+
+### Configuring on a dedicated production server
+
+- Launch a Ubuntu 12.04 instance or a VM
+- Install necessary system packages:
+
+        $ sudo apt-get install python-virtualenv git postgresql libpq_dev postgresql-server-dev-all python-dev nginx
+
+- Clone BioCloudCentral into a local directory (e.g., ``/gvl/bcc``):
+
+        $ cd /gvl/bcc
+        $ git clone git@github.com:chapmanb/biocloudcentral.git
+
+- Follow above standard installation instructions while noting that the ``ROLE`` for ``psql`` needs to be an existing system user (e.g., ``ubuntu``)
+- Create an empty log file that can be edited by the ``ubuntu`` user (e.g., ``/var/log/bcc_server.log``)
+- Update settings in ``settings.py`` to match your server:
+
+    - Edit the database settings to point to the installed Postgres DB
+    - Set ``DEBUG`` to ``False``
+    - Set admin users
+    - Set ``REDIRECT_BASE`` to ``None``
+    - Set ``STATIC_ROOT`` to ``/gvl/bcc/media`` (and create that dir)
+    - Set ``SESSION_ENGINE`` to ``django.contrib.sessions.backends.db``
+    - Change ``SECRET_KEY``
+
+- Collect all static files into a single directory by running:
+
+        $ cd /gvl/bcc/biocloudcentral
+        $ python biocloudcentral/manage.py collectstatic
+
+- Make sure settings in ``bcc_run_server.sh`` are correct for your server
+- Copy Upstart files (``bcc.conf`` and ``bcc_celery.conf``) to ``/etc/init``
+- Configure nginx:
+
+    - Delete ``default`` site from ``/etc/nginx/sites-enabled``
+    - Create ``/etc/nginx/sites-available/bcc`` directory and copy ``bcc_nginx.conf`` file from the BioCloudCentral repo there
+    - Create a symlink ``ln -s /etc/nginx/sites-available/bcc/bcc_nginx.conf /etc/nginx/sites-enabled/bcc``
+    - Optionally update the number of worker threads in ``/etc/nginx/nginx.conf``
+    - Start ``sudo service nginx start`` or reload nginx: ``sudo nginx -s reload``
+
+- Start the app services:
+
+        $ sudo service bcc start
+        $ sudo service bcc_celery start
 
 [1]: https://www.djangoproject.com/
 [2]: http://usecloudman.org/
