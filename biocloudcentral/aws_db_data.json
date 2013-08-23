@@ -190,7 +190,7 @@
       "kernel_id": "", 
       "default": false, 
       "ramdisk_id": "", 
-      "image_id": "ami-5b084832",
+      "image_id": "ami-37febd5e",
       "description": "JCVI Viral and Prokaryotic Pipelines",
       "cloud": 1
     }
