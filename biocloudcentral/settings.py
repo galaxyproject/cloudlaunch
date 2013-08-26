@@ -28,7 +28,7 @@ MANAGERS = ADMINS
 #         'PORT': '5910',                  # Set to empty string for default. Not used with sqlite3.
 #     }
 # }
-DATABASES = {'default': dj_database_url.config()}
+DATABASES = {'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))}
 
 CACHES = {
     'default': {
