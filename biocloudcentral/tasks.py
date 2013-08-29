@@ -1,3 +1,4 @@
+# import time
 import yaml
 import copy
 import logging
@@ -78,9 +79,13 @@ def run_instance(form):
             return False
     # Compose kwargs from form data making sure the named arguments are not included
     kwargs = copy.deepcopy(form)
+    # key_name is the parameter name for the key pair in the launch method so
+    # ensure it's there as a kwqrg if provided in the form
+    if form.get('key_pair', None):
+        kwargs['key_name'] = form['key_pair']
     for key in form.iterkeys():
         if key in ['cluster_name', 'image_id', 'instance_type', 'password',
-                   'placement', 'access_key', 'secret_key', 'cloud']:
+                   'placement', 'access_key', 'secret_key', 'cloud', 'key_pair']:
             del kwargs[key]
     if not err_msg:
         response = cml.launch(cluster_name=form['cluster_name'],

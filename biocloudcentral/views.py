@@ -273,6 +273,37 @@ def get_placements(request):
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 
+def get_key_pairs(request):
+    """
+    Retrieve a list of key pairs available in the user's account on the given cloud.
+    """
+    response = {}
+    if request.is_ajax():
+        if request.method == 'POST':
+            cloud_id = request.POST.get('cloud_id', '')
+            a_key = request.POST.get('a_key', '')
+            s_key = request.POST.get('s_key', '')
+            key_pairs = []
+            if a_key != '' and s_key != '':
+                # Needed to get the cloud connection
+                cloud = models.Cloud.objects.get(pk=cloud_id)
+                cml = CloudManLauncher(a_key, s_key, cloud)
+                kps = cml.ec2_conn.get_all_key_pairs()
+                key_pairs = []
+                for kp in kps:
+                    key_pairs.append(kp.name)
+                response = {'key_pairs': key_pairs}
+        else:
+            response = {"error": "Not a POST request", "key_pairs": []}
+            log.error("Not a POST request")
+    else:
+        response = {"error": "Not an AJAX request", "key_pairs": []}
+        log.error("No XHR")
+    if not response:
+        response = {"error": "Please specify access and secret keys", "key_pairs": []}
+    return HttpResponse(simplejson.dumps(response), mimetype="application/json")
+
+
 def fetch_clusters(request):
     """
     Intiate retrieval of a list of clusters associated with a given account on

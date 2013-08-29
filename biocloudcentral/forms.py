@@ -63,6 +63,11 @@ class CloudManForm(forms.Form):
                             "requires you have filled out the previous 6 fields!",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    key_pair = DynamicChoiceField((("", "Fill above fields & click refresh to fetch"),),
+                            help_text="A specific key pair to be used when launching your instance. This "
+                            "requires you have filled out the initial 6 fields!",
+                            required=False,
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     bucket_default = forms.CharField(required=False,
                               label="Default bucket",
                               widget=forms.TextInput(attrs={"class": textbox_size}),

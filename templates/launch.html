@@ -108,6 +108,43 @@
             }
     }
 
+    function get_key_pairs(){
+      var jqxhr = $.ajax({
+        url: "{% url get_key_pairs %}",
+        type: "post",
+        data: {'cloud_id': $('#id_cloud').val(),
+               'a_key': $('#id_access_key').val(),
+               's_key': $('#id_secret_key').val(),
+               csrfmiddlewaretoken: csrf_token},
+        beforeSend: function(){
+            disable_fields(false);
+            $(this).attr('value', "Fetching data... please wait");
+        },
+        success: function(data) {
+              enable_fields();
+              if (data.key_pairs.length > 0) {
+                var key_pairs = '';
+                for (var i=0; i<data.key_pairs.length; i++) {
+                    key_pairs += '<option value="' + data.key_pairs[i] + '">'
+                        + data.key_pairs[i] + "</option>";
+                }
+                $('#id_key_pair').html(key_pairs);
+                $('#id_key_pair').removeAttr('disabled');
+            } else if (data.error) {
+                $('#id_key_pair').attr('disabled', 'disabled');
+                $('#id_key_pair').html("<option>" + data.error + "</option>");
+            } else {
+                $('#id_key_pair').attr('disabled', 'disabled');
+                $('#id_key_pair').html("<option>Click refresh to update</option>");
+            }
+        },
+        error: function(data){
+            $('#id_key_pair').attr('disabled', 'disabled');
+            $('#id_key_pair').html("<option>" + data.error + "</option>");
+        }
+      });
+    }
+
     function disable_fields(all){
       // Disable inptu fields. Parameter ``all`` (default value is ``true``)
       // indicates that all the input fields should be disabled. If the provided
@@ -354,6 +391,13 @@
         $('#get_placements_btn').tooltip({"placement": "right",
           'title': 'Fetch available cluster placement options'});
 
+        $('#get_gey_pair_btn').click(function(event){
+          event.preventDefault();
+          get_key_pairs(true);
+        });
+        $('#get_gey_pair_btn').tooltip({"placement": "right",
+          'title': 'Fetch available key pairs'});
+
         $('#abort_clusters_fetch').tooltip({"placement": "right",
           'title': 'Abort cluster fetch request'});
 
@@ -411,6 +455,9 @@
           {% endif %}
           {% if field.label == 'Placement' %}
             <i id="get_placements_btn" class="icon-location-arrow action-icons"></i>
+          {% endif %}
+          {% if field.label == 'Key pair' %}
+            <i id="get_gey_pair_btn" class="icon-location-arrow action-icons"></i>
           {% endif %}
           {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}
           {% autoescape off %}
