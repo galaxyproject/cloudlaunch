@@ -417,6 +417,20 @@
            var isCustom = $(this).val() == 0;
            $('#id_custom_image_id').parent().parent().toggle(isCustom);
         });
+
+        // Depending on whether a user is creating or recreating a cluster,
+        // take appropriate (UI) action
+        $('#create_new_cluster_link').click(function(event){
+          event.preventDefault();
+          $('#cluster_name_container').hide();
+          $('#id_cluster_name_container').show();
+        });
+        $('#recreate_cluster_link').click(function(event){
+          event.preventDefault();
+          fetch_clusters();
+          $('#cluster_name_container').hide();
+          $('#id_cluster_name_container').show();
+        });
     });
   </script>
 {% endblock %}
@@ -448,10 +462,24 @@
         <label class="control-label"{% if field.auto_id and input_type != "multicheckbox" and input_type != "radioset" %} for="{{ field.auto_id }}"{% endif %}>{{ field.label }}
         </label>
         <div class="controls{% if float %} controls-row{% endif %}">
-          {{ field }}
           {% if field.label == 'Cluster name' %}
-            <i id="fetch_clusters_btn" class="icon-list-ul action-icons"></i>
-            <i id="abort_clusters_fetch" class="icon-remove action-icons" style="display: none"></i>
+            {# Force users to explicitly choose if creating or recreating a cluster #}
+            <span id="cluster_name_container">
+              <button id="create_new_cluster_link" class="btn btn-small">
+                Create a new cluster
+              </button>
+              or
+              <button id="recreate_cluster_link" class="btn btn-small">
+                Recreate an existing cluster
+              </button>
+            </span>
+            <span id="id_cluster_name_container" style="display:none">
+              {{ field }}
+              <i id="fetch_clusters_btn" class="icon-list-ul action-icons"></i>
+              <i id="abort_clusters_fetch" class="icon-remove action-icons" style="display: none"></i>
+            </span>
+          {% else %}
+            {{ field }}
           {% endif %}
           {% if field.label == 'Placement' %}
             <i id="get_placements_btn" class="icon-location-arrow action-icons"></i>
