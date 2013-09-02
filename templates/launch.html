@@ -431,6 +431,17 @@
           $('#cluster_name_container').hide();
           $('#id_cluster_name_container').show();
         });
+
+        // On cloud selection change, reset cloud-specific fields
+        $('#id_cloud').change(function(){
+          $('#id_access_key').val('');
+          $('#id_secret_key').val('');
+          var default_option = "Fill above fields & click refresh to fetch";
+          $('#id_placement option').text(default_option);
+          $('#id_placement').attr('disabled', 'disabled');
+          $('#id_key_pair option').text(default_option);
+          $('#id_key_pair').attr('disabled', 'disabled');
+        });
     });
   </script>
 {% endblock %}
