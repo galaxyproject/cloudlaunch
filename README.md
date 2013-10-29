@@ -69,7 +69,7 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
 - Launch a Ubuntu 12.04 instance or a VM
 - Install necessary system packages:
 
-        $ sudo apt-get install python-virtualenv git postgresql libpq_dev postgresql-server-dev-all python-dev nginx
+        $ sudo apt-get install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx
 
 - Clone BioCloudCentral into a local directory (e.g., ``/gvl/bcc``):
 
