@@ -30,10 +30,11 @@ and proceed with the database migrations step below:
 If you are deploying to a production server, you'll want to use [PostgreSQL][15].
 If not already installed, do so and then create a database (remember to change the
 password and match it to what you put into your [biocloudcentral/settings.py][6]
-file).
+file). Note that the following commands use *ubuntu* as the database owner. If you
+prefer to use a different user, change it in both commands.
 
     $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE ubuntu LOGIN CREATEDB PASSWORD 'password'\""
-    $ createdb --username bcc --port 5432 biocloudcentral
+    $ createdb --username ubuntu --port 5432 biocloudcentral
 
 Finally, apply the database migrations, and, optionally, preload your database
 with the details about [AWS instances][9]:
