@@ -112,6 +112,10 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
         $ sudo service bcc start
         $ sudo service bcc_celery start
 
+- Connect to the service at http://your.ip.addr.here/launch
+
+      
+
 [1]: https://www.djangoproject.com/
 [2]: http://usecloudman.org/
 [3]: http://cloudbiolinux.org/
