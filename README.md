@@ -39,6 +39,7 @@ Finally, apply the database migrations, and, optionally, preload your database
 with the details about [AWS instances][9]:
 
     $ python biocloudcentral/manage.py syncdb
+    # no need to create a super-user account when asked
     $ python biocloudcentral/manage.py migrate biocloudcentral
     $ python biocloudcentral/manage.py migrate djcelery
     $ python biocloudcentral/manage.py migrate kombu.transport.django
@@ -102,6 +103,9 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
     - Create a symlink ``ln -s /etc/nginx/sites-available/bcc/bcc_nginx.conf /etc/nginx/sites-enabled/bcc``
     - Optionally update the number of worker threads in ``/etc/nginx/nginx.conf``
     - Start ``sudo service nginx start`` or reload nginx: ``sudo nginx -s reload``
+
+- Ensure bcc script is executable
+        $ sudo chmod +x /gvl/bcc/biocloudcentral/bcc_run_server.sh
 
 - Start the app services:
 
