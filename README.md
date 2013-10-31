@@ -97,7 +97,7 @@ a different user, change it in both commands:
                     'ENGINE': 'django.db.backends.postgresql_psycopg2',
                     'NAME': 'biocloudcentral',
                     'USER': 'ubuntu',
-                    'PASSWORD': 'Jvr4KScUqx',
+                    'PASSWORD': 'password_to_change',
                     'HOST': 'localhost',
                     'PORT': '5432',
                 }
