@@ -6,7 +6,7 @@ run it locally - either way, it takes about 2 minutes to go from nothing to
 a configured cluster-in-the-cloud and a scalable analysis platform on top of
 cloud resources.
 
-### Installing the app
+### Installing locally
 
 This [Django][1] application can be run locally, on a dedicated server or deployed
 on [Heroku][4]. To run locally or on a dedicated server, start by installing Python
@@ -27,17 +27,12 @@ and proceed with the database migrations step below:
     $ cp biocloudcentral/settings_local.py.sample biocloudcentral/settings_local.py
     $ mkdir biocloudcentral/db
 
-If you are deploying to a production server, you'll want to use [PostgreSQL][15].
-If not already installed, do so and then create a database (remember to change the
-password and match it to what you put into your [biocloudcentral/settings.py][6]
-file). Note that the following commands use *ubuntu* as the database owner. If you
-prefer to use a different user, change it in both commands.
-
-    $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE ubuntu LOGIN CREATEDB PASSWORD 'password'\""
-    $ createdb --username ubuntu --port 5432 biocloudcentral
+#### Applying database migrations
 
 Finally, apply the database migrations, and, optionally, preload your database
-with the details about [AWS instances][9]:
+with the details about [AWS instances][9]. When prompted, there is no requirement to
+create a super-user account when asked. However, it may be desirable to be able
+to log into the Admin side of the app:
 
     $ python biocloudcentral/manage.py syncdb
     $ python biocloudcentral/manage.py migrate biocloudcentral
@@ -45,7 +40,7 @@ with the details about [AWS instances][9]:
     $ python biocloudcentral/manage.py migrate kombu.transport.django
     $ python biocloudcentral/manage.py loaddata biocloudcentral/aws_db_data.json
 
-### Running locally
+#### Running locally
 
 Simply start the web server and the Celery workers (in two separate tabs or
 [screen][10] sessions):
@@ -72,16 +67,42 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
 
         $ sudo apt-get install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx
 
-- Clone BioCloudCentral into a local directory (e.g., ``/gvl/bcc``):
+- Clone BioCloudCentral into a local directory (e.g., ``/gvl/bcc``) and install
+the required libraries:
 
+        $ sudo mkdir -p /gvl/bcc
+        $ sudo chown ubuntu:ubuntu -R /gvl/bcc
         $ cd /gvl/bcc
-        $ git clone git@github.com:chapmanb/biocloudcentral.git
+        $ virtualenv .
+        $ source bin/activate
+        $ git clone https://github.com/chapmanb/biocloudcentral.git
+        $ cd biocloudcentral
+        $ pip install -r requirements.txt
 
-- Follow above standard installation instructions while noting that the ``ROLE`` for ``psql`` needs to be an existing system user (e.g., ``ubuntu``)
-- Create an empty log file that can be edited by the ``ubuntu`` user (e.g., ``/var/log/bcc_server.log``)
-- Update settings in ``settings.py`` to match your server:
+- Configure a production database, [PostgreSQL][15], with a database. Note that
+the following commands use *ubuntu* as the database owner. If you prefer to use
+a different user, change it in both commands:
 
-    - Edit the database settings to point to the installed Postgres DB
+        $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE ubuntu LOGIN CREATEDB PASSWORD 'password_to_change'\""
+        $ createdb --username ubuntu --port 5432 biocloudcentral
+
+- Update settings in ``biocloudcentral/settings.py`` to match your server settings:
+
+    - Edit the database settings to point to the installed Postgres DB. These must
+    match the username, port, and password from the previous two commands. Delete
+    or comment out any other ``DATABASE`` fields in the file.
+
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                    'NAME': 'biocloudcentral',
+                    'USER': 'ubuntu',
+                    'PASSWORD': 'Jvr4KScUqx',
+                    'HOST': 'localhost',
+                    'PORT': '5432',
+                }
+            }
+
     - Set ``DEBUG`` to ``False``
     - Set admin users
     - Set ``REDIRECT_BASE`` to ``None``
@@ -89,18 +110,44 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
     - Set ``SESSION_ENGINE`` to ``django.contrib.sessions.backends.db``
     - Change ``SECRET_KEY``
 
+- Apply database migrations as per above section
+
 - Collect all static files into a single directory by running:
 
         $ cd /gvl/bcc/biocloudcentral
-        $ python biocloudcentral/manage.py collectstatic
+        $ python biocloudcentral/manage.py collectstatic  # (type ``yes`` when prompted
+        about rewriting existing files)
 
-- Make sure settings in ``bcc_run_server.sh`` are correct for your server
+- Create an empty log file that can be edited by the ``ubuntu`` user
+
+        $ sudo touch /var/log/bcc_server.log
+        $ sudo chown ubuntu:ubuntu /var/log/bcc_server.log
+
+- Make sure settings in ``bcc_run_server.sh`` are correct for what you chose above
+and then make the file executable
+
+        $ chmod +x bcc_run_server.sh
+
 - Copy Upstart files (``bcc.conf`` and ``bcc_celery.conf``) to ``/etc/init``
+
+        $ sudo cp bcc.conf bcc_celery.conf /etc/init
+
 - Configure nginx:
 
     - Delete ``default`` site from ``/etc/nginx/sites-enabled``
-    - Create ``/etc/nginx/sites-available/bcc`` directory and copy ``bcc_nginx.conf`` file from the BioCloudCentral repo there
-    - Create a symlink ``ln -s /etc/nginx/sites-available/bcc/bcc_nginx.conf /etc/nginx/sites-enabled/bcc``
+
+            $ sudo rm /etc/nginx/sites-enabled/default
+
+    - Create ``/etc/nginx/sites-available/bcc`` directory and copy ``bcc_nginx.conf``
+    file from the BioCloudCentral repo there
+
+            $ sudo mkdir /etc/nginx/sites-available/bcc
+            $ sudo cp bcc_nginx.conf /etc/nginx/sites-available/bcc/
+
+    - Create the following symlink
+
+            $ sudo ln -s /etc/nginx/sites-available/bcc/bcc_nginx.conf /etc/nginx/sites-enabled/bcc
+
     - Optionally update the number of worker threads in ``/etc/nginx/nginx.conf``
     - Start ``sudo service nginx start`` or reload nginx: ``sudo nginx -s reload``
 
@@ -108,6 +155,9 @@ under your own account. Once setup, automatically [push to Heroku for live deplo
 
         $ sudo service bcc start
         $ sudo service bcc_celery start
+
+- The app is now available at ``https://server.ip.address/``. The Admin part of
+the app is available at ``https://server.ip.address/admin``.
 
 [1]: https://www.djangoproject.com/
 [2]: http://usecloudman.org/
