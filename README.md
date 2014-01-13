@@ -15,7 +15,7 @@ and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
     $ mkdir bcc; cd bcc
     $ virtualenv .
     $ source bin/activate
-    $ git clone git@github.com:chapmanb/biocloudcentral.git
+    $ git clone https://github.com/chapmanb/biocloudcentral.git
     $ cd biocloudcentral
     $ pip install -r requirements.txt
 
