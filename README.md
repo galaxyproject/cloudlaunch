@@ -84,7 +84,7 @@ the following commands use *ubuntu* as the database owner. If you prefer to use
 a different user, change it in both commands:
 
         $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE ubuntu LOGIN CREATEDB PASSWORD 'password_to_change'\""
-        $ createdb --username ubuntu --port 5432 biocloudcentral
+        $ sudo su ubuntu -c "createdb --username ubuntu --port 5432 biocloudcentral"
 
 - Update settings in ``biocloudcentral/settings.py`` to match your server settings:
 
