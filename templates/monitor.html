@@ -12,8 +12,39 @@
   </style>
   <script>
 
+    // checkin requesting ....
+    function update_launch_status(){
+      // Get an update on task status
+      $.ajax({
+        url: "{% url launch_status %}",
+        type: "post",
+        data: {csrfmiddlewaretoken: csrf_token},
+        success: function(data){
+         update_progress_bar ("requesting");
+
+         if (data.ready == true){
+            // Redirect to monitor page
+            update_instance_state('', 'pending');  // Set state to pending right away
+          }
+          else{
+            // Update #starting_updates to give the user an indication 
+            // things are happening
+            // The task is not ready yet, so keep polling
+            window.setTimeout(function(){update_launch_status(data)}, 5000);
+          }
+        }
+      });
+    }
+
     function update_ui(data) {
         // Depending on instance state, update appropriate UI elements
+        update_progress_bar (data.instance_state);
+
+        if (data.error != '') {
+
+          data.instance_state = 'error';
+        }
+
         if (data.instance_state == 'running') {
             $('#inst_state').html("Ready to use - click the IP below to access");
         }
@@ -22,12 +53,14 @@
               "<i class='icon-bell'></i>");
         }
         else if (data.instance_state != '') {
+
             $('#inst_state').html(data.instance_state +
                 " <img src='{{ STATIC_URL}}images/spinner.gif'/>");
         }
         else {
             $('#inst_state').html("Not available");
         }
+
         if (data.instance_state != 'running') {
             window.setTimeout(function(){update_instance_state(data.task_id, data.instance_state)}, 5000);
         } else {
@@ -61,13 +94,100 @@
                 } //else {
                     //alert("Failure! Check the cloud console.");
                 //}
-            });
+            }); 
     }
+
+    function update_progress_bar (state) {
+      // body...
+      var states = ["requesting", "pending", "booting", "running", "error"];
+      var colors = ['gray', '', 'green', 'red'];
+      var images = ['', 'none'];
+      var curStateColor = [];
+      var curImage = [];
+
+      if (state==states[0]) 
+        {
+          curStateColor = [1, 0, 0, 0],
+          curImage = [0, 1, 1, 1]
+        }
+
+      else if (state==states[1]) 
+        {
+          curStateColor = [2, 1, 0, 0],
+          curImage = [1, 0, 1, 1]
+        }
+
+      else if (state==states[2]) 
+        {
+          curStateColor = [2, 2, 1, 0],
+          curImage = [1, 1, 0, 1]
+        }
+
+      else if (state==states[3]) 
+        {
+          curStateColor = [2, 2, 2, 2],
+          curImage = [1, 1, 1, 1]
+        }
+      else if (state==states[4]) {
+          curStateColor = [3, 3, 3, 3],
+          curImage = [1, 1, 1, 1]
+        }
+      else{
+        // TODO
+      }
+
+
+
+      $('#requesting_bar').css({
+        'background-color': colors[curStateColor[0]],
+        'background-image': images[curImage[0]]
+      });
+
+      $('#pending_bar').css({
+        'background-color': colors[curStateColor[1]],
+        'background-image': images[curImage[1]]
+      });
+
+      $('#booting_bar').css({
+        'background-color': colors[curStateColor[2]],
+        'background-image': images[curImage[2]]
+      });
+
+      $('#ready_bar').css({
+        'background-color': colors[curStateColor[3]],
+        'background-image': images[curImage[3]]
+      });
+
+    }
+
     $(document).ready(function() {
+
+        $('#par1').click(function(event) {
+          /* Act on the event */
+          update_progress_bar('requesting');
+        });
+
+        $('#par2').click(function(event) {
+          /* Act on the event */
+          update_progress_bar('pending');
+        });
+
+        $('#par3').click(function(event) {
+          /* Act on the event */
+          update_progress_bar('booting');
+        });
+
+        $('#par4').click(function(event) {
+          /* Act on the event */
+          update_progress_bar('ready');
+        });
+
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
 
-        update_instance_state('', 'pending');  // Set state to pending right away
+        update_launch_status();
+
+        // update_instance_state('', 'pending');  // Set state to pending right away
         $('#ttp').stopwatch({format: '{Minutes} and {seconds}'}).stopwatch('start');
         $("a[rel^='prettyPhoto']").prettyPhoto({
             default_width: 640,
@@ -95,7 +215,10 @@
         color: #08c;
         background-color: #cccccc \9;
       }
+
+
     </style>
+
 {% endblock %}
 {% block content %}
 
@@ -124,11 +247,29 @@
 
 <div class="row">
 <table class="table table-bordered table-striped span7">
+
  <tr><td>From zero to an analysis platform in</td>
      <td><span id="ttp">&nbsp;</span></td>
  </tr>
  <tr><td class="span5">Instance state</td>
-     <td class="span7"><span id="inst_state">Not available</span></td>
+     <td class="span7">
+
+     <div class="progress progress-striped active" style="margin:0px">
+        <div id="requesting_bar" class="bar" style="width: 25%;">
+          <span class="sr-only">1. Requesting</span>
+        </div>
+        <div id="pending_bar" class="bar" style="width: 25%;">
+          <span class="sr-only">2. Pending</span>
+        </div>
+        <div id="booting_bar" class="bar" style="width: 25%;">
+          <span class="sr-only">3. Booting</span>
+        </div>
+        <div id="ready_bar" class="bar" style="width: 25%;">
+          <span class="sr-only">4. Ready</span>
+        </div>
+      </div>
+
+    </td>
  </tr>
  <tr><td>Public IP (CloudMan console)</td>
      <td>
