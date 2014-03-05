@@ -22,13 +22,12 @@ from bioblend.cloudman.launch import CloudManLauncher
 log = logging.getLogger(__name__)
 
 # ## Landing page with redirects
-
-
 def home(request):
     """
     Render the home page, redirecting to ``/launch``
     """
     launch_url = request.build_absolute_uri("/launch")
+
     if launch_url.startswith(("http://127.0.0.1", "http://localhost")) or not REDIRECT_BASE:
         return redirect("/launch")
     else:
@@ -36,7 +35,7 @@ def home(request):
         if not redirect_base.endswith("/"):
             redirect_base = "%s/" % redirect_base
         return redirect("%slaunch" % redirect_base)
-
+        
 
 def launch(request):
     """
@@ -47,24 +46,31 @@ def launch(request):
     """
     if request.method == "POST":
         data = {'task_id': '', 'ready': False, 'error': '', 'form_errors': ''}
+
         form = forms.CloudManForm(data=request.POST)
+
         if form.is_valid() and request.is_ajax:
             request.session["ec2data"] = form.cleaned_data
             request.session["ec2data"]['cloud_name'] = form.cleaned_data['cloud'].name
             request.session["ec2data"]['cloud_type'] = form.cleaned_data['cloud'].cloud_type
+
             # Initiate a background task now
             form = request.session["ec2data"]
             r = tasks.run_instance.delay(form)
             data['task_id'] = r.id
+            request.session['ec2data']['task_id'] = data['task_id'];
         else:
             # Make sure form errors are captured and propagaed back
             data['form_errors'] = [(k, [unicode(e) for e in v]) for k, v in form.errors.items()]
+
         return HttpResponse(simplejson.dumps(data), mimetype="application/json")
+
     else:
         # Select the first item in the clouds dropdown, thus potentially eliminating
         # that click for the most commonly used cloud. This does assume the most used
         # cloud is the first in the DB and that such an entry exists in the first place
         form = forms.CloudManForm(initial={'cloud': 1})
+
     return render(request, "launch.html", {"form": form}, context_instance=RequestContext(request))
 
 
@@ -74,7 +80,8 @@ def launch_status(request):
     Return a JSON object with the following keys: ``task_id``, ``ready``,
     ``error``, and ``starting_text``.
     """
-    task_id = request.POST.get('task_id', '')
+    # task_id = request.POST.get('task_id', '')
+    task_id =  request.session['ec2data']['task_id']
     r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': ''}
     if task_id:
         r['task_id'] = task_id
@@ -161,7 +168,7 @@ def instancestate(request):
     """
     task_id = request.POST.get('task_id', None)
     instance_state = request.POST.get('instance_state', 'pending')  # Preserve current state
-    state = {'task_id': None, 'instance_state': instance_state}  # Reset info to be sent
+    state = {'task_id': None, 'instance_state': instance_state, 'error': ''}  # Reset info to be sent
     if task_id:
         # If we have a running task, check on instance state
         result = AsyncResult(task_id)

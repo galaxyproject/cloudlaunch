@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% block extra_head %}
 <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
-  <script>
+ 
+  <script>                                                                         
     var csrf_token;
     var abort_fetch = false;
     var clusters_list = Array(); // A list of existing clusters for the given cloud+acct
@@ -278,35 +279,6 @@
       }
     }
 
-    function update_launch_status(data){
-      // Get an update on task status
-      $.ajax({
-        url: "{% url launch_status %}",
-        type: "post",
-        data: {'task_id': data.task_id,
-               csrfmiddlewaretoken: csrf_token},
-        success: function(data){
-         if (data.error != "") {
-            enable_fields();
-            $('#start_btn').button("reset");
-            $('#error_container').html("Error launching an instance <br/>" + data.error);
-            $('#error_container').addClass('alert alert-error');
-         }
-         else if (data.ready === true){
-            // Redirect to monitor page
-            window.location.href="/monitor";
-          }
-          else{
-            // Update #starting_updates to give the user an indication things
-            // are happening
-            $('#starting_updates').text(data.starting_text);
-            // The task is not ready yet, so keep polling
-            window.setTimeout(function(){update_launch_status(data)}, 5000);
-          }
-        }
-      });
-    }
-
     function launch_instance(){
       // Initiate the process of launching an instance
       $('#start_btn').button();
@@ -327,6 +299,7 @@
           beforeSend: function(){
               disable_fields();
               $('#starting_updates').show();
+
           },
           success: function(data){
             if (data.form_errors != "" || data.error != "") {
@@ -343,7 +316,8 @@
               }
             }
             else {
-              update_launch_status(data);
+              // Redirect to monitor page
+              window.location.href="/monitor";
             }
           },
           error: function(data){
@@ -352,8 +326,9 @@
           }
         });
       });
-    }
+    }                                                                
     $(document).ready(function() {
+
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
 
@@ -402,7 +377,7 @@
           'title': 'Abort cluster fetch request'});
 
         // Get ready to handle instance launch form submission
-        launch_instance()
+        launch_instance();
 
         // On text field focus, select all text
         $(':text').focus(function(){
@@ -443,6 +418,7 @@
           $('#id_key_pair').attr('disabled', 'disabled');
         });
     });
+  
   </script>
 {% endblock %}
 {% block content %}
@@ -455,6 +431,7 @@
         <a href="http://aws.amazon.com/">Amazon Web Services</a>).
       </small></h2>
     </div>
+
 <div id="error_container">
   {% if form.non_field_errors|length > 0 %}
     <div class="alert alert-error">Cloud connection problem: <br/>
@@ -526,6 +503,8 @@
     Really starting
   </span>
 </form>
+
+
 
 <footer class="well">
 <p>
