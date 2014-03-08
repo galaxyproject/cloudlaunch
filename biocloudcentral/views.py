@@ -81,8 +81,8 @@ def launch_status(request):
     ``error``, and ``starting_text``.
     """
     # task_id = request.POST.get('task_id', '')
-    task_id =  request.session['ec2data']['task_id']
-    r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': ''}
+    task_id = request.session['ec2data']['task_id']
+    r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': '', 'instance_id':'', 'sg_name':'', 'kp_name':''}
     if task_id:
         r['task_id'] = task_id
         result = AsyncResult(task_id)
@@ -102,7 +102,14 @@ def launch_status(request):
                 request.session['ec2data']['kp_name'] = response['kp_name']
                 request.session['ec2data']['kp_material'] = response['kp_material']
                 request.session['ec2data']['sg_name'] = response['sg_names'][0]
-                request.session['ec2data']['password'] = response['password']
+                request.session['ec2data']['password'] = response['password']       
+
+                #passing data needed for additional instance information table on monitor.html
+                r['instance_id'] = response['instance_id']
+                r['sg_name'] = response['sg_names'][0]
+                r['kp_name'] = response['kp_name']
+
+
                 # Add an entry to the Usage table now
                 try:
                     u = models.Usage(cloud_name=response["cloud_name"],

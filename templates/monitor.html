@@ -9,6 +9,18 @@
         cursor: pointer;
         text-decoration: underline;
       }
+      #table_additional_information {
+        display: none;
+      }
+      .table th {
+        text-align: center;
+      }
+
+      #copy-ip.copy-ip-hover {
+        color: #08c;
+        background-color: #cccccc \9;
+      }
+
   </style>
   <script>
 
@@ -23,11 +35,15 @@
          update_progress_bar ("requesting");
 
          if (data.ready == true){
+
+          $('#instance_id').html(data.instance_id);
+          $('#security_group').html(data.sg_name);
+          $('#key_pair').html(data.kp_name);
             // Redirect to monitor page
             update_instance_state('', 'pending');  // Set state to pending right away
           }
           else{
-            // Update #starting_updates to give the user an indication
+            // Update #starting_updates to give the user an indication 
             // things are happening
             // The task is not ready yet, so keep polling
             window.setTimeout(function(){update_launch_status(data)}, 5000);
@@ -94,7 +110,7 @@
                 } //else {
                     //alert("Failure! Check the cloud console.");
                 //}
-            });
+            }); 
     }
 
     function update_progress_bar (state) {
@@ -105,28 +121,30 @@
       var curStateColor = [];
       var curImage = [];
 
-      if (state==states[0])
+      if (state==states[0]) 
         {
           curStateColor = [1, 0, 0, 0],
           curImage = [0, 1, 1, 1]
         }
 
-      else if (state==states[1])
+      else if (state==states[1]) 
         {
           curStateColor = [2, 1, 0, 0],
           curImage = [1, 0, 1, 1]
         }
 
-      else if (state==states[2])
+      else if (state==states[2]) 
         {
           curStateColor = [2, 2, 1, 0],
           curImage = [1, 1, 0, 1]
         }
 
-      else if (state==states[3])
+      else if (state==states[3]) 
         {
           curStateColor = [2, 2, 2, 2],
           curImage = [1, 1, 1, 1]
+          //show table with additional information
+          $('#table_additional_information').show('slow');
         }
       else if (state==states[4]) {
           curStateColor = [3, 3, 3, 3],
@@ -155,29 +173,10 @@
         'background-color': colors[curStateColor[3]],
         'background-image': images[curImage[3]]
       });
+
     }
 
     $(document).ready(function() {
-
-        $('#par1').click(function(event) {
-          /* Act on the event */
-          update_progress_bar('requesting');
-        });
-
-        $('#par2').click(function(event) {
-          /* Act on the event */
-          update_progress_bar('pending');
-        });
-
-        $('#par3').click(function(event) {
-          /* Act on the event */
-          update_progress_bar('booting');
-        });
-
-        $('#par4').click(function(event) {
-          /* Act on the event */
-          update_progress_bar('ready');
-        });
 
         // Along with this, must add a macthing csrf_token in the body
         csrf_token = $('#csrf_token >div >input').attr("value");
@@ -207,12 +206,6 @@
         });
     });
   </script>
-  <style type="text/css">
-      #copy-ip.copy-ip-hover {
-        color: #08c;
-        background-color: #cccccc \9;
-      }
-  </style>
 
 {% endblock %}
 {% block content %}
@@ -241,91 +234,106 @@
 </div>
 
 <div class="row">
-<table class="table table-bordered table-striped span7">
- <tr><td>From zero to an analysis platform in</td>
-     <td><span id="ttp">&nbsp;</span></td>
- </tr>
- <tr><td class="span5">Instance state</td>
-     <td class="span7">
-
-     <div class="progress progress-striped active" style="margin:0px">
-        <div id="requesting_bar" class="bar" style="width: 25%;">
-          <span class="sr-only">1. Requesting</span>
-        </div>
-        <div id="pending_bar" class="bar" style="width: 25%;">
-          <span class="sr-only">2. Pending</span>
-        </div>
-        <div id="booting_bar" class="bar" style="width: 25%;">
-          <span class="sr-only">3. Booting</span>
-        </div>
-        <div id="ready_bar" class="bar" style="width: 25%;">
-          <span class="sr-only">4. Ready</span>
-        </div>
-      </div>
-    </td>
- </tr>
- <tr><td>Public IP (CloudMan console)</td>
-     <td>
-      <span id="cloud_url"></span>
-      <button id="copy-ip" class="pull-right btn btn-mini" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
-        Copy IP
-      </button>
-     </td>
- </tr>
-</table>
-</div>
-<div class="row">
-  <p style="margin: 20px 0 10px 30px;">Additional instance information</p>
-</div>
-<div class="row">
   <table class="table table-bordered table-striped span7">
-   <tr><td>For command line SSH access use</td>
-       <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
-           (Use key pair or password from the entry form;
-           <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
+
+   <tr><td>From zero to an analysis platform in</td>
+       <td><span id="ttp">&nbsp;</span></td>
    </tr>
-   <tr><td>For FreeNX remote desktop access</td>
+   <tr><td class="span5">Instance state</td>
+       <td class="span7">
+
+       <div class="progress progress-striped active" style="margin:0px">
+          <div id="requesting_bar" class="bar" style="width: 25%;">
+            <span class="sr-only">1. Requesting</span>
+          </div>
+          <div id="pending_bar" class="bar" style="width: 25%;">
+            <span class="sr-only">2. Pending</span>
+          </div>
+          <div id="booting_bar" class="bar" style="width: 25%;">
+            <span class="sr-only">3. Booting</span>
+          </div>
+          <div id="ready_bar" class="bar" style="width: 25%;">
+            <span class="sr-only">4. Ready</span>
+          </div>
+        </div>
+
+      </td>
+   </tr>
+   <tr><td>Public IP (CloudMan console)</td>
        <td>
-           User: ubuntu <br/>
-           Password: from the entry form (<span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)<br/>
-           Host: <span id="nx_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
-           Window Manager: GNOME<br/>
+        <span id="cloud_url"></span>
+        <button id="copy-ip" class="pull-right btn btn-mini" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
+          Copy IP
+        </button>
        </td>
-   </tr>
-   <tr><td>Cluster name</td>
-       <td>{{ request.session.ec2data.cluster_name }}</td>
-   </tr>
-   <tr><td>Instance ID</td>
-       <td>{{ request.session.ec2data.instance_id }}</td>
-   </tr>
-   <tr><td>Image ID (AMI)</td>
-       <td>{{ request.session.ec2data.image_id }}</td>
-   </tr>
-   <tr><td>Security group</td>
-       <td>{{ request.session.ec2data.sg_name }}</td>
-   </tr>
-   <tr><td>Key pair</td>
-       <td>
-           {# Show the link to download key pair material only if a new key pair was created #}
-           {% ifnotequal request.session.ec2data.kp_material None %}
-              <a href="{% url kp %}">{{ request.session.ec2data.kp_name }}</a>
-           {% else %}
-              {{ request.session.ec2data.kp_name }}
-           {% endifnotequal %}
-       </td>
-   </tr>
-   <tr><td>Placement (zone)</td>
-       <td id="placement">Not (yet) available</td>
    </tr>
   </table>
-  <span id="video_link_cont" class="span4">
-      <b>What is happening now? Why is this taking so long?</b><br/>
-      A compute cluster with all of the neccesary services is being built on the fly.
-      <a href="http://youtu.be/lFm9iO3EMSc" title="This is a time lapse video of physically building a compute cluster. The analysis platform being built for you right now will functionally be equivalent to such a cluster - just built considerably quicker and is more accessible. (The video will play in an overlay window and will not navigate you away from this page)" data-toggle="tooltip" rel="prettyPhoto" title="">
-          Watch an example video
-      </a>
-      of what this means for the non-cloud case.
-  </span>
+  <div>
+      <span id="video_link_cont" class="span4">
+        <b>What is happening now? Why is this taking so long?</b><br/>
+        A compute cluster with all of the neccesary services is being built on the fly.
+        <a href="http://youtu.be/lFm9iO3EMSc" title="This is a time lapse video of physically building a compute cluster. The analysis platform being built for you right now will functionally be equivalent to such a cluster - just built considerably quicker and is more accessible. (The video will play in an overlay window and will not navigate you away from this page)" data-toggle="tooltip" rel="prettyPhoto" title="">
+            Watch an example video
+        </a>
+        of what this means for the non-cloud case.
+    </span>
+    </div>
+</div>
+
+<div class="row">
+  <table id="table_additional_information" class="table table-bordered table-striped span7">
+    <thead>
+      <tr>
+        <th colspan=2>
+          Additional instance information
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+     <tr><td>For command line SSH access use</td>
+         <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
+             (Use key pair or password from the entry form;
+             <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
+     </tr>
+     <tr><td>For FreeNX remote desktop access</td>
+         <td>
+             User: ubuntu <br/>
+             Password: from the entry form (<span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)<br/>
+             Host: <span id="nx_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
+             Window Manager: GNOME<br/>
+         </td>
+     </tr>
+     <tr><td>Cluster name</td>
+         <td>{{ request.session.ec2data.cluster_name }}</td>
+     </tr>
+     <tr><td>Instance ID</td>
+         <!--<td>{{ request.session.ec2data.instance_id }}</td>-->
+         <td id="instance_id">Not yet available</td>
+     </tr>
+     <tr><td>Image ID (AMI)</td>
+         <td>{{ request.session.ec2data.image_id }}</td>
+     </tr>
+     <tr><td>Security group</td>
+         <!--<td id="security_group">{{ request.session.ec2data.sg_name }}</td> -->
+         <td id="security_group">Not yet available</td>
+     </tr>
+     <tr><td>Key pair</td>
+         <td id="key_pair">
+             {# Show the link to download key pair material only if a new key pair was created #}
+             <!--{% ifnotequal request.session.ec2data.kp_material None %}
+                <a href="{% url kp %}">{{ request.session.ec2data.kp_name }}</a>
+             {% else %}
+                {{ request.session.ec2data.kp_name }}
+             {% endifnotequal %} -->
+             Not yet available
+         </td>
+     </tr>
+     <tr><td>Placement (zone)</td>
+         <td id="placement">Not (yet) available</td>
+     </tr>
+     </tbody>
+    </table>
+
 </div>
 <div class="well">
     User data contains information necesary to recreate this particular cloud
