@@ -21,7 +21,8 @@ from bioblend.cloudman.launch import CloudManLauncher
 
 log = logging.getLogger(__name__)
 
-# ## Landing page with redirects
+
+## Landing page with redirects
 def home(request):
     """
     Render the home page, redirecting to ``/launch``
@@ -35,7 +36,7 @@ def home(request):
         if not redirect_base.endswith("/"):
             redirect_base = "%s/" % redirect_base
         return redirect("%slaunch" % redirect_base)
-        
+
 
 def launch(request):
     """
@@ -58,7 +59,7 @@ def launch(request):
             form = request.session["ec2data"]
             r = tasks.run_instance.delay(form)
             data['task_id'] = r.id
-            request.session['ec2data']['task_id'] = data['task_id'];
+            request.session['ec2data']['task_id'] = data['task_id']
         else:
             # Make sure form errors are captured and propagaed back
             data['form_errors'] = [(k, [unicode(e) for e in v]) for k, v in form.errors.items()]
@@ -82,7 +83,8 @@ def launch_status(request):
     """
     # task_id = request.POST.get('task_id', '')
     task_id = request.session['ec2data']['task_id']
-    r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': '', 'instance_id':'', 'sg_name':'', 'kp_name':''}
+    r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': '', 'instance_id': '',
+         'sg_name': '', 'kp_name': ''}
     if task_id:
         r['task_id'] = task_id
         result = AsyncResult(task_id)
@@ -102,13 +104,12 @@ def launch_status(request):
                 request.session['ec2data']['kp_name'] = response['kp_name']
                 request.session['ec2data']['kp_material'] = response['kp_material']
                 request.session['ec2data']['sg_name'] = response['sg_names'][0]
-                request.session['ec2data']['password'] = response['password']       
+                request.session['ec2data']['password'] = response['password']
 
-                #passing data needed for additional instance information table on monitor.html
+                # Pass data needed for the additional instance information table on monitortm
                 r['instance_id'] = response['instance_id']
                 r['sg_name'] = response['sg_names'][0]
                 r['kp_name'] = response['kp_name']
-
 
                 # Add an entry to the Usage table now
                 try:
@@ -166,12 +167,11 @@ def keypair(request):
 
 def instancestate(request):
     """
-    Give a POST request with ``task_id`` and ``instance_state`` fields, return
-    JSON with updated value (given the task has completed or the same as provided)
-    value for the ``instance_state`` field and the same value for the ``task_id``.
-    ``task_id`` is to correspond to the ID of the background task.
-    If instance state is not available, return ``Not available`` as the value
-    for ``instance_state``.
+    Given a POST request with ``task_id`` and ``instance_state`` fields, check if
+    the task has completed. If so, return JSON with updated value for the
+    ``instance_state`` field and start a new task, appropriately setting the
+    value of ``task_id``. If the initial ``task_id`` has not completed, return
+    the same value for the ``task_id`` field.
     """
     task_id = request.POST.get('task_id', None)
     instance_state = request.POST.get('instance_state', 'pending')  # Preserve current state
