@@ -39,11 +39,12 @@
           $('#instance_id').html(data.instance_id);
           $('#security_group').html(data.sg_name);
           $('#key_pair').html(data.kp_name);
+          $('#image_id').html(data.image_id);
             // Redirect to monitor page
             update_instance_state('', 'pending');  // Set state to pending right away
           }
           else{
-            // Update #starting_updates to give the user an indication 
+            // Update #starting_updates to give the user an indication
             // things are happening
             // The task is not ready yet, so keep polling
             window.setTimeout(function(){update_launch_status(data)}, 5000);
@@ -110,7 +111,7 @@
                 } //else {
                     //alert("Failure! Check the cloud console.");
                 //}
-            }); 
+            });
     }
 
     function update_progress_bar (state) {
@@ -121,25 +122,25 @@
       var curStateColor = [];
       var curImage = [];
 
-      if (state==states[0]) 
+      if (state==states[0])
         {
           curStateColor = [1, 0, 0, 0],
           curImage = [0, 1, 1, 1]
         }
 
-      else if (state==states[1]) 
+      else if (state==states[1])
         {
           curStateColor = [2, 1, 0, 0],
           curImage = [1, 0, 1, 1]
         }
 
-      else if (state==states[2]) 
+      else if (state==states[2])
         {
           curStateColor = [2, 2, 1, 0],
           curImage = [1, 1, 0, 1]
         }
 
-      else if (state==states[3]) 
+      else if (state==states[3])
         {
           curStateColor = [2, 2, 2, 2],
           curImage = [1, 1, 1, 1]
@@ -311,7 +312,8 @@
          <td id="instance_id">Not yet available</td>
      </tr>
      <tr><td>Image ID (AMI)</td>
-         <td>{{ request.session.ec2data.image_id }}</td>
+         <!-- <td>{{ request.session.ec2data.image_id }}</td> -->
+         <td id="image_id">Not yet available</td>
      </tr>
      <tr><td>Security group</td>
          <!--<td id="security_group">{{ request.session.ec2data.sg_name }}</td> -->

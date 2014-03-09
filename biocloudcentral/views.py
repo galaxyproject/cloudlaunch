@@ -110,6 +110,7 @@ def launch_status(request):
                 r['instance_id'] = response['instance_id']
                 r['sg_name'] = response['sg_names'][0]
                 r['kp_name'] = response['kp_name']
+                r['image_id'] = response['image_id']
 
                 # Add an entry to the Usage table now
                 try:
