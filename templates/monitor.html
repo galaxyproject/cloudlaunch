@@ -296,6 +296,7 @@
              (Use key pair or password from the entry form;
              <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
      </tr>
+     {% comment %}
      <tr><td>For FreeNX remote desktop access</td>
          <td>
              User: ubuntu <br/>
@@ -304,6 +305,7 @@
              Window Manager: GNOME<br/>
          </td>
      </tr>
+     {% endcomment %}
      <tr><td>Cluster name</td>
          <td>{{ request.session.ec2data.cluster_name }}</td>
      </tr>
