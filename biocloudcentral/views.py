@@ -106,7 +106,8 @@ def launch_status(request):
                 request.session['ec2data']['sg_name'] = response['sg_names'][0]
                 request.session['ec2data']['password'] = response['password']
 
-                # Pass data needed for the additional instance information table on monitortm
+                # Pass data needed for the additional instance information table
+                # on the monitor page
                 r['instance_id'] = response['instance_id']
                 r['sg_name'] = response['sg_names'][0]
                 r['kp_name'] = response['kp_name']
@@ -118,7 +119,8 @@ def launch_status(request):
                                      cloud_type=response["cloud_type"],
                                      image_id=response['image_id'],
                                      instance_type=response['instance_type'],
-                                     user_id=response["access_key"])
+                                     user_id=response["access_key"],
+                                     email=response['institutional_email'])
                     u.save()
                 except Exception, e:
                     log.debug("Trouble saving Usage data: {0}".format(e))

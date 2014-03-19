@@ -141,11 +141,13 @@ class Usage(models.Model):
     image_id = models.CharField(max_length=30)
     instance_type = models.CharField(max_length=100)
     user_id = models.CharField(max_length=100)
+    email = models.EmailField(blank=True, null=True)
 
     def __unicode__(self):
-        return u'{pk} | {add} | {name} | {ctype} | {iid} | {itype} | {user}'\
+        return u'{pk} | {add} | {name} | {ctype} | {iid} | {itype} | {user} | {email}'\
             .format(pk=self.pk, add=self.added, name=self.cloud_name, ctype=self.cloud_type,
-            iid=self.image_id, itype=self.instance_type, user=self.user_id)
+            iid=self.image_id, itype=self.instance_type, user=self.user_id,
+            email=self.email)
 
     class Meta:
         ordering = ['updated', 'cloud_type']

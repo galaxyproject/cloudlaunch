@@ -46,6 +46,26 @@ def run_instance(form):
     """
     Run a CloudBioLinux/CloudMan instance with current session credentials.
     """
+    # Dev code only!
+    # Useful when wanting to skip the instance launch process but contitnue the process
+    # response = {}
+    # response['cluster_name'] = form['cluster_name']
+    # response['password'] = form['password']
+    # response['cloud_name'] = form['cloud_name']
+    # response['cloud_type'] = form['cloud_type']
+    # response['access_key'] = form['access_key']
+    # response['instance_type'] = form['instance_type']
+    # response['image_id'] = models.Image.objects.get(pk=form['image_id']).image_id
+    # response['error'] = None
+    # response['sg_names'] = ['CloudMan']
+    # response['kp_name'] = 'cm_kp'
+    # response['kp_material'] = ''
+    # response['instance_id'] = 'i-l0cal'
+    # response['instance_ip'] = '127.0.0.1'
+    # response['institutional_email'] = form['institutional_email']
+    # return response
+    # End dev code
+
     err_msg = None
     kernel_id = None
     ramdisk_id = None
@@ -103,6 +123,7 @@ def run_instance(form):
     response['cloud_type'] = form['cloud_type']
     response['access_key'] = form['access_key']
     response['instance_type'] = form['instance_type']
+    response['institutional_email'] = form['institutional_email']
     response['image_id'] = image_id
     response['error'] = err_msg
     return response
