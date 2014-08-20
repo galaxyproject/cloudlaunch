@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block extra_head %}
 <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
- 
-  <script>                                                                         
+
+  <script>
     var csrf_token;
     var abort_fetch = false;
     var clusters_list = Array(); // A list of existing clusters for the given cloud+acct
@@ -326,7 +326,7 @@
           }
         });
       });
-    }                                                                
+    }
     $(document).ready(function() {
 
         // Along with this, must add a macthing csrf_token in the body
@@ -391,6 +391,9 @@
         $('#id_image_id').change(function(){
            var isCustom = $(this).val() == 0;
            $('#id_custom_image_id').parent().parent().toggle(isCustom);
+           if ($('#id_custom_image_id').is(":visible")) {
+              $('#id_custom_image_id').focus();
+           }
         });
 
         // Depending on whether a user is creating or recreating a cluster,
@@ -418,7 +421,7 @@
           $('#id_key_pair').attr('disabled', 'disabled');
         });
     });
-  
+
   </script>
 {% endblock %}
 {% block content %}
