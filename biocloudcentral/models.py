@@ -106,6 +106,44 @@ class Image(models.Model):
         ordering = ['cloud']
 
 
+class Flavor(models.Model):
+    """
+    The Flavour of an instance. A Flavour is a specific configuration of
+    pre-defined, extra user-data to be passes as parameters during a launch.
+    Can be used to set different cloudman configurations.
+    """
+    #automatically add timestamps when object is created
+    added = models.DateTimeField(auto_now_add=True)
+    #automatically add timestamps when object is updated
+    updated = models.DateTimeField(auto_now=True)
+    cloud = models.ForeignKey(Cloud)
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=255)
+    default = models.BooleanField(help_text="Use as the default flavor for the selected cloud")
+
+    def __unicode__(self):
+        return (u'[%s] %s (%s) %s' %
+            (self.cloud.name, self.description, self.image_id,
+            '*DEFAULT*' if self.default else ''))
+
+    def save(self, *args, **kwargs):
+        # Ensure only 1 image is selected as the 'default' for the given cloud
+        # This is not atomic but don't know how to enforce it at the DB level directly...
+        if self.default is True:
+            try:
+                previous_default = biocloudcentral.models.Image.objects.get(
+                    cloud=self.cloud, default=True)
+                previous_default.default = False
+                previous_default.save()
+            except biocloudcentral.models.Image.DoesNotExist:
+                # This is the first entry so no default can exist
+                log.debug("Did not find previous default image; set {0} as default"
+                    .format(self.image_id))
+        return super(Image, self).save()
+
+    class Meta:
+        ordering = ['cloud']
+
 class DataBucket(models.Model):
     """
     Keep info about available object store bucket.

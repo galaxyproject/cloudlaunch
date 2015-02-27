@@ -85,14 +85,14 @@ def run_instance(form):
         else:
             image = models.Image.objects.get(pk=form['image_id'])
             image_id = image.image_id
-            image.kernel_id if image.kernel_id != '' else None
-            image.ramdisk_id if image.ramdisk_id != '' else None
+            kernel_id = image.kernel_id if image.kernel_id != '' else None
+            ramdisk_id = image.ramdisk_id if image.ramdisk_id != '' else None
     else:
         try:
             image = models.Image.objects.get(cloud=form['cloud'], default=True)
             image_id = image.image_id
-            image.kernel_id if image.kernel_id != '' else None
-            image.ramdisk_id if image.ramdisk_id != '' else None
+            kernel_id = image.kernel_id if image.kernel_id != '' else None
+            ramdisk_id = image.ramdisk_id if image.ramdisk_id != '' else None
         except models.Image.DoesNotExist:
             err_msg = "Cannot find an image to launch for cloud {0}".format(form['cloud'])
             log.error(err_msg)
