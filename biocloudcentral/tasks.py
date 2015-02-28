@@ -69,16 +69,8 @@ def run_instance(form):
     err_msg = None
     kernel_id = None
     ramdisk_id = None
-    # Handle extra_user_data
-    extra_user_data = form['extra_user_data']
-    if extra_user_data:
-        for key, value in yaml.load(extra_user_data).iteritems():
-            form[key] = value
-    del form['extra_user_data']
-    instance_type = form['instance_type']
-    # Create cloudman connection with provided creds
-    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
-    form["freenxpass"] = form["password"]
+
+    # Fetch images
     if form['image_id']:
         if form['image_id'] == '0':
             image_id = form['custom_image_id']
@@ -97,6 +89,33 @@ def run_instance(form):
             err_msg = "Cannot find an image to launch for cloud {0}".format(form['cloud'])
             log.error(err_msg)
             return False
+
+    # handle flavor data
+    if form['flavor_id']:
+        flavor = models.Flavor.objects.get(pk=form['flavor_id'])
+    else:
+        flavor = None
+        try:
+            flavor = models.Flavor.objects.get(cloud=form['cloud'], image=image.pk, default=True)
+        except models.Flavor.DoesNotExist:
+            log.warn("No default flavor specified for cloud {0}. Ignoring...".format(form['cloud']))
+
+    if flavor and flavor.user_data:
+        for key, value in yaml.load(flavor.user_data).iteritems():
+            form[key] = value
+
+    # Handle extra_user_data after flavor data so that flavor data can be overridden
+    extra_user_data = form['extra_user_data']
+    if extra_user_data:
+        for key, value in yaml.load(extra_user_data).iteritems():
+            form[key] = value
+    del form['extra_user_data']
+
+    instance_type = form['instance_type']
+    # Create cloudman connection with provided creds
+    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
+    form["freenxpass"] = form["password"]
+
     # Compose kwargs from form data making sure the named arguments are not included
     kwargs = copy.deepcopy(form)
     # key_name is the parameter name for the key pair in the launch method so
@@ -107,6 +126,7 @@ def run_instance(form):
         if key in ['cluster_name', 'image_id', 'instance_type', 'password',
                    'placement', 'access_key', 'secret_key', 'cloud', 'key_pair']:
             del kwargs[key]
+
     if not err_msg:
         response = cml.launch(cluster_name=form['cluster_name'],
                             image_id=image_id,
