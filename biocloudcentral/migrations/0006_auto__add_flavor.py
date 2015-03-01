@@ -7,13 +7,12 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
+
         # Adding model 'Flavor'
         db.create_table('biocloudcentral_flavor', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('added', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('updated', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
-            ('cloud', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['biocloudcentral.Cloud'])),
             ('image', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['biocloudcentral.Image'])),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=100)),
             ('description', self.gf('django.db.models.fields.CharField')(max_length=255)),
@@ -24,7 +23,7 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        
+
         # Deleting model 'Flavor'
         db.delete_table('biocloudcentral_flavor')
 
@@ -61,7 +60,6 @@ class Migration(SchemaMigration):
         'biocloudcentral.flavor': {
             'Meta': {'ordering': "['cloud', 'image']", 'object_name': 'Flavor'},
             'added': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'cloud': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['biocloudcentral.Cloud']"}),
             'default': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),

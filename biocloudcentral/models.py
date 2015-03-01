@@ -117,7 +117,6 @@ class Flavor(models.Model):
     added = models.DateTimeField(auto_now_add=True)
     #automatically add timestamps when object is updated
     updated = models.DateTimeField(auto_now=True)
-    cloud = models.ForeignKey(Cloud)
     image = models.ForeignKey(Image)
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
@@ -125,8 +124,8 @@ class Flavor(models.Model):
     default = models.BooleanField(help_text="Use as the default flavor for the selected cloud")
 
     def __unicode__(self):
-        return (u'[%s - %s] %s %s' %
-            (self.cloud.name, self.image, self.name,
+        return (u'[%s] %s %s' %
+            (self.image.name, self.name,
             '*DEFAULT*' if self.default else ''))
 
     def save(self, *args, **kwargs):
@@ -140,8 +139,7 @@ class Flavor(models.Model):
         # This is not atomic but don't know how to enforce it at the DB level directly...
         if self.default is True:
             try:
-                previous_default = biocloudcentral.models.Flavor.objects.get(
-                    cloud=self.cloud, image=self.image, default=True)
+                previous_default = biocloudcentral.models.Flavor.objects.get(image=self.image, default=True)
                 previous_default.default = False
                 previous_default.save()
             except biocloudcentral.models.Flavor.DoesNotExist:
@@ -151,7 +149,7 @@ class Flavor(models.Model):
         return super(Flavor, self).save()
 
     class Meta:
-        ordering = ['cloud', 'image']
+        ordering = ['image']
 
 class DataBucket(models.Model):
     """

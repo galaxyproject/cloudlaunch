@@ -107,8 +107,8 @@ class CloudManForm(forms.Form):
                             label="Image",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled',
-                            "onChange": "get_flavors($('#id_cloud option:selected').val(), this.options[this.selectedIndex].value)"}))
-    flavor_id = DynamicChoiceField((("", "Choose cloud type first"),),
+                            "onChange": "get_flavors(this.options[this.selectedIndex].value)"}))
+    flavor_id = DynamicChoiceField((("", "Choose image first"),),
                             help_text="The flavor to use (* indicates the default flavor).",
                             label="Flavor",
                             required=False,

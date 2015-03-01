@@ -96,9 +96,9 @@ def run_instance(form):
     else:
         flavor = None
         try:
-            flavor = models.Flavor.objects.get(cloud=form['cloud'], image=image.pk, default=True)
+            flavor = models.Flavor.objects.get(image=image.pk, default=True)
         except models.Flavor.DoesNotExist:
-            log.warn("No default flavor specified for cloud {0}. Ignoring...".format(form['cloud']))
+            log.warn("No default flavor specified for image {0}. Ignoring...".format(image))
 
     if flavor and flavor.user_data:
         for key, value in yaml.load(flavor.user_data).iteritems():

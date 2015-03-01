@@ -235,18 +235,17 @@ def dynamicfields(request):
 
 def get_flavors(request):
     """
-    Given ``cloud_id`` and 'image_id' (as a PK in the local DB) in a POST request, return a
-    JSON with ``flavors`` and ``image_ids`` containing pertinent info
-    about those attributes for the selected cloud.
+    Given an 'image_id' (as a PK in the local DB) in a POST request, return a
+    JSON with ``flavors`` containing pertinent info
+    about those attributes for the selected image.
     """
     if request.is_ajax():
         if request.method == 'POST':
-            cloud_id = request.POST.get('cloud_id', None)
             image_id = request.POST.get('image_id', None)
             flavors = []
-            if cloud_id and image_id:
+            if image_id:
                 # Get instance types for the given cloud
-                fids = models.Flavor.objects.filter(cloud=cloud_id, image=image_id)
+                fids = models.Flavor.objects.filter(image=image_id)
                 for fid in fids:
                     flavors.append({ 'id' : fid.pk,
                                      'name' : fid.name,

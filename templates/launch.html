@@ -33,7 +33,7 @@
                         var selected = '';
                         if (data.image_ids[i][1].indexOf('*') > -1) {
                             selected = 'selected="selected"';
-                            get_flavors(cloud_id, data.image_ids[i][0]);
+                            get_flavors(data.image_ids[i][0]);
                         }
                         ids += '<option value="' + data.image_ids[i][0] + '" ' + selected + '>'
                             + data.image_ids[i][1] + "</option>";
@@ -47,10 +47,9 @@
             });
     }
 
-    function get_flavors(cloud_id, image_id) {
+    function get_flavors(image_id) {
         $.post("{% url get_flavors %}",
-            {'cloud_id': cloud_id,
-             'image_id': image_id,
+            {'image_id': image_id,
              csrfmiddlewaretoken: csrf_token},
             function(data) {
                 if (data.flavors.length > 0) {
