@@ -125,7 +125,7 @@ class Flavor(models.Model):
 
     def __unicode__(self):
         return (u'[%s] %s %s' %
-            (self.image.name, self.name,
+            (self.image.image_id, self.name,
             '*DEFAULT*' if self.default else ''))
 
     def save(self, *args, **kwargs):
