@@ -91,8 +91,12 @@ def run_instance(form):
             return False
 
     # handle flavor data
+    flavor = None
     if form['flavor_id']:
-        flavor = models.Flavor.objects.get(pk=form['flavor_id'])
+        try:
+            flavor = models.Flavor.objects.get(pk=form['flavor_id'])
+        except ValueError:
+            log.warn("Could not find flavor {0}. Ignoring...".format(form['flavor_id']))
     else:
         flavor = None
         try:
