@@ -8,7 +8,7 @@ djcelery.setup_loader()
 BROKER_URL = 'django://'
 
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
