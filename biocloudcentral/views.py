@@ -224,12 +224,40 @@ def dynamicfields(request):
                     image_ids.append((iid.pk,
                         "{0} ({1}){default}".format(iid.description, iid.image_id,
                         default="*" if iid.default is True else '')))
+
             state = {'instance_types': instance_types,
-                     'image_ids': image_ids}
+                     'image_ids': image_ids }
         else:
             log.error("Not a POST request")
     else:
-        log.error("No XHR")
+        state = { 'error' : "No XHR" }
+    return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+
+def get_flavors(request):
+    """
+    Given an 'image_id' (as a PK in the local DB) in a POST request, return a
+    JSON with ``flavors`` containing pertinent info
+    about those attributes for the selected image.
+    """
+    if request.is_ajax():
+        if request.method == 'POST':
+            image_id = request.POST.get('image_id', None)
+            flavors = []
+            if image_id:
+                # Get instance types for the given cloud
+                fids = models.Flavor.objects.filter(image=image_id)
+                for fid in fids:
+                    flavors.append({ 'id' : fid.pk,
+                                     'name' : fid.name,
+                                     'description' : fid.description,
+                                     'default' : fid.default
+                                  })
+
+            state = { 'flavors': flavors}
+        else:
+            log.error("Not a POST request")
+    else:
+        state = { 'error' : "No XHR" }
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 

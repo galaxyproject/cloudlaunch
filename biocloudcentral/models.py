@@ -2,6 +2,7 @@ from django.db import models
 
 import biocloudcentral
 
+import yaml
 import logging
 log = logging.getLogger(__name__)
 
@@ -105,6 +106,50 @@ class Image(models.Model):
     class Meta:
         ordering = ['cloud']
 
+
+class Flavor(models.Model):
+    """
+    A Flavour is a specific configuration of pre-defined, extra user-data to be
+    passed as parameters during a launch.
+    Can be used to set different cloudman/launch configurations.
+    """
+    #automatically add timestamps when object is created
+    added = models.DateTimeField(auto_now_add=True)
+    #automatically add timestamps when object is updated
+    updated = models.DateTimeField(auto_now=True)
+    image = models.ForeignKey(Image)
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=255)
+    user_data = models.CharField(max_length=1024 * 16) # userdata max length is 16KB
+    default = models.BooleanField(help_text="Use as the default flavor for the selected cloud")
+
+    def __unicode__(self):
+        return (u'[%s] %s %s' %
+            (self.image.image_id, self.name,
+            '*DEFAULT*' if self.default else ''))
+
+    def save(self, *args, **kwargs):
+        # validate user data
+        if self.user_data:
+            try:
+                yaml.load(self.user_data)
+            except Exception, e:
+                raise Exception("Invalid yaml syntax. User data must be in yaml format. Cause: {0}".format(e))
+        # Ensure only 1 flavour is selected as the 'default' for the given cloud
+        # This is not atomic but don't know how to enforce it at the DB level directly...
+        if self.default is True:
+            try:
+                previous_default = biocloudcentral.models.Flavor.objects.get(image=self.image, default=True)
+                previous_default.default = False
+                previous_default.save()
+            except biocloudcentral.models.Flavor.DoesNotExist:
+                # This is the first entry so no default can exist
+                log.debug("Did not find previous default Flavor; set {0} as default"
+                    .format(self.pk))
+        return super(Flavor, self).save()
+
+    class Meta:
+        ordering = ['image']
 
 class DataBucket(models.Model):
     """

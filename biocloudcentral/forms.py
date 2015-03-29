@@ -106,9 +106,22 @@ class CloudManForm(forms.Form):
                             help_text="The machine image to start (* indicates the default machine image).",
                             label="Image",
                             required=False,
+                            widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled',
+                            "onChange": "get_flavors(this.options[this.selectedIndex].value)"}))
+    flavor_id = DynamicChoiceField((("", "Choose image first"),),
+                            help_text="The flavor to use (* indicates the default flavor).",
+                            label="Flavor",
+                            required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     custom_image_id = forms.CharField(required=False,
                               label="Custom image ID",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
                               help_text="Having selected 'Custom image' in the previous drop down,"
                               "provide desired maching image ID (e.g., ami-da5532cs)")
+
+class FlavorAdminForm(forms.ModelForm):
+    class Meta:
+        model = models.Flavor
+        widgets = {
+            'user_data': forms.Textarea(attrs={'cols': 80, 'rows': 20}),
+        }
