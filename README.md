@@ -55,10 +55,17 @@ By default, the application will be available on localhost on port 8000
 
 The main instance of this app available at [biocloudcentral.org][7] is hosted on
 [Heroku][11]. You can do the same by [registering][12] and [deploying][13] the app
-under your own account. Once setup, automatically [push to Heroku for live deployment][14]:
+under your own account. To get started, add heroku as a remote repository:
 
     $ git remote add heroku git@heroku.com:biocloudcentral.git
+
+Then, automatically [push to Heroku for live deployment][14]:
+
     $ git push heroku master
+
+If the database needs migration, run:
+
+    $ heroku run python biocloudcentral/manage.py migrate
 
 ### Configuring on a dedicated production server
 
