@@ -42,14 +42,20 @@ to log into the Admin side of the app:
 
 #### Running locally
 
-Simply start the web server and the Celery workers (in two separate tabs or
-[screen][10] sessions):
+Simply run:
+
+    $ honcho -f ProcfileHoncho start
+
+The application will be available on port 5000 (``127.0.0.1:5000``).
+
+Alternatively, you start the web server and the Celery workers
+in two separate tabs (or [screen][10] sessions):
 
     $ python biocloudcentral/manage.py runserver
-    $ python biocloudcentral/manage.py celeryd --concurrency 3 --loglevel=info
+    $ python biocloudcentral/manage.py celeryd --concurrency 2 --loglevel=info
 
-By default, the application will be available on localhost on port 8000
-(``127.0.0.1:8000``).
+In this case, the application will be available on localhost on port
+8000 (``http://127.0.0.1:8000``).
 
 ### Deploying to Heroku
 
