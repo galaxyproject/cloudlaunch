@@ -20,7 +20,9 @@
         color: #08c;
         background-color: #cccccc \9;
       }
-
+      #launch-issue {
+        display: none;
+      }
   </style>
   <script>
 
@@ -32,18 +34,15 @@
         type: "post",
         data: {csrfmiddlewaretoken: csrf_token},
         success: function(data){
-         update_progress_bar ("requesting");
-
-         if (data.ready == true){
-
-          $('#instance_id').html(data.instance_id);
-          $('#security_group').html(data.sg_name);
-          $('#key_pair').html(data.kp_name);
-          $('#image_id').html(data.image_id);
+          update_progress_bar("requesting");
+          if (data.ready == true) {
+            $('#instance_id').html(data.instance_id);
+            $('#security_group').html(data.sg_name);
+            $('#key_pair').html(data.kp_name);
+            $('#image_id').html(data.image_id);
             // Redirect to monitor page
             update_instance_state('', 'pending');  // Set state to pending right away
-          }
-          else{
+          } else {
             // Update #starting_updates to give the user an indication
             // things are happening
             // The task is not ready yet, so keep polling
@@ -55,7 +54,7 @@
 
     function update_ui(data) {
         // Depending on instance state, update appropriate UI elements
-        update_progress_bar (data.instance_state);
+        update_progress_bar(data.instance_state);
 
         if (data.error != '') {
 
@@ -79,7 +78,28 @@
         }
 
         if (data.instance_state != 'running') {
-            window.setTimeout(function(){update_instance_state(data.task_id, data.instance_state)}, 5000);
+          // If an instance is not ready in 6 minutes, inform the user
+          // that there may be an issue.
+          if ($('#ttp').stopwatch().stopwatch('getTime') > 360000) {
+            txt = ("<b>Hmm, this seems to be taking longer  " +
+                   "than usual.</b> It may be best if you " +
+                   "checked on that instance. ");
+            if (data.public_ip) {
+              txt += "We have the instance IP address below.";
+              $('#cloud_url').html('<a href="http://' +
+                 data.public_ip + '/cloud" target="_blank">' +
+                 data.public_ip + '</a>');
+              $('#copy-ip').attr("data-clipboard-text", data.public_ip);
+              $('#copy-ip').show();
+            } else {
+              txt += ("I am afraid we have no more information but we will " +
+                      "keep checking on this instance.");
+            }
+            $('#launch-issue').html(txt);
+            $('#launch-issue').show();
+          }
+          // Get an update on the instance state every 5 seconds
+          window.setTimeout(function(){update_instance_state(data.task_id, data.instance_state)}, 5000);
         } else {
           $('#ssh_public_ip').html(data.public_ip);
           $('#nx_public_ip').html(data.public_ip);
@@ -91,6 +111,7 @@
           $('#copy-ip').show();
           $('#ttp').stopwatch().stopwatch('stop');
           $('#video_link_cont').html("");
+          $('#launch-issue').hide();
         }
     }
     function update_instance_state(task_id, instance_state) {
@@ -105,9 +126,9 @@
                 update_ui(data);
             }).fail(function(data, textStatus){
                 if(textStatus == 'timeout') {
-                    // Instance is probably alive but the web server not up yet
-                    // so keep checking
-                    window.setTimeout(function(){update_instance_state(task_id, instance_state)}, 5000);
+                  // Instance is probably alive but the web server not up yet
+                  // so keep checking
+                  window.setTimeout(function(){update_instance_state(task_id, instance_state)}, 5000);
                 } //else {
                     //alert("Failure! Check the cloud console.");
                 //}
@@ -233,6 +254,8 @@
     {% endif %}
     </p>
 </div>
+
+<div id="launch-issue" class="alert alert-danger" role="alert"></div>
 
 <div class="row">
   <table class="table table-bordered table-striped span7">
