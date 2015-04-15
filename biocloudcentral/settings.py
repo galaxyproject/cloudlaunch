@@ -102,6 +102,7 @@ STATICFILES_DIRS = (
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(os.path.dirname(__file__), os.pardir, "static"),
+    '/app/.heroku/python/lib/python2.7/site-packages/django/contrib/admin/media/',  # Heroku-setting
 )
 
 # List of finder classes that know how to find static files in
