@@ -97,7 +97,7 @@ def run_instance(form):
             flavor = models.Flavor.objects.get(pk=form['flavor_id'])
         except ValueError:
             log.warn("Could not find flavor {0}. Ignoring...".format(form['flavor_id']))
-    else:
+    elif not form.get('custom_image_id', None):  # Custom images have no flavors
         flavor = None
         try:
             flavor = models.Flavor.objects.get(image=image.pk, default=True)
