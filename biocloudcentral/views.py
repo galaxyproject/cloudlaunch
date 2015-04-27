@@ -191,10 +191,12 @@ def instancestate(request):
     elif 'ec2data' in request.session:
         # We have no task ID, so start a task to get instance state
         form = request.session["ec2data"]
-        cloud = form['cloud']
-        a_key = form["access_key"]
-        s_key = form["secret_key"]
-        instance_id = form["instance_id"]
+        cloud = form.get('cloud', None)
+        a_key = form.get("access_key", None)
+        s_key = form.get("secret_key", None)
+        instance_id = form.get("instance_id", None)
+        if not instance_id:
+            state['error'] = "Missing instance ID, cannot check the state."
         r = tasks.instance_state.delay(cloud, a_key, s_key, instance_id)
         state['task_id'] = r.id
     else:

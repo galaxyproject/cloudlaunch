@@ -37,6 +37,12 @@ def instance_state(cloud, a_key, s_key, instance_id):
     """
     Check on the state of an instance until and return the state.
     """
+    if not instance_id:
+        state = {'instance_state': "",
+                 'public_ip': "",
+                 'placement': "",
+                 'error': "Missing instance ID, cannot check the state."}
+        return state
     cml = CloudManLauncher(a_key, s_key, cloud)
     return cml.get_status(instance_id)
 
@@ -96,13 +102,18 @@ def run_instance(form):
         try:
             flavor = models.Flavor.objects.get(pk=form['flavor_id'])
         except ValueError:
-            log.warn("Could not find flavor {0}. Ignoring...".format(form['flavor_id']))
+            err_msg = "Could not find flavor {0}. Ignoring...".format(form['flavor_id'])
+            log.warn(err_msg)
     elif not form.get('custom_image_id', None):  # Custom images have no flavors
         flavor = None
         try:
             flavor = models.Flavor.objects.get(image=image.pk, default=True)
         except models.Flavor.DoesNotExist:
-            log.warn("No default flavor specified for image {0}. Ignoring...".format(image))
+            err_msg = "No default flavor specified for image {0}. Ignoring...".format(image)
+            log.warn(err_msg)
+        except Exception, exc:
+            err_msg = "Exception fetching flavor: {0}".format(exc)
+            log.warn(err_msg)
 
     if flavor and flavor.user_data:
         for key, value in yaml.load(flavor.user_data).iteritems():
@@ -140,6 +151,8 @@ def run_instance(form):
                             ramdisk_id=ramdisk_id,
                             placement=form['placement'],
                             **kwargs)
+    else:
+        response = {}
     # Keep these parts of the form as part of the response
     response['cluster_name'] = form['cluster_name']
     response['password'] = form['password']
