@@ -455,8 +455,8 @@
     <div class="page-header">
       <h2><small>
         Easily launch <a href="http://cloudbiolinux.org">CloudBioLinux</a>,
-        <a href="http://usecloudman.org">CloudMan</a> and
-        <a href="http://wiki.g2.bx.psu.edu/">Galaxy</a>
+        <a href="http://cloudman.irb.hr/">CloudMan</a> and
+        <a href="https://wiki.galaxyproject.org/">Galaxy</a>
         platforms on Cloud Computing resources (including
         <a href="http://aws.amazon.com/">Amazon Web Services</a>).
       </small></h2>
@@ -471,6 +471,7 @@
 </div>
 
 <form id="launch-form" action="{% url launch %}" method="post" class="form-horizontal">
+
   {% csrf_token %}
   {% for field in form %}
     {% if not field.field.required %}
@@ -540,7 +541,7 @@
 <p>
 This website is an open service developed by the
 <a href="http://cloudbiolinux.org">CloudBioLinux</a> and
-<a href="http://usecloudman.org">CloudMan</a>
+<a href="http://cloudman.irb.hr">CloudMan</a>
 communities. The goal is to make it easy to get started doing
 scalable biological analysis on cloud resources. See
 <a href="http://youtu.be/AKu_CbbgEj0">this video</a> on how to
