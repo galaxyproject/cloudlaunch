@@ -1,6 +1,6 @@
-## BioCloudCentral
+## Cloud Launch
 
-Easily launch [CloudBioLinux][3], [CloudMan][2] and [Galaxy][8] platforms without
+Easily launch [Galaxy][8], [CloudMan][2], and [CloudBioLinux][3] platforms without
 any configuration. You can use this app directly on [biocloudcentral.org][7] or
 run it locally - either way, it takes about 2 minutes to go from nothing to
 a configured cluster-in-the-cloud and a scalable analysis platform on top of
@@ -12,10 +12,10 @@ This [Django][1] application can be run locally, on a dedicated server or deploy
 on [Heroku][4]. To run locally or on a dedicated server, start by installing Python
 and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
 
-    $ mkdir bcc; cd bcc
+    $ mkdir cl; cd cl
     $ virtualenv .
     $ source bin/activate
-    $ git clone https://github.com/chapmanb/biocloudcentral.git
+    $ git clone https://github.com/galaxyproject/biocloudcentral.git
     $ cd biocloudcentral
     $ pip install -r requirements.txt
 
@@ -59,7 +59,7 @@ In this case, the application will be available on localhost on port
 
 ### Deploying to Heroku
 
-The main instance of this app available at [biocloudcentral.org][7] is hosted on
+An instance of this app available at [biocloudcentral.org][7] is hosted on
 [Heroku][11]. You can do the same by [registering][12] and [deploying][13] the app
 under your own account. To get started, add heroku as a remote repository:
 
@@ -75,20 +75,20 @@ If the database needs migration, run:
 
 ### Configuring on a dedicated production server
 
-- Launch a Ubuntu 12.04 instance or a VM
+- Launch a Ubuntu 14.04 instance or a VM
 - Install necessary system packages:
 
         $ sudo apt-get install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx
 
-- Clone BioCloudCentral into a local directory (e.g., ``/gvl/bcc``) and install
+- Clone Cloud Launch into a local directory (e.g., ``/cl``) and install
 the required libraries:
 
-        $ sudo mkdir -p /gvl/bcc
-        $ sudo chown ubuntu:ubuntu -R /gvl/bcc
-        $ cd /gvl/bcc
-        $ virtualenv .
-        $ source bin/activate
-        $ git clone https://github.com/chapmanb/biocloudcentral.git
+        $ sudo mkdir /cl
+        $ sudo chown ubuntu:ubuntu /cl
+        $ cd /cl
+        $ virtualenv .cl
+        $ source .cl/bin/activate
+        $ git clone https://github.com/galaxyproject/biocloudcentral.git
         $ cd biocloudcentral
         $ pip install -r requirements.txt
 
@@ -119,7 +119,7 @@ a different user, change it in both commands:
     - Set ``DEBUG`` to ``False``
     - Set admin users
     - Set ``REDIRECT_BASE`` to ``None``
-    - Set ``STATIC_ROOT`` to ``/gvl/bcc/media`` (and create that dir)
+    - Set ``STATIC_ROOT`` to ``/cl/media`` (and create that dir, as `ubuntu` user)
     - Set ``SESSION_ENGINE`` to ``django.contrib.sessions.backends.db``
     - Change ``SECRET_KEY``
 
@@ -127,23 +127,23 @@ a different user, change it in both commands:
 
 - Collect all static files into a single directory by running:
 
-        $ cd /gvl/bcc/biocloudcentral
+        $ cd /cl/biocloudcentral
         $ python biocloudcentral/manage.py collectstatic  # (type ``yes`` when prompted
         about rewriting existing files)
 
 - Create an empty log file that can be edited by the ``ubuntu`` user
 
-        $ sudo touch /var/log/bcc_server.log
-        $ sudo chown ubuntu:ubuntu /var/log/bcc_server.log
+        $ sudo touch /var/log/cl_server.log
+        $ sudo chown ubuntu:ubuntu /var/log/cl_server.log
 
-- Make sure settings in ``bcc_run_server.sh`` are correct for what you chose above
+- Make sure settings in ``cl_run_server.sh`` are correct for what you chose above
 and then make the file executable
 
-        $ chmod +x bcc_run_server.sh
+        $ chmod +x cl_run_server.sh
 
-- Copy Upstart files (``bcc.conf`` and ``bcc_celery.conf``) to ``/etc/init``
+- Copy Upstart files (``cl.conf`` and ``cl_celery.conf``) to ``/etc/init``
 
-        $ sudo cp bcc.conf bcc_celery.conf /etc/init
+        $ sudo cp cl.conf cl_celery.conf /etc/init
 
 - Configure nginx:
 
@@ -151,26 +151,25 @@ and then make the file executable
 
             $ sudo rm /etc/nginx/sites-enabled/default
 
-    - Create ``/etc/nginx/sites-available/bcc`` directory and copy ``bcc_nginx.conf``
-    file from the BioCloudCentral repo there
+    - Copy the ngixn config file from the Cloud Launch repo
 
-            $ sudo mkdir /etc/nginx/sites-available/bcc
-            $ sudo cp bcc_nginx.conf /etc/nginx/sites-available/bcc/
+            $ sudo cp cl_nginx.conf /etc/nginx/sites-available/
 
     - Create the following symlink
 
-            $ sudo ln -s /etc/nginx/sites-available/bcc/bcc_nginx.conf /etc/nginx/sites-enabled/bcc
+            $ sudo ln -s /etc/nginx/sites-available/cl_nginx.conf /etc/nginx/sites-enabled/cl
 
     - Optionally update the number of worker threads in ``/etc/nginx/nginx.conf``
+    - Test the nginx configuration with ``nginx -t``
     - Start ``sudo service nginx start`` or reload nginx: ``sudo nginx -s reload``
 
-- Start the app services:
+- Start the app services via Upstart:
 
-        $ sudo service bcc start
-        $ sudo service bcc_celery start
+        $ sudo service cl start
+        $ sudo service cl_celery start
 
 - The app is now available at ``https://server.ip.address/``. The Admin part of
-the app is available at ``https://server.ip.address/admin``.
+the app is available at ``https://server.ip.address/admin/``.
 
 [1]: https://www.djangoproject.com/
 [2]: http://usecloudman.org/

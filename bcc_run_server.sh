@@ -3,15 +3,16 @@
 # ensure the paths specified below are OK with your system
 
 set -e
-LOGFILE=/var/log/bcc_server.log
+LOGFILE=/var/log/cl_server.log
 NUM_WORKERS=3
 # User to run as
 USER=`whoami`
 # GROUP=`groups | cut -d' ' -f1`
-# By default, BCC is assumed cloned in /gvl/bcc/
-cd /gvl/bcc/biocloudcentral
+# By default, CL is assumed cloned in `/cl`
+INSTALL_DIR="/cl"
+cd "$INSTALL_DIR/biocloudcentral"
 # Activate the virtual env
-source ../bin/activate
+source "$INSTALL_DIR/.cl/bin/activate"
 # Start the web app as a gunicorn-managed wsgi app
 exec ../bin/gunicorn biocloudcentral.wsgi:application \
   -w $NUM_WORKERS \

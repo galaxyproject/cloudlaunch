@@ -18,7 +18,7 @@ class CloudManForm(forms.Form):
     Details needed to boot a setup and boot a CloudMan instance.
     """
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
-    ud_url = "http://wiki.g2.bx.psu.edu/Admin/Cloud/UserData"
+    ud_url = "https://wiki.galaxyproject.org/CloudMan/UserData"
     target = "target='_blank'"
     textbox_size = "input_xlarge"
     cloud = forms.ModelChoiceField(queryset=models.Cloud.objects.all(),
@@ -28,12 +28,12 @@ class CloudManForm(forms.Form):
                                    "onChange": "get_dynamic_fields(this.options[this.selectedIndex].value)"}))
     access_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
-                                 help_text="Your Access Key ID. For the Amazon cloud, available from "
+                                 help_text="Your cloud account access key. For the Amazon cloud, available from "
                                  "the <a href='{0}' {1} tabindex='-1'>security credentials page</a>.".format(
                                      key_url, target))
     secret_key = forms.CharField(required=True,
                                  widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
-                                 help_text="Your Secret Access Key. For the Amazon cloud, also available "
+                                 help_text="Your cloud account secret key. For the Amazon cloud, also available "
                                  "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
                                  .format(key_url, target))
     institutional_email = forms.EmailField(required=True,
@@ -57,17 +57,17 @@ class CloudManForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput(render_value=False,
                                                           attrs={"class": textbox_size}),
                                help_text="Your choice of password, for the CloudMan "
-                               "web interface and accessing the instance via ssh or FreeNX.")
+                               "web interface and accessing the server via ssh.")
     instance_type = DynamicChoiceField((("", "Choose cloud type first"),),
-                            help_text="Type (ie, virtual hardware configuration) of the instance to start.",
+                            help_text="Type (ie, virtual hardware configuration) of the server to start.",
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     placement = DynamicChoiceField((("", "Fill above fields & click refresh to fetch"),),
-                            help_text="A specific placement zone where your instance will run. This "
+                            help_text="A specific placement zone where your server will run. This "
                             "requires you have filled out the previous 6 fields!",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     key_pair = DynamicChoiceField((("", "Fill above fields & click refresh to fetch"),),
-                            help_text="A specific key pair to be used when launching your instance. This "
+                            help_text="A specific key pair to be used when launching your server. This "
                             "requires you have filled out the initial 6 fields!",
                             required=False,
                             widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
@@ -92,10 +92,7 @@ class CloudManForm(forms.Form):
     share_string = forms.CharField(required=False,
                               label="Shared cluster string",
                               widget=forms.TextInput(attrs={"class": textbox_size}),
-                              help_text="A share string to use for deriving this cluster instance."
-                              "See <a href='https://bitbucket.org/galaxy/cloudman/wiki/SharedInstances'>"
-                              "this page</a> for a list of public shared instances."
-                              .format(ud_url, target))
+                              help_text="A share string to use for deriving this cluster instance.")
     extra_user_data = forms.CharField(required=False,
                                 label="Extra User-Data",
                                 widget=forms.widgets.Textarea(attrs={"class": textbox_size}),

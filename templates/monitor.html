@@ -238,16 +238,16 @@
     {{ request.session.ec2data.cloud_name }} cloud is launching!</span>
     <p>
         The process of launching an instance of the platform takes a few minutes.
-        Once the instance and the necessary services are running, a link to the
-        instance will be shown (in <i>Public IP</i> field). To manage
-        your newly created platform, please use the
+        Once the instance and the necessary services are running, a link to your
+        server will be shown (in <i>Public IP</i> field). To manage
+        your newly created cluster, please use the
         <a href="http://cloudman.irb.hr" target="_blank">CloudMan</a> console
         from the shown link.
     </p>
     {% if request.session.ec2data.cloud_type == 'ec2' %}
       <p>
         Amazon is now <a href="http://aws.amazon.com/ec2/pricing/" target="_blank">
-        charging you per hour</a> for your new machine. You may use the
+        charging you per hour</a> for your new server. You may use the
         <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
         to monitor the status of your instance.
       </p>
@@ -263,7 +263,7 @@
    <tr><td>From zero to an analysis platform in</td>
        <td><span id="ttp">&nbsp;</span></td>
    </tr>
-   <tr><td class="span5">Instance state</td>
+   <tr><td class="span5">Server state</td>
        <td class="span7">
 
        <div class="progress progress-striped active" style="margin:0px">
@@ -283,9 +283,9 @@
 
       </td>
    </tr>
-   <tr><td>Public IP (CloudMan console)</td>
+   <tr><td>Server IP address (CloudMan console)</td>
        <td>
-        <span id="cloud_url"></span>
+        <span id="cloud_url"><i>Pending</i></span>
         <button id="copy-ip" class="pull-right btn btn-mini" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
           Copy IP
         </button>
@@ -299,7 +299,7 @@
     <thead>
       <tr>
         <th colspan=2>
-          Additional instance information
+          Additional server information
         </th>
       </tr>
     </thead>
@@ -354,10 +354,10 @@
 </div>
 <div class="well">
     User data contains information necessary to recreate this particular cloud
-    platform. After terminating the platform instance, unless deleted, you can
-    easily recreate it from this website by using the same credentials
-    and cluster name. If you would like to recreate the platform manually from
-    the {{ request.session.ec2data.cloud_name }} cloud's  web console or directly
+    cluster. After terminating the cluster, unless deleted, you can
+    easily recreate it from this website by using the same access credentials
+    and cluster name. If you would like to recreate the cluster manually from
+    the {{ request.session.ec2data.cloud_name }} cloud's web console or directly
     via the cloud's API, you will need the user-data in the downloaded format.
     See <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
     this page</a> for more information.

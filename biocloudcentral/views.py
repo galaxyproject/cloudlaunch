@@ -43,7 +43,8 @@ def launch(request):
     Initiate launching of an instance. Given an empty request, render the
     ``launch`` page. Given a ``POST`` request, initiate a background task to
     launch an instance and return JSON with the task ID and ``ready`` status
-    attribute set to ``false``.
+    attribute set to ``False``. Following a POST request, also store data into
+    the session, under `ec2data` key.
     """
     if request.method == "POST":
         data = {'task_id': '', 'ready': False, 'error': '', 'form_errors': ''}
