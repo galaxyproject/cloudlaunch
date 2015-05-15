@@ -8,9 +8,9 @@ NUM_WORKERS=3
 # User to run as
 USER=`whoami`
 # GROUP=`groups | cut -d' ' -f1`
-# By default, CL is assumed cloned in `/cl`
+# By default, CL is assumed cloned within `/cl`
 INSTALL_DIR="/cl"
-cd "$INSTALL_DIR/biocloudcentral"
+cd "$INSTALL_DIR/cloudlaunch"
 # Activate the virtual env
 source "$INSTALL_DIR/.cl/bin/activate"
 # Start the web app as a gunicorn-managed wsgi app

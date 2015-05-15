@@ -15,8 +15,8 @@ and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
     $ mkdir cl; cd cl
     $ virtualenv .
     $ source bin/activate
-    $ git clone https://github.com/galaxyproject/biocloudcentral.git
-    $ cd biocloudcentral
+    $ git clone https://github.com/galaxyproject/cloudlaunch.git
+    $ cd cloudlaunch
     $ pip install -r requirements.txt
 
 Next, you need to make a database available. For local development and deployment,
@@ -127,7 +127,7 @@ a different user, change it in both commands:
 
 - Collect all static files into a single directory by running:
 
-        $ cd /cl/biocloudcentral
+        $ cd /cl/cloudlaunch
         $ python biocloudcentral/manage.py collectstatic  # (type ``yes`` when prompted
         about rewriting existing files)
 
