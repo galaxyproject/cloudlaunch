@@ -78,26 +78,26 @@ If the database needs migration, run:
 - Launch a Ubuntu 14.04 instance or a VM
 - Install necessary system packages:
 
-        $ sudo apt-get install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx
+        $ sudo apt-get -y install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx
 
-- Clone Cloud Launch into a local directory (e.g., ``/cl``) and install
-the required libraries:
+- Clone Cloud Launch into a local directory (e.g., ``/srv/cloudlaunch``) as
+system user ``launch`` and install the required libraries:
 
-        $ sudo mkdir /cl
-        $ sudo chown ubuntu:ubuntu /cl
-        $ cd /cl
+        $ sudo mkdir -p /srv/cloudlaunch
+        $ sudo chown launch:launch /srv/cloudlaunch
+        $ cd /srv/cloudlaunch
         $ virtualenv .cl
         $ source .cl/bin/activate
-        $ git clone https://github.com/galaxyproject/biocloudcentral.git
-        $ cd biocloudcentral
+        $ git clone https://github.com/galaxyproject/cloudlaunch.git
+        $ cd cloudlaunch
         $ pip install -r requirements.txt
 
-- Configure a production database, [PostgreSQL][15], with a database. Note that
-the following commands use *ubuntu* as the database owner. If you prefer to use
+- Configure a [PostgreSQL][15] server with a database. Note that
+the following commands use *launch* as the database owner. If you prefer to use
 a different user, change it in both commands:
 
-        $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE ubuntu LOGIN CREATEDB PASSWORD 'password_to_change'\""
-        $ sudo su ubuntu -c "createdb --username ubuntu --port 5432 biocloudcentral"
+        $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE launch LOGIN CREATEDB PASSWORD 'password_to_change'\""
+        $ sudo su launch -c "createdb --username launch --port 5432 cloudlaunch"
 
 - Update settings in ``biocloudcentral/settings.py`` to match your server settings:
 
@@ -108,8 +108,8 @@ a different user, change it in both commands:
             DATABASES = {
                 'default': {
                     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-                    'NAME': 'biocloudcentral',
-                    'USER': 'ubuntu',
+                    'NAME': 'cloudlaunch',
+                    'USER': 'launch',
                     'PASSWORD': 'password_to_change',
                     'HOST': 'localhost',
                     'PORT': '5432',
@@ -119,7 +119,7 @@ a different user, change it in both commands:
     - Set ``DEBUG`` to ``False``
     - Set admin users
     - Set ``REDIRECT_BASE`` to ``None``
-    - Set ``STATIC_ROOT`` to ``/cl/media`` (and create that dir, as `ubuntu` user)
+    - Set ``STATIC_ROOT`` to ``/srv/cloudlaunch/media`` (and create that dir, as `launch` user)
     - Set ``SESSION_ENGINE`` to ``django.contrib.sessions.backends.db``
     - Change ``SECRET_KEY``
 
@@ -127,14 +127,14 @@ a different user, change it in both commands:
 
 - Collect all static files into a single directory by running:
 
-        $ cd /cl/cloudlaunch
+        $ cd /cl/cloudlaunch/cloudlaunch
         $ python biocloudcentral/manage.py collectstatic  # (type ``yes`` when prompted
         about rewriting existing files)
 
-- Create an empty log file that can be edited by the ``ubuntu`` user
+- Create an empty log file that can be edited by the ``launch`` user
 
         $ sudo touch /var/log/cl_server.log
-        $ sudo chown ubuntu:ubuntu /var/log/cl_server.log
+        $ sudo chown launch:launch /var/log/cl_server.log
 
 - Make sure settings in ``cl_run_server.sh`` are correct for what you chose above
 and then make the file executable

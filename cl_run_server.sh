@@ -8,8 +8,8 @@ NUM_WORKERS=3
 # User to run as
 USER=`whoami`
 # GROUP=`groups | cut -d' ' -f1`
-# By default, CL is assumed cloned within `/cl`
-INSTALL_DIR="/cl"
+# By default, CL is assumed cloned within `/srv/cloudlaunch`
+INSTALL_DIR="/srv/cloudlaunch"
 cd "$INSTALL_DIR/cloudlaunch"
 # Activate the virtual env
 source "$INSTALL_DIR/.cl/bin/activate"
