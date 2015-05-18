@@ -9,12 +9,13 @@ NUM_WORKERS=3
 USER=`whoami`
 # GROUP=`groups | cut -d' ' -f1`
 # By default, CL is assumed cloned within `/srv/cloudlaunch`
+# and its virtualenv created in `/srv/cloudlaunch/.cl`
 INSTALL_DIR="/srv/cloudlaunch"
 cd "$INSTALL_DIR/cloudlaunch"
 # Activate the virtual env
 source "$INSTALL_DIR/.cl/bin/activate"
 # Start the web app as a gunicorn-managed wsgi app
-exec ../bin/gunicorn biocloudcentral.wsgi:application \
+exec $INSTALL_DIR/.cl/bin/gunicorn biocloudcentral.wsgi:application \
   -w $NUM_WORKERS \
   --user=$USER --log-level=debug \
   --log-file=$LOGFILE 2>>$LOGFILE \

@@ -136,22 +136,18 @@ a different user, change it in both commands:
         $ sudo touch /var/log/cl_server.log
         $ sudo chown launch:launch /var/log/cl_server.log
 
-- Make sure settings in ``cl_run_server.sh`` are correct for what you chose above
-and then make the file executable
-
-        $ chmod +x cl_run_server.sh
-
 - Copy Upstart files (``cl.conf`` and ``cl_celery.conf``) to ``/etc/init``
 
-        $ sudo cp cl.conf cl_celery.conf /etc/init
+        $ sudo cp cl.conf cl_celery.conf /etc/init/.
 
 - Configure nginx:
 
-    - Delete ``default`` site from ``/etc/nginx/sites-enabled``
+    - If it exists, delete ``default`` site from ``/etc/nginx/sites-enabled``
+      (or update it as necessary)
 
             $ sudo rm /etc/nginx/sites-enabled/default
 
-    - Copy the ngixn config file from the Cloud Launch repo
+    - Copy the nginx config file from the Cloud Launch repo
 
             $ sudo cp cl_nginx.conf /etc/nginx/sites-available/
 
@@ -160,7 +156,7 @@ and then make the file executable
             $ sudo ln -s /etc/nginx/sites-available/cl_nginx.conf /etc/nginx/sites-enabled/cl
 
     - Optionally update the number of worker threads in ``/etc/nginx/nginx.conf``
-    - Test the nginx configuration with ``nginx -t``
+    - Test the nginx configuration with ``sudo nginx -t``
     - Start ``sudo service nginx start`` or reload nginx: ``sudo nginx -s reload``
 
 - Start the app services via Upstart:
