@@ -121,7 +121,7 @@ def launch_status(request):
                                      image_id=response['image_id'],
                                      instance_type=response['instance_type'],
                                      user_id=response["access_key"],
-                                     email=response['institutional_email'])
+                                     email=response.get('institutional_email', ''))
                     u.save()
                 except Exception, e:
                     log.debug("Trouble saving Usage data: {0}".format(e))
