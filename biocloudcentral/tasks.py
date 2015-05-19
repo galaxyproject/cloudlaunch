@@ -144,13 +144,13 @@ def run_instance(form):
 
     if not err_msg:
         response = cml.launch(cluster_name=form['cluster_name'],
-                            image_id=image_id,
-                            instance_type=instance_type,
-                            password=form["password"],
-                            kernel_id=kernel_id,
-                            ramdisk_id=ramdisk_id,
-                            placement=form['placement'],
-                            **kwargs)
+                              image_id=image_id,
+                              instance_type=instance_type,
+                              password=form["password"],
+                              kernel_id=kernel_id,
+                              ramdisk_id=ramdisk_id,
+                              placement=form['placement'],
+                              **kwargs)
     else:
         response = {}
     # Keep these parts of the form as part of the response

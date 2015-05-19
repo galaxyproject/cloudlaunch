@@ -22,7 +22,7 @@ from bioblend.cloudman.launch import CloudManLauncher
 log = logging.getLogger(__name__)
 
 
-## Landing page with redirects
+# Landing page with redirects
 def home(request):
     """
     Render the home page, redirecting to ``/launch``
@@ -126,8 +126,9 @@ def launch_status(request):
                 except Exception, e:
                     log.debug("Trouble saving Usage data: {0}".format(e))
         else:
-            starting_text_list = ['Starting an instance... please wait', 'Really starting!',
-                'Still starting.', 'Hopefully done soon!']
+            starting_text_list = ['Starting an instance... please wait',
+                                  'Really starting!', 'Still starting.',
+                                  'Hopefully done soon!']
             st = starting_text_list[randint(0, len(starting_text_list) - 1)]
             r['starting_text'] = st
     return HttpResponse(simplejson.dumps(r), mimetype="application/json")
@@ -219,22 +220,23 @@ def dynamicfields(request):
                 # Get instance types for the given cloud
                 its = models.InstanceType.objects.filter(cloud=cloud_id)
                 for it in its:
-                    instance_types.append((it.tech_name,
-                        "{0} ({1})".format(it.pretty_name, it.description)))
+                    instance_types.append((it.tech_name, "{0} ({1})"
+                                           .format(it.pretty_name, it.description)))
                 # Get Image IDs for the given cloud
                 iids = models.Image.objects.filter(cloud=cloud_id)
                 for iid in iids:
-                    image_ids.append((iid.pk,
-                        "{0} ({1}){default}".format(iid.description, iid.image_id,
-                        default="*" if iid.default is True else '')))
+                    image_ids.append((iid.pk, "{0} ({1}){default}"
+                                      .format(iid.description, iid.image_id,
+                                              default="*" if iid.default is True else '')))
 
             state = {'instance_types': instance_types,
-                     'image_ids': image_ids }
+                     'image_ids': image_ids}
         else:
             log.error("Not a POST request")
     else:
-        state = { 'error' : "No XHR" }
+        state = {'error': "No XHR"}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
+
 
 def get_flavors(request):
     """
@@ -250,17 +252,16 @@ def get_flavors(request):
                 # Get instance types for the given cloud
                 fids = models.Flavor.objects.filter(image=image_id)
                 for fid in fids:
-                    flavors.append({ 'id' : fid.pk,
-                                     'name' : fid.name,
-                                     'description' : fid.description,
-                                     'default' : fid.default
-                                  })
+                    flavors.append({'id': fid.pk,
+                                    'name': fid.name,
+                                    'description': fid.description,
+                                    'default': fid.default})
 
-            state = { 'flavors': flavors}
+            state = {'flavors': flavors}
         else:
             log.error("Not a POST request")
     else:
-        state = { 'error' : "No XHR" }
+        state = {'error': "No XHR"}
     return HttpResponse(simplejson.dumps(state), mimetype="application/json")
 
 
@@ -285,7 +286,7 @@ def _get_placement_inner(request):
                 cloud = models.Cloud.objects.get(pk=cloud_id)
                 cml = CloudManLauncher(a_key, s_key, cloud)
                 placements = cml.find_placements(cml.ec2_conn, inst_type,
-                    cloud.cloud_type, cluster_name)
+                                                 cloud.cloud_type, cluster_name)
                 return {'placements': placements}
         else:
             log.error("Not a POST request")
@@ -381,7 +382,7 @@ def update_clusters(request):
     task_id = request.POST.get('task_id', '')
     result = AsyncResult(task_id)
     fetching_data_text_list = ['Fetching data... please wait', 'Fetching data...',
-        'Still fetching data...', 'Hopefully done soon!']
+                               'Still fetching data...', 'Hopefully done soon!']
     fdt = fetching_data_text_list[randint(0, len(fetching_data_text_list) - 1)]
     r = {'task_id': task_id,
          'ready': result.ready(),
