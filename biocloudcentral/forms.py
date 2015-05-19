@@ -1,5 +1,6 @@
 from django import forms
 from biocloudcentral import models
+from biocloudcentral import settings
 
 
 class DynamicChoiceField(forms.ChoiceField):
@@ -36,6 +37,11 @@ class CloudManForm(forms.Form):
                                  help_text="Your cloud account secret key. For the Amazon cloud, also available "
                                  "from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
                                  .format(key_url, target))
+    if hasattr(settings, 'ASK_FOR_EMAIL') and settings.ASK_FOR_EMAIL:
+        require_email = hasattr(settings, 'REQUIRE_EMAIL') and settings.REQUIRE_EMAIL
+        institutional_email = forms.EmailField(required=require_email,
+                                 widget=forms.TextInput(attrs={"class": "%s" % textbox_size}),
+                                 help_text="Your institutional email. For grant-reporting purposes only.")
     # A simple text input element
     # cluster_name = forms.CharField(required=True,
     #                                help_text="Name of your cluster used for identification and "
@@ -112,9 +118,6 @@ class CloudManForm(forms.Form):
                               widget=forms.TextInput(attrs={"class": textbox_size}),
                               help_text="Having selected 'Custom image' in the previous drop down,"
                               "provide desired maching image ID (e.g., ami-da5532cs)")
-    institutional_email = forms.EmailField(required=False,
-                                 widget=forms.TextInput(attrs={"class": "%s" % textbox_size}),
-                                 help_text="Your institutional email. For grant-reporting purposes only.")
 
 class FlavorAdminForm(forms.ModelForm):
     class Meta:
