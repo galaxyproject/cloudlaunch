@@ -68,7 +68,7 @@ def run_instance(form):
     # response['kp_material'] = ''
     # response['instance_id'] = 'i-l0cal'
     # response['instance_ip'] = '127.0.0.1'
-    # response['institutional_email'] = form['institutional_email']
+    # response['institutional_email'] = form.get('institutional_email', '')
     # return response
     # End dev code
 
@@ -142,6 +142,8 @@ def run_instance(form):
             del kwargs[key]
 
     if not err_msg:
+        log.debug("Launching cluster {0} from image {1} on instance {2} in zone '{3}'."
+                  .format(form['cluster_name'], image_id, instance_type, form['placement']))
         response = cml.launch(cluster_name=form['cluster_name'],
                               image_id=image_id,
                               instance_type=instance_type,
@@ -159,7 +161,7 @@ def run_instance(form):
     response['cloud_type'] = form['cloud_type']
     response['access_key'] = form['access_key']
     response['instance_type'] = form['instance_type']
-    response['institutional_email'] = form['institutional_email']
+    response['institutional_email'] = form.get('institutional_email', '')
     response['image_id'] = image_id
     response['error'] = err_msg
     return response
