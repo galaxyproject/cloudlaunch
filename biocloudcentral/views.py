@@ -21,6 +21,10 @@ from bioblend.cloudman.launch import CloudManLauncher
 
 log = logging.getLogger(__name__)
 
+brand = 'Cloud Launch'
+if hasattr(settings, 'BRAND'):
+    brand = settings.BRAND
+
 
 # Landing page with redirects
 def home(request):
@@ -73,9 +77,6 @@ def launch(request):
         # cloud is the first in the DB and that such an entry exists in the first place
         form = forms.CloudManForm(initial={'cloud': 1})
 
-    brand = 'Cloud Launch'
-    if hasattr(settings, 'BRAND'):
-        brand = settings.BRAND
     return render(request, "launch.html", {"form": form, 'brand': brand}, context_instance=RequestContext(request))
 
 
@@ -141,7 +142,7 @@ def monitor(request):
     """
     Monitor a launch request and return offline files for console re-runs.
     """
-    return render(request, "monitor.html", context_instance=RequestContext(request))
+    return render(request, "monitor.html", {'brand': brand}, context_instance=RequestContext(request))
 
 
 def userdata(request):
