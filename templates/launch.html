@@ -225,18 +225,14 @@
                     'text': data.clusters_list[i].cluster_name});
                 }
                 c_name_el.removeAttr('disabled');
-                var options = { width: "resolve",
-                    closeOnSelect: !c_name_el.is("[MULTIPLE]"),
-                    createSearchChoice: function(term) {
-                        return {
-                            id: term,
-                            text: term + ' (new)'
-                        };
-                    },
-                    data: clusters
-                };
+                // Cretate a dropdown w/ list of existing clusters
+                var s = $('<select id="id_cluster_name" name="id_cluster_name" class="ui-input-basic" />');
+                for(var i in clusters_list) {
+                    $('<option />', {value: clusters_list[i].cluster_name, text: clusters_list[i].cluster_name}).appendTo(s);
+                }
+                c_name_el.replaceWith(s[0]);
+                $('#existing-cluster-dropdown').show();
                 enable_fields();
-                c_name_el.select2(options);
                 // If choosing an existing cluster, look for placement automatically
                 c_name_el.attr("onChange", 'get_placements(false);');
               } else {
@@ -379,7 +375,6 @@
             // By default, custom image ID el. is hidden
             $('#id_custom_image_id').parent().parent().hide();
         });
-        $("input,select,textarea").addClass("input-xlarge");
 
         // Allow the user to fetch a list of existing clusters
         $('#fetch_clusters_btn').click(function(){ fetch_clusters(); });
@@ -477,15 +472,15 @@
       <div class="control-group{% if field.errors %} error{% endif %}{% if field.field.required %} required{% endif %}">
         <label class="control-label"{% if field.auto_id and input_type != "multicheckbox" and input_type != "radioset" %} for="{{ field.auto_id }}"{% endif %}>{{ field.label }}
         </label>
-        <div class="controls{% if float %} controls-row{% endif %}">
+        <div class="controls{% if float %} controls-row{% endif %} ui-select">
           {% if field.label == 'Cluster name' %}
             {# Force users to explicitly choose if creating or recreating a cluster #}
             <span id="cluster_name_container">
-              <button id="create_new_cluster_link" class="btn btn-small">
+              <button id="create_new_cluster_link" class="btn btn-small action-button">
                 Create a new cluster
               </button>
               or
-              <button id="recreate_cluster_link" class="btn btn-small">
+              <button id="recreate_cluster_link" class="btn btn-small action-button">
                 Recreate an existing cluster
               </button>
             </span>
@@ -494,8 +489,16 @@
               <i id="fetch_clusters_btn" class="icon-list-ul action-icons"></i>
               <i id="abort_clusters_fetch" class="icon-remove action-icons" style="display: none"></i>
             </span>
+            <div id="existing-cluster-dropdown" class="button" style="display:none">
+              <i class="fa fa-caret-down"></i>
+            </div>
           {% else %}
             {{ field }}
+          {% endif %}
+          {% if field.field.is_select %}
+            <div class="button">
+              <i class="fa fa-caret-down"></i>
+            </div>
           {% endif %}
           {% if field.label == 'Placement' %}
             <i id="get_placements_btn" class="icon-location-arrow action-icons"></i>
@@ -503,23 +506,22 @@
           {% if field.label == 'Key pair' %}
             <i id="get_gey_pair_btn" class="icon-location-arrow action-icons"></i>
           {% endif %}
-          {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}
-          {% autoescape off %}
-            <br/><span class="help-inline"><span class="muted">{{ field.help_text }}</muted></span>
-          {% endautoescape %}
-           <!-- {% include "bootstrap_toolkit/field_help.html" with display="inline" %} -->
         </div>
+        {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}
+        {% autoescape off %}
+          <span class="help-inline"><span class="text-muted">{{ field.help_text }}</muted></span>
+        {% endautoescape %}
       </div>
     {% if not field.field.required %}
       </span>
     {% endif %}
   {% endfor %}
   <h5>
-    <a id="hide_advanced_startup_options" style="display: none;" href="#">
+    <a id="hide_advanced_startup_options" style="display: none;" href="#" class="undecorated_a">
       <i class="icon-arrow-up"></i>
       Hide advanced options
     </a>
-    <a id="show_advanced_startup_options" href="#">
+    <a id="show_advanced_startup_options" href="#" class="undecorated_a">
       <i class="icon-arrow-down"></i>
       Show advanced startup options
     </a>

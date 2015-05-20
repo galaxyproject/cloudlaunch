@@ -13,15 +13,133 @@
         display: none;
       }
       .table th {
-        text-align: center;
+        width: 35%;
       }
-
       #copy-ip.copy-ip-hover {
         color: #08c;
         background-color: #cccccc \9;
       }
       #launch-issue {
         display: none;
+      }
+
+      .progress {
+        height: 20px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        background-color: #f7f7f7;
+        background-image: -moz-linear-gradient(top, #f5f5f5, #f9f9f9);
+        background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#f5f5f5), to(#f9f9f9));
+        background-image: -webkit-linear-gradient(top, #f5f5f5, #f9f9f9);
+        background-image: -o-linear-gradient(top, #f5f5f5, #f9f9f9);
+        background-image: linear-gradient(to bottom, #f5f5f5, #f9f9f9);
+        background-repeat: repeat-x;
+        -webkit-border-radius: 4px;
+           -moz-border-radius: 4px;
+                border-radius: 4px;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#fff9f9f9', GradientType=0);
+        -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+           -moz-box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+                box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .progress .bar {
+        float: left;
+        width: 0;
+        height: 100%;
+        font-size: 12px;
+        color: #ffffff;
+        text-align: center;
+        text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+        background-color: #0e90d2;
+        background-image: -moz-linear-gradient(top, #149bdf, #0480be);
+        background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#149bdf), to(#0480be));
+        background-image: -webkit-linear-gradient(top, #149bdf, #0480be);
+        background-image: -o-linear-gradient(top, #149bdf, #0480be);
+        background-image: linear-gradient(to bottom, #149bdf, #0480be);
+        background-repeat: repeat-x;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff149bdf', endColorstr='#ff0480be', GradientType=0);
+        -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+           -moz-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+                box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+        -webkit-box-sizing: border-box;
+           -moz-box-sizing: border-box;
+                box-sizing: border-box;
+        -webkit-transition: width 0.6s ease;
+           -moz-transition: width 0.6s ease;
+             -o-transition: width 0.6s ease;
+                transition: width 0.6s ease;
+      }
+
+      .progress .bar + .bar {
+        -webkit-box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+           -moz-box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+                box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.15), inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+      }
+
+      .progress-striped .bar {
+        background-color: #149bdf;
+        background-image: -webkit-gradient(linear, 0 100%, 100% 0, color-stop(0.25, rgba(255, 255, 255, 0.15)), color-stop(0.25, transparent), color-stop(0.5, transparent), color-stop(0.5, rgba(255, 255, 255, 0.15)), color-stop(0.75, rgba(255, 255, 255, 0.15)), color-stop(0.75, transparent), to(transparent));
+        background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: -moz-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        -webkit-background-size: 40px 40px;
+           -moz-background-size: 40px 40px;
+             -o-background-size: 40px 40px;
+                background-size: 40px 40px;
+      }
+
+      .progress.active .bar {
+        -webkit-animation: progress-bar-stripes 2s linear infinite;
+           -moz-animation: progress-bar-stripes 2s linear infinite;
+            -ms-animation: progress-bar-stripes 2s linear infinite;
+             -o-animation: progress-bar-stripes 2s linear infinite;
+                animation: progress-bar-stripes 2s linear infinite;
+      }
+
+      .progress-danger .bar,
+      .progress .bar-danger {
+        background-color: #dd514c;
+        background-image: -moz-linear-gradient(top, #ee5f5b, #c43c35);
+        background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#c43c35));
+        background-image: -webkit-linear-gradient(top, #ee5f5b, #c43c35);
+        background-image: -o-linear-gradient(top, #ee5f5b, #c43c35);
+        background-image: linear-gradient(to bottom, #ee5f5b, #c43c35);
+        background-repeat: repeat-x;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffee5f5b', endColorstr='#ffc43c35', GradientType=0);
+      }
+
+      .progress-danger.progress-striped .bar,
+      .progress-striped .bar-danger {
+        background-color: #ee5f5b;
+        background-image: -webkit-gradient(linear, 0 100%, 100% 0, color-stop(0.25, rgba(255, 255, 255, 0.15)), color-stop(0.25, transparent), color-stop(0.5, transparent), color-stop(0.5, rgba(255, 255, 255, 0.15)), color-stop(0.75, rgba(255, 255, 255, 0.15)), color-stop(0.75, transparent), to(transparent));
+        background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: -moz-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+      }
+
+      .progress-success .bar,
+      .progress .bar-success {
+        background-color: #5eb95e;
+        background-image: -moz-linear-gradient(top, #62c462, #57a957);
+        background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#62c462), to(#57a957));
+        background-image: -webkit-linear-gradient(top, #62c462, #57a957);
+        background-image: -o-linear-gradient(top, #62c462, #57a957);
+        background-image: linear-gradient(to bottom, #62c462, #57a957);
+        background-repeat: repeat-x;
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff62c462', endColorstr='#ff57a957', GradientType=0);
+      }
+
+      .progress-success.progress-striped .bar,
+      .progress-striped .bar-success {
+        background-color: #62c462;
+        background-image: -webkit-gradient(linear, 0 100%, 100% 0, color-stop(0.25, rgba(255, 255, 255, 0.15)), color-stop(0.25, transparent), color-stop(0.5, transparent), color-stop(0.5, rgba(255, 255, 255, 0.15)), color-stop(0.75, rgba(255, 255, 255, 0.15)), color-stop(0.75, transparent), to(transparent));
+        background-image: -webkit-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: -moz-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: -o-linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+        background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
       }
   </style>
   <script>
@@ -260,36 +378,37 @@
 <div class="row">
   <table class="table table-bordered table-striped span7">
 
-   <tr><td>From zero to an analysis platform in</td>
-       <td><span id="ttp">&nbsp;</span></td>
+   <tr>
+      <th>From zero to an analysis platform in</th>
+      <td><span id="ttp">&nbsp;</span></td>
    </tr>
-   <tr><td class="span5">Server state</td>
-       <td class="span7">
-
-       <div class="progress progress-striped active" style="margin:0px">
+   <tr>
+      <th>Server state</th>
+      <td>
+        <div class="progress progress-striped active" style="margin:0px">
           <div id="requesting_bar" class="bar" style="width: 25%;">
-            <span class="sr-only">1. Requesting</span>
+            <span>1. Requesting</span>
           </div>
           <div id="pending_bar" class="bar" style="width: 25%;">
-            <span class="sr-only">2. Pending</span>
+            <span>2. Pending</span>
           </div>
           <div id="booting_bar" class="bar" style="width: 25%;">
-            <span class="sr-only">3. Booting</span>
+            <span>3. Booting</span>
           </div>
           <div id="ready_bar" class="bar" style="width: 25%;">
-            <span class="sr-only">4. Ready</span>
+            <span>4. Ready</span>
           </div>
         </div>
-
       </td>
    </tr>
-   <tr><td>Server IP address (CloudMan console)</td>
-       <td>
-        <span id="cloud_url"><i>Please wait</i></span>
-        <button id="copy-ip" class="pull-right btn btn-mini" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
-          Copy IP
-        </button>
-       </td>
+   <tr>
+      <th>Server IP address (CloudMan console)</th>
+      <td>
+      <span id="cloud_url"><i>Please wait</i></span>
+      <button id="copy-ip" class="pull-right btn btn-mini action-button" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
+        Copy IP
+      </button>
+      </td>
    </tr>
   </table>
 </div>
@@ -304,7 +423,7 @@
       </tr>
     </thead>
     <tbody>
-     <tr><td>For command line SSH access use</td>
+     <tr><th>For command line SSH access use</th>
          <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
              (Use key pair or password from the entry form;
              <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
@@ -319,22 +438,22 @@
          </td>
      </tr>
      {% endcomment %}
-     <tr><td>Cluster name</td>
+     <tr><th>Cluster name</th>
          <td>{{ request.session.ec2data.cluster_name }}</td>
      </tr>
-     <tr><td>Instance ID</td>
+     <tr><th>Instance ID</th>
          <!--<td>{{ request.session.ec2data.instance_id }}</td>-->
          <td id="instance_id">Not yet available</td>
      </tr>
-     <tr><td>Image ID (AMI)</td>
+     <tr><th>Image ID (AMI)</th>
          <!-- <td>{{ request.session.ec2data.image_id }}</td> -->
          <td id="image_id">Not yet available</td>
      </tr>
-     <tr><td>Security group</td>
+     <tr><th>Security group</th>
          <!--<td id="security_group">{{ request.session.ec2data.sg_name }}</td> -->
          <td id="security_group">Not yet available</td>
      </tr>
-     <tr><td>Key pair</td>
+     <tr><th>Key pair</th>
          <td id="key_pair">
              {# Show the link to download key pair material only if a new key pair was created #}
              <!--{% ifnotequal request.session.ec2data.kp_material None %}
@@ -345,7 +464,7 @@
              Not yet available
          </td>
      </tr>
-     <tr><td>Placement (zone)</td>
+     <tr><th>Placement (zone)</th>
          <td id="placement">Not (yet) available</td>
      </tr>
      </tbody>

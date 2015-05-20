@@ -1,6 +1,10 @@
 from django import forms
+from django.forms.fields import Field
+
 from biocloudcentral import models
 from biocloudcentral import settings
+
+setattr(Field, 'is_select', lambda self: isinstance(self.widget, forms.Select))
 
 
 class DynamicChoiceField(forms.ChoiceField):
@@ -21,7 +25,7 @@ class CloudManForm(forms.Form):
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     ud_url = "https://wiki.galaxyproject.org/CloudMan/UserData"
     target = "target='_blank'"
-    textbox_size = "input_xlarge"
+    textbox_size = "ui-input"
     cloud = forms.ModelChoiceField(
         queryset=models.Cloud.objects.all(),
         help_text="Choose from the available clouds. The credentials "
@@ -34,12 +38,12 @@ class CloudManForm(forms.Form):
         help_text="Your cloud account access key. For the Amazon cloud, available from "
         "the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
         .format(key_url, target))
-    secret_key = forms.CharField(required=True,
-                                 widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
-                                 help_text="Your cloud account secret key. For "
-                                 "the Amazon cloud, also available from the "
-                                 "<a href='{0}' {1} tabindex='-1'>security credentials page</a>."
-                                 .format(key_url, target))
+    secret_key = forms.CharField(
+        required=True,
+        widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
+        help_text="Your cloud account secret key. For the Amazon cloud, also "
+        "available from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
+        .format(key_url, target))
     if hasattr(settings, 'ASK_FOR_EMAIL') and settings.ASK_FOR_EMAIL:
         require_email = hasattr(settings, 'REQUIRE_EMAIL') and settings.REQUIRE_EMAIL
         institutional_email = forms.EmailField(
