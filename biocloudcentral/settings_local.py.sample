@@ -15,6 +15,9 @@ DATABASES = {
 
 # App-specific settings
 
+# Page title and brand text
+BRAND = "Cloud Launch"
+
 # Whether to add an email field to the form and make it required or optional.
 ASK_FOR_EMAIL = False
 REQUIRE_EMAIL = False

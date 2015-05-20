@@ -15,7 +15,7 @@ from django.shortcuts import render, redirect
 from biocloudcentral import forms
 from biocloudcentral import models
 from biocloudcentral import tasks
-from biocloudcentral.settings import REDIRECT_BASE
+from biocloudcentral import settings
 from bioblend.cloudman.launch import CloudManLauncher
 
 
@@ -29,10 +29,10 @@ def home(request):
     """
     launch_url = request.build_absolute_uri("/launch")
 
-    if launch_url.startswith(("http://127.0.0.1", "http://localhost")) or not REDIRECT_BASE:
+    if launch_url.startswith(("http://127.0.0.1", "http://localhost")) or not settings.REDIRECT_BASE:
         return redirect("/launch")
     else:
-        redirect_base = REDIRECT_BASE
+        redirect_base = settings.REDIRECT_BASE
         if not redirect_base.endswith("/"):
             redirect_base = "%s/" % redirect_base
         return redirect("%slaunch" % redirect_base)
@@ -73,7 +73,10 @@ def launch(request):
         # cloud is the first in the DB and that such an entry exists in the first place
         form = forms.CloudManForm(initial={'cloud': 1})
 
-    return render(request, "launch.html", {"form": form}, context_instance=RequestContext(request))
+    brand = 'Cloud Launch'
+    if hasattr(settings, 'BRAND'):
+        brand = settings.BRAND
+    return render(request, "launch.html", {"form": form, 'brand': brand}, context_instance=RequestContext(request))
 
 
 def launch_status(request):
