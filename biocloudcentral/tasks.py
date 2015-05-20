@@ -109,8 +109,7 @@ def run_instance(form):
         try:
             flavor = models.Flavor.objects.get(image=image.pk, default=True)
         except models.Flavor.DoesNotExist:
-            err_msg = "No default flavor specified for image {0}. Ignoring...".format(image)
-            log.warn(err_msg)
+            log.debug("No default flavor specified for image {0}. Ignoring...".format(image))
         except Exception, exc:
             err_msg = "Exception fetching flavor: {0}".format(exc)
             log.warn(err_msg)
