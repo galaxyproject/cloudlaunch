@@ -290,6 +290,7 @@
               // Call the update method only after a few seconds
               // window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
               update_clusters(data.task_id);
+              $('#recreate_old_cluster_warning').show();
             },
             error: function(data){
                 // If anything goes wrong (also see #abort_clusters_fetch),
@@ -491,6 +492,14 @@
             </span>
             <div id="existing-cluster-dropdown" class="button" style="display:none">
               <i class="fa fa-caret-down"></i>
+            </div>
+            <div id="recreate_old_cluster_warning" class="well" style="display: none;">
+              <b>Crucial note (please read):</b> If you are recreating a cluster
+              that was created prior to June 2015, you must select appropriate
+              <i>Image</i> under the <i>Advanced startup options</i>
+              below. See <i>Deprecated AMIs</i> on <a href="https://wiki.galaxyproject.org/CloudMan/#Galaxy_AMIs" target="_blank">this page</a>
+              for a list of old machine images. <b>Otherwise your cluster will
+              get corrupted.</b>
             </div>
           {% else %}
             {{ field }}
