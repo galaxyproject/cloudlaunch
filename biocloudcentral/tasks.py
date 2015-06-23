@@ -96,7 +96,7 @@ def run_instance(form):
             log.error(err_msg)
             return False
 
-    # handle flavor data
+    # Handle flavor data
     flavor = None
     if form['flavor_id']:
         try:
@@ -113,10 +113,14 @@ def run_instance(form):
         except Exception, exc:
             err_msg = "Exception fetching flavor: {0}".format(exc)
             log.warn(err_msg)
-
+    # Complement the form data with what's defined in the flavor
     if flavor and flavor.user_data:
         for key, value in yaml.load(flavor.user_data).iteritems():
-            form[key] = value
+            # Allow user-provided default bucket to override one specified in the flavor
+            if key == 'bucket_default' and form.get('bucket_default', None):
+                pass
+            else:
+                form[key] = value
 
     # Handle extra_user_data after flavor data so that flavor data can be overridden
     extra_user_data = form['extra_user_data']
@@ -133,7 +137,7 @@ def run_instance(form):
     # Compose kwargs from form data making sure the named arguments are not included
     kwargs = copy.deepcopy(form)
     # key_name is the parameter name for the key pair in the launch method so
-    # ensure it's there as a kwqrg if provided in the form
+    # ensure it's there as a kwarg if provided in the form
     if form.get('key_pair', None):
         kwargs['key_name'] = form['key_pair']
     for key in form.iterkeys():
@@ -141,6 +145,7 @@ def run_instance(form):
                    'placement', 'access_key', 'secret_key', 'cloud', 'key_pair']:
             del kwargs[key]
 
+    response = {}
     if not err_msg:
         log.debug("Launching cluster {0} from image {1} on instance {2} in zone '{3}'."
                   .format(form['cluster_name'], image_id, instance_type, form['placement']))
@@ -152,8 +157,6 @@ def run_instance(form):
                               ramdisk_id=ramdisk_id,
                               placement=form['placement'],
                               **kwargs)
-    else:
-        response = {}
     # Keep these parts of the form as part of the response
     response['cluster_name'] = form['cluster_name']
     response['password'] = form['password']
