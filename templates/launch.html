@@ -225,8 +225,8 @@
                     'text': data.clusters_list[i].cluster_name});
                 }
                 c_name_el.removeAttr('disabled');
-                // Cretate a dropdown w/ list of existing clusters
-                var s = $('<select id="id_cluster_name" name="id_cluster_name" class="ui-input-basic" />');
+                // Create a dropdown w/ list of existing clusters
+                var s = $('<select id="id_cluster_name" name="cluster_name" class="ui-input-basic" />');
                 for(var i in clusters_list) {
                     $('<option />', {value: clusters_list[i].cluster_name, text: clusters_list[i].cluster_name}).appendTo(s);
                 }
