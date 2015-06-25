@@ -119,8 +119,26 @@ def run_instance(form):
             # Allow user-provided default bucket to override one specified in the flavor
             if key == 'bucket_default' and form.get('bucket_default', None):
                 pass
+            elif key == 'initial_cluster_type' and form.get('initial_cluster_type', None):
+                pass
+            elif key == 'galaxy_data_option' and form.get('galaxy_data_option', None):
+                pass
+            elif key == 'pss' and form.get('pss', None):
+                pass
             else:
                 form[key] = value
+        # TODO: This is a temporary hack to set the user selected storage size to the selected cluster template
+        # till we can come up with a better UI that allows fine grained control over each filesystem's size.
+        # The current version only sets the size for the first filesystem that's found in the matching cluster template
+        try:
+            if form.get('initial_cluster_type', None) and form.get('pss', None):
+                templates = [template for template in form['cluster_templates'] if template['name'] == form['initial_cluster_type']]
+                if templates:
+                    templates[0]['filesystem_templates'][0]['type'] = form.get('galaxy_data_option', None)
+                    templates[0]['filesystem_templates'][0]['size'] = form.get('pss')
+        except Exception as e:
+            log.error("Couldn't set the storage size for the filesystem. Reason: {0}. Ignoring... ".format(e))
+
 
     # Handle extra_user_data after flavor data so that flavor data can be overridden
     extra_user_data = form['extra_user_data']

@@ -4,7 +4,7 @@ from django.forms.fields import Field
 from biocloudcentral import models
 from biocloudcentral import settings
 
-setattr(Field, 'is_select', lambda self: isinstance(self.widget, forms.Select))
+setattr(Field, 'is_select', lambda self: isinstance(self.widget, forms.Select) and not isinstance(self.widget, forms.RadioSelect))
 
 
 class DynamicChoiceField(forms.ChoiceField):
@@ -16,6 +16,12 @@ class DynamicChoiceField(forms.ChoiceField):
         # TODO: Add some validation code to ensure passed data is valid.
         # Return True if value is valid else return False
         return True
+
+class NumberInput(forms.TextInput):
+    """
+    Override TextInput to allow only number types
+    """
+    input_type = "number"
 
 
 class CloudManForm(forms.Form):
@@ -131,6 +137,23 @@ class CloudManForm(forms.Form):
         label="Flavor",
         required=False,
         widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    initial_cluster_type = forms.ChoiceField((("Galaxy", "Galaxy"),("Data", "Data"),("Test", "Cluster only")),
+        help_text="The cluster type determines the initial startup template used by cloudman (* indicates the default type).",
+        label="Cluster type",
+        required=False,
+        initial="Galaxy",
+        widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_cluster_type(this.value)"}))
+    galaxy_data_option = forms.ChoiceField((("transient", "Transient"),("volume", "Volume")),
+        help_text="The type of storage to use for the Galaxy volume (* indicates the default type).",
+        label="Storage type",
+        required=False,
+        initial="transient",
+        widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_storage_option(this.value)"}))
+    pss = forms.CharField(
+        required=False,
+        label="Storage size",
+        widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)" }),
+        help_text="The size of the storage (in GB). The default is 10.")
     custom_image_id = forms.CharField(
         required=False,
         label="Custom image ID",
