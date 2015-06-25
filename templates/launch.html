@@ -486,8 +486,8 @@
           $('#id_key_pair').attr('disabled', 'disabled');
         });
 
-        // Initially hide the storage size field
-        $('#id_pss').parent().parent().hide();
+        // Synchronise initial storage size field visibility
+        change_cluster_type($("input[name='initial_cluster_type']:checked").val());
     });
 
   </script>
