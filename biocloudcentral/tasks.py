@@ -117,13 +117,18 @@ def run_instance(form):
     if flavor and flavor.user_data:
         for key, value in yaml.load(flavor.user_data).iteritems():
             # Allow user-provided default bucket to override one specified in the flavor
+            print "Enumerating", key, form.get('bucket_default', None)
             if key == 'bucket_default' and form.get('bucket_default', None):
+                print "1"
                 pass
-            if key == 'initial_cluster_type' and form.get('initial_cluster_type', None):
+            elif key == 'initial_cluster_type' and form.get('initial_cluster_type', None):
+                print "2"
                 pass
-            if key == 'galaxy_data_option' and form.get('galaxy_data_option', None):
+            elif key == 'galaxy_data_option' and form.get('galaxy_data_option', None):
+                print "3"
                 pass
-            if key == 'pss' and form.get('pss', None):
+            elif key == 'pss' and form.get('pss', None):
+                print "4"
                 pass
             else:
                 form[key] = value
