@@ -355,21 +355,21 @@
 	function change_cluster_type(cluster_type) {
     	switch (cluster_type) {
     		case "Galaxy":
-    			$('#id_storage_type_0').prop('checked', true);
-    			$('#id_storage_type_0').prop('disabled', false);
-    			$('#id_storage_type_0').parent().parent().parent().parent().parent().show();
-    			$('#id_storage_size').parent().parent().show();
+    			$('#id_galaxy_data_option_0').prop('checked', true);
+    			$('#id_galaxy_data_option_0').prop('disabled', false);
+    			$('#id_galaxy_data_option_0').parent().parent().parent().parent().parent().show();
+    			$('#id_pss').parent().parent().show();
     			break;
     		case "Data":
-    			$('#id_storage_type_0').prop('disabled', true);
-    			$('#id_storage_type_1').prop('checked', true);
-    			$('#id_storage_type_0').parent().parent().parent().parent().parent().show();
-    			$('#id_storage_size').parent().parent().show();
+    			$('#id_galaxy_data_option_0').prop('disabled', true);
+    			$('#id_galaxy_data_option_1').prop('checked', true);
+    			$('#id_galaxy_data_option_0').parent().parent().parent().parent().parent().show();
+    			$('#id_pss').parent().parent().show();
     			break;
     		case "Test":
-    			$('#id_storage_type_0').prop('checked', true);
-    			$('#id_storage_size').parent().parent().hide();
-    			$('#id_storage_type_0').parent().parent().parent().parent().parent().hide();
+    			$('#id_galaxy_data_option_0').prop('checked', true);
+    			$('#id_pss').parent().parent().hide();
+    			$('#id_galaxy_data_option_0').parent().parent().parent().parent().parent().hide();
     			break;
     	}
     }
@@ -377,10 +377,10 @@
     function change_storage_option(storage_type) {
     	switch (storage_type) {
     		case "transient":
-    			$('#id_storage_size').parent().parent().hide();
+    			$('#id_pss').parent().parent().hide();
     			break;
     		case "volume":
-    			$('#id_storage_size').parent().parent().show();
+    			$('#id_pss').parent().parent().show();
     			break;
     	}
     }
@@ -486,7 +486,7 @@
         });
 
         // Initially hide the storage size field
-        $('#id_storage_size').parent().parent().hide();
+        $('#id_pss').parent().parent().hide();
     });
 
   </script>
