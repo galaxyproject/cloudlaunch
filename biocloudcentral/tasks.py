@@ -134,6 +134,7 @@ def run_instance(form):
             if form.get('initial_cluster_type', None) and form.get('pss', None):
                 templates = [template for template in form['cluster_templates'] if template['name'] == form['initial_cluster_type']]
                 if templates:
+                    templates[0]['filesystem_templates'][0]['type'] = form.get('galaxy_data_option', None)
                     templates[0]['filesystem_templates'][0]['size'] = form.get('pss')
         except Exception as e:
             log.error("Couldn't set the storage size for the filesystem. Reason: {0}. Ignoring... ".format(e))
