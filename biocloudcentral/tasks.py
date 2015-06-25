@@ -119,6 +119,12 @@ def run_instance(form):
             # Allow user-provided default bucket to override one specified in the flavor
             if key == 'bucket_default' and form.get('bucket_default', None):
                 pass
+            if key == 'initial_cluster_type' and form.get('initial_cluster_type', None):
+                pass
+            if key == 'galaxy_data_option' and form.get('galaxy_data_option', None):
+                pass
+            if key == 'pss' and form.get('pss', None):
+                pass
             else:
                 form[key] = value
 
