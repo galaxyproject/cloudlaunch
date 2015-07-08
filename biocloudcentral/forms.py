@@ -46,7 +46,7 @@ class CloudManForm(forms.Form):
         .format(key_url, target))
     secret_key = forms.CharField(
         required=True,
-        widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
+        widget=forms.PasswordInput(attrs={"class": "%s disableable" % textbox_size}),
         help_text="Your cloud account secret key. For the Amazon cloud, also "
         "available from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
         .format(key_url, target))
