@@ -153,7 +153,13 @@
         data: {csrfmiddlewaretoken: csrf_token},
         success: function(data){
           update_progress_bar("requesting");
-          if (data.ready == true) {
+          if (data.error) {
+            $('#launch-issue-text').text(data.error);
+            $('#launch-issue').show();
+            $('#ttp').stopwatch().stopwatch('stop');
+            $('#cloud_url').text("");
+            update_progress_bar("error");
+          } else if (data.ready == true) {
             $('#instance_id').html(data.instance_id);
             $('#security_group').html(data.sg_name);
             $('#key_pair').html(data.kp_name);
@@ -175,7 +181,6 @@
         update_progress_bar(data.instance_state);
 
         if (data.error != '') {
-
           data.instance_state = 'error';
         }
 
@@ -187,7 +192,6 @@
               "<i class='icon-bell'></i>");
         }
         else if (data.instance_state != '') {
-
             $('#inst_state').html(data.instance_state +
                 " <img src='{{ STATIC_URL}}images/spinner.gif'/>");
         }
@@ -213,7 +217,7 @@
               txt += ("I am afraid we have no more information but we will " +
                       "keep checking on this instance.");
             }
-            $('#launch-issue').html(txt);
+            $('#launch-issue-text').text(txt);
             $('#launch-issue').show();
           }
           // Get an update on the instance state every 5 seconds
@@ -256,7 +260,7 @@
     function update_progress_bar (state) {
       // body...
       var states = ["requesting", "pending", "booting", "running", "error"];
-      var colors = ['gray', '', 'green', 'red'];
+      var colors = ['gray', '', 'green', '#dd1c15'];
       var images = ['', 'none'];
       var curStateColor = [];
       var curImage = [];
@@ -377,7 +381,13 @@
     </p>
 </div>
 
-<div id="launch-issue" class="alert alert-danger" role="alert"></div>
+<div id="launch-issue" class="alert alert-danger" role="alert">
+  <div id="launch-issue-text"></div>
+  <div class="help-block">
+    <b>Note</b> that this may be a terminal error which you many need to correct
+    first and then attempt the start process again.
+  </div>
+</div>
 
 <div class="row">
   <table class="table table-bordered table-striped span7">

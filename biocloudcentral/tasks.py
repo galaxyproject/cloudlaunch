@@ -116,7 +116,7 @@ def run_instance(form):
     # Complement the form data with what's defined in the flavor
     if flavor and flavor.user_data:
         for key, value in yaml.load(flavor.user_data).iteritems():
-            # Allow user-provided default bucket to override one specified in the flavor
+            # Allow user-provided form value to override one specified in the flavor
             if key == 'bucket_default' and form.get('bucket_default', None):
                 pass
             elif key == 'initial_cluster_type' and form.get('initial_cluster_type', None):
@@ -132,13 +132,13 @@ def run_instance(form):
         # The current version only sets the size for the first filesystem that's found in the matching cluster template
         try:
             if form.get('initial_cluster_type', None) and form.get('pss', None):
-                templates = [template for template in form['cluster_templates'] if template['name'] == form['initial_cluster_type']]
+                templates = [template for template in form['cluster_templates']
+                             if template['name'] == form['initial_cluster_type']]
                 if templates:
                     templates[0]['filesystem_templates'][0]['type'] = form.get('galaxy_data_option', None)
                     templates[0]['filesystem_templates'][0]['size'] = form.get('pss')
         except Exception as e:
             log.error("Couldn't set the storage size for the filesystem. Reason: {0}. Ignoring... ".format(e))
-
 
     # Handle extra_user_data after flavor data so that flavor data can be overridden
     extra_user_data = form['extra_user_data']
@@ -175,6 +175,7 @@ def run_instance(form):
                               ramdisk_id=ramdisk_id,
                               placement=form['placement'],
                               **kwargs)
+
     # Keep these parts of the form as part of the response
     response['cluster_name'] = form['cluster_name']
     response['password'] = form['password']
@@ -184,5 +185,5 @@ def run_instance(form):
     response['instance_type'] = form['instance_type']
     response['institutional_email'] = form.get('institutional_email', '')
     response['image_id'] = image_id
-    response['error'] = err_msg
+    response['error'] = err_msg or response['error']
     return response
