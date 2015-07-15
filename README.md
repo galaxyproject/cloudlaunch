@@ -30,15 +30,24 @@ and proceed with the database migrations step below:
 #### Applying database migrations
 
 Finally, apply the database migrations, and, optionally, preload your database
-with the details about [AWS instances][9]. When prompted, there is no requirement to
-create a super-user account when asked. However, it may be desirable to be able
-to log into the Admin side of the app:
+with the details about [AWS instances][9]. When prompted during the initial
+databse sync, create a super-user account; it will be used to log into the
+Admin side of the app and allow you to manage it:
 
     $ python biocloudcentral/manage.py syncdb
     $ python biocloudcentral/manage.py migrate biocloudcentral
     $ python biocloudcentral/manage.py migrate djcelery
     $ python biocloudcentral/manage.py migrate kombu.transport.django
+    # Optional; if you want to preload AWS cloud info and instance types
     $ python biocloudcentral/manage.py loaddata biocloudcentral/aws_db_data.json
+
+#### Collect static data
+
+Do the following to get all the static content into a single location:
+
+    $ mkdir /some/absolute/path
+    # Edit biocloudcentral/settings_local.py and set STATIC_ROOT to above path
+    $ python biocloudcentral/manage.py collectstatic --noinput
 
 #### Running locally
 
@@ -47,6 +56,7 @@ Simply run:
     $ honcho -f ProcfileHoncho start
 
 The application will be available on port 5000 (``127.0.0.1:5000``).
+The Admin part of the app is available under ``127.0.0.1:5000/admin/``.
 
 Alternatively, you start the web server and the Celery workers
 in two separate tabs (or [screen][10] sessions):
@@ -99,7 +109,8 @@ a different user, change it in both commands:
         $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE launch LOGIN CREATEDB PASSWORD 'password_to_change'\""
         $ sudo su launch -c "createdb --username launch --port 5432 cloudlaunch"
 
-- Update settings in ``biocloudcentral/settings.py`` to match your server settings:
+- Make a copy of ``biocloudcentral/settings_local.py.sample`` as
+``biocloudcentral/settings_local.py`` and set (at least) the following values:
 
     - Edit the database settings to point to the installed Postgres DB. These must
     match the username, port, and password from the previous two commands. Delete
@@ -116,20 +127,17 @@ a different user, change it in both commands:
                 }
             }
 
-    - Set ``DEBUG`` to ``False``
     - Set admin users
-    - Set ``REDIRECT_BASE`` to ``None``
-    - Set ``STATIC_ROOT`` to ``/srv/cloudlaunch/media`` (and create that dir, as `launch` user)
-    - Set ``SESSION_ENGINE`` to ``django.contrib.sessions.backends.db``
+    - Update ``STATIC_ROOT`` if ``/srv/cloudlaunch/media`` is not acceptable
+        - Make sure the set directory exists and is owned by the `launch` user
     - Change ``SECRET_KEY``
 
 - Apply database migrations as per above section
 
 - Collect all static files into a single directory by running:
 
-        $ cd /cl/cloudlaunch/cloudlaunch
-        $ python biocloudcentral/manage.py collectstatic  # (type ``yes`` when prompted
-        about rewriting existing files)
+        $ cd /srv/cloudlaunch/cloudlaunch
+        $ python biocloudcentral/manage.py collectstatic --noinput
 
 - Create an empty log file that can be edited by the ``launch`` user
 
