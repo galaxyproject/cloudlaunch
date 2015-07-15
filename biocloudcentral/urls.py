@@ -5,8 +5,8 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
-    # Examples:
+urlpatterns = patterns(
+    '',
     url(r'^$', 'biocloudcentral.views.home', name='home'),
     url(r'^launch$', 'biocloudcentral.views.launch', name='launch'),
     url(r'^launch-status$', 'biocloudcentral.views.launch_status', name='launch_status'),
@@ -23,7 +23,6 @@ urlpatterns = patterns('',
         name='update_clusters'),
     url(r'^revoke-fetch-clusters$', 'biocloudcentral.views.revoke_fetch_clusters',
         name='revoke_fetch_clusters'),
-    # url(r'^biocloudcentral/', include('biocloudcentral.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
@@ -32,9 +31,9 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     # Include CBLtweaker app
-    url(r'^cbltweaker', include('biocloudcentral.cbltweaker.urls')),
+    # url(r'^cbltweaker', include('biocloudcentral.cbltweaker.urls')),
 
-    # Needed to be able to run this app with gunicorn and have it serve static content
-    (r'^static/(?P<path>.*)$', 'django.views.static.serve',
+    # Needed to serve static content collected via `collectstatic`
+    url(r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': settings.STATICFILES_DIRS[0], 'show_indexes': True}),
 )

@@ -101,8 +101,10 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+
+    # This path will serve content from the project's `static` dir only (i.e.,
+    # no admin css/js); run collectstatic for that and see `settings_local.py`
     os.path.join(os.path.dirname(__file__), os.pardir, "static"),
-    '/app/.heroku/python/lib/python2.7/site-packages/django/contrib/admin/media/',  # Heroku-setting
 )
 
 # List of finder classes that know how to find static files in
