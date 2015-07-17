@@ -84,22 +84,22 @@ class CloudManForm(forms.Form):
         help_text="Type (ie, virtual hardware configuration) of the server to start.",
         widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     initial_cluster_type = forms.ChoiceField(
-        (("Galaxy", "Cluster with Galaxy"), ("Data", "Persistent data cluster"),
-         ("Test", "Transient cluster"), ("None", "Do not set cluster type now")),
+        (("Galaxy", "Cluster with Galaxy"), ("Data", "Cluster only"),
+         ("None", "Do not set cluster type now")),
         help_text="The cluster type determines the initial startup template "
                   "used by cloudman.",
         label="Cluster type",
         required=True,
         initial="Galaxy",
         widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_cluster_type(this.value)"}))
-    galaxy_data_option = forms.ChoiceField(
+    storage_type = forms.ChoiceField(
         (("transient", "Transient"), ("volume", "Persistent")),
         help_text="The type of storage to use for the Galaxy volume.",
         label="Storage type",
         required=False,
         initial="transient",
         widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_storage_option(this.value)"}))
-    pss = forms.CharField(
+    storage_size = forms.CharField(
         required=False,
         label="Storage size",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),

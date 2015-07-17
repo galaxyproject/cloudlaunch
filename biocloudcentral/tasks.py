@@ -121,9 +121,9 @@ def run_instance(form):
                 pass
             elif key == 'initial_cluster_type' and form.get('initial_cluster_type', None):
                 pass
-            elif key == 'galaxy_data_option' and form.get('galaxy_data_option', None):
+            elif key == 'storage_type' and form.get('storage_type', None):
                 pass
-            elif key == 'pss' and form.get('pss', None):
+            elif key == 'storage_size' and form.get('storage_size', None):
                 pass
             else:
                 form[key] = value
@@ -131,12 +131,12 @@ def run_instance(form):
         # till we can come up with a better UI that allows fine grained control over each filesystem's size.
         # The current version only sets the size for the first filesystem that's found in the matching cluster template
         try:
-            if form.get('initial_cluster_type', None) and form.get('pss', None):
+            if form.get('initial_cluster_type', None) and form.get('storage_size', None):
                 templates = [template for template in form['cluster_templates']
                              if template['name'] == form['initial_cluster_type']]
                 if templates:
-                    templates[0]['filesystem_templates'][0]['type'] = form.get('galaxy_data_option', None)
-                    templates[0]['filesystem_templates'][0]['size'] = form.get('pss')
+                    templates[0]['filesystem_templates'][0]['type'] = form.get('storage_type', None)
+                    templates[0]['filesystem_templates'][0]['size'] = form.get('storage_size')
         except Exception as e:
             log.error("Couldn't set the storage size for the filesystem. Reason: {0}. Ignoring... ".format(e))
 
