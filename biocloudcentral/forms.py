@@ -32,6 +32,7 @@ class CloudManForm(forms.Form):
     """
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     ud_url = "https://wiki.galaxyproject.org/CloudMan/UserData"
+    types_url = "https://wiki.galaxyproject.org/CloudMan/ClusterTypes"
     target = "target='_blank'"
     textbox_size = "ui-input"
     cloud = forms.ModelChoiceField(
@@ -87,14 +88,17 @@ class CloudManForm(forms.Form):
         (("Galaxy", "Cluster with Galaxy"), ("Data", "Cluster only"),
          ("None", "Do not set cluster type now")),
         help_text="The cluster type determines the initial startup template "
-                  "used by cloudman.",
+                  "used by CloudMan. See <a href='{0}' {1} tabindex='-1'>this page"
+                  "</a> for details on cluster types.".format(types_url, target),
         label="Cluster type",
         required=True,
         initial="Galaxy",
         widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_cluster_type(this.value)"}))
     storage_type = forms.ChoiceField(
         (("transient", "Transient"), ("volume", "Persistent")),
-        help_text="The type of storage to use for the Galaxy volume.",
+        help_text="The type of storage to use for the main file system. "
+                  "See <a href='{0}' {1} tabindex='-1'>this page"
+                  "</a> for more details on storage types.".format(types_url, target),
         label="Storage type",
         required=False,
         initial="transient",
