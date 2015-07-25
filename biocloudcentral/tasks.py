@@ -165,8 +165,10 @@ def run_instance(form):
 
     response = {}
     if not err_msg:
-        log.debug("Launching cluster {0} from image {1} on instance {2} in zone '{3}'."
-                  .format(form['cluster_name'], image_id, instance_type, form['placement']))
+        log.debug("Launching cluster '{0}' on {1} cloud from image {2} on "
+                  "instance type {3}{4}."
+                  .format(form['cluster_name'], form['cloud_name'], image_id, instance_type,
+                          " in zone '{0}'".format(form['placement']) if form['placement'] else ""))
         response = cml.launch(cluster_name=form['cluster_name'],
                               image_id=image_id,
                               instance_type=instance_type,
@@ -185,5 +187,5 @@ def run_instance(form):
     response['instance_type'] = form['instance_type']
     response['institutional_email'] = form.get('institutional_email', '')
     response['image_id'] = image_id
-    response['error'] = err_msg or response['error']
+    response['error'] = err_msg or response.get('error', None)
     return response
