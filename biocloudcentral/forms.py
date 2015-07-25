@@ -95,19 +95,20 @@ class CloudManForm(forms.Form):
         initial="Galaxy",
         widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_cluster_type(this.value)"}))
     storage_type = forms.ChoiceField(
-        (("transient", "Transient"), ("volume", "Persistent")),
+        (("volume", "Persistent volume storage"), ("transient", "Transient instance storage")),
         help_text="The type of storage to use for the main file system. "
                   "See <a href='{0}' {1} tabindex='-1'>this page"
                   "</a> for more details on storage types.".format(types_url, target),
         label="Storage type",
         required=False,
-        initial="transient",
+        initial="volume",
         widget=forms.RadioSelect(attrs={"class": "radio_select", "onChange": "change_storage_option(this.value)"}))
     storage_size = forms.CharField(
         required=False,
         label="Storage size",
+        initial="10",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
-        help_text="The size of the storage (in GB). The default is 10.")
+        help_text="The size of the storage (in GB; number only). The default is 10.")
     placement = DynamicChoiceField(
         (("", "Fill above fields & click refresh to fetch"),),
         help_text="A specific placement zone where your server will run. This "
