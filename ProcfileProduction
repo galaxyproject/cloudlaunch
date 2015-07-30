@@ -1,0 +1,2 @@
+web: ../.cl/bin/gunicorn -b "0.0.0.0:8000" -w 3 --access-logfile access.log --error-logfile error.log biocloudcentral.wsgi:application
+celery: ../.cl/bin/python biocloudcentral/manage.py celeryd --logfile tasks.log --loglevel=info --autoscale=5,2
