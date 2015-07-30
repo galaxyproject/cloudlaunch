@@ -6,11 +6,9 @@ run it locally - either way, it takes about 2 minutes to go from nothing to
 a configured cluster-in-the-cloud and a scalable analysis platform on top of
 cloud resources.
 
-### Installing locally
+### Installing a dev instance
 
-This [Django][1] application can be run locally, on a dedicated server or deployed
-on [Heroku][4]. To run locally or on a dedicated server, start by installing Python
-and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
+This [Django][1] application can be run locally for development, start by installing Python and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
 
     $ mkdir cl; cd cl
     $ virtualenv .
@@ -19,7 +17,7 @@ and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
     $ cd cloudlaunch
     $ pip install -r requirements.txt
 
-Next, you need to make a database available. For local development and deployment,
+Next, you need to make a database available. For development,
 [SQLite][16] will suffice. To use it, simply copy file
 ``biocloudcentral/settings_local.py.sample`` to ``biocloudcentral/settings_local.py``
 and proceed with the database migrations step below:
@@ -49,23 +47,23 @@ Do the following to get all the static content into a single location:
     # Edit biocloudcentral/settings_local.py and set STATIC_ROOT to above path
     $ python biocloudcentral/manage.py collectstatic --noinput
 
-#### Running locally
+#### Run the app
 
-Simply run:
+Start the app with the following command, which will start a development web
+server and a task queue process:
 
-    $ honcho -f ProcfileHoncho start
+    $ honcho -f ProcfileDev start
 
-The application will be available on port 5000 (``127.0.0.1:5000``).
-The Admin part of the app is available under ``127.0.0.1:5000/admin/``.
+The application will be available on port 8000 (``127.0.0.1:8000``).
+The Admin part of the app is available under ``127.0.0.1:8000/admin/``, where you
+will need to add your cloud connection and image information before you can launch
+instances.
 
-Alternatively, you start the web server and the Celery workers
+Alternatively, you start the web server and the Celery task queue
 in two separate tabs (or [screen][10] sessions):
 
     $ python biocloudcentral/manage.py runserver
-    $ python biocloudcentral/manage.py celeryd --concurrency 2 --loglevel=info
-
-In this case, the application will be available on localhost on port
-8000 (``http://127.0.0.1:8000``).
+    $ python biocloudcentral/manage.py celeryd --concurrency 2 --loglevel=debug
 
 ### Deploying to Heroku
 
@@ -88,10 +86,11 @@ If the database needs migration, run:
 - Launch a Ubuntu 14.04 instance or a VM
 - Install necessary system packages:
 
-        $ sudo apt-get -y install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx
+        $ sudo apt-get update
+        $ sudo apt-get -y install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx supervisor
 
-- Clone Cloud Launch into a local directory (e.g., ``/srv/cloudlaunch``) as
-system user ``launch`` and install the required libraries:
+- Clone Cloud Launch into a local directory ``/srv/cloudlaunch`` as
+system user ``launch`` and install the required libraries (if you choose to install the app in a different directory, you will also need to change a number of configuration files where the specified path is assumed):
 
         $ sudo mkdir -p /srv/cloudlaunch
         $ sudo chown launch:launch /srv/cloudlaunch
@@ -128,7 +127,7 @@ a different user, change it in both commands:
             }
 
     - Set admin users
-    - Update ``STATIC_ROOT`` if ``/srv/cloudlaunch/media`` is not acceptable
+    - Ensure ``STATIC_ROOT`` is set to ``/srv/cloudlaunch/media``
         - Make sure the set directory exists and is owned by the `launch` user
     - Change ``SECRET_KEY``
 
@@ -139,15 +138,6 @@ a different user, change it in both commands:
         $ cd /srv/cloudlaunch/cloudlaunch
         $ python biocloudcentral/manage.py collectstatic --noinput
 
-- Create an empty log file that can be edited by the ``launch`` user
-
-        $ sudo touch /var/log/cl_server.log
-        $ sudo chown launch:launch /var/log/cl_server.log
-
-- Copy Upstart files (``cl.conf`` and ``cl_celery.conf``) to ``/etc/init``
-
-        $ sudo cp cl.conf cl_celery.conf /etc/init/.
-
 - Configure nginx:
 
     - If it exists, delete ``default`` site from ``/etc/nginx/sites-enabled``
@@ -157,7 +147,7 @@ a different user, change it in both commands:
 
     - Copy the nginx config file from the Cloud Launch repo
 
-            $ sudo cp cl_nginx.conf /etc/nginx/sites-available/
+            $ sudo cp /srv/cloudlaunch/cloudlaunch/cl_nginx.conf /etc/nginx/sites-available/
 
     - Create the following symlink
 
@@ -165,15 +155,20 @@ a different user, change it in both commands:
 
     - Optionally update the number of worker threads in ``/etc/nginx/nginx.conf``
     - Test the nginx configuration with ``sudo nginx -t``
-    - Start ``sudo service nginx start`` or reload nginx: ``sudo nginx -s reload``
+    - Start & reload nginx with ``sudo service nginx start`` and ``sudo nginx -s reload``
 
-- Start the app services via Upstart:
+- Run the app via [supervisor][17]:
 
-        $ sudo service cl start
-        $ sudo service cl_celery start
+        $ sudo cp cl_supervisor.conf /etc/supervisor/conf.d/
+        $ sudo supervisorctl reread
+        $ sudo supervisorctl update
+        # Check the status with
+        $ sudo supervisorctl status
 
-- The app is now available at ``https://server.ip.address/``. The Admin part of
-the app is available at ``https://server.ip.address/admin/``.
+- The app is now available at ``http://server.ip.address/``. The Admin part of
+the app is available at ``http://server.ip.address/admin/``.
+
+- Logs are available in the installation directory, `/srv/cloudlaunch/cloudlaunch/`
 
 [1]: https://www.djangoproject.com/
 [2]: http://usecloudman.org/
@@ -191,6 +186,7 @@ the app is available at ``https://server.ip.address/admin/``.
 [14]: https://devcenter.heroku.com/articles/git
 [15]: http://www.postgresql.org/
 [16]: http://www.sqlite.org/
+[17]: http://supervisord.org/index.html
 
 ## LICENSE
 
