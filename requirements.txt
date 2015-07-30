@@ -6,13 +6,13 @@ South==0.7.3
 amqp==1.0.12
 anyjson==0.3.3
 billiard==2.7.3.31
-bioblend>=0.3.3
-boto==2.9.7
+bioblend>=0.6.1
+boto==2.38.0
 celery==3.0.21
 dj-database-url==0.2.1
 django-bootstrap-toolkit==2.12.0
 django-celery==3.0.17
-gunicorn==17.5
+gunicorn==19.3.0
 honcho>=0.6.6
 kombu==2.5.12
 mock==1.0.1
