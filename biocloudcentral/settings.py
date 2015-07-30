@@ -174,7 +174,6 @@ INSTALLED_APPS = (
     'biocloudcentral',
     'djcelery',
     'kombu.transport.django',
-    'cbltweaker',
 )
 
 # A sample logging configuration. The only tangible logging
