@@ -1,14 +1,23 @@
+## Table of Contents
+
+- [Installing a dev instance](#installing-a-dev-instance)
+- [Configuring on a production server](#configuring-on-a-production-server)
+- [Deploying to Heroku](#deploying-to-heroku)
+- [Running in a Docker container](#running-in-a-docker-container)
+
 ## Cloud Launch
 
 Easily launch [Galaxy][8], [CloudMan][2], and [CloudBioLinux][3] platforms without
-any configuration. You can use this app directly on [biocloudcentral.org][7] or
+any configuration. You can use this app directly on [launch.usegalaxy.org][7] or
 run it locally - either way, it takes about 2 minutes to go from nothing to
 a configured cluster-in-the-cloud and a scalable analysis platform on top of
 cloud resources.
 
 ### Installing a dev instance
 
-This [Django][1] application can be run locally for development, start by installing Python and [virtualenv][5]. Then, build a virtualenv and install the dependencies:
+This [Django][1] application can be run locally for development, start by
+installing Python and [virtualenv][5]. Then, build a virtualenv and install
+the dependencies:
 
     $ mkdir cl; cd cl
     $ virtualenv .
@@ -65,23 +74,7 @@ in two separate tabs (or [screen][10] sessions):
     $ python biocloudcentral/manage.py runserver
     $ python biocloudcentral/manage.py celeryd --concurrency 2 --loglevel=debug
 
-### Deploying to Heroku
-
-An instance of this app available at [biocloudcentral.org][7] is hosted on
-[Heroku][11]. You can do the same by [registering][12] and [deploying][13] the app
-under your own account. To get started, add heroku as a remote repository:
-
-    $ git remote add heroku git@heroku.com:biocloudcentral.git
-
-Then, automatically [push to Heroku for live deployment][14]:
-
-    $ git push heroku master
-
-If the database needs migration, run:
-
-    $ heroku run python biocloudcentral/manage.py migrate
-
-### Configuring on a dedicated production server
+### Configuring on a production server
 
 - Launch a Ubuntu 14.04 instance or a VM
 - Install necessary system packages:
@@ -90,7 +83,9 @@ If the database needs migration, run:
         $ sudo apt-get -y install python-virtualenv git postgresql libpq-dev postgresql-server-dev-all python-dev nginx supervisor
 
 - Clone Cloud Launch into a local directory ``/srv/cloudlaunch`` as
-system user ``launch`` and install the required libraries (if you choose to install the app in a different directory, you will also need to change a number of configuration files where the specified path is assumed):
+system user ``launch`` and install the required libraries (if you choose to
+install the app in a different directory, you will also need to change a number
+of configuration files where the specified path is assumed):
 
         $ sudo mkdir -p /srv/cloudlaunch
         $ sudo chown launch:launch /srv/cloudlaunch
@@ -102,8 +97,8 @@ system user ``launch`` and install the required libraries (if you choose to inst
         $ pip install -r requirements.txt
 
 - Configure a [PostgreSQL][15] server with a database. Note that
-the following commands use *launch* as the database owner. If you prefer to use
-a different user, change it in both commands:
+the following commands use the `launch` system user as the database owner. If
+you prefer to use a different user, change it in both commands:
 
         $ sudo su postgres -c "psql --port 5432 -c \"CREATE ROLE launch LOGIN CREATEDB PASSWORD 'password_to_change'\""
         $ sudo su launch -c "createdb --username launch --port 5432 cloudlaunch"
@@ -159,7 +154,7 @@ a different user, change it in both commands:
 
 - Run the app via [supervisor][17]:
 
-        $ sudo cp cl_supervisor.conf /etc/supervisor/conf.d/
+        $ sudo cp /srv/cloudlaunch/cloudlaunch/cl_supervisor.conf /etc/supervisor/conf.d/
         $ sudo supervisorctl reread
         $ sudo supervisorctl update
         # Check the status with
@@ -170,13 +165,38 @@ the app is available at ``http://server.ip.address/admin/``.
 
 - Logs are available in the installation directory, `/srv/cloudlaunch/cloudlaunch/`
 
+### Deploying to Heroku
+
+An instance of this app available at [biocloudcentral.org][7] is hosted on
+[Heroku][11]. You can do the same by [registering][12] and [deploying][13] the
+app under your own account. To get started, add heroku as a remote repository:
+
+    $ git remote add heroku git@heroku.com:biocloudcentral.git
+
+Then, automatically [push to Heroku for live deployment][14]:
+
+    $ git push heroku master
+
+If the database needs migration, run:
+
+    $ heroku run python biocloudcentral/manage.py migrate
+
+### Running in a Docker container
+
+A preliminary version of a Docker container with Cloud Launch
+pre-configured is also available. For the time being, this is not
+considered a *stable* release but can be used as a very quick way
+of getting your own instance to test your deployment with. The
+Dockerfile with the instructions on how to build the container
+are available here: https://github.com/afgane/cloudlaunch-docker
+
 [1]: https://www.djangoproject.com/
 [2]: http://usecloudman.org/
 [3]: http://cloudbiolinux.org/
 [4]: http://devcenter.heroku.com/articles/django
 [5]: https://github.com/pypa/virtualenv
 [6]: https://github.com/chapmanb/biocloudcentral/blob/master/biocloudcentral/settings.py
-[7]: http://biocloudcentral.org/
+[7]: https://launch.usegalaxy.org/
 [8]: http://usegalaxy.org/
 [9]: http://aws.amazon.com/ec2/#instance
 [10]: http://www.gnu.org/software/screen/
