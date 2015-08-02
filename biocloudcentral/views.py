@@ -124,6 +124,8 @@ def launch_status(request):
                                      cloud_type=response["cloud_type"],
                                      image_id=response['image_id'],
                                      instance_type=response['instance_type'],
+                                     cluster_type=response['cluster_type'],
+                                     storage_type=response['storage_type'],
                                      user_id=response["access_key"],
                                      email=response.get('institutional_email', ''))
                     u.save()

@@ -35,11 +35,11 @@ admin.site.register(DataBucket)
 class UsageAdmin(admin.ModelAdmin):
     model = Usage
     # Enable column-based display&filtering of entries
-    list_display = ('added', 'cloud_name', 'cloud_type', 'image_id',
-                    'instance_type', 'user_id')
+    list_display = ('added', 'cloud_name', 'image_id', 'instance_type',
+                    'cluster_type', 'storage_type', 'user_id')
     # Enable filtering of displayed entries
-    list_filter = ('added', 'cloud_name', 'cloud_type', 'image_id',
-                   'instance_type', 'user_id')
+    list_filter = ('added', 'cloud_name', 'instance_type',
+                   'cluster_type', 'storage_type', 'image_id', 'user_id')
     if hasattr(settings, 'ASK_FOR_EMAIL') and settings.ASK_FOR_EMAIL:
         list_display += ('email',)
         list_filter += ('email',)
