@@ -62,6 +62,7 @@ def run_instance(form):
     # response['access_key'] = form['access_key']
     # response['cluster_type'] = form.get('initial_cluster_type', '')
     # response['storage_type'] = form.get('storage_type', '')
+    # response['storage_size'] = form.get('storage_size', '')
     # response['instance_type'] = form['instance_type']
     # response['image_id'] = models.Image.objects.get(pk=form['image_id']).image_id
     # response['error'] = None
@@ -189,6 +190,7 @@ def run_instance(form):
     response['instance_type'] = form['instance_type']
     response['cluster_type'] = form.get('initial_cluster_type', '')
     response['storage_type'] = form.get('storage_type', '')
+    response['storage_size'] = form.get('storage_size', '')
     response['institutional_email'] = form.get('institutional_email', '')
     response['image_id'] = image_id
     response['error'] = err_msg or response.get('error', None)

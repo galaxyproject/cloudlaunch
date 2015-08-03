@@ -187,6 +187,7 @@ class Usage(models.Model):
     instance_type = models.CharField(max_length=100)
     cluster_type = models.CharField(max_length=30, blank=True, null=True)
     storage_type = models.CharField(max_length=30, blank=True, null=True)
+    storage_size = models.IntegerField(blank=True, null=True)
     user_id = models.CharField(max_length=100)
     email = models.EmailField(blank=True, null=True)
 

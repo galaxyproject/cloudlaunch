@@ -36,7 +36,7 @@ class UsageAdmin(admin.ModelAdmin):
     model = Usage
     # Enable column-based display&filtering of entries
     list_display = ('added', 'cloud_name', 'image_id', 'instance_type',
-                    'cluster_type', 'storage_type', 'user_id')
+                    'cluster_type', 'storage_type', 'storage_size', 'user_id')
     # Enable filtering of displayed entries
     list_filter = ('added', 'cloud_name', 'instance_type',
                    'cluster_type', 'storage_type', 'image_id', 'user_id')

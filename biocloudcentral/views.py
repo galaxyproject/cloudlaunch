@@ -120,12 +120,24 @@ def launch_status(request):
 
                 # Add an entry to the Usage table now
                 try:
+                    cluster_type = response['cluster_type']
+                    storage_type = response['storage_type']
+                    storage_size = response['storage_size']
+                    # Depending on the cluster type, set null values vs.
+                    # form defaults
+                    if cluster_type == 'None':
+                        cluster_type = None
+                        storage_type = None
+                        storage_size = None
+                    elif response['storage_type'] == 'transient':
+                        storage_size = None
                     u = models.Usage(cloud_name=response["cloud_name"],
                                      cloud_type=response["cloud_type"],
                                      image_id=response['image_id'],
                                      instance_type=response['instance_type'],
-                                     cluster_type=response['cluster_type'],
-                                     storage_type=response['storage_type'],
+                                     cluster_type=cluster_type,
+                                     storage_type=storage_type,
+                                     storage_size=storage_size,
                                      user_id=response["access_key"],
                                      email=response.get('institutional_email', ''))
                     u.save()
