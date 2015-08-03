@@ -155,8 +155,8 @@ class CloudManForm(forms.Form):
         required=False,
         label="Extra User-Data",
         widget=forms.widgets.Textarea(attrs={"class": textbox_size}),
-        help_text="Pass advanced properties to CloudMan via the the cloud"
-        "infrastructure's user-data mechanism. Properties should be in YAML"
+        help_text="Pass advanced properties to CloudMan via the the cloud "
+        "infrastructure's user-data mechanism. Properties should be in YAML "
         "formatted key-value pairs.")
     image_id = DynamicChoiceField(
         (("", "Choose cloud type first"),),
@@ -165,18 +165,18 @@ class CloudManForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled',
                                    "onChange": "get_flavors(this.options[this.selectedIndex].value)"}))
+    custom_image_id = forms.CharField(
+        required=False,
+        label="Custom image ID",
+        widget=forms.TextInput(attrs={"class": textbox_size}),
+        help_text="Having selected 'Custom image' in the previous drop down, "
+        "provide desired maching image ID (e.g., ami-da5532cs)")
     flavor_id = DynamicChoiceField(
         (("", "Choose image first"),),
         help_text="The flavor to use (* indicates the default flavor).",
         label="Flavor",
         required=False,
         widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
-    custom_image_id = forms.CharField(
-        required=False,
-        label="Custom image ID",
-        widget=forms.TextInput(attrs={"class": textbox_size}),
-        help_text="Having selected 'Custom image' in the previous drop down,"
-        "provide desired maching image ID (e.g., ami-da5532cs)")
 
 
 class FlavorAdminForm(forms.ModelForm):
