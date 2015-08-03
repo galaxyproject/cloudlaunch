@@ -197,7 +197,7 @@ def run_instance(form):
     response['cloud_name'] = form['cloud_name']
     response['cloud_type'] = form['cloud_type']
     response['access_key'] = form['access_key']
-    response['instance_type'] = form['instance_type']
+    response['instance_type'] = instance_type
     response['cluster_type'] = form.get('initial_cluster_type', '')
     response['storage_type'] = form.get('storage_type', '')
     response['storage_size'] = form.get('storage_size', '')
