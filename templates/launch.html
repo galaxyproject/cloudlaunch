@@ -14,7 +14,13 @@
                 if (data.instance_types.length > 0) {
                     var types = '';
                     for (var i=0; i<data.instance_types.length; i++) {
-                        types += '<option value="' + data.instance_types[i][0] + '">'
+                        var default_instance_type = '';
+                        // First non-custom type becomes the default
+                        if (i == 1) {
+                          default_instance_type = 'selected="selected"';
+                        }
+                        types += '<option value="' + data.instance_types[i][0] +
+                            '" ' + default_instance_type + '>'
                             + data.instance_types[i][1] + "</option>";
                     }
                     $('#id_instance_type').html(types);
@@ -417,6 +423,7 @@
             $('#show_advanced_startup_options').hide();
             // By default, custom image ID el. is hidden
             $('#id_custom_image_id').parent().parent().hide();
+            $('#id_custom_instance_type').parent().parent().hide();
         });
 
         // Allow the user to fetch a list of existing clusters
@@ -458,6 +465,15 @@
            $('#id_custom_image_id').parent().parent().toggle(isCustom);
            if ($('#id_custom_image_id').is(":visible")) {
               $('#id_custom_image_id').focus();
+           }
+        });
+        // On selecting custom type option, toggle visibility of custom
+        // instance type text field
+        $('#id_instance_type').change(function(){
+           var customType = $(this).val() == 0;
+           $('#id_custom_instance_type').parent().parent().parent().toggle(customType);
+           if ($('#id_custom_instance_type').is(":visible")) {
+              $('#id_custom_instance_type').focus();
            }
         });
 

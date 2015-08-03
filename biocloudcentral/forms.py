@@ -84,6 +84,12 @@ class CloudManForm(forms.Form):
         (("", "Choose cloud type first"),),
         help_text="Type (ie, virtual hardware configuration) of the server to start.",
         widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    custom_instance_type = forms.CharField(
+        required=False,
+        label="Custom instance type",
+        widget=forms.TextInput(attrs={"class": textbox_size}),
+        help_text="Having selected 'Custom instance type' in the previous drop "
+        "down, provide desired instance type (e.g., c3.large)")
     initial_cluster_type = forms.ChoiceField(
         (("Galaxy", "Cluster with Galaxy"), ("Data", "Cluster only"),
          ("None", "Do not set cluster type now")),

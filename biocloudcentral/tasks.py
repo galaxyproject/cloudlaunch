@@ -54,6 +54,7 @@ def run_instance(form):
     """
     # Dev code only!
     # Useful when wanting to skip the instance launch process but contitnue the process
+    # log.debug("form: %s" % form)
     # response = {}
     # response['cluster_name'] = form['cluster_name']
     # response['password'] = form['password']
@@ -63,7 +64,8 @@ def run_instance(form):
     # response['cluster_type'] = form.get('initial_cluster_type', '')
     # response['storage_type'] = form.get('storage_type', '')
     # response['storage_size'] = form.get('storage_size', '')
-    # response['instance_type'] = form['instance_type']
+    # response['instance_type'] = (form['custom_instance_type'] if
+    #                              form['custom_instance_type'] else form['instance_type'])
     # response['image_id'] = models.Image.objects.get(pk=form['image_id']).image_id
     # response['error'] = None
     # response['sg_names'] = ['CloudMan']
@@ -72,6 +74,7 @@ def run_instance(form):
     # response['instance_id'] = 'i-l0cal'
     # response['instance_ip'] = '127.0.0.1'
     # response['institutional_email'] = form.get('institutional_email', '')
+    # log.debug("response: %s" % response)
     # return response
     # End dev code
 
@@ -156,7 +159,8 @@ def run_instance(form):
             form[key] = value
     del form['extra_user_data']
 
-    instance_type = form['instance_type']
+    instance_type = (form['custom_instance_type'] if form['custom_instance_type']
+                     else form['instance_type'])
     # Create cloudman connection with provided creds
     cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
