@@ -418,12 +418,15 @@
         });
         $('#show_advanced_startup_options').click(function(event){
             event.preventDefault();
+            customTypeHidden = $('#id_custom_instance_type').parent().parent().is(":hidden");
             $('.advanced_startup_options').show();
             $('#hide_advanced_startup_options').show();
             $('#show_advanced_startup_options').hide();
             // By default, custom image ID el. is hidden
             $('#id_custom_image_id').parent().parent().hide();
-            $('#id_custom_instance_type').parent().parent().hide();
+            if (customTypeHidden) {
+              $('#id_custom_instance_type').parent().parent().hide();
+            }
         });
 
         // Allow the user to fetch a list of existing clusters
@@ -471,9 +474,12 @@
         // instance type text field
         $('#id_instance_type').change(function(){
            var customType = $(this).val() == 0;
-           $('#id_custom_instance_type').parent().parent().parent().toggle(customType);
-           if ($('#id_custom_instance_type').is(":visible")) {
+           if (customType) {
+              $('#id_custom_instance_type').parent().parent().show();
+              $('#id_custom_instance_type').parent().parent().parent().show();
               $('#id_custom_instance_type').focus();
+           } else {
+              $('#id_custom_instance_type').parent().parent().parent().hide();
            }
         });
 
