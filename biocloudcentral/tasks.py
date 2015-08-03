@@ -128,14 +128,20 @@ def run_instance(form):
                 pass
             elif key == 'storage_size' and form.get('storage_size', None):
                 pass
+            elif ('filesystem_templates' in form.get('extra_user_data', '') and
+                  key == 'cluster_templates'):
+                # log.debug("filesystem_templates defined in the form; skipping "
+                #           "cluster_templates defined in the flavor.")
+                pass
             else:
+                # log.debug("Adding flavor-defined user data key %s" % key)
                 form[key] = value
         # TODO: This is a temporary hack to set the user selected storage size to the selected cluster template
         # till we can come up with a better UI that allows fine grained control over each filesystem's size.
         # The current version only sets the size for the first filesystem that's found in the matching cluster template
         try:
             if form.get('initial_cluster_type', None) and form.get('storage_size', None):
-                templates = [template for template in form['cluster_templates']
+                templates = [template for template in form.get('cluster_templates', [])
                              if template['name'] == form['initial_cluster_type']]
                 if templates:
                     templates[0]['filesystem_templates'][0]['type'] = form.get('storage_type', None)
