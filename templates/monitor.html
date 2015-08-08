@@ -356,28 +356,28 @@
 
 <div class="page-header">
     <span class="lead text-success">
-    Congratulations, your scalable analysis platform on the
-    {{ request.session.ec2data.cloud_name }} cloud is launching!</span>
+    Please wait, your scalable cluster is launching on the
+    {{ request.session.ec2data.cloud_name }} cloud.</span>
     <p>
-        The process of launching an instance of the platform takes a few minutes.
-        Once the instance and the necessary services are running, a link to your
-        server will be shown (in <i>Server IP address</i> field). To manage
-        your newly created cluster, please use the
+        The process of launching a cluster takes a few minutes.
+        Once the cluster and the necessary applications are running, a link to your
+        cluster will be shown (in the <i>Cluster address</i> field). To manage
+        your newly created cluster, use the
         <a href="http://cloudman.irb.hr" target="_blank">CloudMan</a> console
         at the shown link.
     </p>
     {% if request.session.ec2data.cloud_type == 'ec2' %}
       <p>
         Amazon is now <a href="http://aws.amazon.com/ec2/pricing/" target="_blank">
-        charging you per hour</a> for your new server. You may use the
+        charging you per hour</a> for your new cluster server. You may use the
         <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
-        to monitor the status of your instance.
+        to check the status of your server.
       </p>
     {% endif %}
     <p>
-      For login, use <i>ubuntu</i> username and the password you provided on
-      the previous page (also available in the table below once the server
-      becomes ready).
+      <b>For CloudMan console login</b>, use <i>ubuntu</i> username and the
+      password you provided on the previous page (also available in the table
+      below once the cluster becomes ready).
     </p>
 </div>
 
@@ -397,7 +397,7 @@
       <td><span id="ttp">&nbsp;</span></td>
    </tr>
    <tr>
-      <th>Server state</th>
+      <th>Cluster state</th>
       <td>
         <div class="progress progress-striped active" style="margin:0px">
           <div id="requesting_bar" class="bar" style="width: 25%;">
@@ -416,7 +416,7 @@
       </td>
    </tr>
    <tr>
-      <th>Server IP address (CloudMan console)</th>
+      <th>Cluster address (CloudMan console)</th>
       <td>
       <span id="cloud_url"><i>Please wait</i></span>
       <button id="copy-ip" class="pull-right btn btn-mini action-button" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
@@ -489,11 +489,12 @@
     User data contains information necessary to recreate this particular cloud
     cluster. After terminating the cluster, unless deleted, you can
     easily recreate it from this website by using the same access credentials
-    and cluster name. If you would like to recreate the cluster manually from
+    and the same cluster name. If you would like to recreate the cluster manually from
     the {{ request.session.ec2data.cloud_name }} cloud's web console or directly
     via the cloud's API, you will need the user-data in the downloaded format.
-    See <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud#Detailed_steps" target="_blank">
-    this page</a> for more information.
+    See <a href="http://wiki.galaxyproject.org/CloudMan#Detailed_steps" target="_blank">
+    this page</a> for more information. Please note that the user data contains
+    your credentials so keep it in a safe place.
     <div style="padding-top: 10px">
       <a class="btn btn-success" href="{% url ud %}">Download user-data</a>
     </div>
