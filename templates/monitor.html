@@ -162,7 +162,11 @@
           } else if (data.ready == true) {
             $('#instance_id').html(data.instance_id);
             $('#security_group').html(data.sg_name);
-            $('#key_pair').html(data.kp_name);
+            $('#key-pair-name').html(data.kp_name);
+            // Show the link to download key pair material only if a new key pair was created
+            if (data.kp_material != null) {
+              $('#key-pair-material').show();
+            }
             $('#image_id').html(data.image_id);
             // Redirect to monitor page
             update_instance_state('', 'pending');  // Set state to pending right away
@@ -469,13 +473,11 @@
      </tr>
      <tr><th>Key pair</th>
          <td id="key_pair">
+             <span id="key-pair-name">Not yet available</span>
              {# Show the link to download key pair material only if a new key pair was created #}
-             <!--{% ifnotequal request.session.ec2data.kp_material None %}
-                <a href="{% url kp %}">{{ request.session.ec2data.kp_name }}</a>
-             {% else %}
-                {{ request.session.ec2data.kp_name }}
-             {% endifnotequal %} -->
-             Not yet available
+             <span id="key-pair-material" style="display: none;">
+               [<a href="{% url kp %}">Download</a>]
+             </span>
          </td>
      </tr>
      <tr><th>Placement (zone)</th>

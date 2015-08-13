@@ -37,6 +37,14 @@ def instance_state(cloud, a_key, s_key, instance_id):
     """
     Check on the state of an instance until and return the state.
     """
+    # Dev code
+    # if instance_id == 'i-l0cal':
+    #     state = {'instance_state': "ready",
+    #              'public_ip': "127.0.0.1:42284",
+    #              'placement': "desktop",
+    #              'error': ""}
+    #     return state
+    # End dev code
     if not instance_id:
         state = {'instance_state': "",
                  'public_ip': "",
@@ -70,7 +78,7 @@ def run_instance(form):
     # response['error'] = None
     # response['sg_names'] = ['CloudMan']
     # response['kp_name'] = 'cm_kp'
-    # response['kp_material'] = ''
+    # response['kp_material'] = 'kp_material_placeholder'
     # response['instance_id'] = 'i-l0cal'
     # response['instance_ip'] = '127.0.0.1'
     # response['institutional_email'] = form.get('institutional_email', '')
@@ -190,7 +198,6 @@ def run_instance(form):
                               ramdisk_id=ramdisk_id,
                               placement=form['placement'],
                               **kwargs)
-
     # Keep these parts of the form as part of the response
     response['cluster_name'] = form['cluster_name']
     response['password'] = form['password']
