@@ -77,7 +77,13 @@ def launch(request):
         # cloud is the first in the DB and that such an entry exists in the first place
         form = forms.CloudManForm(initial={'cloud': 1})
 
-    return render(request, "launch.html", {"form": form, 'brand': brand}, context_instance=RequestContext(request))
+    # Include a user notice on the page if defined in the settings
+    notice = None
+    if hasattr(settings, 'NOTICE'):
+        notice = settings.NOTICE
+
+    return render(request, "launch.html", {"form": form, 'brand': brand, 'notice':
+                  notice}, context_instance=RequestContext(request))
 
 
 def launch_status(request):

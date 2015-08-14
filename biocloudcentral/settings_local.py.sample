@@ -32,6 +32,9 @@ STATIC_ROOT = '/srv/cloudlaunch/media'
 
 # Page title and brand text
 BRAND = "Cloud Launch"
+# Supply a string that will be prominently displayed on the launch page.
+# You can use HTML tags as part of the string.
+NOTICE = None
 
 # Whether to add an email field to the form and make it required or optional.
 ASK_FOR_EMAIL = False

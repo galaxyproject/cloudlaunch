@@ -518,13 +518,19 @@
   </script>
 {% endblock %}
 {% block content %}
-    <div class="page-header">
-      <h2><small>
-        Easily launch your own cloud servers for use with
-        <a href="https://galaxyproject.org/">Galaxy</a> and
-        <a href="http://cloudman.irb.hr/">CloudMan</a>.
-      </small></h2>
-    </div>
+<div class="page-header">
+  <h2><small>
+    Easily launch your own cloud servers for use with
+    <a href="https://galaxyproject.org/">Galaxy</a> and
+    <a href="http://cloudman.irb.hr/">CloudMan</a>.
+  </small></h2>
+</div>
+
+{% if notice %}
+  <div class="well">
+    {{ notice|safe }}
+  </div>
+{% endif %}
 
 <div id="error_container">
   {% if form.non_field_errors|length > 0 %}
