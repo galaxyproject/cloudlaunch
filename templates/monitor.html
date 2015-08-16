@@ -159,6 +159,7 @@
               $('#err-key-pair').show();
             }
             $('#launch-issue').show();
+            $('.page-header').hide();
             $('#ttp').stopwatch().stopwatch('stop');
             $('#cloud_url').text("");
             update_progress_bar("error");
@@ -360,6 +361,7 @@
 
 {% endblock %}
 {% block content %}
+<div id="masthead-spacer"></div>
 <div class="page-header">
     <span class="lead text-success">
     Please wait, your scalable cluster is launching on the
