@@ -106,6 +106,13 @@ def launch_status(request):
             #       Then, need to redo how monitor page is displayed...
             response = result.get()
             if response.get("error", ""):
+                # If a key got created, allow the user to download it even if
+                # an error was encountered.
+                if response['kp_material']:
+                    request.session['ec2data']['kp_name'] = response['kp_name']
+                    request.session['ec2data']['kp_material'] = response['kp_material']
+                    r['kp_name'] = response['kp_name']
+                    r['kp_material'] = response['kp_material']
                 r['error'] = response['error']
             else:
                 request.session['ec2data']['cluster_name'] = response['cluster_name']
