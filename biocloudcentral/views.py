@@ -320,7 +320,8 @@ def _get_placement_inner(request):
                 cml = CloudManLauncher(a_key, s_key, cloud)
                 placements = cml.find_placements(cml.ec2_conn, inst_type,
                                                  cloud.cloud_type, cluster_name)
-                return {'placements': placements}
+                return {'placements': placements.get('zones'),
+                        'error': placements.get('error')}
         else:
             log.error("Not a POST request")
     else:
