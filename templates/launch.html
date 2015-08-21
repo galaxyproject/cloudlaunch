@@ -223,7 +223,11 @@
             if (data.ready === true){
               $('#abort_clusters_fetch').hide();
               var clusters = Array();
-              if (data.clusters_list.length > 0) {
+              if (data.error != null){
+                $('#error_container').text(data.error);
+                enable_fields();
+              }
+              else if (data.clusters_list.length > 0) {
                 // Keep the list of clusters to reuse for placement
                 clusters_list = data.clusters_list;
                 for (var i=0; i<data.clusters_list.length; i++) {

@@ -420,9 +420,13 @@ def update_clusters(request):
     r = {'task_id': task_id,
          'ready': result.ready(),
          'clusters_list': [],
-         'wait_text': fdt}
+         'wait_text': fdt,
+         'error': None}
     if result.ready():
-        r['clusters_list'] = result.get()
+        clusters_pd = result.get()
+        r['clusters_list'] = clusters_pd.get('clusters', [])
+        if clusters_pd.get('error', None):
+            r['error'] = clusters_pd['error']
     return HttpResponse(simplejson.dumps(r), mimetype="application/json")
 
 
