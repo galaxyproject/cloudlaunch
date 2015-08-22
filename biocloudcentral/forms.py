@@ -44,13 +44,13 @@ class CloudManForm(forms.Form):
     access_key = forms.CharField(
         required=True,
         widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size}),
-        help_text="Your cloud account access key. For the Amazon cloud, available from "
+        help_text="Your cloud account API access key. For the Amazon cloud, available from "
         "the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
         .format(key_url, target))
     secret_key = forms.CharField(
         required=True,
         widget=forms.PasswordInput(attrs={"class": "%s disableable" % textbox_size}),
-        help_text="Your cloud account secret key. For the Amazon cloud, also "
+        help_text="Your cloud account API secret key. For the Amazon cloud, also "
         "available from the <a href='{0}' {1} tabindex='-1'>security credentials page</a>."
         .format(key_url, target))
     if hasattr(settings, 'ASK_FOR_EMAIL') and settings.ASK_FOR_EMAIL:
@@ -67,7 +67,7 @@ class CloudManForm(forms.Form):
     cluster_name = forms.CharField(
         required=True,
         help_text="Name of your cluster used for identification and "
-        "relaunching. If creating a new cluster, type any name you like.",
+        "restarting. If creating a new cluster, type any name you like.",
         widget=forms.TextInput(attrs={"class": "%s disableable" % textbox_size,
                                       "type": "hidden",
                                       "placeholder": "Enter a NEW cluster name or fetch existing"}))

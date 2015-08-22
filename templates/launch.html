@@ -529,6 +529,8 @@
     Easily launch your own cloud servers for use with
     <a href="https://galaxyproject.org/">Galaxy</a> and
     <a href="http://cloudman.irb.hr/">CloudMan</a>.
+    See <a href="https://wiki.galaxyproject.org/CloudMan/GettingStarted" target="_blank">
+    this page</a> for detailed instructions on how to get started.
   </small></h2>
 </div>
 
@@ -564,7 +566,7 @@
               </button>
               or
               <button id="recreate_cluster_link" class="btn btn-small action-button">
-                Recreate an existing cluster
+                Start a shut down cluster
               </button>
             </span>
             <span id="id_cluster_name_container" style="display:none">
@@ -577,8 +579,8 @@
             </div>
             <div id="recreate_old_cluster_warning" class="well" style="display: none;">
               <b>Crucial note (please read):</b> If you are recreating a cluster
-              that was created prior to the August 2015 CloudMan release, you
-              must select appropriate <i>Image</i> under the <i>Advanced
+              that was created on AWS prior to the August 2015 CloudMan release,
+              you must select appropriate <i>Image</i> under the <i>Advanced
               startup options</i> below. See <i>Deprecated AMIs</i> on
               <a href="https://wiki.galaxyproject.org/CloudMan/#Galaxy_AMIs" target="_blank">
               this page</a> for a list of old machine images. <b>Otherwise, your
