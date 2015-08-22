@@ -90,8 +90,8 @@
           for (i=0; i<clusters_list.length; i++) {
             if (cluster_name == clusters_list[i].cluster_name) {
               if (clusters_list[i].placement != null) {
-                placement = '<option value="' + clusters_list[i].placement + '">'
-                            + clusters_list[i].placement + "</option>";
+                placement = '<option value="' + clusters_list[i].placement.placement + '">'
+                            + clusters_list[i].placement.placement + "</option>";
                 $('#id_placement').html(placement);
                 $('#id_placement').removeAttr('disabled');
                 placement_found = true;
