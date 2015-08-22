@@ -301,7 +301,11 @@
               // Call the update method only after a few seconds
               // window.setTimeout(function(){update_clusters(data.task_id)}, 5000);
               update_clusters(data.task_id);
-              $('#recreate_old_cluster_warning').show("slow");
+              if ($('#id_cloud').val() == 1) {
+                // By default, Amazon cloud gets ID 1 and the warning applies
+                // to it.
+                $('#recreate_old_cluster_warning').show("slow");
+              }
             },
             error: function(data){
                 // If anything goes wrong (also see #abort_clusters_fetch),
