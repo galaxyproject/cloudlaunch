@@ -35,9 +35,9 @@ class Cloud(models.Model):
         verbose_name="CIDR IP range",
         help_text="Available IP range for all instances in this cloud in CIDR format")
     is_secure = models.BooleanField()
-    s3_host = models.CharField(max_length=255)
+    s3_host = models.CharField(max_length=255, blank=True, null=True)
     s3_port = models.IntegerField(max_length=6, blank=True, null=True)
-    s3_conn_path = models.CharField(max_length=255, default='/')
+    s3_conn_path = models.CharField(max_length=255, default='/', blank=True, null=True)
 
     def __unicode__(self):
         return u'%s (%s)' % (self.name, self.get_cloud_type_display())
@@ -57,7 +57,7 @@ class InstanceType(models.Model):
     updated = models.DateTimeField(auto_now=True)
     cloud = models.ForeignKey(Cloud)
     pretty_name = models.CharField(max_length=100)
-    tech_name = models.CharField(max_length=100)
+    tech_name = models.CharField(max_length=100, verbose_name="API name")
     description = models.CharField(max_length=100)
 
     def __unicode__(self):
