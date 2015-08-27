@@ -159,7 +159,7 @@
               $('#err-key-pair').show();
             }
             $('#launch-issue').show();
-            $('.page-header').hide();
+            $('#page-header').hide();
             $('#ttp').stopwatch().stopwatch('stop');
             $('#cloud_url').text("");
             update_progress_bar("error");
@@ -236,12 +236,15 @@
           $('#placement').html(data.placement);
           $('#cloud_url').html('<a href="http://' +
              data.public_ip + '/cloud" target="_blank">' +
-             data.public_ip + '</a>');
+             data.public_ip + '</a> - Click the address to access the cluster');
           $('#copy-ip').attr("data-clipboard-text", data.public_ip);
           $('#copy-ip').show();
           $('#ttp').stopwatch().stopwatch('stop');
           $('#video_link_cont').html("");
           $('#launch-issue').hide();
+          // Swap the info text
+          $('#cluster-launching-content').hide();
+          $('#cluster-ready-content').show();
         }
     }
     function update_instance_state(task_id, instance_state) {
@@ -350,10 +353,10 @@
         $(".pwd_sh_link").click(function(e){
             if ($(".pwd").is(':visible')) {
                 $(".pwd").hide();
-                $(".pwd_sh_link").html("show");
+                $(".pwd_sh_link").text("show password");
             } else {
                 $(".pwd").show();
-                $(".pwd_sh_link").html("hide");
+                $(".pwd_sh_link").text("hide password");
             }
         });
     });
@@ -362,22 +365,34 @@
 {% endblock %}
 {% block content %}
 <div id="masthead-spacer"></div>
-<div class="page-header">
-    <span class="lead text-success">
-    Please wait, your scalable cluster is launching on the
-    {{ request.session.ec2data.cloud_name }} cloud.</span>
-    <p>
-        The process of launching a cluster takes a few minutes.
-        Once the cluster and the necessary applications are running, a link to your
-        cluster will be shown (in the <i>Cluster address</i> field). To manage
-        your newly created cluster, use the
-        <a href="http://cloudman.irb.hr" target="_blank">CloudMan</a> console
-        at the shown link.
-    </p>
+<div id="page-header">
+    <div id="cluster-launching-content">
+      <span class="lead text-success">
+      Please wait, your scalable cluster is starting on the
+      {{ request.session.ec2data.cloud_name }} cloud.</span>
+      <p>
+          The process of launching a cluster takes a few minutes.
+          Once the cluster and the necessary applications are running, a link to your
+          cluster will be shown (in the <i>Cluster address</i> field). To manage
+          your newly created cluster, use the
+          <a href="http://cloudman.irb.hr" target="_blank">CloudMan</a> console
+          at the shown link.
+      </p>
+    </div>
+    <div id="cluster-ready-content" style="display: none">
+      <span class="lead text-success">
+        Your cluster on the {{ request.session.ec2data.cloud_name }} cloud is
+        ready.
+      </span>
+      <p>
+        Access the cluster by clicking on its IP address provided in the
+        <i>Cluster address</i> field below.
+      </p>
+    </div>
     {% if request.session.ec2data.cloud_type == 'ec2' %}
       <p>
         Amazon is now <a href="http://aws.amazon.com/ec2/pricing/" target="_blank">
-        charging you per hour</a> for your new cluster server. You may use the
+        charging you per hour</a> for your new cluster. You may use the
         <a href="https://console.aws.amazon.com/ec2/" target="_blank">EC2 console</a>
         to check the status of your server.
       </p>
@@ -445,15 +460,15 @@
     <thead>
       <tr>
         <th colspan=2>
-          Additional server information
+          Additional cluster information
         </th>
       </tr>
     </thead>
     <tbody>
      <tr><th>For command line SSH access use</th>
          <td>ssh ubuntu@<span id="ssh_public_ip">{{ request.session.ec2data.public_ip }}</span><br/>
-             (Use key pair or password from the entry form;
-             <span class="pwd_sh_link">show</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
+             (Use key pair or password from the entry form
+             (<span class="pwd_sh_link">show password</span><span class="pwd">: {{ request.session.ec2data.password }}</span>)</td>
      </tr>
      {% comment %}
      <tr><td>For FreeNX remote desktop access</td>
