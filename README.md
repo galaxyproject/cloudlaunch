@@ -1,7 +1,7 @@
 ## Table of Contents
 
 - [Installing a dev instance](#installing-a-dev-instance)
-- [Configuring on a production server](#configuring-on-a-production-server)
+- [Installing on a production server](#installing-on-a-production-server)
 - [Deploying to Heroku](#deploying-to-heroku)
 - [Running in a Docker container](#running-in-a-docker-container)
 
@@ -74,7 +74,7 @@ in two separate tabs (or [screen][10] sessions):
     $ python biocloudcentral/manage.py runserver
     $ python biocloudcentral/manage.py celeryd --concurrency 2 --loglevel=debug
 
-### Configuring on a production server
+### Installing on a production server
 
 - Launch a Ubuntu 14.04 instance or a VM
 - Install necessary system packages:
@@ -136,7 +136,7 @@ you prefer to use a different user, change it in both commands:
 - Configure nginx:
 
     - If it exists, delete ``default`` site from ``/etc/nginx/sites-enabled``
-      (or update it as necessary)
+      (or update it as desired)
 
             $ sudo rm /etc/nginx/sites-enabled/default
 
