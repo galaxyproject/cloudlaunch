@@ -108,7 +108,7 @@ def launch_status(request):
             if response.get("error", ""):
                 # If a key got created, allow the user to download it even if
                 # an error was encountered.
-                if response['kp_material']:
+                if response.get('kp_material'):
                     request.session['ec2data']['kp_name'] = response['kp_name']
                     request.session['ec2data']['kp_material'] = response['kp_material']
                     r['kp_name'] = response['kp_name']
@@ -129,7 +129,7 @@ def launch_status(request):
                 r['instance_id'] = response['instance_id']
                 r['sg_name'] = response['sg_names'][0]
                 r['kp_name'] = response['kp_name']
-                r['kp_material'] = response['kp_material']
+                r['kp_material'] = response.get('kp_material', '')
                 r['image_id'] = response['image_id']
 
                 # Add an entry to the Usage table now
