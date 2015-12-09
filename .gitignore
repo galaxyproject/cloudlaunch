@@ -6,5 +6,10 @@ man
 local
 .Python
 *.pyc
-biocloudcentral/settings_local.py
-biocloudcentral/db/
+
+django-cloudlaunch/cloudlaunch/settings_local.py
+django-cloudlaunch/db.sqlite3
+
+docs/_build/
+
+*.DS_Store
