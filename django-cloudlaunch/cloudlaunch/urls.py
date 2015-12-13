@@ -18,7 +18,19 @@ from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
 
+from rest_framework import routers
+from baselaunch import views
+
+router = routers.DefaultRouter()
+router.register(r'applications', views.ApplicationViewSet)
+router.register(r'categories', views.CategoryViewSet)
+router.register(r'images', views.ImageViewSet)
+router.register(r'infrastructure', views.InfrastructureViewSet)
+router.register(r'groups', views.GroupViewSet)
+router.register(r'users', views.UserViewSet)
+
 urlpatterns = [
-    url(r'^', include('cmlaunch.urls'), name='index'),
+    url(r'^api/v1/', include(router.urls)),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^admin/', admin.site.urls),
 ]
