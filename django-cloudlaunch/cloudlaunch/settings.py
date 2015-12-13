@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'baselaunch'
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -119,6 +121,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# Installed apps settings
+
+REST_FRAMEWORK = {
+    'PAGE_SIZE': 50
+}
+
 
 # Allow settings to be overridden in a biocloudcentral/settings_local.py
 try:
