@@ -2,4 +2,4 @@ Django==1.9
 djangorestframework==3.3.1
 wheel==0.24.0
 django-rest-auth>=0.6.0
-alldjango-allauth>=0.24.1
+django-allauth>=0.24.1

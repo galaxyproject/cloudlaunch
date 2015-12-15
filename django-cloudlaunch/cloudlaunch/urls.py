@@ -17,41 +17,9 @@ Including another URLconf
 from django.conf.urls import include
 from django.conf.urls import url
 from django.contrib import admin
-from rest_auth import views as rest_auth_views
-from rest_auth.registration import views as rest_reg_views
-from rest_framework import viewsets
-from baselaunch import views
-from .util import HybridRouter
 
-
-router = HybridRouter()
-router.register(r'applications', views.ApplicationViewSet)
-router.register(r'categories', views.CategoryViewSet)
-router.register(r'images', views.ImageViewSet)
-router.register(r'infrastructure', views.InfrastructureViewSet)
-# django rest-auth
-router.register(r'login', rest_auth_views.LoginView,
-                base_name='rest_login')
-router.register(r'logout', rest_auth_views.LogoutView,
-                base_name='rest_logout')
-router.register(r'user', rest_auth_views.UserDetailsView,
-                base_name='rest_user_details')
-router.register(r'password/reset', rest_auth_views.PasswordResetView,
-                base_name='rest_password_reset')
-router.register(r'password/reset/confirm',
-                rest_auth_views.PasswordResetConfirmView,
-                base_name='test')
-router.register(r'password/change', rest_auth_views.PasswordChangeView,
-                base_name='rest_password_change')
-# django rest-auth registration views
-router.register(r'registration', rest_reg_views.RegisterView,
-                base_name='rest_register')
-router.register(r'registration/verify-email', rest_reg_views.VerifyEmailView,
-                base_name='rest_verify_email')
 
 urlpatterns = [
-    url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v1/', include('rest_framework.urls',
-                             namespace='rest_framework')),
     url(r'^admin/', admin.site.urls),
+    url(r'', include('baselaunch.urls'))
 ]
