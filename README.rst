@@ -18,6 +18,7 @@ versions, 3.5 is the only supported version.
 Use of virtualenv is also highly advised.
 
 1. Checkout cloudlaunch and create environment
+
 .. code-block:: bash
 
     $ mkdir launcher && cd launcher
