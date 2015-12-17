@@ -1,0 +1,19 @@
+language: python
+python: 3.5
+os:
+  - linux
+#  - osx
+env:
+  - TOX_ENV=py35
+  - TOX_ENV=pypy
+matrix:
+  fast_finish: true
+  allow_failures:
+    - os: osx
+install:
+  - pip install tox
+  - pip install coveralls
+script:
+  - tox -e $TOX_ENV
+after_success:
+  - coveralls
