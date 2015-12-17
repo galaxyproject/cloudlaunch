@@ -30,27 +30,27 @@ router.register(r'categories', views.CategoryViewSet)
 router.register(r'images', views.ImageViewSet)
 router.register(r'infrastructure', views.InfrastructureViewSet)
 # django rest-auth
-router.register(r'login', rest_auth_views.LoginView,
+router.register(r'auth/login', rest_auth_views.LoginView,
                 base_name='rest_login')
-router.register(r'logout', rest_auth_views.LogoutView,
+router.register(r'auth/logout', rest_auth_views.LogoutView,
                 base_name='rest_logout')
-router.register(r'user', rest_auth_views.UserDetailsView,
+router.register(r'auth/user', rest_auth_views.UserDetailsView,
                 base_name='rest_user_details')
-router.register(r'password/reset', rest_auth_views.PasswordResetView,
+router.register(r'auth/password/reset', rest_auth_views.PasswordResetView,
                 base_name='rest_password_reset')
-router.register(r'password/reset/confirm',
+router.register(r'auth/password/reset/confirm',
                 rest_auth_views.PasswordResetConfirmView,
                 base_name='test')
-router.register(r'password/change', rest_auth_views.PasswordChangeView,
+router.register(r'auth/password/change', rest_auth_views.PasswordChangeView,
                 base_name='rest_password_change')
 # django rest-auth registration views
-router.register(r'registration', rest_reg_views.RegisterView,
+router.register(r'auth/registration', rest_reg_views.RegisterView,
                 base_name='rest_register')
-router.register(r'registration/verify-email', rest_reg_views.VerifyEmailView,
+router.register(r'auth/registration/verify-email', rest_reg_views.VerifyEmailView,
                 base_name='rest_verify_email')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v1/', include('rest_framework.urls',
-                             namespace='rest_framework'))
+    url(r'^api/v1/auth/', include('rest_framework.urls',
+                                  namespace='rest_framework')),
 ]
