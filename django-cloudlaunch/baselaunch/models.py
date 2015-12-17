@@ -36,7 +36,8 @@ class AWSEC2(Infrastructure):
 class AWSS3(Infrastructure):
     s3_host = models.CharField(max_length=255, blank=True, null=True)
     s3_port = models.IntegerField(blank=True, null=True)
-    s3_conn_path = models.CharField(max_length=255, default='/', blank=True, null=True)
+    s3_conn_path = models.CharField(max_length=255, default='/', blank=True,
+                                    null=True)
 
     class Meta:
         verbose_name = "AWS S3"
