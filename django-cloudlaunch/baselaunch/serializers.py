@@ -5,6 +5,7 @@ from baselaunch import models
 
 
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
+    id = serializers.ReadOnlyField()
 
     class Meta:
         model = models.Application
