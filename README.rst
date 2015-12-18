@@ -6,9 +6,8 @@ CloudLaunch is a reusable Django app for launching applications on cloud,
 container or local infrastructure.
 
 This is an all new version of Cloudlaunch currently being developed as per
-[issue #49](https://github.com/galaxyproject/cloudlaunch/issues/49). Stay tuned.
-
-Detailed documentation is in the "docs" directory.
+`issue #49 <https://github.com/galaxyproject/cloudlaunch/issues/49>`_. Stay
+tuned.
 
 Install
 -------
@@ -18,6 +17,7 @@ versions, 3.5 is the only supported version.
 Use of virtualenv is also highly advised.
 
 1. Checkout cloudlaunch and create environment
+
 .. code-block:: bash
 
     $ mkdir launcher && cd launcher
@@ -28,8 +28,9 @@ Use of virtualenv is also highly advised.
     $ cd django-cloudlaunch
     $ python manage.py migrate
     $ python manage.py runserver
+    $ python manage.py createsuperuser
 
 2. Start the development server and visit http://127.0.0.1:8000/admin/
-   to defined your applications.
+   to define your application properties.
 
-3. Visit http://127.0.0.1:8000/cloudlaunch/ to launch an application.
+3. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
