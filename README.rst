@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/galaxyproject/cloudlaunch.svg?branch=dev
+   :target: https://travis-ci.org/galaxyproject/cloudlaunch
+   :alt: Travis Build Status
+
 ===========
 CloudLaunch
 ===========
