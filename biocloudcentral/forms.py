@@ -134,6 +134,13 @@ class CloudManForm(forms.Form):
         help_text="The default bucket to use. See <a href='{0}' {1} tabindex='-1'>"
         "CloudMan's wiki</a> for a detailed description of this option."
         .format(ud_url, target))
+    worker_initial_count = forms.CharField(
+        required=False,
+        label="Initial number of workers",
+        widget=forms.TextInput(attrs={"class": textbox_size}),
+        help_text="Automatically launch worker nodes as soon as the cluster "
+        "boots. Workers will be of the same instance type as the master."
+        .format(ud_url, target))
     post_start_script_url = forms.CharField(
         required=False,
         label="Post-start script",
