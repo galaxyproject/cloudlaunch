@@ -14,15 +14,18 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ApplicationSerializer
 
 
-class CategoryViewSet(viewsets.ViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows applications to be viewed or edited.
     """
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
 
-    def list(self, request, pk=None, application_pk=None):
-        categories = self.queryset.filter(application=application_pk)
+    def list(self, request, application_pk=None):
+        if application_pk:
+            categories = self.queryset.filter(application=application_pk)
+        else:
+            categories = self.queryset
         serializer = serializers.CategorySerializer(categories, many=True, context={'request': request})
         return Response(serializer.data)
 

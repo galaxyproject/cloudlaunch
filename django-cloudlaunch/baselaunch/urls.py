@@ -27,8 +27,8 @@ from rest_framework_nested import routers
 
 router = routers.SimpleRouter()
 # router = HybridRouter()
+router.register(r'applications/categories', views.CategoryViewSet)
 router.register(r'applications', views.ApplicationViewSet)
-router.register(r'app-categories', views.CategoryViewSet)
 router.register(r'images', views.ImageViewSet)
 router.register(r'infrastructure', views.InfrastructureViewSet)
 # Nested routes
