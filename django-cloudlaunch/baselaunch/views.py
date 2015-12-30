@@ -1,5 +1,6 @@
-from django.contrib.auth.models import User, Group
+# from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
+from rest_framework.response import Response
 
 from baselaunch import models
 from baselaunch import serializers
@@ -13,12 +14,22 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ApplicationSerializer
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(viewsets.ViewSet):
     """
     API endpoint that allows applications to be viewed or edited.
     """
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
+
+    def list(self, request, pk=None, application_pk=None):
+        categories = self.queryset.filter(application=application_pk)
+        serializer = serializers.CategorySerializer(categories, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        categories = self.queryset.get(slug=pk)
+        serializer = serializers.CategorySerializer(categories, context={'request': request})
+        return Response(serializer.data)
 
 
 class AWSEC2ViewSet(viewsets.ModelViewSet):
