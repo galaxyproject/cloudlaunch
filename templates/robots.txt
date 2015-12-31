@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /fetch-clusters
+Disallow: /kp
+Disallow: /launch-status
+Disallow: /ud

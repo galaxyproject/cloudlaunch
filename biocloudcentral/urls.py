@@ -1,5 +1,6 @@
 import settings
 from django.conf.urls.defaults import patterns, include, url
+from django.views.generic.simple import direct_to_template
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -23,6 +24,8 @@ urlpatterns = patterns(
         name='update_clusters'),
     url(r'^revoke-fetch-clusters$', 'biocloudcentral.views.revoke_fetch_clusters',
         name='revoke_fetch_clusters'),
+    url(r'^robots\.txt$', direct_to_template,
+        {'template': 'robots.txt', 'mimetype': 'text/plain'}),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
