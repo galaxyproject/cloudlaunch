@@ -76,6 +76,12 @@ in two separate tabs (or [screen][10] sessions):
 
 ### Installing on a production server
 
+#### Automated installation ####
+We have developed an Ansible playbook for installing this application. The
+playbook automates the manual steps provided below with all the same defaults.
+The playbook is available [here][18].
+
+#### Manual installation ####
 - Launch a Ubuntu 14.04 instance or a VM
 - Install necessary system packages:
 
@@ -207,6 +213,7 @@ are available here: https://github.com/afgane/cloudlaunch-docker
 [15]: http://www.postgresql.org/
 [16]: http://www.sqlite.org/
 [17]: http://supervisord.org/index.html
+[18]: https://github.com/afgane/ansible-cloudlaunch
 
 ## LICENSE
 
