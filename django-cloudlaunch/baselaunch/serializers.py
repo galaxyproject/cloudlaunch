@@ -12,7 +12,6 @@ class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
-    id = serializers.ReadOnlyField()
     versions = AppVersionSerializer(many=True, read_only=True)
 
     class Meta:

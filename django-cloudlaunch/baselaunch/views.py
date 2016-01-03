@@ -26,12 +26,14 @@ class CategoryViewSet(viewsets.ModelViewSet):
             categories = self.queryset.filter(application=application_pk)
         else:
             categories = self.queryset
-        serializer = serializers.CategorySerializer(categories, many=True, context={'request': request})
+        serializer = serializers.CategorySerializer(
+            categories, many=True, context={'request': request})
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None):
         categories = self.queryset.get(slug=pk)
-        serializer = serializers.CategorySerializer(categories, context={'request': request})
+        serializer = serializers.CategorySerializer(
+            categories, context={'request': request})
         return Response(serializer.data)
 
 
