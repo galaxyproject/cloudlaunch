@@ -1,11 +1,19 @@
-from django.contrib.auth.models import User, Group
+# from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
 from baselaunch import models
 
 
+class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.ApplicationVersion
+        fields = ('version', 'image_id', 'launch_data')
+
+
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.ReadOnlyField()
+    versions = AppVersionSerializer(many=True, read_only=True)
 
     class Meta:
         model = models.Application

@@ -96,7 +96,7 @@ class Application(DateNameAwareModel):
 
 
 class ApplicationVersion(models.Model):
-    application = models.ForeignKey(Application)
+    application = models.ForeignKey(Application, related_name="versions")
     version = models.CharField(max_length=30)
     # Image provides a link to the infrastructure and is hence a ManyToMany
     # field as the same application definition and version may be available
