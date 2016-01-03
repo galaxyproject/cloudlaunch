@@ -13,13 +13,20 @@ class DateNameAwareModel(models.Model):
 
 
 class Infrastructure(DateNameAwareModel):
-    pass
+    # Indicates what kind of infrastructure a class represents
+    KIND = (
+        ('cloud', 'Cloud'),
+        ('container', 'Container'),
+        ('local', 'Local'),
+    )
 
     def __str__(self):
         return self.name
 
 
 class AWSEC2(Infrastructure):
+    kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
+                            default='cloud', editable=False)
     region_name = models.CharField(max_length=100)
     region_endpoint = models.CharField(max_length=255)
     is_secure = models.BooleanField()
@@ -34,6 +41,8 @@ class AWSEC2(Infrastructure):
 
 
 class AWSS3(Infrastructure):
+    kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
+                            default='cloud', editable=False)
     s3_host = models.CharField(max_length=255, blank=True, null=True)
     s3_port = models.IntegerField(blank=True, null=True)
     s3_conn_path = models.CharField(max_length=255, default='/', blank=True,
@@ -45,6 +54,8 @@ class AWSS3(Infrastructure):
 
 
 class OpenStack(Infrastructure):
+    kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
+                            default='cloud', editable=False)
     auth_url = models.CharField(max_length=255)
     region_name = models.CharField(max_length=100)
 
@@ -75,15 +86,23 @@ class Category(models.Model):
 
 
 class Application(DateNameAwareModel):
-    version = models.CharField(max_length=30, blank=True, null=True)
+    slug = models.SlugField(max_length=50, primary_key=True)
     description = models.TextField(blank=True, null=True)
     info_url = models.URLField(blank=True, null=True)
     categories = models.ManyToManyField(Category, blank=True)
+
+    def __str__(self):
+        return "{0}".format(self.name)
+
+
+class ApplicationVersion(models.Model):
+    application = models.ForeignKey(Application)
+    version = models.CharField(max_length=30)
+    # Image provides a link to the infrastructure and is hence a ManyToMany
+    # field as the same application definition and version may be available
+    # on multiple infrastructures.
     image_id = models.ManyToManyField(Image, blank=True)
     # Userdata max length is 16KB
     launch_data = models.TextField(max_length=1024 * 16, help_text="Instance "
                                    "user data to parameterize the launch.",
                                    blank=True, null=True)
-
-    def __str__(self):
-        return "{0} ({1})".format(self.name, self.version)

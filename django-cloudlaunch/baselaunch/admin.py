@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from .models import Application
+from .models import ApplicationVersion
 from .models import AWSEC2
 from .models import AWSS3
 from .models import Category
@@ -11,7 +12,17 @@ from .models import OpenStack
 class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
 
-admin.site.register(Application)
+
+class AppVersionInline(admin.StackedInline):
+    model = ApplicationVersion
+    extra = 1
+
+
+class AppAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
+    inlines = [AppVersionInline]
+
+admin.site.register(Application, AppAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(AWSEC2)
 admin.site.register(AWSS3)
