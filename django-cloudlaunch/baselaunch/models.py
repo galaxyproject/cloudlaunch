@@ -25,9 +25,15 @@ class Infrastructure(DateNameAwareModel):
         return self.name
 
 
-class AWSEC2(Infrastructure):
+class Cloud(Infrastructure):
     kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
                             default='cloud', editable=False)
+
+    class Meta:
+        abstract = True
+
+
+class AWSEC2(Cloud):
     region_name = models.CharField(max_length=100)
     region_endpoint = models.CharField(max_length=255)
     is_secure = models.BooleanField()
@@ -41,9 +47,7 @@ class AWSEC2(Infrastructure):
         verbose_name_plural = "AWS EC2"
 
 
-class AWSS3(Infrastructure):
-    kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
-                            default='cloud', editable=False)
+class AWSS3(Cloud):
     s3_host = models.CharField(max_length=255, blank=True, null=True)
     s3_port = models.IntegerField(blank=True, null=True)
     s3_conn_path = models.CharField(max_length=255, default='/', blank=True,
@@ -54,9 +58,7 @@ class AWSS3(Infrastructure):
         verbose_name_plural = "AWS S3"
 
 
-class OpenStack(Infrastructure):
-    kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
-                            default='cloud', editable=False)
+class OpenStack(Cloud):
     auth_url = models.CharField(max_length=255)
     region_name = models.CharField(max_length=100)
 
