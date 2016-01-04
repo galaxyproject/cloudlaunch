@@ -16,21 +16,26 @@ class DateNameAwareModel(models.Model):
 class Infrastructure(DateNameAwareModel):
     # Indicates what kind of infrastructure a class represents
     KIND = (
-        ('cloud', 'Cloud'),
-        ('container', 'Container'),
-        ('local', 'Local'),
+        ('cloud', 'clouds'),
+        ('container', 'containers'),
+        ('local', 'local'),
     )
+    kind = models.CharField(max_length=10, choices=KIND, editable=False)
 
     def __str__(self):
         return self.name
 
 
 class Cloud(Infrastructure):
-    kind = models.CharField(max_length=10, choices=Infrastructure.KIND,
-                            default='cloud', editable=False)
+
+    def __init__(self, *args, **kwargs):
+        # Set the default value for the `kind` field for this type of
+        # infrastructure
+        self._meta.get_field('kind').default = 'cloud'
+        super(Cloud, self).__init__(*args, **kwargs)
 
     class Meta:
-        abstract = True
+        proxy = True
 
 
 class AWSEC2(Cloud):

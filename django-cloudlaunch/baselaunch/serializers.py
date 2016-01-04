@@ -1,4 +1,3 @@
-# from django.contrib.auth.models import User, Group
 from rest_framework import serializers
 
 from baselaunch import models
@@ -23,6 +22,12 @@ class InfrastructureSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Infrastructure
         fields = ('url', 'name')
+
+
+class CloudSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = models.Cloud
 
 
 class AWSEC2Serializer(serializers.HyperlinkedModelSerializer):

@@ -27,7 +27,9 @@ from .util import HybridRouter
 router = HybridRouter()
 router.register(r'applications', views.ApplicationViewSet)
 router.register(r'images', views.ImageViewSet)
-router.register(r'infrastructure', views.InfrastructureViewSet)
+router.register(r'infrastructure/clouds', views.CloudViewSet)
+router.register(r'infrastructure', views.InfrastructureList,
+                base_name='infrastructure')
 # django rest-auth
 router.register(r'auth/login', rest_auth_views.LoginView,
                 base_name='rest_login')
