@@ -30,14 +30,6 @@ class ImageViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ImageSerializer
 
 
-class InfrastructureViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows infrastructure info to be viewed or edited.
-    """
-    queryset = models.Infrastructure.objects.all()
-    serializer_class = serializers.InfrastructureSerializer
-
-
 class InfrastructureList(APIView):
     """
     List kinds in infrastructures.
