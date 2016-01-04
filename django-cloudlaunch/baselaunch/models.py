@@ -1,4 +1,5 @@
 from django.db import models
+from django.template.defaultfilters import slugify
 
 
 class DateNameAwareModel(models.Model):
@@ -80,6 +81,12 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Newly created object, so set slug
+            self.slug = slugify(self.name)
+        super(Category, self).save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Application category"
         verbose_name_plural = "Application categories"
@@ -93,6 +100,12 @@ class Application(DateNameAwareModel):
 
     def __str__(self):
         return "{0}".format(self.name)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Newly created object, so set slug
+            self.slug = slugify(self.name)
+        super(Application, self).save(*args, **kwargs)
 
 
 class ApplicationVersion(models.Model):
