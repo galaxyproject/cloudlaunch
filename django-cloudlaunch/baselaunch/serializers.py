@@ -18,12 +18,6 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Application
 
 
-class CategorySerializer(serializers.HyperlinkedModelSerializer):
-
-    class Meta:
-        model = models.Category
-
-
 class InfrastructureSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:

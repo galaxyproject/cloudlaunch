@@ -27,13 +27,12 @@ from rest_framework_nested import routers
 
 router = routers.SimpleRouter()
 # router = HybridRouter()
-router.register(r'applications/categories', views.CategoryViewSet)
 router.register(r'applications', views.ApplicationViewSet)
 router.register(r'images', views.ImageViewSet)
 router.register(r'infrastructure', views.InfrastructureViewSet)
 # Nested routes
-app_router = routers.NestedSimpleRouter(router, r'applications', lookup='application')
-app_router.register(r'categories', views.CategoryViewSet, base_name='app-categories')
+# app_router = routers.NestedSimpleRouter(router, r'applications', lookup='application')
+# app_router.register(r'categories', views.CategoryViewSet, base_name='app-categories')
 # django rest-auth
 # router.register(r'auth/login', rest_auth_views.LoginView,
 #                 base_name='rest_login')
@@ -56,7 +55,7 @@ app_router.register(r'categories', views.CategoryViewSet, base_name='app-categor
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v1/', include(app_router.urls)),
+    # url(r'^api/v1/', include(app_router.urls)),
     # url(r'^api/v1/auth/', include('rest_framework.urls',
     #                               namespace='rest_framework')),
 ]

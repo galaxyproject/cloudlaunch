@@ -76,29 +76,10 @@ class Image(DateNameAwareModel):
         return "{0} ({1})".format(self.name, self.image_id)
 
 
-class Category(models.Model):
-    name = models.CharField(max_length=50)
-    slug = models.SlugField(max_length=50, primary_key=True)
-
-    def __str__(self):
-        return self.name
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            # Newly created object, so set slug
-            self.slug = slugify(self.name)
-        super(Category, self).save(*args, **kwargs)
-
-    class Meta:
-        verbose_name = "Application category"
-        verbose_name_plural = "Application categories"
-
-
 class Application(DateNameAwareModel):
     slug = models.SlugField(max_length=50, primary_key=True)
     description = models.TextField(blank=True, null=True)
     info_url = models.URLField(blank=True, null=True)
-    categories = models.ManyToManyField(Category, blank=True)
 
     def __str__(self):
         return "{0}".format(self.name)
