@@ -12,55 +12,62 @@ class DateNameAwareModel(models.Model):
     class Meta:
         abstract = True
 
-
-class Infrastructure(DateNameAwareModel):
-    # Indicates what kind of infrastructure a class represents
-    KIND = (
-        ('cloud', 'clouds'),
-        ('container', 'containers'),
-        ('local', 'local'),
-    )
-    kind = models.CharField(max_length=10, choices=KIND, editable=False)
-
     def __str__(self):
-        return self.name
+        return "{0}".format(self.name)
 
 
-class Cloud(Infrastructure):
+class Cloud(DateNameAwareModel):
+    # Ideally, this would be a proxy class so it can be used to uniformly
+    # retrieve all cloud objects (e.g., Cloud.objects.all()) but without
+    # explicitly existing in the database. However, without a parent class
+    # (e.g., Infrastructure), this cannot be due to Django restrictions
+    # https://docs.djangoproject.com/en/1.9/topics/db/
+    #   models/#base-class-restrictions
+    kind = models.CharField(max_length=10, default='cloud', editable=False)
+    slug = models.SlugField(max_length=50, primary_key=True)
 
-    def __init__(self, *args, **kwargs):
-        # Set the default value for the `kind` field for this type of
-        # infrastructure
-        self._meta.get_field('kind').default = 'cloud'
-        super(Cloud, self).__init__(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Newly created object, so set slug
+            self.slug = slugify(self.name)
+        super(Cloud, self).save(*args, **kwargs)
+
+
+class AWS(Cloud):
+    compute = models.ForeignKey('EC2')
+    object_store = models.ForeignKey('S3', blank=True, null=True)
 
     class Meta:
-        proxy = True
+        verbose_name = "AWS"
+        verbose_name_plural = "AWS"
 
 
-class AWSEC2(Cloud):
-    region_name = models.CharField(max_length=100)
-    region_endpoint = models.CharField(max_length=255)
-    is_secure = models.BooleanField()
-    ec2_port = models.IntegerField(blank=True, null=True,
-                                   verbose_name="EC2 port")
+class EC2(DateNameAwareModel):
+    ec2_region_name = models.CharField(max_length=100,
+                                       verbose_name="EC2 region name")
+    ec2_region_endpoint = models.CharField(
+        max_length=255, verbose_name="EC2 region endpoint")
     ec2_conn_path = models.CharField(max_length=255, default='/',
                                      verbose_name="EC2 conn path")
+    ec2_is_secure = models.BooleanField(default=True,
+                                        verbose_name="EC2 is secure")
+    ec2_port = models.IntegerField(blank=True, null=True,
+                                   verbose_name="EC2 port")
 
     class Meta:
-        verbose_name = "AWS EC2"
-        verbose_name_plural = "AWS EC2"
+        verbose_name = "EC2"
+        verbose_name_plural = "EC2"
 
 
-class AWSS3(Cloud):
+class S3(DateNameAwareModel):
     s3_host = models.CharField(max_length=255, blank=True, null=True)
-    s3_port = models.IntegerField(blank=True, null=True)
     s3_conn_path = models.CharField(max_length=255, default='/', blank=True,
                                     null=True)
+    s3_is_secure = models.BooleanField(default=True)
+    s3_port = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        verbose_name = "AWS S3"
-        verbose_name_plural = "AWS S3"
+        verbose_name_plural = "S3"
 
 
 class OpenStack(Cloud):
@@ -75,10 +82,13 @@ class OpenStack(Cloud):
 class Image(DateNameAwareModel):
     image_id = models.CharField(max_length=50, verbose_name="Image ID")
     description = models.CharField(max_length=255, blank=True, null=True)
-    infrastructure = models.ForeignKey(Infrastructure, blank=True, null=True)
+
+
+class CloudImage(Image):
+    cloud = models.ForeignKey(Cloud, blank=True, null=True)
 
     def __str__(self):
-        return "{0} ({1})".format(self.name, self.image_id)
+        return "{0} (on {1})".format(self.name, self.cloud.name)
 
 
 class Application(DateNameAwareModel):
