@@ -25,11 +25,11 @@ from .util import HybridRouter
 
 
 router = HybridRouter()
-# router.register(r'applications', views.ApplicationViewSet)
+router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
-# router.register(r'infrastructure/clouds', views.CloudViewSet)
-# router.register(r'infrastructure', views.InfrastructureList,
-#                 base_name='infrastructure')
+router.register(r'infrastructure/clouds', views.CloudViewSet)
+router.register(r'infrastructure', views.InfrastructureList,
+                base_name='infrastructure')
 # django rest-auth
 router.register(r'auth/login', rest_auth_views.LoginView,
                 base_name='rest_login')
@@ -51,7 +51,7 @@ router.register(r'auth/registration/verify-email', rest_reg_views.VerifyEmailVie
                 base_name='rest_verify_email')
 
 urlpatterns = [
-    # url(r'^api/v1/', include(router.urls)),
+    url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/auth/', include('rest_framework.urls',
                                   namespace='rest_framework')),
 ]

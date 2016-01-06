@@ -34,7 +34,7 @@ class Cloud(DateNameAwareModel):
 
 
 class AWS(Cloud):
-    compute = models.ForeignKey('EC2')
+    compute = models.ForeignKey('EC2', blank=True, null=True)
     object_store = models.ForeignKey('S3', blank=True, null=True)
 
     class Meta:
@@ -80,6 +80,14 @@ class OpenStack(Cloud):
 
 
 class Image(DateNameAwareModel):
+    """
+    A base Image model used by a virtual appliance.
+
+    Applications will use Images and the same application may be available
+    on multiple infrastructures so we need this base class so a single
+    application field can be used to retrieve all images across
+    infrastructures.
+    """
     image_id = models.CharField(max_length=50, verbose_name="Image ID")
     description = models.CharField(max_length=255, blank=True, null=True)
 
@@ -112,7 +120,8 @@ class ApplicationVersion(models.Model):
     # Image provides a link to the infrastructure and is hence a ManyToMany
     # field as the same application definition and version may be available
     # on multiple infrastructures.
-    image_id = models.ManyToManyField(Image, blank=True)
+    images = models.ManyToManyField(Image, blank=True,
+                                    related_name="applications")
     # Userdata max length is 16KB
     launch_data = models.TextField(max_length=1024 * 16, help_text="Instance "
                                    "user data to parameterize the launch.",
