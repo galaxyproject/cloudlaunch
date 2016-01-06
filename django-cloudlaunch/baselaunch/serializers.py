@@ -11,6 +11,7 @@ class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
+    slug = serializers.CharField(read_only=True)
     versions = AppVersionSerializer(many=True, read_only=True)
 
     class Meta:

@@ -10,10 +10,9 @@ from .models import Application
 class ApplicationTests(APITestCase):
 
     APP_DATA = {'name': 'HelloWorldApp',
-                'version': '0.1',
+                'slug': 'helloworldapp',
                 'description': 'HelloWorldDesc',
-                'info_url': 'http://www.cloudlaunch.org',
-                'launch_data': "{'bucket': 'mybucket'}"}
+                'info_url': 'http://www.cloudlaunch.org'}
 
     def _create_application(self, app_data):
         url = reverse('application-list')
@@ -27,6 +26,7 @@ class ApplicationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Application.objects.count(), 1)
         self.assertEqual(Application.objects.get().name, 'HelloWorldApp')
+        self.assertEqual(Application.objects.get().slug, 'helloworldapp')
 
     def test_get_application(self):
         """
@@ -45,7 +45,7 @@ class ApplicationTests(APITestCase):
         """
         data = ApplicationTests.APP_DATA
         new_app = self._create_application(data)
-        url = reverse('application-detail', args=[new_app.data['id']])
+        url = reverse('application-detail', args=[new_app.data['slug']])
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Application.objects.count(), 0)
@@ -56,13 +56,11 @@ class ApplicationTests(APITestCase):
         """
         data = ApplicationTests.APP_DATA.copy()
         new_app = self._create_application(data)
-        url = reverse('application-detail', args=[new_app.data['id']])
+        url = reverse('application-detail', args=[new_app.data['slug']])
         data['name'] = 'HelloWorldApp2'
-        data['version'] = '0.2'
         data['description'] = 'HelloWorldDesc2'
         response = self.client.put(url, data=data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Application.objects.get().name, 'HelloWorldApp2')
-        self.assertEqual(Application.objects.get().version, '0.2')
         self.assertEqual(Application.objects.get().description,
                          'HelloWorldDesc2')
