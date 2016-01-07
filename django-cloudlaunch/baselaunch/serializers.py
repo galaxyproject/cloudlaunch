@@ -1,13 +1,23 @@
+import urllib.parse
 from rest_framework import serializers
 
 from baselaunch import models
 
 
-class CloudSerializer(serializers.HyperlinkedModelSerializer):
+class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
+    regions = serializers.SerializerMethodField('regions_url')
+
+    def regions_url(self, obj):
+        """
+        Include a URL for listing regions within this cloud.
+        """
+        rel_url = urllib.parse.urljoin(self.context['request'].path, 'regions')
+        return self.context['request'].build_absolute_uri(rel_url)
 
     class Meta:
         model = models.Cloud
+        fields = ("name", "slug", "regions")
 
 
 class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
