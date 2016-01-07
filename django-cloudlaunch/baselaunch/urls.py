@@ -14,28 +14,37 @@ Including another URLconf
     2. Import the include() function: from django.conf.urls import url, include
     3. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
+from macpath import basename
+
 from django.conf.urls import include
 from django.conf.urls import url
-# from django.contrib import admin
 from rest_auth import views as rest_auth_views
 from rest_auth.registration import views as rest_reg_views
-# from rest_framework import viewsets
+
 from baselaunch import views
-from .util import HybridRouter
+
+from .util import HybridDefaultRouter, HybridNestedRouter, HybridSimpleRouter
 
 
-router = HybridRouter()
+# from django.contrib import admin
+# from rest_framework import viewsets
+router = HybridDefaultRouter()
 router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
-router.register(r'infrastructure/clouds', views.CloudViewSet)
 router.register(r'infrastructure', views.InfrastructureView,
                 base_name='infrastructure')
-# django rest-auth
-router.register(r'auth', views.AuthView,
-                base_name='auth')
+router.register(r'auth', views.AuthView, base_name='auth')
+
+infra_router = HybridSimpleRouter()
+infra_router.register(r'clouds', views.CloudViewSet)
+
+cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='clouds')
+cloud_router.register(r'regions', views.RegionView, base_name='region')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
+    url(r'^api/v1/infrastructure/', include(infra_router.urls)),
+    url(r'^api/v1/infrastructure/', include(cloud_router.urls)),
     url(r'^api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),
     url(r'^api/v1/auth/registration', include('rest_auth.registration.urls',
                                               namespace='rest_auth_reg')),

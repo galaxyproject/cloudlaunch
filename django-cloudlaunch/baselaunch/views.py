@@ -1,3 +1,4 @@
+from cloudbridge.cloud.factory import CloudProviderFactory, ProviderList
 from django.core.urlresolvers import reverse
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -58,6 +59,18 @@ class AuthView(APIView):
                 'password/reset/change': request.build_absolute_uri(reverse('rest_auth:rest_password_change')),
                 }
         return Response(data)
+
+
+class RegionView(APIView):
+    """
+    List regions in a given cloud.
+    """
+
+    def get(self, request, format=None):
+        provider = CloudProviderFactory().create_provider(
+            ProviderList.OPENSTACK, {})
+        regions = [region.name for region in provider.compute.regions.list()]
+        return Response(regions)
 
 
 class CloudViewSet(viewsets.ModelViewSet):
