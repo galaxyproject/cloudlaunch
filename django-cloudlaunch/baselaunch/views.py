@@ -1,3 +1,4 @@
+from django.core.urlresolvers import reverse
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,14 +31,33 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 #     serializer_class = serializers.CloudImageSerializer
 
 
-class InfrastructureList(APIView):
+class InfrastructureView(APIView):
     """
     List kinds in infrastructures.
     """
+
     def get(self, request, format=None):
         # We only support cloud infrastructures for the time being
         response = {'url': request.build_absolute_uri('clouds')}
         return Response(response)
+
+
+class AuthView(APIView):
+    """
+    List kinds in infrastructures.
+    """
+
+    def get(self, request, format=None):
+        # We only support cloud infrastructures for the time being
+        data = {'login': request.build_absolute_uri(reverse('rest_auth:rest_login')),
+                'logout': request.build_absolute_uri(reverse('rest_auth:rest_logout')),
+                'user': request.build_absolute_uri(reverse('rest_auth:rest_user_details')),
+                'registration': request.build_absolute_uri(reverse('rest_auth_reg:rest_register')),
+                'password/reset': request.build_absolute_uri(reverse('rest_auth:rest_password_reset')),
+                'password/reset/confirm': request.build_absolute_uri(reverse('rest_auth:rest_password_reset_confirm')),
+                'password/reset/change': request.build_absolute_uri(reverse('rest_auth:rest_password_change')),
+                }
+        return Response(data)
 
 
 class CloudViewSet(viewsets.ModelViewSet):
