@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
 
@@ -126,3 +127,41 @@ class ApplicationVersion(models.Model):
     launch_data = models.TextField(max_length=1024 * 16, help_text="Instance "
                                    "user data to parameterize the launch.",
                                    blank=True, null=True)
+
+
+class AWSCredentials(DateNameAwareModel):
+    cloud = models.ManyToManyField(AWS)
+    access_key = models.CharField(max_length=50)
+    secret_key = models.CharField(max_length=50)
+    user_profile = models.ForeignKey('UserProfile')
+
+    class Meta:
+        verbose_name = "AWS Credentials"
+        verbose_name_plural = "AWS Credentials"
+
+
+class OpenStackCredentials(DateNameAwareModel):
+    cloud = models.ManyToManyField(OpenStack)
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=50)
+    tenant_name = models.CharField(max_length=50)
+    user_profile = models.ForeignKey('UserProfile')
+
+    class Meta:
+        verbose_name = "OpenStack Credentials"
+        verbose_name_plural = "OpenStack Credentials"
+
+
+class UserProfile(models.Model):
+    # Link UserProfile to a User model instance
+    user = models.OneToOneField(User)
+    slug = models.SlugField(unique=True, primary_key=True, editable=False)
+
+    def __str__(self):
+        return "{0} ({1} {2})".format(self.user.username, self.user.first_name,
+                                      self.user.last_name)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.user.username)
+        super(UserProfile, self).save(*args, **kwargs)
