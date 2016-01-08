@@ -144,6 +144,9 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 50
 }
 
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'baselaunch.serializers.UserSerializer'
+}
 
 # Allow settings to be overridden in a biocloudcentral/settings_local.py
 try:

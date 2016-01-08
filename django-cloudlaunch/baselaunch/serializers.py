@@ -1,3 +1,4 @@
+from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
@@ -46,3 +47,27 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Application
+
+
+class AWSCredsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.AWSCredentials
+
+
+class OpenStackCredsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.OpenStackCredentials
+
+
+class UserSerializer(UserDetailsSerializer):
+    aws_creds = AWSCredsSerializer(
+        many=True, read_only=True, source='userprofile.awscredentials_set')
+    openstack_creds = OpenStackCredsSerializer(
+        many=True, read_only=True,
+        source='userprofile.openstackcredentials_set')
+
+    class Meta(UserDetailsSerializer.Meta):
+        fields = UserDetailsSerializer.Meta.fields + ('aws_creds',
+                                                      'openstack_creds')
