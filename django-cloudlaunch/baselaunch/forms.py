@@ -5,7 +5,8 @@ from baselaunch import models
 
 
 class AWSCredentialsForm(ModelForm):
-    secret_key = forms.CharField(widget=PasswordInput(render_value=True))
+    secret_key = forms.CharField(widget=PasswordInput(render_value=True),
+                                 required=False)
 
     class Meta:
         model = models.AWSCredentials
@@ -13,7 +14,8 @@ class AWSCredentialsForm(ModelForm):
 
 
 class OpenStackCredentialsForm(ModelForm):
-    password = forms.CharField(widget=PasswordInput(render_value=True))
+    password = forms.CharField(widget=PasswordInput(render_value=True),
+                               required=False)
 
     class Meta:
         model = models.OpenStackCredentials

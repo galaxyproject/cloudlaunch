@@ -132,7 +132,7 @@ class ApplicationVersion(models.Model):
 class AWSCredentials(DateNameAwareModel):
     cloud = models.ManyToManyField(AWS)
     access_key = models.CharField(max_length=50)
-    secret_key = models.CharField(max_length=50)
+    secret_key = models.CharField(max_length=50, blank=True, null=True)
     user_profile = models.ForeignKey('UserProfile')
 
     class Meta:
@@ -143,7 +143,7 @@ class AWSCredentials(DateNameAwareModel):
 class OpenStackCredentials(DateNameAwareModel):
     cloud = models.ManyToManyField(OpenStack)
     username = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
+    password = models.CharField(max_length=50, blank=True, null=True)
     tenant_name = models.CharField(max_length=50)
     user_profile = models.ForeignKey('UserProfile')
 
