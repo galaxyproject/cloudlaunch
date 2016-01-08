@@ -22,7 +22,6 @@ class CloudSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Cloud
-        fields = ("name", "slug", "regions")
 
 
 class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
@@ -47,10 +46,3 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Application
-
-
-# class AWSSerializer(serializers.HyperlinkedModelSerializer):
-
-#     class Meta:
-#         model = models.AWS
-#         # fields = CloudSerializer.Meta.fields + ('region_name',)
