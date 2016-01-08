@@ -38,8 +38,8 @@ router.register(r'auth', views.AuthView, base_name='auth')
 infra_router = HybridSimpleRouter()
 infra_router.register(r'clouds', views.CloudViewSet)
 
-cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='clouds')
-cloud_router.register(r'regions', views.RegionView, base_name='region')
+cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='cloud')
+cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),

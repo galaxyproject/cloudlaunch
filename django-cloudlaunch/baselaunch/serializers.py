@@ -1,7 +1,12 @@
-import urllib.parse
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from baselaunch import models
+
+
+class RegionSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
 
 
 class CloudSerializer(serializers.ModelSerializer):
@@ -12,8 +17,8 @@ class CloudSerializer(serializers.ModelSerializer):
         """
         Include a URL for listing regions within this cloud.
         """
-        rel_url = urllib.parse.urljoin(self.context['request'].path, 'regions')
-        return self.context['request'].build_absolute_uri(rel_url)
+        return reverse('region-list', args=[obj.slug],
+                       request=self.context['request'])
 
     class Meta:
         model = models.Cloud

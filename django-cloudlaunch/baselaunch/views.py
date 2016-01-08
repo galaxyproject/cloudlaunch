@@ -1,9 +1,9 @@
 import json
 
 from cloudbridge.cloud.factory import CloudProviderFactory, ProviderList
-from django.core.urlresolvers import reverse
 from rest_framework import viewsets
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from baselaunch import models
@@ -62,17 +62,20 @@ class AuthView(APIView):
         return Response(data)
 
 
-class RegionView(APIView):
+class RegionViewSet(viewsets.ViewSet):
     """
     List regions in a given cloud.
     """
 
-    def get(self, request, format=None):
-        provider = CloudProviderFactory().create_provider(
-            ProviderList.OPENSTACK, {})
-        regions = [json.loads(region.to_json())
-                   for region in provider.compute.regions.list()]
-        return Response(regions)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.RegionSerializer
+
+    def list(self, request, **kwargs):
+        provider = CloudProviderFactory().create_provider(ProviderList.OPENSTACK,
+                                                          {})
+        serializer = serializers.RegionSerializer(instance=provider.compute.regions.list(),
+                                                  many=True)
+        return Response(serializer.data)
 
 
 class CloudViewSet(viewsets.ModelViewSet):
