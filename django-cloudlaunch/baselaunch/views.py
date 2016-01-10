@@ -1,11 +1,11 @@
 import json
 
-from cloudbridge.cloud.factory import CloudProviderFactory, ProviderList
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
+from baselaunch import domain_model
 from baselaunch import models
 from baselaunch import serializers
 
@@ -71,8 +71,8 @@ class RegionViewSet(viewsets.ViewSet):
     serializer_class = serializers.RegionSerializer
 
     def list(self, request, **kwargs):
-        provider = CloudProviderFactory().create_provider(ProviderList.OPENSTACK,
-                                                          {})
+        cloud_pk = self.kwargs.get("cloud_pk")
+        provider = domain_model.get_cloud_provider(cloud_pk, request=request)
         serializer = serializers.RegionSerializer(instance=provider.compute.regions.list(),
                                                   many=True)
         return Response(serializer.data)

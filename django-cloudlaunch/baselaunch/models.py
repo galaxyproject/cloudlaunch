@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.defaultfilters import slugify
+from model_utils.managers import InheritanceManager
 
 
 class DateNameAwareModel(models.Model):
@@ -24,6 +26,7 @@ class Cloud(DateNameAwareModel):
     # (e.g., Infrastructure), this cannot be due to Django restrictions
     # https://docs.djangoproject.com/en/1.9/topics/db/
     #   models/#base-class-restrictions
+    objects = InheritanceManager()
     kind = models.CharField(max_length=10, default='cloud', editable=False)
     slug = models.SlugField(max_length=50, primary_key=True)
 
@@ -129,23 +132,25 @@ class ApplicationVersion(models.Model):
                                    blank=True, null=True)
 
 
-class AWSCredentials(DateNameAwareModel):
-    cloud = models.ManyToManyField(AWS)
+class Credentials(DateNameAwareModel):
+    cloud = models.ForeignKey('Cloud')
+    objects = InheritanceManager()
+    user_profile = models.ForeignKey('UserProfile')
+
+
+class AWSCredentials(Credentials):
     access_key = models.CharField(max_length=50)
     secret_key = models.CharField(max_length=50, blank=True, null=True)
-    user_profile = models.ForeignKey('UserProfile')
 
     class Meta:
         verbose_name = "AWS Credentials"
         verbose_name_plural = "AWS Credentials"
 
 
-class OpenStackCredentials(DateNameAwareModel):
-    cloud = models.ManyToManyField(OpenStack)
+class OpenStackCredentials(Credentials):
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=50, blank=True, null=True)
     tenant_name = models.CharField(max_length=50)
-    user_profile = models.ForeignKey('UserProfile')
 
     class Meta:
         verbose_name = "OpenStack Credentials"
