@@ -40,6 +40,7 @@ infra_router.register(r'clouds', views.CloudViewSet)
 
 cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='cloud')
 cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
+cloud_router.register(r'keypairs', views.KeyPairViewSet, base_name='keypair')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),

@@ -62,6 +62,14 @@ class AuthView(APIView):
         return Response(data)
 
 
+class CloudViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint to view and or edit cloud infrastructure info.
+    """
+    queryset = models.Cloud.objects.all()
+    serializer_class = serializers.CloudSerializer
+
+
 class RegionViewSet(viewsets.ViewSet):
     """
     List regions in a given cloud.
@@ -77,9 +85,16 @@ class RegionViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-class CloudViewSet(viewsets.ModelViewSet):
+class KeyPairViewSet(viewsets.ViewSet):
     """
-    API endpoint to view and or edit cloud infrastructure info.
+    List keypairs in a given cloud.
     """
-    queryset = models.Cloud.objects.all()
-    serializer_class = serializers.CloudSerializer
+
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.KeyPairSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.KeyPairSerializer(instance=provider.security.key_pairs.list(),
+                                                   many=True)
+        return Response(serializer.data)

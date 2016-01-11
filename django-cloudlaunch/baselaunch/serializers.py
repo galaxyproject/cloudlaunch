@@ -10,15 +10,29 @@ class RegionSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+class KeyPairSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    material = serializers.CharField()
+
+
 class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
     regions = serializers.SerializerMethodField('regions_url')
+    keypairs = serializers.SerializerMethodField('keypairs_url')
 
     def regions_url(self, obj):
         """
         Include a URL for listing regions within this cloud.
         """
         return reverse('region-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def keypairs_url(self, obj):
+        """
+        Include a URL for listing keypairs within this cloud.
+        """
+        return reverse('keypair-list', args=[obj.slug],
                        request=self.context['request'])
 
     class Meta:
