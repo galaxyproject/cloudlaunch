@@ -63,6 +63,6 @@ def get_credentials_from_profile(cloud, request):
     logged in user.
     """
     profile = request.user.userprofile
-    credentials = profile.credentials_set.filter(cloud=cloud). \
+    credentials = profile.credentials_set.filter(cloud=cloud, default=True). \
         select_subclasses().first()
     return credentials.as_dict()

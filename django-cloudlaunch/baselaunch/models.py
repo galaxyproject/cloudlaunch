@@ -1,5 +1,4 @@
 from django.contrib.auth.models import User
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.template.defaultfilters import slugify
 from model_utils.managers import InheritanceManager
@@ -133,9 +132,28 @@ class ApplicationVersion(models.Model):
 
 
 class Credentials(DateNameAwareModel):
+    default = models.BooleanField(
+        verbose_name="Use as default credentials", blank=True)
     cloud = models.ForeignKey('Cloud')
     objects = InheritanceManager()
     user_profile = models.ForeignKey('UserProfile')
+
+    def save(self, *args, **kwargs):
+        # Ensure only 1 set of credentials is selected as the 'default'
+        # This is not atomic but don't know how to enforce it at the
+        # DB level directly.
+        if self.default is True:
+            try:
+                previous_default = Credentials.objects.get(
+                    cloud=self.cloud, default=True)
+                previous_default.default = False
+                previous_default.save()
+            except Credentials.DoesNotExist:
+                # This is the first entry so no default can exist
+                # TODO: introduce logging
+                print("Did not find previous default credentials; "
+                      "set '{0}' as default".format(self.name))
+        return super(Credentials, self).save()
 
 
 class AWSCredentials(Credentials):
