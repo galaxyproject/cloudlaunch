@@ -62,11 +62,26 @@ def get_credentials_from_request(cloud, request):
 def get_credentials_from_profile(cloud, request):
     """
     Returns the stored database credentials for a given cloud for the currently
-    logged in user. If the user is not logged in, return an empty dict.
+    logged in user. If the user is not logged in or no credentials are found,
+    return an empty dict.
+
+    .. note:: If no credentials are found but the server has environment
+    variables required by Cloudbridge available, those credentials will
+    be used!
     """
     if request.user.is_anonymous():
         return {}
     profile = request.user.userprofile
-    credentials = profile.credentials_set.filter(cloud=cloud, default=True). \
+    # Check for default credentials
+    credentials = profile.credentials.filter(clouds=cloud, default=True). \
         select_subclasses().first()
-    return credentials.as_dict()
+    if credentials:
+        return credentials.as_dict()
+    # Check for a set of credentials for the given cloud
+    credentials = profile.credentials.filter(clouds=cloud).select_subclasses()
+    if not credentials:
+        return {}
+    if credentials.count() == 1:
+        return credentials[0].as_dict()
+    else:
+        raise ValueError("Too many credentials to choose from.")

@@ -91,6 +91,7 @@ class CloudSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Cloud
+        exclude = ('kind',)
 
 
 class CloudImageSerializer(serializers.HyperlinkedModelSerializer):

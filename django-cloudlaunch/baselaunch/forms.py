@@ -9,7 +9,7 @@ class AWSCredentialsForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(AWSCredentialsForm, self).__init__(*args, **kwargs)
         # restrict choices to AWS clouds only
-        self.fields['cloud'].queryset = models.AWS.objects.all()
+        self.fields['clouds'].queryset = models.AWS.objects.all()
 
     secret_key = forms.CharField(widget=PasswordInput(render_value=True),
                                  required=False)
@@ -24,7 +24,7 @@ class OpenStackCredentialsForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(OpenStackCredentialsForm, self).__init__(*args, **kwargs)
         # restrict choices to Openstack clouds only
-        self.fields['cloud'].queryset = models.OpenStack \
+        self.fields['clouds'].queryset = models.OpenStack \
             .objects.all()
 
     password = forms.CharField(widget=PasswordInput(render_value=True),
