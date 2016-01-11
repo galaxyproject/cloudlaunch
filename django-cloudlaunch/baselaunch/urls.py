@@ -50,4 +50,7 @@ urlpatterns = [
                                               namespace='rest_auth_reg')),
     url(r'^api/v1/auth/', include('rest_framework.urls',
                                   namespace='rest_framework')),
+    # The following is required because rest_auth calls allauth internally and
+    # reverse urls need to be resolved.
+    url(r'^accounts/', include('allauth.urls')),
 ]
