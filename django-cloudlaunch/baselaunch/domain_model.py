@@ -1,21 +1,30 @@
+"""
+Represents the domain model and provides a higher level abstraction over the
+base model. This layer is separate from the view in that it does not deal
+with requests directly and only with model objects - thus making it
+reusable without a related web request.
+"""
 from cloudbridge.cloud.factory import CloudProviderFactory, ProviderList
 
 from baselaunch import models
 
 
-def get_cloud_provider(cloud_pk, request):
-    cloud = models.Cloud.objects.filter(
-        slug=cloud_pk).select_subclasses().first()
-    profile = request.user.userprofile
-    credentials = profile.credentials_set.filter(cloud=cloud). \
-        select_subclasses().first()
+def get_cloud_provider(cloud, cred_dict):
+    """
+    Returns a provider for a cloud given a cloud model and a dictionary
+    containing the relevant credentials.
+
+    :type cloud: Cloud
+    :param cloud: The cloud to create a provider for
+
+    :rtype: ``object`` of :class:`.dict`
+    :return:  A dict containing the necessary credentials for the cloud.
+    """
     if isinstance(cloud, models.OpenStack):
         config = {'os_auth_url': cloud.auth_url,
-                  'os_region_name': cloud.region_name,
-                  'os_username': credentials.username,
-                  'os_password': credentials.password,
-                  'os_tenant_name': credentials.tenant_name
+                  'os_region_name': cloud.region_name
                   }
+        config.update(cred_dict)
         return CloudProviderFactory().create_provider(ProviderList.OPENSTACK,
                                                       config)
     elif isinstance(cloud, models.AWS):
@@ -24,9 +33,8 @@ def get_cloud_provider(cloud_pk, request):
                   'ec2_region_endpoint': cloud.compute.ec2_region_endpoint,
                   'ec2_port': cloud.compute.ec2_port,
                   'ec2_conn_path': cloud.compute.ec2_conn_path,
-                  'aws_access_key': credentials.access_key,
-                  'aws_secret_key': credentials.secret_key,
                   }
+        config.update(cred_dict)
         return CloudProviderFactory().create_provider(ProviderList.AWS,
                                                       config)
     else:

@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
-from baselaunch import domain_model
 from baselaunch import models
 from baselaunch import serializers
+from baselaunch import view_helpers
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -71,8 +71,7 @@ class RegionViewSet(viewsets.ViewSet):
     serializer_class = serializers.RegionSerializer
 
     def list(self, request, **kwargs):
-        cloud_pk = self.kwargs.get("cloud_pk")
-        provider = domain_model.get_cloud_provider(cloud_pk, request=request)
+        provider = view_helpers.get_cloud_provider(self)
         serializer = serializers.RegionSerializer(instance=provider.compute.regions.list(),
                                                   many=True)
         return Response(serializer.data)

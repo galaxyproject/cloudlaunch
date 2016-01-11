@@ -146,6 +146,11 @@ class AWSCredentials(Credentials):
         verbose_name = "AWS Credentials"
         verbose_name_plural = "AWS Credentials"
 
+    def as_dict(self):
+        return {'aws_access_key': self.access_key,
+                'aws_secret_key': self.secret_key,
+                }
+
 
 class OpenStackCredentials(Credentials):
     username = models.CharField(max_length=50)
@@ -155,6 +160,12 @@ class OpenStackCredentials(Credentials):
     class Meta:
         verbose_name = "OpenStack Credentials"
         verbose_name_plural = "OpenStack Credentials"
+
+    def as_dict(self):
+        return {'os_username': self.username,
+                'os_password': self.password,
+                'os_tenant_name': self.tenant_name
+                }
 
 
 class UserProfile(models.Model):
