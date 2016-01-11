@@ -1,6 +1,5 @@
-import json
-
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
@@ -74,7 +73,7 @@ class RegionViewSet(viewsets.ViewSet):
     """
     List regions in a given cloud.
     """
-
+    permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.RegionSerializer
 
@@ -89,7 +88,7 @@ class KeyPairViewSet(viewsets.ViewSet):
     """
     List keypairs in a given cloud.
     """
-
+    permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.KeyPairSerializer
 
@@ -104,7 +103,7 @@ class VolumeViewSet(viewsets.ViewSet):
     """
     List volumes in a given cloud.
     """
-
+    permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.VolumeSerializer
 
@@ -119,7 +118,7 @@ class SnapshotViewSet(viewsets.ViewSet):
     """
     List snapshots in a given cloud.
     """
-
+    permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.SnapshotSerializer
 
@@ -134,7 +133,7 @@ class BucketViewSet(viewsets.ViewSet):
     """
     List buckets in a given cloud.
     """
-
+    permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.BucketSerializer
 
@@ -151,7 +150,7 @@ class BucketObjectViewSet(viewsets.ViewSet):
     """
     List objects in a given cloud bucket.
     """
-
+    permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.BucketObjectSerializer
 

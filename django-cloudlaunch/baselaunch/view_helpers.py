@@ -6,7 +6,9 @@ def get_cloud_provider(view):
     """
     Returns a cloud provider for the current user. The relevant
     cloud is discovered from the view and the credentials are retrieved
-    from the request or user profile.    """
+    from the request or user profile. Return ``None`` if no credentials were
+    retrieved.
+    """
     cloud_pk = view.kwargs.get("cloud_pk")
     cloud = models.Cloud.objects.filter(
         slug=cloud_pk).select_subclasses().first()
@@ -60,8 +62,10 @@ def get_credentials_from_request(cloud, request):
 def get_credentials_from_profile(cloud, request):
     """
     Returns the stored database credentials for a given cloud for the currently
-    logged in user.
+    logged in user. If the user is not logged in, return an empty dict.
     """
+    if request.user.is_anonymous():
+        return {}
     profile = request.user.userprofile
     credentials = profile.credentials_set.filter(cloud=cloud, default=True). \
         select_subclasses().first()
