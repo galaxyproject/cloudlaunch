@@ -41,13 +41,23 @@ infra_router.register(r'clouds', views.CloudViewSet)
 cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='cloud')
 cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
 cloud_router.register(r'keypairs', views.KeyPairViewSet, base_name='keypair')
+cloud_router.register(r'block_store/volumes', views.VolumeViewSet,
+                      base_name='volume')
+cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,
+                      base_name='snapshot')
 cloud_router.register(r'object_store/buckets', views.BucketViewSet,
                       base_name='bucket')
+
+bucket_router = HybridNestedRouter(cloud_router, r'object_store/buckets',
+                                   lookup='bucket')
+bucket_router.register(r'objects', views.BucketObjectViewSet,
+                       base_name='object')
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/infrastructure/', include(infra_router.urls)),
     url(r'^api/v1/infrastructure/', include(cloud_router.urls)),
+    url(r'^api/v1/infrastructure/', include(bucket_router.urls)),
     url(r'^api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),
     url(r'^api/v1/auth/registration', include('rest_auth.registration.urls',
                                               namespace='rest_auth_reg')),

@@ -16,7 +16,32 @@ class KeyPairSerializer(serializers.Serializer):
     material = serializers.CharField()
 
 
+class VolumeSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    state = serializers.CharField()
+
+
+class SnapshotSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    state = serializers.CharField()
+
+
 class BucketSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    contents = serializers.SerializerMethodField('content_url')
+
+    def content_url(self, obj):
+        """
+        Include a URL for listing this bucket's contents
+        """
+        return reverse('object-list', args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
+
+
+class BucketObjectSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
 
@@ -25,6 +50,8 @@ class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
     regions = serializers.SerializerMethodField('regions_url')
     keypairs = serializers.SerializerMethodField('keypairs_url')
+    volumes = serializers.SerializerMethodField('volume_url')
+    snapshots = serializers.SerializerMethodField('snapshot_url')
     buckets = serializers.SerializerMethodField('bucket_url')
 
     def regions_url(self, obj):
@@ -41,9 +68,23 @@ class CloudSerializer(serializers.ModelSerializer):
         return reverse('keypair-list', args=[obj.slug],
                        request=self.context['request'])
 
+    def volume_url(self, obj):
+        """
+        Include a URL for listing volumes within this cloud.
+        """
+        return reverse('volume-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def snapshot_url(self, obj):
+        """
+        Include a URL for listing snapshots within this cloud.
+        """
+        return reverse('snapshot-list', args=[obj.slug],
+                       request=self.context['request'])
+
     def bucket_url(self, obj):
         """
-        Include a URL for listing keypairs within this cloud.
+        Include a URL for listing buckets within this cloud.
         """
         return reverse('bucket-list', args=[obj.slug],
                        request=self.context['request'])

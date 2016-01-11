@@ -100,6 +100,36 @@ class KeyPairViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+class VolumeViewSet(viewsets.ViewSet):
+    """
+    List volumes in a given cloud.
+    """
+
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.VolumeSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.VolumeSerializer(instance=provider.block_store.volumes.list(),
+                                                  many=True)
+        return Response(serializer.data)
+
+
+class SnapshotViewSet(viewsets.ViewSet):
+    """
+    List snapshots in a given cloud.
+    """
+
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.SnapshotSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.SnapshotSerializer(instance=provider.block_store.snapshots.list(),
+                                                    many=True)
+        return Response(serializer.data)
+
+
 class BucketViewSet(viewsets.ViewSet):
     """
     List buckets in a given cloud.
@@ -110,6 +140,28 @@ class BucketViewSet(viewsets.ViewSet):
 
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.BucketSerializer(instance=provider.object_store.list(),
-                                                  many=True)
+        serializer = serializers.BucketSerializer(
+            instance=provider.object_store.list(),
+            many=True, context={'request': self.request,
+                                'cloud_pk': self.kwargs.get("cloud_pk")})
         return Response(serializer.data)
+
+
+class BucketObjectViewSet(viewsets.ViewSet):
+    """
+    List objects in a given cloud bucket.
+    """
+
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.BucketObjectSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        bucket_pk = self.kwargs.get("bucket_pk")
+        bucket = provider.object_store.get(bucket_pk)
+        if bucket:
+            serializer = serializers.BucketObjectSerializer(bucket.list(),
+                                                            many=True)
+            return Response(serializer.data)
+        else:
+            return Response({})
