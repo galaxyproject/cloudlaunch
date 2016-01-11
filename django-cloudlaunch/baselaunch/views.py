@@ -98,3 +98,18 @@ class KeyPairViewSet(viewsets.ViewSet):
         serializer = serializers.KeyPairSerializer(instance=provider.security.key_pairs.list(),
                                                    many=True)
         return Response(serializer.data)
+
+
+class BucketViewSet(viewsets.ViewSet):
+    """
+    List buckets in a given cloud.
+    """
+
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.BucketSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.BucketSerializer(instance=provider.object_store.list(),
+                                                  many=True)
+        return Response(serializer.data)

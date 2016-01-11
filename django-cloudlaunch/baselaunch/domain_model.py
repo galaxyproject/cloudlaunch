@@ -33,6 +33,9 @@ def get_cloud_provider(cloud, cred_dict):
                   'ec2_region_endpoint': cloud.compute.ec2_region_endpoint,
                   'ec2_port': cloud.compute.ec2_port,
                   'ec2_conn_path': cloud.compute.ec2_conn_path,
+                  's3_host': cloud.object_store.s3_host,
+                  's3_port': cloud.object_store.s3_port,
+                  's3_conn_path': cloud.object_store.s3_conn_path,
                   }
         config.update(cred_dict)
         return CloudProviderFactory().create_provider(ProviderList.AWS,
