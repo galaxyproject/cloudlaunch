@@ -86,7 +86,7 @@ class RegionViewSet(viewsets.ViewSet):
 
 class KeyPairViewSet(viewsets.ViewSet):
     """
-    List keypairs in a given cloud.
+    List key pairs in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
@@ -96,6 +96,21 @@ class KeyPairViewSet(viewsets.ViewSet):
         provider = view_helpers.get_cloud_provider(self)
         serializer = serializers.KeyPairSerializer(instance=provider.security.key_pairs.list(),
                                                    many=True)
+        return Response(serializer.data)
+
+
+class SecurityGroupViewSet(viewsets.ViewSet):
+    """
+    List security groups in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.SecurityGroupSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.SecurityGroupSerializer(
+            instance=provider.security.security_groups.list(), many=True)
         return Response(serializer.data)
 
 

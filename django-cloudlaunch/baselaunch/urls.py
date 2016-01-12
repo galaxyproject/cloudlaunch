@@ -14,12 +14,8 @@ Including another URLconf
     2. Import the include() function: from django.conf.urls import url, include
     3. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
-from macpath import basename
-
 from django.conf.urls import include
 from django.conf.urls import url
-from rest_auth import views as rest_auth_views
-from rest_auth.registration import views as rest_reg_views
 
 from baselaunch import views
 
@@ -41,6 +37,8 @@ infra_router.register(r'clouds', views.CloudViewSet)
 cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='cloud')
 cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
 cloud_router.register(r'keypairs', views.KeyPairViewSet, base_name='keypair')
+cloud_router.register(r'security_groups', views.SecurityGroupViewSet,
+                      base_name='security_group')
 cloud_router.register(r'block_store/volumes', views.VolumeViewSet,
                       base_name='volume')
 cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,

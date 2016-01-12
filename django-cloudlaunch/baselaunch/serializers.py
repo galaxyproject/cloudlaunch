@@ -16,6 +16,20 @@ class KeyPairSerializer(serializers.Serializer):
     material = serializers.CharField()
 
 
+class SecurityGroupRuleSerializer(serializers.Serializer):
+    ip_protocol = serializers.CharField()
+    from_port = serializers.CharField()
+    to_port = serializers.CharField()
+    cidr_ip = serializers.CharField()
+
+
+class SecurityGroupSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    description = serializers.CharField()
+    rules = SecurityGroupRuleSerializer(many=True, read_only=True)
+
+
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
@@ -50,6 +64,7 @@ class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
     regions = serializers.SerializerMethodField('regions_url')
     keypairs = serializers.SerializerMethodField('keypairs_url')
+    security_groups = serializers.SerializerMethodField('security_groups_url')
     volumes = serializers.SerializerMethodField('volume_url')
     snapshots = serializers.SerializerMethodField('snapshot_url')
     buckets = serializers.SerializerMethodField('bucket_url')
@@ -63,9 +78,16 @@ class CloudSerializer(serializers.ModelSerializer):
 
     def keypairs_url(self, obj):
         """
-        Include a URL for listing keypairs within this cloud.
+        Include a URL for listing key pairs within this cloud.
         """
         return reverse('keypair-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def security_groups_url(self, obj):
+        """
+        Include a URL for listing security groups within this cloud.
+        """
+        return reverse('security_group-list', args=[obj.slug],
                        request=self.context['request'])
 
     def volume_url(self, obj):
