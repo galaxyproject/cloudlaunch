@@ -30,6 +30,25 @@ class SecurityGroupSerializer(serializers.Serializer):
     rules = SecurityGroupRuleSerializer(many=True, read_only=True)
 
 
+class NetworkSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    state = serializers.CharField()
+    cidr_block = serializers.CharField()
+    subnets = serializers.SerializerMethodField('subnets_url')
+
+    def subnets_url(self, obj):
+        """Include a URL for listing this network subnets."""
+        return reverse('subnet-list', args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
+
+
+class SubnetSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    cidr_block = serializers.CharField()
+
+
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
@@ -65,6 +84,7 @@ class CloudSerializer(serializers.ModelSerializer):
     regions = serializers.SerializerMethodField('regions_url')
     keypairs = serializers.SerializerMethodField('keypairs_url')
     security_groups = serializers.SerializerMethodField('security_groups_url')
+    networks = serializers.SerializerMethodField('networks_url')
     volumes = serializers.SerializerMethodField('volume_url')
     snapshots = serializers.SerializerMethodField('snapshot_url')
     buckets = serializers.SerializerMethodField('bucket_url')
@@ -88,6 +108,13 @@ class CloudSerializer(serializers.ModelSerializer):
         Include a URL for listing security groups within this cloud.
         """
         return reverse('security_group-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def networks_url(self, obj):
+        """
+        Include a URL for listing networks within this cloud.
+        """
+        return reverse('network-list', args=[obj.slug],
                        request=self.context['request'])
 
     def volume_url(self, obj):

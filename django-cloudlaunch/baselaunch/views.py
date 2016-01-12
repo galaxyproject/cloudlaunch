@@ -114,6 +114,40 @@ class SecurityGroupViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+class NetworkViewSet(viewsets.ViewSet):
+    """
+    List networks in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.NetworkSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.NetworkSerializer(
+            instance=provider.network.list(), many=True,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk")})
+        return Response(serializer.data)
+
+
+class SubnetViewSet(viewsets.ViewSet):
+    """
+    List networks in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.SubnetSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        network_pk = self.kwargs.get("network_pk")
+        network = provider.network.get(network_pk)
+        serializer = serializers.SubnetSerializer(
+            instance=network.subnets(), many=True)
+        return Response(serializer.data)
+
+
 class VolumeViewSet(viewsets.ViewSet):
     """
     List volumes in a given cloud.

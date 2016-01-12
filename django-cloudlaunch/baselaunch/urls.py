@@ -39,12 +39,16 @@ cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
 cloud_router.register(r'keypairs', views.KeyPairViewSet, base_name='keypair')
 cloud_router.register(r'security_groups', views.SecurityGroupViewSet,
                       base_name='security_group')
+cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
 cloud_router.register(r'block_store/volumes', views.VolumeViewSet,
                       base_name='volume')
 cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,
                       base_name='snapshot')
 cloud_router.register(r'object_store/buckets', views.BucketViewSet,
                       base_name='bucket')
+
+network_router = HybridNestedRouter(cloud_router, r'networks', lookup='network')
+network_router.register(r'subnets', views.SubnetViewSet, base_name='subnet')
 
 bucket_router = HybridNestedRouter(cloud_router, r'object_store/buckets',
                                    lookup='bucket')
@@ -55,6 +59,7 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/infrastructure/', include(infra_router.urls)),
     url(r'^api/v1/infrastructure/', include(cloud_router.urls)),
+    url(r'^api/v1/infrastructure/', include(network_router.urls)),
     url(r'^api/v1/infrastructure/', include(bucket_router.urls)),
     url(r'^api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),
     url(r'^api/v1/auth/registration', include('rest_auth.registration.urls',
