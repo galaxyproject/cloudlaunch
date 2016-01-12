@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.twitter',
+    'djcelery',
     'baselaunch'
 ]
 
@@ -153,3 +154,9 @@ try:
     from settings_local import *  # noqa
 except ImportError:
     pass
+
+# django-celery configuration
+
+BROKER_URL = 'django://'
+import djcelery
+djcelery.setup_loader()
