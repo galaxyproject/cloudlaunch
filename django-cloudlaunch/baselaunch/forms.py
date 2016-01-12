@@ -1,5 +1,7 @@
 from django import forms
-from django.forms import ModelForm, PasswordInput
+from django.forms import ModelForm
+from django.forms import PasswordInput
+from django.forms.models import BaseInlineFormSet
 
 from baselaunch import models
 
@@ -33,3 +35,14 @@ class OpenStackCredentialsForm(ModelForm):
     class Meta:
         model = models.OpenStackCredentials
         fields = '__all__'
+
+
+class DefaultRequiredInlineFormSet(BaseInlineFormSet):
+
+    def clean(self):
+        """Check that at least one default credentials has been set."""
+        super(DefaultRequiredInlineFormSet, self).clean()
+        if any(self.errors):
+            return
+        if not any(cleaned_data.get('default') for cleaned_data in self.cleaned_data):
+            raise forms.ValidationError('At least one default credentials are required.')

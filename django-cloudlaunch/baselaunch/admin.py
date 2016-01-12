@@ -39,12 +39,14 @@ class S3Admin(admin.ModelAdmin):
 class AWSCredsInline(admin.StackedInline):
     model = models.AWSCredentials
     form = forms.AWSCredentialsForm
+    formset = forms.DefaultRequiredInlineFormSet
     extra = 1
 
 
 class OSCredsInline(admin.StackedInline):
     model = models.OpenStackCredentials
     form = forms.OpenStackCredentialsForm
+    formset = forms.DefaultRequiredInlineFormSet
     extra = 1
 
 

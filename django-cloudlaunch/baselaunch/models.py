@@ -133,10 +133,24 @@ class ApplicationVersion(models.Model):
 
 class Credentials(DateNameAwareModel):
     default = models.BooleanField(
-        help_text="If set, use as default credentials", blank=True)
+        help_text="If set, use as default credentials for the selected cloud",
+        blank=True)
     cloud = models.ForeignKey('Cloud', related_name='credentials')
     objects = InheritanceManager()
     user_profile = models.ForeignKey('UserProfile', related_name='credentials')
+
+    def save(self, *args, **kwargs):
+        # Ensure only 1 set of credentials is selected as the 'default' for
+        # the current cloud.
+        # This is not atomic but don't know how to enforce it at the
+        # DB level directly.
+        if self.default is True:
+            previous_default = Credentials.objects.filter(
+                cloud=self.cloud, default=True).select_subclasses().first()
+            if previous_default:
+                previous_default.default = False
+                previous_default.save()
+        return super(Credentials, self).save()
 
 
 class AWSCredentials(Credentials):
