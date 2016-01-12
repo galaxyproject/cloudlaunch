@@ -54,6 +54,19 @@ class SubnetSerializer(serializers.Serializer):
     cidr_block = serializers.CharField()
 
 
+class InstanceTypeSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    family = serializers.CharField()
+    vcpus = serializers.CharField()
+    ram = serializers.CharField()
+    size_root_disk = serializers.CharField()
+    size_ephemeral_disks = serializers.CharField()
+    num_ephemeral_disks = serializers.CharField()
+    size_total_disk = serializers.CharField()
+    extra_data = serializers.CharField()
+
+
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
@@ -90,6 +103,7 @@ class CloudSerializer(serializers.ModelSerializer):
     keypairs = serializers.SerializerMethodField('keypairs_url')
     security_groups = serializers.SerializerMethodField('security_groups_url')
     networks = serializers.SerializerMethodField('networks_url')
+    instance_types = serializers.SerializerMethodField('instance_types_url')
     volumes = serializers.SerializerMethodField('volume_url')
     snapshots = serializers.SerializerMethodField('snapshot_url')
     buckets = serializers.SerializerMethodField('bucket_url')
@@ -120,6 +134,13 @@ class CloudSerializer(serializers.ModelSerializer):
         Include a URL for listing networks within this cloud.
         """
         return reverse('network-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def instance_types_url(self, obj):
+        """
+        Include a URL for listing compute instance types within this cloud.
+        """
+        return reverse('instance_type-list', args=[obj.slug],
                        request=self.context['request'])
 
     def volume_url(self, obj):

@@ -167,6 +167,21 @@ class SubnetViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+class InstanceTypeViewSet(viewsets.ViewSet):
+    """
+    List compute instance types in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.InstanceTypeSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.InstanceTypeSerializer(
+            instance=provider.compute.instance_types.list(), many=True)
+        return Response(serializer.data)
+
+
 class VolumeViewSet(viewsets.ViewSet):
     """
     List volumes in a given cloud.
