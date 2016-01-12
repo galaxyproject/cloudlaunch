@@ -5,9 +5,18 @@ from rest_framework.reverse import reverse
 from baselaunch import models
 
 
+class ZoneSerializer(serializers.Serializer):
+    # FIXME: This field is OpenStack-specific ``AvailabilityZone`` object
+    # until CloudBridge provides an internal implementation
+    # https://github.com/gvlproject/cloudbridge/issues/14
+    zoneName = serializers.CharField()
+    zoneState = serializers.DictField(child=serializers.CharField())
+
+
 class RegionSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
+    zones = ZoneSerializer(many=True)
 
 
 class KeyPairSerializer(serializers.Serializer):
