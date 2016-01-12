@@ -73,12 +73,12 @@ def get_credentials_from_profile(cloud, request):
         return {}
     profile = request.user.userprofile
     # Check for default credentials
-    credentials = profile.credentials.filter(clouds=cloud, default=True). \
+    credentials = profile.credentials.filter(cloud=cloud, default=True). \
         select_subclasses().first()
     if credentials:
         return credentials.as_dict()
     # Check for a set of credentials for the given cloud
-    credentials = profile.credentials.filter(clouds=cloud).select_subclasses()
+    credentials = profile.credentials.filter(cloud=cloud).select_subclasses()
     if not credentials:
         return {}
     if credentials.count() == 1:

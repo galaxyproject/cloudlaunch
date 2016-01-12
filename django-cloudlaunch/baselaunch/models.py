@@ -134,9 +134,7 @@ class ApplicationVersion(models.Model):
 class Credentials(DateNameAwareModel):
     default = models.BooleanField(
         help_text="If set, use as default credentials", blank=True)
-    # The same set of creds may be applicable to multiple clouds (e.g., AWS
-    # us-east-1 and us-west-1)
-    clouds = models.ManyToManyField('Cloud')
+    cloud = models.ForeignKey('Cloud', related_name='credentials')
     objects = InheritanceManager()
     user_profile = models.ForeignKey('UserProfile', related_name='credentials')
 
