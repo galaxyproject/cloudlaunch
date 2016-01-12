@@ -47,6 +47,11 @@ cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,
 cloud_router.register(r'object_store/buckets', views.BucketViewSet,
                       base_name='bucket')
 
+security_group_router = HybridNestedRouter(cloud_router, r'security_groups',
+                                           lookup='security_group')
+security_group_router.register(r'rules', views.SecurityGroupRuleViewSet,
+                               base_name='security_group_rule')
+
 network_router = HybridNestedRouter(cloud_router, r'networks', lookup='network')
 network_router.register(r'subnets', views.SubnetViewSet, base_name='subnet')
 
@@ -59,6 +64,7 @@ urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
     url(r'^api/v1/infrastructure/', include(infra_router.urls)),
     url(r'^api/v1/infrastructure/', include(cloud_router.urls)),
+    url(r'^api/v1/infrastructure/', include(security_group_router.urls)),
     url(r'^api/v1/infrastructure/', include(network_router.urls)),
     url(r'^api/v1/infrastructure/', include(bucket_router.urls)),
     url(r'^api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),

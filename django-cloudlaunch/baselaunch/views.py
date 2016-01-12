@@ -110,7 +110,26 @@ class SecurityGroupViewSet(viewsets.ViewSet):
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
         serializer = serializers.SecurityGroupSerializer(
-            instance=provider.security.security_groups.list(), many=True)
+            instance=provider.security.security_groups.list(), many=True,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk")})
+        return Response(serializer.data)
+
+
+class SecurityGroupRuleViewSet(viewsets.ViewSet):
+    """
+    List security group rules in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.SecurityGroupRuleSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        sg_pk = self.kwargs.get("security_group_pk")
+        sg = provider.security.security_groups.get(sg_pk)
+        serializer = serializers.SecurityGroupRuleSerializer(
+            instance=sg.rules, many=True)
         return Response(serializer.data)
 
 

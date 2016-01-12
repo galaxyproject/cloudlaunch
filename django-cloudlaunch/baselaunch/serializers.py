@@ -27,7 +27,12 @@ class SecurityGroupSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     description = serializers.CharField()
-    rules = SecurityGroupRuleSerializer(many=True, read_only=True)
+    rules = serializers.SerializerMethodField('rules_url')
+
+    def rules_url(self, obj):
+        """Include a URL for listing this SG rules."""
+        return reverse('security_group_rule-list', args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
 
 
 class NetworkSerializer(serializers.Serializer):
