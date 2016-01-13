@@ -1,3 +1,4 @@
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -202,7 +203,21 @@ class InstanceTypeViewSet(viewsets.ViewSet):
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
         serializer = serializers.InstanceTypeSerializer(
-            instance=provider.compute.instance_types.list(), many=True)
+            instance=provider.compute.instance_types.list(), many=True,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk")})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        name = pk.replace('_', '.')  # un-slugify
+        provider = view_helpers.get_cloud_provider(self)
+        instance_types = provider.compute.instance_types.find(name=name)
+        if len(instance_types) != 1:
+            return Response({'detail': 'Cannot find instance type {0}'.format(
+                             pk)}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.InstanceTypeSerializer(
+            instance=instance_types[0],
+            context={'request': self.request, 'cloud_pk': cloud_pk})
         return Response(serializer.data)
 
 
@@ -217,7 +232,10 @@ class InstanceViewSet(viewsets.ViewSet):
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
         serializer = serializers.InstanceSerializer(
-            instance=provider.compute.instances.list(), many=True)
+            instance=provider.compute.instances.list(), many=True,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk"),
+                     'list': True})
         return Response(serializer.data)
 
 

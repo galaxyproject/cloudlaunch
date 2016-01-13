@@ -66,6 +66,7 @@ class SubnetSerializer(serializers.Serializer):
 
 
 class InstanceTypeSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     family = serializers.CharField()
@@ -76,6 +77,13 @@ class InstanceTypeSerializer(serializers.Serializer):
     num_ephemeral_disks = serializers.CharField()
     size_total_disk = serializers.CharField()
     extra_data = serializers.DictField(serializers.CharField())
+
+    def detail_url(self, obj):
+        """Create a URL for accessing a single instance."""
+        slug = obj.name.replace('.', '_')  # slugify
+        return reverse('instance_type-detail',
+                       args=[self.context['cloud_pk'], slug],
+                       request=self.context['request'])
 
 
 class VolumeSerializer(serializers.Serializer):
@@ -95,9 +103,28 @@ class InstanceSerializer(serializers.Serializer):
     name = serializers.CharField()
     public_ips = serializers.ListField(serializers.IPAddressField())
     private_ips = serializers.ListField(serializers.IPAddressField())
-    instance_type = InstanceTypeSerializer()
+    instance_type = serializers.SerializerMethodField('instance_type_url')
     image_id = serializers.CharField()
     placement_zone = ZoneSerializer()
+
+    def instance_type_url(self, obj):
+        """
+        Include a URL for listing compute instance type for this instance.
+
+        """
+        slug = (obj.instance_type.name).replace('.', '_')  # slugify
+        return reverse('instance_type-detail',
+                       args=[self.context['cloud_pk'], slug],
+                       request=self.context['request'])
+
+    def __init__(self, *args, **kwargs):
+        super(InstanceSerializer, self).__init__(*args, **kwargs)
+        # Grabbing instance type for OpenStack is slow because for each
+        # instance, an additional request is made to retrieve the actual
+        # instance type and this takes ages. Hence, display instance_type only
+        # in detail view.
+        if self.context.get('list', False):
+            self.fields.pop('instance_type')
 
 
 class BucketSerializer(serializers.Serializer):
