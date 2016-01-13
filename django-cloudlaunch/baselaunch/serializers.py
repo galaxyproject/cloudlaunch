@@ -204,6 +204,7 @@ class InstanceSerializer(serializers.Serializer):
         # in detail view.
         if self.context.get('list', False):
             self.fields.pop('instance_type')
+            self.fields.pop('instance_type_url')
         else:
             # For the detail view, do not include the url field
             self.fields.pop('url')
