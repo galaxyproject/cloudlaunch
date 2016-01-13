@@ -238,6 +238,19 @@ class InstanceViewSet(viewsets.ViewSet):
                      'list': True})
         return Response(serializer.data)
 
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        provider = view_helpers.get_cloud_provider(self)
+        instance = provider.compute.instances.get(pk)
+        if not instance:
+            return Response({'detail': 'Cannot find instance {0}'.format(
+                             pk)}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.InstanceSerializer(
+            instance=instance,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk"),
+                     'list': False})
+        return Response(serializer.data)
+
 
 class VolumeViewSet(viewsets.ViewSet):
     """
