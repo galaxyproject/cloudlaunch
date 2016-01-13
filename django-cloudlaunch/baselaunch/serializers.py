@@ -211,20 +211,35 @@ class AWSCredsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.AWSCredentials
+        exclude = ('secret_key', )
 
 
 class OpenStackCredsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.OpenStackCredentials
+        exclude = ('password', )
 
 
 class UserSerializer(UserDetailsSerializer):
-    aws_creds = AWSCredsSerializer(
-        many=True, read_only=True, source='userprofile.awscredentials_set')
-    openstack_creds = OpenStackCredsSerializer(
-        many=True, read_only=True,
-        source='userprofile.openstackcredentials_set')
+    aws_creds = serializers.SerializerMethodField()
+    openstack_creds = serializers.SerializerMethodField()
+
+    def get_aws_creds(self, obj):
+        """
+        Include a URL for listing this bucket's contents
+        """
+        creds = obj.userprofile.credentials.filter(
+            awscredentials__isnull=False).select_subclasses()
+        return AWSCredsSerializer(instance=creds, many=True).data
+
+    def get_openstack_creds(self, obj):
+        """
+        Include a URL for listing this bucket's contents
+        """
+        creds = obj.userprofile.credentials.filter(
+            openstackcredentials__isnull=False).select_subclasses()
+        return OpenStackCredsSerializer(instance=creds, many=True).data
 
     class Meta(UserDetailsSerializer.Meta):
         fields = UserDetailsSerializer.Meta.fields + ('aws_creds',
