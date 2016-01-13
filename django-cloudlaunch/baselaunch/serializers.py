@@ -11,14 +11,27 @@ class ZoneSerializer(serializers.Serializer):
 
 
 class RegionSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     zones = serializers.SerializerMethodField('zones_url')
+
+    def detail_url(self, obj):
+        """Create a URL for accessing a single instance."""
+        return reverse('region-detail',
+                       args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
 
     def zones_url(self, obj):
         """Include a URL for listing zones"""
         return reverse('zone-list', args=[self.context['cloud_pk'], obj.id],
                        request=self.context['request'])
+
+    def __init__(self, *args, **kwargs):
+        super(RegionSerializer, self).__init__(*args, **kwargs)
+        # For the detail view, do not include the url field
+        if not self.context.get('list', False):
+            self.fields.pop('url')
 
 
 class MachineImageSerializer(serializers.Serializer):
