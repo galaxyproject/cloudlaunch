@@ -79,9 +79,32 @@ class RegionViewSet(viewsets.ViewSet):
 
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.RegionSerializer(instance=provider.compute.regions.list(),
-                                                  many=True)
+        serializer = serializers.RegionSerializer(
+            instance=provider.compute.regions.list(),
+            many=True,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk")})
         return Response(serializer.data)
+
+
+class ZoneViewSet(viewsets.ViewSet):
+    """
+    List zones in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.ZoneSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        region_pk = self.kwargs.get("region_pk")
+        region = provider.compute.regions.get(region_pk)
+        if region:
+            serializer = serializers.ZoneSerializer(region.zones,
+                                                    many=True)
+            return Response(serializer.data)
+        else:
+            return Response({})
 
 
 class KeyPairViewSet(viewsets.ViewSet):
@@ -94,8 +117,9 @@ class KeyPairViewSet(viewsets.ViewSet):
 
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.KeyPairSerializer(instance=provider.security.key_pairs.list(),
-                                                   many=True)
+        serializer = serializers.KeyPairSerializer(
+            instance=provider.security.key_pairs.list(),
+            many=True)
         return Response(serializer.data)
 
 
@@ -192,8 +216,9 @@ class VolumeViewSet(viewsets.ViewSet):
 
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.VolumeSerializer(instance=provider.block_store.volumes.list(),
-                                                  many=True)
+        serializer = serializers.VolumeSerializer(
+            instance=provider.block_store.volumes.list(),
+            many=True)
         return Response(serializer.data)
 
 
@@ -207,8 +232,9 @@ class SnapshotViewSet(viewsets.ViewSet):
 
     def list(self, request, **kwargs):
         provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.SnapshotSerializer(instance=provider.block_store.snapshots.list(),
-                                                    many=True)
+        serializer = serializers.SnapshotSerializer(
+            instance=provider.block_store.snapshots.list(),
+            many=True)
         return Response(serializer.data)
 
 

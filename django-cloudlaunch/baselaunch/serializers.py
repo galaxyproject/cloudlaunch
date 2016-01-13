@@ -9,14 +9,19 @@ class ZoneSerializer(serializers.Serializer):
     # FIXME: This field is OpenStack-specific ``AvailabilityZone`` object
     # until CloudBridge provides an internal implementation
     # https://github.com/gvlproject/cloudbridge/issues/14
-    zoneName = serializers.CharField()
-    zoneState = serializers.DictField(child=serializers.CharField())
+    id = serializers.CharField()
+    name = serializers.CharField()
 
 
 class RegionSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
-    zones = ZoneSerializer(many=True)
+    zones = serializers.SerializerMethodField('zones_url')
+
+    def zones_url(self, obj):
+        """Include a URL for listing zones"""
+        return reverse('zone-list', args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
 
 
 class KeyPairSerializer(serializers.Serializer):
