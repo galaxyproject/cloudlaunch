@@ -206,6 +206,21 @@ class InstanceTypeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+class InstanceViewSet(viewsets.ViewSet):
+    """
+    List compute instances in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.InstanceSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.InstanceSerializer(
+            instance=provider.compute.instances.list(), many=True)
+        return Response(serializer.data)
+
+
 class VolumeViewSet(viewsets.ViewSet):
     """
     List volumes in a given cloud.

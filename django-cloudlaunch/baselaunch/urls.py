@@ -42,6 +42,8 @@ cloud_router.register(r'security_groups', views.SecurityGroupViewSet,
 cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
 cloud_router.register(r'compute/instance_types', views.InstanceTypeViewSet,
                       base_name='instance_type')
+cloud_router.register(r'compute/instances', views.InstanceViewSet,
+                      base_name='instance')
 cloud_router.register(r'block_store/volumes', views.VolumeViewSet,
                       base_name='volume')
 cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,

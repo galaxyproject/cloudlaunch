@@ -6,9 +6,6 @@ from baselaunch import models
 
 
 class ZoneSerializer(serializers.Serializer):
-    # FIXME: This field is OpenStack-specific ``AvailabilityZone`` object
-    # until CloudBridge provides an internal implementation
-    # https://github.com/gvlproject/cloudbridge/issues/14
     id = serializers.CharField()
     name = serializers.CharField()
 
@@ -78,7 +75,7 @@ class InstanceTypeSerializer(serializers.Serializer):
     size_ephemeral_disks = serializers.CharField()
     num_ephemeral_disks = serializers.CharField()
     size_total_disk = serializers.CharField()
-    extra_data = serializers.CharField()
+    extra_data = serializers.DictField(serializers.CharField())
 
 
 class VolumeSerializer(serializers.Serializer):
@@ -91,6 +88,16 @@ class SnapshotSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     state = serializers.CharField()
+
+
+class InstanceSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    public_ips = serializers.ListField(serializers.IPAddressField())
+    private_ips = serializers.ListField(serializers.IPAddressField())
+    instance_type = InstanceTypeSerializer()
+    image_id = serializers.CharField()
+    placement_zone = ZoneSerializer()
 
 
 class BucketSerializer(serializers.Serializer):
@@ -118,6 +125,7 @@ class CloudSerializer(serializers.ModelSerializer):
     security_groups = serializers.SerializerMethodField('security_groups_url')
     networks = serializers.SerializerMethodField('networks_url')
     instance_types = serializers.SerializerMethodField('instance_types_url')
+    instances = serializers.SerializerMethodField('instances_url')
     volumes = serializers.SerializerMethodField('volume_url')
     snapshots = serializers.SerializerMethodField('snapshot_url')
     buckets = serializers.SerializerMethodField('bucket_url')
@@ -155,6 +163,13 @@ class CloudSerializer(serializers.ModelSerializer):
         Include a URL for listing compute instance types within this cloud.
         """
         return reverse('instance_type-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def instances_url(self, obj):
+        """
+        Include a URL for listing compute instances within this cloud.
+        """
+        return reverse('instance-list', args=[obj.slug],
                        request=self.context['request'])
 
     def volume_url(self, obj):
