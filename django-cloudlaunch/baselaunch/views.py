@@ -88,6 +88,38 @@ class RegionViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
+class MachineImageViewSet(viewsets.ViewSet):
+    """
+    List machine images in a given cloud.
+    """
+    permission_classes = (IsAuthenticated,)
+    # Required for the Browsable API renderer to have a nice form.
+    serializer_class = serializers.MachineImageSerializer
+
+    def list(self, request, **kwargs):
+        provider = view_helpers.get_cloud_provider(self)
+        serializer = serializers.MachineImageSerializer(
+            instance=provider.compute.images.list(),
+            many=True,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk"),
+                     'list': True})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        provider = view_helpers.get_cloud_provider(self)
+        instance = provider.compute.images.get(pk)
+        if not instance:
+            return Response({'detail': 'Cannot find machine image {0}'.format(
+                             pk)}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializers.MachineImageSerializer(
+            instance=instance,
+            context={'request': self.request,
+                     'cloud_pk': self.kwargs.get("cloud_pk"),
+                     'list': False})
+        return Response(serializer.data)
+
+
 class ZoneViewSet(viewsets.ViewSet):
     """
     List zones in a given cloud.
@@ -205,7 +237,8 @@ class InstanceTypeViewSet(viewsets.ViewSet):
         serializer = serializers.InstanceTypeSerializer(
             instance=provider.compute.instance_types.list(), many=True,
             context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk")})
+                     'cloud_pk': self.kwargs.get("cloud_pk"),
+                     'list': True})
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None, cloud_pk=None):
@@ -217,7 +250,8 @@ class InstanceTypeViewSet(viewsets.ViewSet):
                              pk)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.InstanceTypeSerializer(
             instance=instance_types[0],
-            context={'request': self.request, 'cloud_pk': cloud_pk})
+            context={'request': self.request, 'cloud_pk': cloud_pk,
+                     'list': False})
         return Response(serializer.data)
 
 

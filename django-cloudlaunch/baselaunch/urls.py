@@ -36,6 +36,8 @@ infra_router.register(r'clouds', views.CloudViewSet)
 
 cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='cloud')
 cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
+cloud_router.register(r'machine_images', views.MachineImageViewSet,
+                      base_name='machine_image')
 cloud_router.register(r'keypairs', views.KeyPairViewSet, base_name='keypair')
 cloud_router.register(r'security_groups', views.SecurityGroupViewSet,
                       base_name='security_group')

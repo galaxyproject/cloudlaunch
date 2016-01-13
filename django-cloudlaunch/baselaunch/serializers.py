@@ -21,6 +21,25 @@ class RegionSerializer(serializers.Serializer):
                        request=self.context['request'])
 
 
+class MachineImageSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('detail_url')
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+    description = serializers.CharField()
+
+    def detail_url(self, obj):
+        """Create a URL for accessing a single instance."""
+        return reverse('machine_image-detail',
+                       args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
+
+    def __init__(self, *args, **kwargs):
+        super(MachineImageSerializer, self).__init__(*args, **kwargs)
+        # For the detail view, do not include the url field
+        if not self.context.get('list', False):
+            self.fields.pop('url')
+
+
 class KeyPairSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
@@ -85,6 +104,12 @@ class InstanceTypeSerializer(serializers.Serializer):
                        args=[self.context['cloud_pk'], slug],
                        request=self.context['request'])
 
+    def __init__(self, *args, **kwargs):
+        super(InstanceTypeSerializer, self).__init__(*args, **kwargs)
+        # For the detail view, do not include the url field
+        if not self.context.get('list', False):
+            self.fields.pop('url')
+
 
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
@@ -99,22 +124,37 @@ class SnapshotSerializer(serializers.Serializer):
 
 
 class InstanceSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     public_ips = serializers.ListField(serializers.IPAddressField())
     private_ips = serializers.ListField(serializers.IPAddressField())
-    instance_type = serializers.SerializerMethodField('instance_type_url')
+    instance_type = serializers.SerializerMethodField('instance_type_name')
+    instance_type_url = serializers.SerializerMethodField('instance_type_link')
     image_id = serializers.CharField()
+    image_id_url = serializers.SerializerMethodField('image_id_link')
     placement_zone = ZoneSerializer()
 
-    def instance_type_url(self, obj):
+    def detail_url(self, obj):
+        return reverse('instance-detail',
+                       args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
+
+    def instance_type_name(self, obj):
         """
         Include a URL for listing compute instance type for this instance.
-
         """
+        return obj.instance_type.name
+
+    def instance_type_link(self, obj):
         slug = (obj.instance_type.name).replace('.', '_')  # slugify
         return reverse('instance_type-detail',
                        args=[self.context['cloud_pk'], slug],
+                       request=self.context['request'])
+
+    def image_id_link(self, obj):
+        return reverse('machine_image-detail',
+                       args=[self.context['cloud_pk'], obj.image_id],
                        request=self.context['request'])
 
     def __init__(self, *args, **kwargs):
@@ -125,6 +165,9 @@ class InstanceSerializer(serializers.Serializer):
         # in detail view.
         if self.context.get('list', False):
             self.fields.pop('instance_type')
+        else:
+            # For the detail view, do not include the url field
+            self.fields.pop('url')
 
 
 class BucketSerializer(serializers.Serializer):
@@ -148,6 +191,7 @@ class BucketObjectSerializer(serializers.Serializer):
 class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
     regions = serializers.SerializerMethodField('regions_url')
+    machine_images = serializers.SerializerMethodField('machine_images_url')
     keypairs = serializers.SerializerMethodField('keypairs_url')
     security_groups = serializers.SerializerMethodField('security_groups_url')
     networks = serializers.SerializerMethodField('networks_url')
@@ -162,6 +206,13 @@ class CloudSerializer(serializers.ModelSerializer):
         Include a URL for listing regions within this cloud.
         """
         return reverse('region-list', args=[obj.slug],
+                       request=self.context['request'])
+
+    def machine_images_url(self, obj):
+        """
+        Include a URL for listing machine images within this cloud.
+        """
+        return reverse('machine_image-list', args=[obj.slug],
                        request=self.context['request'])
 
     def keypairs_url(self, obj):
