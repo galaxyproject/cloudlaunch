@@ -54,9 +54,22 @@ class MachineImageSerializer(serializers.Serializer):
 
 
 class KeyPairSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     material = serializers.CharField()
+
+    def detail_url(self, obj):
+        """Create a URL for accessing a single instance."""
+        return reverse('keypair-detail',
+                       args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
+
+    def __init__(self, *args, **kwargs):
+        super(KeyPairSerializer, self).__init__(*args, **kwargs)
+        # For the detail view, do not include the url field
+        if not self.context.get('list', False):
+            self.fields.pop('url')
 
 
 class SecurityGroupRuleSerializer(serializers.Serializer):
@@ -67,15 +80,28 @@ class SecurityGroupRuleSerializer(serializers.Serializer):
 
 
 class SecurityGroupSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
     description = serializers.CharField()
     rules = serializers.SerializerMethodField('rules_url')
 
+    def detail_url(self, obj):
+        """Create a URL for accessing a single instance."""
+        return reverse('security_group-detail',
+                       args=[self.context['cloud_pk'], obj.id],
+                       request=self.context['request'])
+
     def rules_url(self, obj):
         """Include a URL for listing this SG rules."""
         return reverse('security_group_rule-list', args=[self.context['cloud_pk'], obj.id],
                        request=self.context['request'])
+
+    def __init__(self, *args, **kwargs):
+        super(SecurityGroupSerializer, self).__init__(*args, **kwargs)
+        # For the detail view, do not include the url field
+        if not self.context.get('list', False):
+            self.fields.pop('url')
 
 
 class NetworkSerializer(serializers.Serializer):
