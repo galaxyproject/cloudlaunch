@@ -143,6 +143,19 @@ class KeyPairViewSet(viewsets.ViewSet):
             self, 'key pair', 'security.key_pairs', pk, 'KeyPairSerializer',
             cloud_pk)
 
+    def create(self, request, cloud_pk, format=None):
+        return view_helpers.generic_create(self, request.data,
+                                           'KeyPairSerializer')
+
+    def delete(self, request, pk, cloud_pk, format=None):
+        provider = view_helpers.get_cloud_provider(self)
+        kp = provider.security.key_pairs.get(pk)
+        try:
+            kp.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class SecurityGroupViewSet(viewsets.ViewSet):
     """

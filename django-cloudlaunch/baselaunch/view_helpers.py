@@ -170,3 +170,32 @@ def generic_retrieve(view, resource_name, resource_class_name, obj_id,
         context={'request': view.request, 'cloud_pk': cloud_pk,
                  'list': False})
     return Response(serializer.data)
+
+
+def generic_create(view, request_data, serializer_name):
+    """
+    A template for the ViewSet ``delete`` method to delete an object.
+
+    The method has is generic but fixed in what it does so take a look at the
+    implementaion to see if it can be used in the given view.
+
+    :type view: ViewSet
+    :param view: The view from where the method is being called.
+
+    :type request_data: ``django.http.request.QueryDict``
+    :param resource_name: Request data field.
+
+    :type serializer_name: str
+    :param serializer_name: The name of the serializer to use.
+
+    :rtype: Response
+    :return: A ``Response`` object with serialized data and 201 CREATED status
+             or a 400 BAD REQUEST error status.
+    """
+    serializer = getattr(serializers, serializer_name)(
+        data=request_data, context={'view': view})
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

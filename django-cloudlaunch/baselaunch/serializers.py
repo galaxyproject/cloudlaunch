@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from baselaunch import models
+from baselaunch import view_helpers
 
 
 class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
@@ -118,13 +119,17 @@ class KeyPairSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    material = serializers.CharField()
+    material = serializers.CharField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         super(KeyPairSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
         if not self.context.get('list', False):
             self.fields.pop('url')
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        return provider.security.key_pairs.create(validated_data.get('name'))
 
 
 class SecurityGroupRuleSerializer(serializers.Serializer):
