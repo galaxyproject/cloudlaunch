@@ -79,27 +79,13 @@ class RegionViewSet(viewsets.ViewSet):
     serializer_class = serializers.RegionSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.RegionSerializer(
-            instance=provider.compute.regions.list(),
-            many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': True})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'compute.regions',
+                                         'RegionSerializer')
 
     def retrieve(self, request, pk=None, cloud_pk=None):
-        provider = view_helpers.get_cloud_provider(self)
-        instance = provider.compute.regions.get(pk)
-        if not instance:
-            return Response({'detail': 'Cannot find region {0}'.format(
-                             pk)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.RegionSerializer(
-            instance=instance,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': False})
-        return Response(serializer.data)
+        return view_helpers.generic_retrieve(
+            self, 'region', 'compute.regions', pk, 'RegionSerializer',
+            cloud_pk)
 
 
 class MachineImageViewSet(viewsets.ViewSet):
@@ -111,27 +97,13 @@ class MachineImageViewSet(viewsets.ViewSet):
     serializer_class = serializers.MachineImageSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.MachineImageSerializer(
-            instance=provider.compute.images.list(),
-            many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': True})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'compute.images',
+                                         'MachineImageSerializer')
 
     def retrieve(self, request, pk=None, cloud_pk=None):
-        provider = view_helpers.get_cloud_provider(self)
-        instance = provider.compute.images.get(pk)
-        if not instance:
-            return Response({'detail': 'Cannot find machine image {0}'.format(
-                             pk)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.MachineImageSerializer(
-            instance=instance,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': False})
-        return Response(serializer.data)
+        return view_helpers.generic_retrieve(
+            self, 'machine image', 'compute.images', pk,
+            'MachineImageSerializer', cloud_pk)
 
 
 class ZoneViewSet(viewsets.ViewSet):
@@ -163,26 +135,13 @@ class KeyPairViewSet(viewsets.ViewSet):
     serializer_class = serializers.KeyPairSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.KeyPairSerializer(
-            instance=provider.security.key_pairs.list(), many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': True})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'security.key_pairs',
+                                         'KeyPairSerializer')
 
     def retrieve(self, request, pk=None, cloud_pk=None):
-        provider = view_helpers.get_cloud_provider(self)
-        instance = provider.security.key_pairs.get(pk)
-        if not instance:
-            return Response({'detail': 'Cannot find key pair {0}'.format(
-                             pk)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.KeyPairSerializer(
-            instance=instance,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': False})
-        return Response(serializer.data)
+        return view_helpers.generic_retrieve(
+            self, 'key pair', 'security.key_pairs', pk, 'KeyPairSerializer',
+            cloud_pk)
 
 
 class SecurityGroupViewSet(viewsets.ViewSet):
@@ -194,26 +153,13 @@ class SecurityGroupViewSet(viewsets.ViewSet):
     serializer_class = serializers.SecurityGroupSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.SecurityGroupSerializer(
-            instance=provider.security.security_groups.list(), many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': True})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'security.security_groups',
+                                         'SecurityGroupSerializer')
 
     def retrieve(self, request, pk=None, cloud_pk=None):
-        provider = view_helpers.get_cloud_provider(self)
-        instance = provider.security.security_groups.get(pk)
-        if not instance:
-            return Response({'detail': 'Cannot find security group {0}'.format(
-                             pk)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.SecurityGroupSerializer(
-            instance=instance,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': False})
-        return Response(serializer.data)
+        return view_helpers.generic_retrieve(
+            self, 'security group', 'security.security_groups', pk,
+            'SecurityGroupSerializer', cloud_pk)
 
 
 class SecurityGroupRuleViewSet(viewsets.ViewSet):
@@ -242,12 +188,11 @@ class NetworkViewSet(viewsets.ViewSet):
     serializer_class = serializers.NetworkSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.NetworkSerializer(
-            instance=provider.network.list(), many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk")})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'network', 'NetworkSerializer')
+
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        return view_helpers.generic_retrieve(
+            self, 'network', 'network', pk, 'NetworkSerializer', cloud_pk)
 
 
 class SubnetViewSet(viewsets.ViewSet):
@@ -276,15 +221,11 @@ class InstanceTypeViewSet(viewsets.ViewSet):
     serializer_class = serializers.InstanceTypeSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.InstanceTypeSerializer(
-            instance=provider.compute.instance_types.list(), many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': True})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'compute.instance_types',
+                                         'InstanceTypeSerializer')
 
     def retrieve(self, request, pk=None, cloud_pk=None):
+        pk = pk.replace('_', '.')  # un-slugify
         provider = view_helpers.get_cloud_provider(self)
         instance_type = provider.compute.instance_types.get(pk)
         if not instance_type:
@@ -306,26 +247,13 @@ class InstanceViewSet(viewsets.ViewSet):
     serializer_class = serializers.InstanceSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.InstanceSerializer(
-            instance=provider.compute.instances.list(), many=True,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': True})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'compute.instances',
+                                         'InstanceSerializer')
 
     def retrieve(self, request, pk=None, cloud_pk=None):
-        provider = view_helpers.get_cloud_provider(self)
-        instance = provider.compute.instances.get(pk)
-        if not instance:
-            return Response({'detail': 'Cannot find instance {0}'.format(
-                             pk)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.InstanceSerializer(
-            instance=instance,
-            context={'request': self.request,
-                     'cloud_pk': self.kwargs.get("cloud_pk"),
-                     'list': False})
-        return Response(serializer.data)
+        return view_helpers.generic_retrieve(
+            self, 'instance', 'compute.instances', pk, 'InstanceSerializer',
+            cloud_pk)
 
 
 class VolumeViewSet(viewsets.ViewSet):
@@ -337,11 +265,13 @@ class VolumeViewSet(viewsets.ViewSet):
     serializer_class = serializers.VolumeSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.VolumeSerializer(
-            instance=provider.block_store.volumes.list(),
-            many=True)
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'block_store.volumes',
+                                         'VolumeSerializer')
+
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        return view_helpers.generic_retrieve(
+            self, 'volume', 'block_store.volumes', pk, 'VolumeSerializer',
+            cloud_pk)
 
 
 class SnapshotViewSet(viewsets.ViewSet):
@@ -353,11 +283,13 @@ class SnapshotViewSet(viewsets.ViewSet):
     serializer_class = serializers.SnapshotSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.SnapshotSerializer(
-            instance=provider.block_store.snapshots.list(),
-            many=True)
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'block_store.snapshots',
+                                         'SnapshotSerializer')
+
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        return view_helpers.generic_retrieve(
+            self, 'snapshot', 'block_store.snapshots', pk,
+            'SnapshotSerializer', cloud_pk)
 
 
 class BucketViewSet(viewsets.ViewSet):
@@ -369,12 +301,12 @@ class BucketViewSet(viewsets.ViewSet):
     serializer_class = serializers.BucketSerializer
 
     def list(self, request, **kwargs):
-        provider = view_helpers.get_cloud_provider(self)
-        serializer = serializers.BucketSerializer(
-            instance=provider.object_store.list(),
-            many=True, context={'request': self.request,
-                                'cloud_pk': self.kwargs.get("cloud_pk")})
-        return Response(serializer.data)
+        return view_helpers.generic_list(self, 'object_store',
+                                         'BucketSerializer')
+
+    def retrieve(self, request, pk=None, cloud_pk=None):
+        return view_helpers.generic_retrieve(
+            self, 'bucket', 'object_store', pk, 'BucketSerializer', cloud_pk)
 
 
 class BucketObjectViewSet(viewsets.ViewSet):

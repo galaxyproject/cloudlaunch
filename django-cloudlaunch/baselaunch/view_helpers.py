@@ -1,5 +1,10 @@
+from rest_framework import status
+from rest_framework.response import Response
+
 from baselaunch import domain_model
 from baselaunch import models
+from baselaunch import serializers
+from baselaunch import util
 
 
 def get_cloud_provider(view):
@@ -85,3 +90,83 @@ def get_credentials_from_profile(cloud, request):
         return credentials[0].as_dict()
     else:
         raise ValueError("Too many credentials to choose from.")
+
+
+def generic_list(view, resource_class_name, serializer_name):
+    """
+    A template for the ViewSet ``list`` method.
+
+    The method has is generic but fixed in what it does so take a look at the
+    implementaion to see if it can be used in the given view.
+
+    :type view: ViewSet
+    :param view: The view from where the method is being called.
+
+    :type resource_class_name: str
+    :param resource_class_name: A name of the Cloudbridge class for the
+                                resources being retrieved. Note that dot
+                                notation can be used here
+                                (e.g., ``compute.images``).
+
+    :type serializer_name: str
+    :param serializer_name: The name of the serializer to use.
+
+    :rtype: Response
+    :return: A ``Response`` object with serialized data.
+    """
+    provider = get_cloud_provider(view)
+    serializer = getattr(serializers, serializer_name)(
+        instance=util.getattrd(provider, resource_class_name + ".list")(),
+        many=True,
+        context={'request': view.request,
+                 'cloud_pk': view.kwargs.get('cloud_pk'),
+                 'list': True})
+    return Response(serializer.data)
+
+
+def generic_retrieve(view, resource_name, resource_class_name, obj_id,
+                     serializer_name, cloud_pk):
+    """
+    A template for the ViewSet ``retrieve`` method to get a single object.
+
+    The method has is generic but fixed in what it does so take a look at the
+    implementaion to see if it can be used in the given view.
+
+    :type view: ViewSet
+    :param view: The view from where the method is being called.
+
+    :type resource_name: str
+    :param resource_name: A name of the resource being retrieved. This will be
+                          included in an error message so should be human
+                          representation of the resource.
+
+    :type resource_class_name: str
+    :param resource_class_name: A name of the Cloudbridge class for the
+                                resource being retrieved. Note that dot
+                                notation can be used here
+                                (e.g., ``compute.images``).
+
+    :type obj_id: str
+    :param obj_id: The ID of the object being retrieved.
+
+    :type serializer_name: str
+    :param serializer_name: The name of the serializer to use.
+
+    :type cloud_pk: str
+    :param cloud_pk: The cloud identifier.
+
+    :rtype: Response
+    :return: A ``Response`` object with serialized data or a 400 bad request
+             error.
+    """
+    provider = get_cloud_provider(view)
+    instance = util.getattrd(provider, resource_class_name + '.get')(obj_id)
+    if not instance:
+        return Response({'detail': 'Cannot find {0} {1}'.format(
+                         resource_name, obj_id)},
+                        status=status.HTTP_400_BAD_REQUEST)
+    serializer = getattr(serializers, serializer_name)(
+        instance=instance,
+        context={'request': view.request, 'cloud_pk': cloud_pk,
+                 'list': False})
+    return Response(serializer.data)

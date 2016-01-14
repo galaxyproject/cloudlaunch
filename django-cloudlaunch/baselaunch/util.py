@@ -1,3 +1,5 @@
+from functools import reduce
+
 from django.conf.urls import url
 from rest_framework import routers, viewsets
 from rest_framework_nested import routers as nested_routers
@@ -60,3 +62,15 @@ class HybridSimpleRouter(HybridRoutingMixin, routers.SimpleRouter):
 
 class HybridNestedRouter(HybridRoutingMixin, nested_routers.NestedSimpleRouter):
     pass
+
+
+def getattrd(obj, name, default=None):
+    """
+    Same as ``getattr()``, but allows dot notation lookup.
+    Discussed in: http://stackoverflow.com/questions/11975781
+    """
+
+    try:
+        return reduce(getattr, name.split("."), obj)
+    except AttributeError:
+        return default

@@ -8,12 +8,12 @@ from baselaunch import models
 
 class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
     """
-    This custom hyperlink field  builds up the arguments required
-    to link to a nested view of arbitrary depth, provided the
-    'parent_url_kwargs' parameter is passed in. This parameter must contain
-    a list of kwarg names that are required for django's reverse() to work. The
-    values for each argument are obtained from the serializer context.
-    It's modelled after drf-nested-routers' NestedHyperlinkedRelatedField
+    This custom hyperlink field builds up the arguments required to link to a
+    nested view of arbitrary depth, provided the ``parent_url_kwargs`` parameter
+    is passed in. This parameter must contain a list of ``kwarg`` names that are
+    required for django's ``reverse()`` to work. The values for each argument
+    are obtained from the serializer context. It's modelled after drf-nested-
+    routers' ``NestedHyperlinkedRelatedField``.
     """
     lookup_field = 'pk'
 
@@ -24,7 +24,7 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
     def get_url(self, obj, view_name, request, format):
         """
         Given an object, return the URL that hyperlinks to the object.
-        May raise a `NoReverseMatch` if the `view_name` and `lookup_field`
+        May raise a ``NoReverseMatch`` if the ``view_name`` and ``lookup_field``
         attributes are not configured to correctly match the URL conf.
         """
         # Unsaved objects will not yet have a valid URL.
@@ -43,10 +43,9 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
 
     def lookup_value(self, obj, field_name):
         """
-        Returns an attribute value in a given object. The field_name may be
+        Returns an attribute value in a given object. The ``field_name`` may be
         nested, in which case the operation will be applied repeatedly to
-        get the innermost value.
-        e.g. lookup_value(my_obj, "region.name")
+        get the innermost value (e.g. ``lookup_value(my_obj, "region.name")``).
         """
         current_obj = obj
         for attr in field_name.split("."):
@@ -56,9 +55,9 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
 
 class CustomHyperlinkedIdentityField(CustomHyperlinkedRelatedField):
     """
-    A version of the CustomHyperlinkedRelatedField dedicated to creating
+    A version of the ``CustomHyperlinkedRelatedField`` dedicated to creating
     identity links. It's simply copied from rest framework's
-    relations.HyperlinkedRelatedField
+    ``relations.HyperlinkedRelatedField``.
     """
     lookup_field = 'pk'
 
@@ -157,10 +156,10 @@ class SecurityGroupSerializer(serializers.Serializer):
 
 class NetworkSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-#     url = CustomHyperlinkedIdentityField(view_name='network-detail',
-#                                          lookup_field='id',
-#                                          lookup_url_kwarg='pk',
-#                                          parent_url_kwargs=['cloud_pk'])
+    url = CustomHyperlinkedIdentityField(view_name='network-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     state = serializers.CharField()
     cidr_block = serializers.CharField()
@@ -178,10 +177,7 @@ class SubnetSerializer(serializers.Serializer):
 
 class InstanceTypeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-    url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
-                                         lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+    url = serializers.SerializerMethodField('detail_url')
     name = serializers.CharField()
     family = serializers.CharField()
     vcpus = serializers.CharField()
@@ -192,6 +188,12 @@ class InstanceTypeSerializer(serializers.Serializer):
     size_total_disk = serializers.CharField()
     extra_data = serializers.DictField(serializers.CharField())
 
+    def detail_url(self, obj):
+        slug = (obj.id).replace('.', '_')  # slugify
+        return reverse('instance_type-detail',
+                       args=[self.context['cloud_pk'], slug],
+                       request=self.context['request'])
+
     def __init__(self, *args, **kwargs):
         super(InstanceTypeSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
@@ -201,12 +203,20 @@ class InstanceTypeSerializer(serializers.Serializer):
 
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='volume-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     state = serializers.CharField()
 
 
 class SnapshotSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='snapshot-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     state = serializers.CharField()
 
@@ -249,6 +259,10 @@ class InstanceSerializer(serializers.Serializer):
 
 class BucketSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='bucket-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     contents = CustomHyperlinkedIdentityField(view_name='object-list',
                                               lookup_field='id',
