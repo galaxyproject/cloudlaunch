@@ -1,8 +1,75 @@
 from rest_auth.serializers import UserDetailsSerializer
+from rest_framework import relations
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from baselaunch import models
+
+
+class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
+    """
+    This custom hyperlink field  builds up the arguments required
+    to link to a nested view of arbitrary depth, provided the
+    'parent_url_kwargs' parameter is passed in. This parameter must contain
+    a list of kwarg names that are required for django's reverse() to work. The
+    values for each argument are obtained from the serializer context.
+    It's modelled after drf-nested-routers' NestedHyperlinkedRelatedField
+    """
+    lookup_field = 'pk'
+
+    def __init__(self, *args, **kwargs):
+        self.parent_url_kwargs = kwargs.pop('parent_url_kwargs', [])
+        super(CustomHyperlinkedRelatedField, self).__init__(*args, **kwargs)
+
+    def get_url(self, obj, view_name, request, format):
+        """
+        Given an object, return the URL that hyperlinks to the object.
+        May raise a `NoReverseMatch` if the `view_name` and `lookup_field`
+        attributes are not configured to correctly match the URL conf.
+        """
+        # Unsaved objects will not yet have a valid URL.
+        if hasattr(obj, 'pk') and obj.pk is None:
+            return None
+
+        lookup_value = self.lookup_value(obj, self.lookup_field)
+        if not lookup_value:
+            # if no pk value was found, return an empty url
+            return ""
+        reverse_kwargs = {arg: self.context[arg]
+                          for arg in self.parent_url_kwargs}
+        reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
+        return self.reverse(
+            view_name, kwargs=reverse_kwargs, request=request, format=format)
+
+    def lookup_value(self, obj, field_name):
+        """
+        Returns an attribute value in a given object. The field_name may be
+        nested, in which case the operation will be applied repeatedly to
+        get the innermost value.
+        e.g. lookup_value(my_obj, "region.name")
+        """
+        current_obj = obj
+        for attr in field_name.split("."):
+            current_obj = getattr(current_obj, attr)
+        return current_obj
+
+
+class CustomHyperlinkedIdentityField(CustomHyperlinkedRelatedField):
+    """
+    A version of the CustomHyperlinkedRelatedField dedicated to creating
+    identity links. It's simply copied from rest framework's
+    relations.HyperlinkedRelatedField
+    """
+    lookup_field = 'pk'
+
+    def __init__(self, *args, **kwargs):
+        kwargs['read_only'] = True
+        # The asterisk is a special value that DRF has an interpretation
+        # for: It will result in the source being set to the current object.
+        # itself. (Usually, the source is a field of the current object being
+        # serialized)
+        kwargs['source'] = '*'
+        super(CustomHyperlinkedIdentityField, self).__init__(*args, **kwargs)
 
 
 class ZoneSerializer(serializers.Serializer):
@@ -11,21 +78,16 @@ class ZoneSerializer(serializers.Serializer):
 
 
 class RegionSerializer(serializers.Serializer):
-    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='region-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    zones = serializers.SerializerMethodField('zones_url')
-
-    def detail_url(self, obj):
-        """Create a URL for accessing a single instance."""
-        return reverse('region-detail',
-                       args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
-
-    def zones_url(self, obj):
-        """Include a URL for listing zones"""
-        return reverse('zone-list', args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
+    zones = CustomHyperlinkedIdentityField(view_name='zone-list',
+                                           lookup_field='id',
+                                           lookup_url_kwarg='region_pk',
+                                           parent_url_kwargs=['cloud_pk'])
 
     def __init__(self, *args, **kwargs):
         super(RegionSerializer, self).__init__(*args, **kwargs)
@@ -35,16 +97,13 @@ class RegionSerializer(serializers.Serializer):
 
 
 class MachineImageSerializer(serializers.Serializer):
-    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='machine_image-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     description = serializers.CharField()
-
-    def detail_url(self, obj):
-        """Create a URL for accessing a single instance."""
-        return reverse('machine_image-detail',
-                       args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
 
     def __init__(self, *args, **kwargs):
         super(MachineImageSerializer, self).__init__(*args, **kwargs)
@@ -54,16 +113,13 @@ class MachineImageSerializer(serializers.Serializer):
 
 
 class KeyPairSerializer(serializers.Serializer):
-    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='keypair-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     material = serializers.CharField()
-
-    def detail_url(self, obj):
-        """Create a URL for accessing a single instance."""
-        return reverse('keypair-detail',
-                       args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
 
     def __init__(self, *args, **kwargs):
         super(KeyPairSerializer, self).__init__(*args, **kwargs)
@@ -80,22 +136,17 @@ class SecurityGroupRuleSerializer(serializers.Serializer):
 
 
 class SecurityGroupSerializer(serializers.Serializer):
-    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='security_group-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     description = serializers.CharField()
-    rules = serializers.SerializerMethodField('rules_url')
-
-    def detail_url(self, obj):
-        """Create a URL for accessing a single instance."""
-        return reverse('security_group-detail',
-                       args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
-
-    def rules_url(self, obj):
-        """Include a URL for listing this SG rules."""
-        return reverse('security_group_rule-list', args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
+    rules = CustomHyperlinkedIdentityField(view_name='security_group_rule-list',
+                                           lookup_field='id',
+                                           lookup_url_kwarg='security_group_pk',
+                                           parent_url_kwargs=['cloud_pk'])
 
     def __init__(self, *args, **kwargs):
         super(SecurityGroupSerializer, self).__init__(*args, **kwargs)
@@ -106,15 +157,17 @@ class SecurityGroupSerializer(serializers.Serializer):
 
 class NetworkSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
+#     url = CustomHyperlinkedIdentityField(view_name='network-detail',
+#                                          lookup_field='id',
+#                                          lookup_url_kwarg='pk',
+#                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     state = serializers.CharField()
     cidr_block = serializers.CharField()
-    subnets = serializers.SerializerMethodField('subnets_url')
-
-    def subnets_url(self, obj):
-        """Include a URL for listing this network subnets."""
-        return reverse('subnet-list', args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
+    subnets = CustomHyperlinkedIdentityField(view_name='subnet-list',
+                                             lookup_field='id',
+                                             lookup_url_kwarg='network_pk',
+                                             parent_url_kwargs=['cloud_pk'])
 
 
 class SubnetSerializer(serializers.Serializer):
@@ -124,8 +177,11 @@ class SubnetSerializer(serializers.Serializer):
 
 
 class InstanceTypeSerializer(serializers.Serializer):
-    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     family = serializers.CharField()
     vcpus = serializers.CharField()
@@ -135,13 +191,6 @@ class InstanceTypeSerializer(serializers.Serializer):
     num_ephemeral_disks = serializers.CharField()
     size_total_disk = serializers.CharField()
     extra_data = serializers.DictField(serializers.CharField())
-
-    def detail_url(self, obj):
-        """Create a URL for accessing a single instance."""
-        slug = obj.name.replace('.', '_')  # slugify
-        return reverse('instance_type-detail',
-                       args=[self.context['cloud_pk'], slug],
-                       request=self.context['request'])
 
     def __init__(self, *args, **kwargs):
         super(InstanceTypeSerializer, self).__init__(*args, **kwargs)
@@ -163,38 +212,26 @@ class SnapshotSerializer(serializers.Serializer):
 
 
 class InstanceSerializer(serializers.Serializer):
-    url = serializers.SerializerMethodField('detail_url')
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='instance-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     public_ips = serializers.ListField(serializers.IPAddressField())
     private_ips = serializers.ListField(serializers.IPAddressField())
-    instance_type = serializers.SerializerMethodField('instance_type_name')
-    instance_type_url = serializers.SerializerMethodField('instance_type_link')
+    instance_type = serializers.CharField(source='instance_type.name')
+    instance_type_url = CustomHyperlinkedIdentityField(view_name='instance-detail',
+                                                       lookup_field='instance_type.id',
+                                                       lookup_url_kwarg='pk',
+                                                       parent_url_kwargs=['cloud_pk'])
     image_id = serializers.CharField()
-    image_id_url = serializers.SerializerMethodField('image_id_link')
+    image_id_url = CustomHyperlinkedIdentityField(view_name='machine_image-detail',
+                                                  lookup_field='image_id',
+                                                  lookup_url_kwarg='pk',
+                                                  parent_url_kwargs=['cloud_pk'])
+
     placement_zone = ZoneSerializer()
-
-    def detail_url(self, obj):
-        return reverse('instance-detail',
-                       args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
-
-    def instance_type_name(self, obj):
-        """
-        Include a URL for listing compute instance type for this instance.
-        """
-        return obj.instance_type.name
-
-    def instance_type_link(self, obj):
-        slug = (obj.instance_type.name).replace('.', '_')  # slugify
-        return reverse('instance_type-detail',
-                       args=[self.context['cloud_pk'], slug],
-                       request=self.context['request'])
-
-    def image_id_link(self, obj):
-        return reverse('machine_image-detail',
-                       args=[self.context['cloud_pk'], obj.image_id],
-                       request=self.context['request'])
 
     def __init__(self, *args, **kwargs):
         super(InstanceSerializer, self).__init__(*args, **kwargs)
@@ -213,14 +250,10 @@ class InstanceSerializer(serializers.Serializer):
 class BucketSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
-    contents = serializers.SerializerMethodField('content_url')
-
-    def content_url(self, obj):
-        """
-        Include a URL for listing this bucket's contents
-        """
-        return reverse('object-list', args=[self.context['cloud_pk'], obj.id],
-                       request=self.context['request'])
+    contents = CustomHyperlinkedIdentityField(view_name='object-list',
+                                              lookup_field='id',
+                                              lookup_url_kwarg='bucket_pk',
+                                              parent_url_kwargs=['cloud_pk'])
 
 
 class BucketObjectSerializer(serializers.Serializer):
@@ -230,86 +263,36 @@ class BucketObjectSerializer(serializers.Serializer):
 
 class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
-    regions = serializers.SerializerMethodField('regions_url')
-    machine_images = serializers.SerializerMethodField('machine_images_url')
-    keypairs = serializers.SerializerMethodField('keypairs_url')
-    security_groups = serializers.SerializerMethodField('security_groups_url')
-    networks = serializers.SerializerMethodField('networks_url')
-    instance_types = serializers.SerializerMethodField('instance_types_url')
-    instances = serializers.SerializerMethodField('instances_url')
-    volumes = serializers.SerializerMethodField('volume_url')
-    snapshots = serializers.SerializerMethodField('snapshot_url')
-    buckets = serializers.SerializerMethodField('bucket_url')
-
-    def regions_url(self, obj):
-        """
-        Include a URL for listing regions within this cloud.
-        """
-        return reverse('region-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def machine_images_url(self, obj):
-        """
-        Include a URL for listing machine images within this cloud.
-        """
-        return reverse('machine_image-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def keypairs_url(self, obj):
-        """
-        Include a URL for listing key pairs within this cloud.
-        """
-        return reverse('keypair-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def security_groups_url(self, obj):
-        """
-        Include a URL for listing security groups within this cloud.
-        """
-        return reverse('security_group-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def networks_url(self, obj):
-        """
-        Include a URL for listing networks within this cloud.
-        """
-        return reverse('network-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def instance_types_url(self, obj):
-        """
-        Include a URL for listing compute instance types within this cloud.
-        """
-        return reverse('instance_type-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def instances_url(self, obj):
-        """
-        Include a URL for listing compute instances within this cloud.
-        """
-        return reverse('instance-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def volume_url(self, obj):
-        """
-        Include a URL for listing volumes within this cloud.
-        """
-        return reverse('volume-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def snapshot_url(self, obj):
-        """
-        Include a URL for listing snapshots within this cloud.
-        """
-        return reverse('snapshot-list', args=[obj.slug],
-                       request=self.context['request'])
-
-    def bucket_url(self, obj):
-        """
-        Include a URL for listing buckets within this cloud.
-        """
-        return reverse('bucket-list', args=[obj.slug],
-                       request=self.context['request'])
+    regions = CustomHyperlinkedIdentityField(view_name='region-list',
+                                             lookup_field='slug',
+                                             lookup_url_kwarg='cloud_pk')
+    machine_images = CustomHyperlinkedIdentityField(view_name='machine_image-list',
+                                                    lookup_field='slug',
+                                                    lookup_url_kwarg='cloud_pk')
+    keypairs = CustomHyperlinkedIdentityField(view_name='keypair-list',
+                                              lookup_field='slug',
+                                              lookup_url_kwarg='cloud_pk')
+    security_groups = CustomHyperlinkedIdentityField(view_name='security_group-list',
+                                                     lookup_field='slug',
+                                                     lookup_url_kwarg='cloud_pk')
+    networks = CustomHyperlinkedIdentityField(view_name='network-list',
+                                              lookup_field='slug',
+                                              lookup_url_kwarg='cloud_pk')
+    instance_types = CustomHyperlinkedIdentityField(view_name='instance_type-list',
+                                                    lookup_field='slug',
+                                                    lookup_url_kwarg='cloud_pk')
+    instances = CustomHyperlinkedIdentityField(view_name='instance-list',
+                                               lookup_field='slug',
+                                               lookup_url_kwarg='cloud_pk')
+    volumes = CustomHyperlinkedIdentityField(view_name='volume-list',
+                                             lookup_field='slug',
+                                             lookup_url_kwarg='cloud_pk')
+    snapshots = CustomHyperlinkedIdentityField(view_name='snapshot-list',
+                                               lookup_field='slug',
+                                               lookup_url_kwarg='cloud_pk')
+    buckets = CustomHyperlinkedIdentityField(view_name='bucket-list',
+                                             lookup_field='slug',
+                                             lookup_url_kwarg='cloud_pk')
 
     class Meta:
         model = models.Cloud
@@ -362,17 +345,23 @@ class UserSerializer(UserDetailsSerializer):
         """
         Include a URL for listing this bucket's contents
         """
-        creds = obj.userprofile.credentials.filter(
-            awscredentials__isnull=False).select_subclasses()
-        return AWSCredsSerializer(instance=creds, many=True).data
+        try:
+            creds = obj.userprofile.credentials.filter(
+                awscredentials__isnull=False).select_subclasses()
+            return AWSCredsSerializer(instance=creds, many=True).data
+        except models.UserProfile.DoesNotExist:
+            return ""
 
     def get_openstack_creds(self, obj):
         """
         Include a URL for listing this bucket's contents
         """
-        creds = obj.userprofile.credentials.filter(
-            openstackcredentials__isnull=False).select_subclasses()
-        return OpenStackCredsSerializer(instance=creds, many=True).data
+        try:
+            creds = obj.userprofile.credentials.filter(
+                openstackcredentials__isnull=False).select_subclasses()
+            return OpenStackCredsSerializer(instance=creds, many=True).data
+        except models.UserProfile.DoesNotExist:
+            return ""
 
     class Meta(UserDetailsSerializer.Meta):
         fields = UserDetailsSerializer.Meta.fields + ('aws_creds',

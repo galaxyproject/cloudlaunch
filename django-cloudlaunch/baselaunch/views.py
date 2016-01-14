@@ -285,14 +285,13 @@ class InstanceTypeViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def retrieve(self, request, pk=None, cloud_pk=None):
-        name = pk.replace('_', '.')  # un-slugify
         provider = view_helpers.get_cloud_provider(self)
-        instance_types = provider.compute.instance_types.find(name=name)
-        if len(instance_types) != 1:
+        instance_type = provider.compute.instance_types.get(pk)
+        if not instance_type:
             return Response({'detail': 'Cannot find instance type {0}'.format(
                              pk)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.InstanceTypeSerializer(
-            instance=instance_types[0],
+            instance=instance_type,
             context={'request': self.request, 'cloud_pk': cloud_pk,
                      'list': False})
         return Response(serializer.data)
