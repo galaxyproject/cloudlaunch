@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from baselaunch import domain_model
 from baselaunch import models
 from baselaunch import util
-import serializers
 
 
 def get_cloud_provider(view):
@@ -114,6 +113,7 @@ def generic_list(view, resource_class_name, serializer_name):
     :rtype: Response
     :return: A ``Response`` object with serialized data.
     """
+    from baselaunch import serializers
     provider = get_cloud_provider(view)
     serializer = getattr(serializers, serializer_name)(
         instance=util.getattrd(provider, resource_class_name + ".list")(),
@@ -159,6 +159,7 @@ def generic_retrieve(view, resource_name, resource_class_name, obj_id,
     :return: A ``Response`` object with serialized data or a 400 bad request
              error.
     """
+    from baselaunch import serializers
     provider = get_cloud_provider(view)
     instance = util.getattrd(provider, resource_class_name + '.get')(obj_id)
     if not instance:
@@ -195,6 +196,7 @@ def generic_create(view, request, serializer_name, cloud_pk):
     :return: A ``Response`` object with serialized data and 201 CREATED status
              or a 400 BAD REQUEST error status.
     """
+    from baselaunch import serializers
     serializer = getattr(serializers, serializer_name)(
         data=request.data, context={'view': view, 'request': request,
                                     'cloud_pk': cloud_pk})
