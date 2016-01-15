@@ -33,15 +33,19 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         if hasattr(obj, 'pk') and obj.pk is None:
             return None
 
+        reverse_kwargs = {}
+        # Use kwargs from view if available. When using the serializer
+        # manually, a view may not be available. If so, the required
+        # args must be supplied through the serializer context
+        if 'view' in self.context:
+            reverse_kwargs = {key: val for key, val in self.context['view'].kwargs.items()
+                              if key in self.parent_url_kwargs}
+        # Let serializer context values override view kwargs
+        reverse_kwargs.update({key: val for key, val in self.context.items()
+                               if key in self.parent_url_kwargs})
         lookup_value = util.getattrd(obj, self.lookup_field)
-        if not lookup_value:
-            # if no pk value was found, return an empty url
-            return ""
-        reverse_kwargs = {arg: self.context.get(arg)
-                          for arg in self.parent_url_kwargs}
-        reverse_kwargs.update({arg: self.context['view'].kwargs.get(arg)
-                               for arg in self.parent_url_kwargs})
-        reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
+        if lookup_value:
+            reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
         return self.reverse(
             view_name, kwargs=reverse_kwargs, request=request, format=format)
 
@@ -84,7 +88,7 @@ class RegionSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super(RegionSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
-        if not self.context.get('list', False):
+        if not isinstance(self.instance, list):
             self.fields.pop('url')
 
 
@@ -100,7 +104,7 @@ class MachineImageSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super(MachineImageSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
-        if not self.context.get('list', False):
+        if not isinstance(self.instance, list):
             self.fields.pop('url')
 
 
@@ -116,7 +120,7 @@ class KeyPairSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super(KeyPairSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
-        if not self.context.get('list', False):
+        if not isinstance(self.instance, list):
             self.fields.pop('url')
 
     def create(self, validated_data):
@@ -147,7 +151,7 @@ class SecurityGroupSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super(SecurityGroupSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
-        if not self.context.get('list', False):
+        if not isinstance(self.instance, list):
             self.fields.pop('url')
 
 
@@ -190,7 +194,7 @@ class InstanceTypeSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
         super(InstanceTypeSerializer, self).__init__(*args, **kwargs)
         # For the detail view, do not include the url field
-        if not self.context.get('list', False):
+        if not isinstance(self.instance, list):
             self.fields.pop('url')
 
 
@@ -242,7 +246,7 @@ class InstanceSerializer(serializers.Serializer):
         # instance, an additional request is made to retrieve the actual
         # instance type and this takes ages. Hence, display instance_type only
         # in detail view.
-        if self.context.get('list', False):
+        if isinstance(self.instance, list):
             self.fields.pop('instance_type')
             self.fields.pop('instance_type_url')
         else:
