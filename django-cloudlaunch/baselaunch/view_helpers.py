@@ -3,8 +3,8 @@ from rest_framework.response import Response
 
 from baselaunch import domain_model
 from baselaunch import models
-from baselaunch import serializers
 from baselaunch import util
+import serializers
 
 
 def get_cloud_provider(view):
