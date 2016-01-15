@@ -1,7 +1,6 @@
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import relations
 from rest_framework import serializers
-from rest_framework.reverse import reverse
 
 from baselaunch import models
 from baselaunch import util
@@ -172,8 +171,14 @@ class NetworkSerializer(serializers.Serializer):
 
 class SubnetSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='subnet-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk',
+                                                            'network_pk'])
     name = serializers.CharField()
     cidr_block = serializers.CharField()
+    network_id = serializers.CharField()
 
 
 class InstanceTypeSerializer(serializers.Serializer):

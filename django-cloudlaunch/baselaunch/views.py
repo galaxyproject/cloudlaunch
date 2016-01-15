@@ -1,8 +1,6 @@
-from abc import ABCMeta, abstractmethod, abstractproperty
+from abc import ABCMeta, abstractmethod
 
 from django.http.response import Http404
-from rest_framework import mixins
-from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -11,7 +9,6 @@ from rest_framework.views import APIView
 
 from baselaunch import models
 from baselaunch import serializers
-from baselaunch import util
 from baselaunch import view_helpers
 
 
@@ -270,18 +267,11 @@ class SubnetViewSet(CustomModelViewSet):
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        network_pk = self.kwargs.get("network_pk")
-        network = provider.network.get(network_pk)
-        if network:
-            # TODO: network.subnets should be a property instead of a method
-            return network.subnets()
-        else:
-            raise Http404
+        return provider.network.subnets.list(network=self.kwargs["network_pk"])
 
     def get_object(self):
-        # TODO: CloudBridge needs a subnet.get method
-        return next((s for s in self.list_objects()
-                     if s.id == self.kwargs["pk"]), None)
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.network.subnets.get(self.kwargs["pk"])
 
 
 class InstanceTypeViewSet(CustomReadOnlyModelViewSet):
