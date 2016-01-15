@@ -11,16 +11,13 @@ from baselaunch import view_helpers
 class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
     """
     This custom hyperlink field builds up the arguments required to link to a
-    nested view of arbitrary depth, provided the ``parent_url_kwargs`` parameter
-    is passed in. This parameter must contain a list of ``kwarg`` names that are
-    required for django's ``reverse()`` to work. The values for each argument
-    are obtained from the serializer context. It's modelled after drf-nested-
-    routers' ``NestedHyperlinkedRelatedField``.
+    nested view of arbitrary depth. The kwargs required for django's
+    ``reverse()`` are obtained from the view attached to the serializer context.
+    It's modelled after drf-nested-routers' ``NestedHyperlinkedRelatedField``.
     """
     lookup_field = 'pk'
 
     def __init__(self, *args, **kwargs):
-        self.parent_url_kwargs = kwargs.pop('parent_url_kwargs', [])
         super(CustomHyperlinkedRelatedField, self).__init__(*args, **kwargs)
 
     def get_url(self, obj, view_name, request, format):
@@ -37,10 +34,7 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         if not lookup_value:
             # if no pk value was found, return an empty url
             return ""
-        reverse_kwargs = {arg: self.context.get(arg)
-                          for arg in self.parent_url_kwargs}
-        reverse_kwargs.update({arg: self.context['view'].kwargs.get(arg)
-                               for arg in self.parent_url_kwargs})
+        reverse_kwargs = self.context['view'].kwargs.copy()
         reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
         return self.reverse(
             view_name, kwargs=reverse_kwargs, request=request, format=format)
@@ -73,13 +67,11 @@ class RegionSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='region-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     zones = CustomHyperlinkedIdentityField(view_name='zone-list',
                                            lookup_field='id',
-                                           lookup_url_kwarg='region_pk',
-                                           parent_url_kwargs=['cloud_pk'])
+                                           lookup_url_kwarg='region_pk')
 
     def __init__(self, *args, **kwargs):
         super(RegionSerializer, self).__init__(*args, **kwargs)
@@ -92,8 +84,7 @@ class MachineImageSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='machine_image-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     description = serializers.CharField()
 
@@ -108,8 +99,7 @@ class KeyPairSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='keypair-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     material = serializers.CharField(read_only=True)
 
@@ -135,14 +125,12 @@ class SecurityGroupSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='security_group-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     description = serializers.CharField()
     rules = CustomHyperlinkedIdentityField(view_name='security_group_rule-list',
                                            lookup_field='id',
-                                           lookup_url_kwarg='security_group_pk',
-                                           parent_url_kwargs=['cloud_pk'])
+                                           lookup_url_kwarg='security_group_pk')
 
     def __init__(self, *args, **kwargs):
         super(SecurityGroupSerializer, self).__init__(*args, **kwargs)
@@ -155,15 +143,13 @@ class NetworkSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='network-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     state = serializers.CharField()
     cidr_block = serializers.CharField()
     subnets = CustomHyperlinkedIdentityField(view_name='subnet-list',
                                              lookup_field='id',
-                                             lookup_url_kwarg='network_pk',
-                                             parent_url_kwargs=['cloud_pk'])
+                                             lookup_url_kwarg='network_pk')
 
 
 class SubnetSerializer(serializers.Serializer):
@@ -175,8 +161,7 @@ class SubnetSerializer(serializers.Serializer):
 class InstanceTypeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
-                                         lookup_field='name',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_field='name')
     name = serializers.CharField()
     family = serializers.CharField()
     vcpus = serializers.CharField()
@@ -198,8 +183,7 @@ class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='volume-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     state = serializers.CharField()
 
@@ -208,8 +192,7 @@ class SnapshotSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='snapshot-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     state = serializers.CharField()
 
@@ -218,21 +201,18 @@ class InstanceSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='instance-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     public_ips = serializers.ListField(serializers.IPAddressField())
     private_ips = serializers.ListField(serializers.IPAddressField())
     instance_type = serializers.CharField(source='instance_type.name')
     instance_type_url = CustomHyperlinkedIdentityField(view_name='instance-detail',
                                                        lookup_field='instance_type.id',
-                                                       lookup_url_kwarg='pk',
-                                                       parent_url_kwargs=['cloud_pk'])
+                                                       lookup_url_kwarg='pk')
     image_id = serializers.CharField()
     image_id_url = CustomHyperlinkedIdentityField(view_name='machine_image-detail',
                                                   lookup_field='image_id',
-                                                  lookup_url_kwarg='pk',
-                                                  parent_url_kwargs=['cloud_pk'])
+                                                  lookup_url_kwarg='pk')
 
     placement_zone = ZoneSerializer()
 
@@ -254,13 +234,11 @@ class BucketSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='bucket-detail',
                                          lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['cloud_pk'])
+                                         lookup_url_kwarg='pk')
     name = serializers.CharField()
     contents = CustomHyperlinkedIdentityField(view_name='object-list',
                                               lookup_field='id',
-                                              lookup_url_kwarg='bucket_pk',
-                                              parent_url_kwargs=['cloud_pk'])
+                                              lookup_url_kwarg='bucket_pk')
 
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
