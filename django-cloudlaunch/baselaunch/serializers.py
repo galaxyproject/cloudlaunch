@@ -84,12 +84,6 @@ class RegionSerializer(serializers.Serializer):
                                            lookup_url_kwarg='region_pk',
                                            parent_url_kwargs=['cloud_pk'])
 
-    def __init__(self, *args, **kwargs):
-        super(RegionSerializer, self).__init__(*args, **kwargs)
-        # For the detail view, do not include the url field
-        if not isinstance(self.instance, list):
-            self.fields.pop('url')
-
 
 class MachineImageSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
@@ -100,12 +94,6 @@ class MachineImageSerializer(serializers.Serializer):
     name = serializers.CharField()
     description = serializers.CharField()
 
-    def __init__(self, *args, **kwargs):
-        super(MachineImageSerializer, self).__init__(*args, **kwargs)
-        # For the detail view, do not include the url field
-        if not isinstance(self.instance, list):
-            self.fields.pop('url')
-
 
 class KeyPairSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
@@ -115,12 +103,6 @@ class KeyPairSerializer(serializers.Serializer):
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     material = serializers.CharField(read_only=True)
-
-    def __init__(self, *args, **kwargs):
-        super(KeyPairSerializer, self).__init__(*args, **kwargs)
-        # For the detail view, do not include the url field
-        if not isinstance(self.instance, list):
-            self.fields.pop('url')
 
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
@@ -146,12 +128,6 @@ class SecurityGroupSerializer(serializers.Serializer):
                                            lookup_field='id',
                                            lookup_url_kwarg='security_group_pk',
                                            parent_url_kwargs=['cloud_pk'])
-
-    def __init__(self, *args, **kwargs):
-        super(SecurityGroupSerializer, self).__init__(*args, **kwargs)
-        # For the detail view, do not include the url field
-        if not isinstance(self.instance, list):
-            self.fields.pop('url')
 
 
 class NetworkSerializer(serializers.Serializer):
@@ -195,12 +171,6 @@ class InstanceTypeSerializer(serializers.Serializer):
     num_ephemeral_disks = serializers.CharField()
     size_total_disk = serializers.CharField()
     extra_data = serializers.DictField(serializers.CharField())
-
-    def __init__(self, *args, **kwargs):
-        super(InstanceTypeSerializer, self).__init__(*args, **kwargs)
-        # For the detail view, do not include the url field
-        if not isinstance(self.instance, list):
-            self.fields.pop('url')
 
 
 class VolumeSerializer(serializers.Serializer):

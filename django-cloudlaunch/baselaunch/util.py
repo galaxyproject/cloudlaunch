@@ -1,4 +1,3 @@
-from functools import reduce
 import operator
 
 from django.conf.urls import url
@@ -68,6 +67,5 @@ class HybridNestedRouter(HybridRoutingMixin, nested_routers.NestedSimpleRouter):
 def getattrd(obj, name):
     """
     Same as ``getattr()``, but allows dot notation lookup.
-    Discussed in: http://stackoverflow.com/questions/11975781
     """
     return operator.attrgetter(name)(obj)
