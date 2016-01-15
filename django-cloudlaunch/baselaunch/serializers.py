@@ -274,6 +274,13 @@ class BucketSerializer(serializers.Serializer):
                                               lookup_url_kwarg='bucket_pk',
                                               parent_url_kwargs=['cloud_pk'])
 
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        try:
+            return provider.object_store.create(validated_data.get('name'))
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
+
 
 class BucketObjectSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)

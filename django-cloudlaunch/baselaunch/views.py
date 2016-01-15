@@ -144,8 +144,8 @@ class KeyPairViewSet(viewsets.ViewSet):
             cloud_pk)
 
     def create(self, request, cloud_pk, format=None):
-        return view_helpers.generic_create(self, request.data,
-                                           'KeyPairSerializer')
+        return view_helpers.generic_create(self, request, 'KeyPairSerializer',
+                                           cloud_pk)
 
     def delete(self, request, pk, cloud_pk, format=None):
         provider = view_helpers.get_cloud_provider(self)
@@ -320,6 +320,10 @@ class BucketViewSet(viewsets.ViewSet):
     def retrieve(self, request, pk=None, cloud_pk=None):
         return view_helpers.generic_retrieve(
             self, 'bucket', 'object_store', pk, 'BucketSerializer', cloud_pk)
+
+    def create(self, request, cloud_pk, format=None):
+        return view_helpers.generic_create(self, request, 'BucketSerializer',
+                                           cloud_pk)
 
 
 class BucketObjectViewSet(viewsets.ViewSet):
