@@ -182,7 +182,9 @@ class SubnetSerializer(serializers.Serializer):
 
 class InstanceTypeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-    url = serializers.SerializerMethodField('detail_url')
+    url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
+                                         lookup_field='name',
+                                         parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     family = serializers.CharField()
     vcpus = serializers.CharField()
@@ -192,12 +194,6 @@ class InstanceTypeSerializer(serializers.Serializer):
     num_ephemeral_disks = serializers.CharField()
     size_total_disk = serializers.CharField()
     extra_data = serializers.DictField(serializers.CharField())
-
-    def detail_url(self, obj):
-        slug = (obj.id).replace('.', '_')  # slugify
-        return reverse('instance_type-detail',
-                       args=[self.context['cloud_pk'], slug],
-                       request=self.context['request'])
 
     def __init__(self, *args, **kwargs):
         super(InstanceTypeSerializer, self).__init__(*args, **kwargs)

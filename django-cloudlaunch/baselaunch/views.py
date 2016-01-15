@@ -232,20 +232,21 @@ class InstanceTypeViewSet(viewsets.ViewSet):
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.InstanceTypeSerializer
+    lookup_field = 'name'
+    lookup_value_regex = '[^/]+'
 
     def list(self, request, **kwargs):
         return view_helpers.generic_list(self, 'compute.instance_types',
                                          'InstanceTypeSerializer')
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        pk = pk.replace('_', '.')  # un-slugify
+    def retrieve(self, request, name=None, cloud_pk=None):
         provider = view_helpers.get_cloud_provider(self)
-        instance_type = provider.compute.instance_types.get(pk)
-        if not instance_type:
+        instance_types = provider.compute.instance_types.find(name=name)
+        if not instance_types:
             return Response({'detail': 'Cannot find instance type {0}'.format(
                              pk)}, status=status.HTTP_400_BAD_REQUEST)
         serializer = serializers.InstanceTypeSerializer(
-            instance=instance_type,
+            instance=instance_types[0],
             context={'request': self.request, 'cloud_pk': cloud_pk,
                      'list': False})
         return Response(serializer.data)
