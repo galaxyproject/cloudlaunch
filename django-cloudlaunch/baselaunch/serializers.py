@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from baselaunch import models
+from baselaunch import util
 from baselaunch import view_helpers
 
 
@@ -32,7 +33,7 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         if hasattr(obj, 'pk') and obj.pk is None:
             return None
 
-        lookup_value = self.lookup_value(obj, self.lookup_field)
+        lookup_value = util.getattrd(obj, self.lookup_field)
         if not lookup_value:
             # if no pk value was found, return an empty url
             return ""
@@ -41,17 +42,6 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
         return self.reverse(
             view_name, kwargs=reverse_kwargs, request=request, format=format)
-
-    def lookup_value(self, obj, field_name):
-        """
-        Returns an attribute value in a given object. The ``field_name`` may be
-        nested, in which case the operation will be applied repeatedly to
-        get the innermost value (e.g. ``lookup_value(my_obj, "region.name")``).
-        """
-        current_obj = obj
-        for attr in field_name.split("."):
-            current_obj = getattr(current_obj, attr)
-        return current_obj
 
 
 class CustomHyperlinkedIdentityField(CustomHyperlinkedRelatedField):
