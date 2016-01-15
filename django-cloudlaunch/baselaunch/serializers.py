@@ -110,10 +110,40 @@ class KeyPairSerializer(serializers.Serializer):
 
 
 class SecurityGroupRuleSerializer(serializers.Serializer):
-    ip_protocol = serializers.CharField()
+    ip_protocol = serializers.CharField(label="IP protocol")
     from_port = serializers.CharField()
     to_port = serializers.CharField()
-    cidr_ip = serializers.CharField()
+    cidr_ip = serializers.CharField(label="CIDR IP")
+
+    def create(self, validated_data):
+
+        class SGRule(object):
+            """
+            A template for a Security Group Rule.
+
+            This is necessary unless a specific security group rule can be
+            retrieved via CloudBridge (i.e., ``SecurityGroupService`` is added).
+            """
+            def __init__(self, ip_protocol, from_port, to_port, cidr_ip=None):
+                self.ip_protocol = ip_protocol
+                self.from_port = from_port
+                self.to_port = to_port
+                self.cidr_ip = cidr_ip
+
+        view = self.context.get('view')
+        provider = view_helpers.get_cloud_provider(view)
+        sg_pk = view.kwargs.get('security_group_pk')
+        if sg_pk:
+            sg = provider.security.security_groups.get(sg_pk)
+            if sg and sg.add_rule(validated_data.get('ip_protocol'),
+                                  validated_data.get('from_port'),
+                                  validated_data.get('to_port'),
+                                  validated_data.get('cidr_ip')):
+                return SGRule(validated_data.get('ip_protocol'),
+                              validated_data.get('from_port'),
+                              validated_data.get('to_port'),
+                              validated_data.get('cidr_ip'))
+        return None
 
 
 class SecurityGroupSerializer(serializers.Serializer):
@@ -128,6 +158,11 @@ class SecurityGroupSerializer(serializers.Serializer):
                                            lookup_field='id',
                                            lookup_url_kwarg='security_group_pk',
                                            parent_url_kwargs=['cloud_pk'])
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        return provider.security.security_groups.create(
+            validated_data.get('name'), validated_data.get('description'))
 
 
 class NetworkSerializer(serializers.Serializer):
