@@ -37,8 +37,10 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         if not lookup_value:
             # if no pk value was found, return an empty url
             return ""
-        reverse_kwargs = {arg: self.context[arg]
+        reverse_kwargs = {arg: self.context.get(arg)
                           for arg in self.parent_url_kwargs}
+        reverse_kwargs.update({arg: self.context['view'].kwargs.get(arg)
+                               for arg in self.parent_url_kwargs})
         reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
         return self.reverse(
             view_name, kwargs=reverse_kwargs, request=request, format=format)

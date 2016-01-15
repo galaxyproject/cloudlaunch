@@ -1,3 +1,7 @@
+from abc import ABCMeta, abstractmethod, abstractproperty
+
+from django.http.response import Http404
+from rest_framework import mixins
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
@@ -7,7 +11,54 @@ from rest_framework.views import APIView
 
 from baselaunch import models
 from baselaunch import serializers
+from baselaunch import util
 from baselaunch import view_helpers
+
+
+class CustomNonModelObjectMixin(object):
+    """
+    A custom viewset mixin to make it easier to work with non-django-model viewsets.
+    Only the list_objects() and retrieve_object() methods need to be implemented.
+    Create and update methods will work normally through DRF's serializers.
+    """
+    __metaclass__ = ABCMeta
+
+    def get_queryset(self):
+        return self.list_objects()
+
+    def get_object(self):
+        obj = self.retrieve_object()
+        if obj is None:
+            raise Http404
+
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    @abstractmethod
+    def list_objects(self):
+        """
+        Override this method to return the list of objects for
+        list() methods.
+        """
+        pass
+
+    @abstractmethod
+    def retrieve_object(self):
+        """
+        Override this method to return the object for the get method.
+        If the returned object is None, an HTTP404 will be raised.
+        """
+        pass
+
+
+class CustomModelViewSet(CustomNonModelObjectMixin, viewsets.ModelViewSet):
+    pass
+
+
+class CustomReadOnlyModelViewSet(CustomNonModelObjectMixin,
+                                 viewsets.ReadOnlyModelViewSet):
+    pass
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -70,7 +121,7 @@ class CloudViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.CloudSerializer
 
 
-class RegionViewSet(viewsets.ViewSet):
+class RegionViewSet(CustomReadOnlyModelViewSet):
     """
     List regions in a given cloud.
     """
@@ -78,17 +129,17 @@ class RegionViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.RegionSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'compute.regions',
-                                         'RegionSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.compute.regions.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'region', 'compute.regions', pk, 'RegionSerializer',
-            cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.compute.regions.get(self.kwargs["pk"])
+        return obj
 
 
-class MachineImageViewSet(viewsets.ViewSet):
+class MachineImageViewSet(CustomModelViewSet):
     """
     List machine images in a given cloud.
     """
@@ -96,17 +147,17 @@ class MachineImageViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.MachineImageSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'compute.images',
-                                         'MachineImageSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.compute.images.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'machine image', 'compute.images', pk,
-            'MachineImageSerializer', cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.compute.images.get(self.kwargs["pk"])
+        return obj
 
 
-class ZoneViewSet(viewsets.ViewSet):
+class ZoneViewSet(CustomReadOnlyModelViewSet):
     """
     List zones in a given cloud.
     """
@@ -114,19 +165,21 @@ class ZoneViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.ZoneSerializer
 
-    def list(self, request, **kwargs):
+    def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         region_pk = self.kwargs.get("region_pk")
         region = provider.compute.regions.get(region_pk)
         if region:
-            serializer = serializers.ZoneSerializer(region.zones,
-                                                    many=True)
-            return Response(serializer.data)
+            return region.zones
         else:
-            return Response({})
+            raise Http404
+
+    def get_object(self):
+        return next((s for s in self.list_objects()
+                     if s.id == self.kwargs["pk"]), None)
 
 
-class KeyPairViewSet(viewsets.ViewSet):
+class KeyPairViewSet(CustomModelViewSet):
     """
     List key pairs in a given cloud.
     """
@@ -134,30 +187,17 @@ class KeyPairViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.KeyPairSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'security.key_pairs',
-                                         'KeyPairSerializer')
-
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'key pair', 'security.key_pairs', pk, 'KeyPairSerializer',
-            cloud_pk)
-
-    def create(self, request, cloud_pk, format=None):
-        return view_helpers.generic_create(self, request, 'KeyPairSerializer',
-                                           cloud_pk)
-
-    def delete(self, request, pk, cloud_pk, format=None):
+    def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        kp = provider.security.key_pairs.get(pk)
-        try:
-            kp.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return provider.security.key_pairs.list()
+
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.security.key_pairs.get(self.kwargs["pk"])
+        return obj
 
 
-class SecurityGroupViewSet(viewsets.ViewSet):
+class SecurityGroupViewSet(CustomModelViewSet):
     """
     List security groups in a given cloud.
     """
@@ -165,34 +205,44 @@ class SecurityGroupViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.SecurityGroupSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'security.security_groups',
-                                         'SecurityGroupSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.security.security_groups.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'security group', 'security.security_groups', pk,
-            'SecurityGroupSerializer', cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.security.security_groups.get(self.kwargs["pk"])
+        return obj
 
 
-class SecurityGroupRuleViewSet(viewsets.ViewSet):
+class SecurityGroupRuleViewSet(CustomModelViewSet):
     """
     List security group rules in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
-    # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.SecurityGroupRuleSerializer
 
-    def list(self, request, **kwargs):
+    def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         sg_pk = self.kwargs.get("security_group_pk")
         sg = provider.security.security_groups.get(sg_pk)
-        serializer = serializers.SecurityGroupRuleSerializer(
-            instance=sg.rules, many=True)
-        return Response(serializer.data)
+        if sg:
+            return sg.rules
+        else:
+            raise Http404
+
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        sg_pk = self.kwargs.get("security_group_pk")
+        sg = provider.security.security_groups.get(sg_pk)
+        if not sg:
+            raise Http404
+        else:
+            pk = self.kwargs.get("pk")
+            return provider.security.security_groups.rules.get(pk)
 
 
-class NetworkViewSet(viewsets.ViewSet):
+class NetworkViewSet(CustomModelViewSet):
     """
     List networks in a given cloud.
     """
@@ -200,15 +250,17 @@ class NetworkViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.NetworkSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'network', 'NetworkSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.network.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'network', 'network', pk, 'NetworkSerializer', cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.network.get(self.kwargs["pk"])
+        return obj
 
 
-class SubnetViewSet(viewsets.ViewSet):
+class SubnetViewSet(CustomModelViewSet):
     """
     List networks in a given cloud.
     """
@@ -216,16 +268,23 @@ class SubnetViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.SubnetSerializer
 
-    def list(self, request, **kwargs):
+    def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         network_pk = self.kwargs.get("network_pk")
         network = provider.network.get(network_pk)
-        serializer = serializers.SubnetSerializer(
-            instance=network.subnets(), many=True)
-        return Response(serializer.data)
+        if network:
+            # TODO: network.subnets should be a property instead of a method
+            return network.subnets()
+        else:
+            raise Http404
+
+    def get_object(self):
+        # TODO: CloudBridge needs a subnet.get method
+        return next((s for s in self.list_objects()
+                     if s.id == self.kwargs["pk"]), None)
 
 
-class InstanceTypeViewSet(viewsets.ViewSet):
+class InstanceTypeViewSet(CustomReadOnlyModelViewSet):
     """
     List compute instance types in a given cloud.
     """
@@ -235,24 +294,21 @@ class InstanceTypeViewSet(viewsets.ViewSet):
     lookup_field = 'name'
     lookup_value_regex = '[^/]+'
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'compute.instance_types',
-                                         'InstanceTypeSerializer')
-
-    def retrieve(self, request, name=None, cloud_pk=None):
+    def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        instance_types = provider.compute.instance_types.find(name=name)
-        if not instance_types:
-            return Response({'detail': 'Cannot find instance type {0}'.format(
-                             pk)}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializers.InstanceTypeSerializer(
-            instance=instance_types[0],
-            context={'request': self.request, 'cloud_pk': cloud_pk,
-                     'list': False})
-        return Response(serializer.data)
+        return provider.compute.instance_types.list()
+
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        name = self.kwargs.get('name')
+        obj = provider.compute.instance_types.find(name=name)
+        if obj:
+            return obj[0]
+        else:
+            raise Http404
 
 
-class InstanceViewSet(viewsets.ViewSet):
+class InstanceViewSet(CustomModelViewSet):
     """
     List compute instances in a given cloud.
     """
@@ -260,17 +316,17 @@ class InstanceViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.InstanceSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'compute.instances',
-                                         'InstanceSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.compute.instances.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'instance', 'compute.instances', pk, 'InstanceSerializer',
-            cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.compute.instances.get(self.kwargs["pk"])
+        return obj
 
 
-class VolumeViewSet(viewsets.ViewSet):
+class VolumeViewSet(CustomModelViewSet):
     """
     List volumes in a given cloud.
     """
@@ -278,56 +334,51 @@ class VolumeViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.VolumeSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'block_store.volumes',
-                                         'VolumeSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.block_store.volumes.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'volume', 'block_store.volumes', pk, 'VolumeSerializer',
-            cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.block_store.volumes.get(self.kwargs["pk"])
+        return obj
 
 
-class SnapshotViewSet(viewsets.ViewSet):
+class SnapshotViewSet(CustomModelViewSet):
     """
     List snapshots in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
-    # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.SnapshotSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'block_store.snapshots',
-                                         'SnapshotSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.block_store.snapshots.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'snapshot', 'block_store.snapshots', pk,
-            'SnapshotSerializer', cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.block_store.snapshots.get(self.kwargs["pk"])
+        return obj
 
 
-class BucketViewSet(viewsets.ViewSet):
+class BucketViewSet(CustomModelViewSet):
     """
     List buckets in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
-    # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.BucketSerializer
 
-    def list(self, request, **kwargs):
-        return view_helpers.generic_list(self, 'object_store',
-                                         'BucketSerializer')
+    def list_objects(self):
+        provider = view_helpers.get_cloud_provider(self)
+        return provider.object_store.list()
 
-    def retrieve(self, request, pk=None, cloud_pk=None):
-        return view_helpers.generic_retrieve(
-            self, 'bucket', 'object_store', pk, 'BucketSerializer', cloud_pk)
-
-    def create(self, request, cloud_pk, format=None):
-        return view_helpers.generic_create(self, request, 'BucketSerializer',
-                                           cloud_pk)
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.object_store.get(self.kwargs["pk"])
+        return obj
 
 
-class BucketObjectViewSet(viewsets.ViewSet):
+class BucketObjectViewSet(CustomModelViewSet):
     """
     List objects in a given cloud bucket.
     """
@@ -335,13 +386,16 @@ class BucketObjectViewSet(viewsets.ViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.BucketObjectSerializer
 
-    def list(self, request, **kwargs):
+    def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         bucket_pk = self.kwargs.get("bucket_pk")
         bucket = provider.object_store.get(bucket_pk)
         if bucket:
-            serializer = serializers.BucketObjectSerializer(bucket.list(),
-                                                            many=True)
-            return Response(serializer.data)
+            return bucket.list()
         else:
-            return Response({})
+            raise Http404
+
+    def get_object(self):
+        provider = view_helpers.get_cloud_provider(self)
+        obj = provider.object_store.get(self.kwargs["pk"])
+        return obj
