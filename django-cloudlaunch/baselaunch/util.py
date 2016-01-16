@@ -68,4 +68,7 @@ def getattrd(obj, name):
     """
     Same as ``getattr()``, but allows dot notation lookup.
     """
-    return operator.attrgetter(name)(obj)
+    try:
+        return operator.attrgetter(name)(obj)
+    except AttributeError:
+        return None

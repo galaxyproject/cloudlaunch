@@ -35,30 +35,44 @@ infra_router = HybridSimpleRouter()
 infra_router.register(r'clouds', views.CloudViewSet)
 
 cloud_router = HybridNestedRouter(infra_router, r'clouds', lookup='cloud')
-cloud_router.register(r'regions', views.RegionViewSet, base_name='region')
-cloud_router.register(r'machine_images', views.MachineImageViewSet,
+
+cloud_router.register(r'compute', views.ComputeViewSet,
+                      base_name='compute')
+cloud_router.register(r'compute/machine_images', views.MachineImageViewSet,
                       base_name='machine_image')
-cloud_router.register(r'keypairs', views.KeyPairViewSet, base_name='keypair')
-cloud_router.register(r'security_groups', views.SecurityGroupViewSet,
-                      base_name='security_group')
-cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
 cloud_router.register(r'compute/instance_types', views.InstanceTypeViewSet,
                       base_name='instance_type')
 cloud_router.register(r'compute/instances', views.InstanceViewSet,
                       base_name='instance')
+cloud_router.register(r'compute/regions', views.RegionViewSet,
+                      base_name='region')
+
+cloud_router.register(r'security', views.SecurityViewSet,
+                      base_name='security')
+cloud_router.register(r'security/keypairs', views.KeyPairViewSet,
+                      base_name='keypair')
+cloud_router.register(r'security/security_groups', views.SecurityGroupViewSet,
+                      base_name='security_group')
+
+cloud_router.register(r'block_store', views.BlockStoreViewSet,
+                      base_name='block_store')
 cloud_router.register(r'block_store/volumes', views.VolumeViewSet,
                       base_name='volume')
 cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,
                       base_name='snapshot')
+cloud_router.register(r'object_store', views.ObjectStoreViewSet,
+                      base_name='object_store')
 cloud_router.register(r'object_store/buckets', views.BucketViewSet,
                       base_name='bucket')
 
-region_router = HybridNestedRouter(cloud_router, r'regions',
+cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
+
+region_router = HybridNestedRouter(cloud_router, r'compute/regions',
                                    lookup='region')
 region_router.register(r'zones', views.ZoneViewSet,
                        base_name='zone')
 
-security_group_router = HybridNestedRouter(cloud_router, r'security_groups',
+security_group_router = HybridNestedRouter(cloud_router, r'security/security_groups',
                                            lookup='security_group')
 security_group_router.register(r'rules', views.SecurityGroupRuleViewSet,
                                base_name='security_group_rule')

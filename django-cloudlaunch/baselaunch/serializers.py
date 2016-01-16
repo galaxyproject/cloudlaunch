@@ -1,3 +1,4 @@
+from django.core.urlresolvers import NoReverseMatch
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import relations
 from rest_framework import serializers
@@ -45,8 +46,15 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         lookup_value = util.getattrd(obj, self.lookup_field)
         if lookup_value:
             reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
-        return self.reverse(
-            view_name, kwargs=reverse_kwargs, request=request, format=format)
+        try:
+            return self.reverse(
+                view_name, kwargs=reverse_kwargs, request=request, format=format)
+        except NoReverseMatch as e:
+            # If the reverse() failed when the lookup_value is empty, just
+            # ignore, since it's probably a null value in the dataset
+            if lookup_value:
+                raise e
+            return ""
 
 
 class CustomHyperlinkedIdentityField(CustomHyperlinkedRelatedField):
@@ -124,6 +132,7 @@ class SecurityGroupRuleSerializer(serializers.Serializer):
             This is necessary unless a specific security group rule can be
             retrieved via CloudBridge (i.e., ``SecurityGroupService`` is added).
             """
+
             def __init__(self, ip_protocol, from_port, to_port, cidr_ip=None):
                 self.ip_protocol = ip_protocol
                 self.from_port = from_port
@@ -291,40 +300,55 @@ class BucketObjectSerializer(serializers.Serializer):
 
 class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
-    regions = CustomHyperlinkedIdentityField(view_name='region-list',
+    compute = CustomHyperlinkedIdentityField(view_name='compute-list',
                                              lookup_field='slug',
                                              lookup_url_kwarg='cloud_pk')
-    machine_images = CustomHyperlinkedIdentityField(view_name='machine_image-list',
-                                                    lookup_field='slug',
-                                                    lookup_url_kwarg='cloud_pk')
-    keypairs = CustomHyperlinkedIdentityField(view_name='keypair-list',
+    security = CustomHyperlinkedIdentityField(view_name='security-list',
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
-    security_groups = CustomHyperlinkedIdentityField(view_name='security_group-list',
-                                                     lookup_field='slug',
-                                                     lookup_url_kwarg='cloud_pk')
+    block_store = CustomHyperlinkedIdentityField(view_name='block_store-list',
+                                                 lookup_field='slug',
+                                                 lookup_url_kwarg='cloud_pk')
+    object_store = CustomHyperlinkedIdentityField(view_name='object_store-list',
+                                                  lookup_field='slug',
+                                                  lookup_url_kwarg='cloud_pk')
     networks = CustomHyperlinkedIdentityField(view_name='network-list',
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
-    instance_types = CustomHyperlinkedIdentityField(view_name='instance_type-list',
-                                                    lookup_field='slug',
-                                                    lookup_url_kwarg='cloud_pk')
-    instances = CustomHyperlinkedIdentityField(view_name='instance-list',
-                                               lookup_field='slug',
-                                               lookup_url_kwarg='cloud_pk')
-    volumes = CustomHyperlinkedIdentityField(view_name='volume-list',
-                                             lookup_field='slug',
-                                             lookup_url_kwarg='cloud_pk')
-    snapshots = CustomHyperlinkedIdentityField(view_name='snapshot-list',
-                                               lookup_field='slug',
-                                               lookup_url_kwarg='cloud_pk')
-    buckets = CustomHyperlinkedIdentityField(view_name='bucket-list',
-                                             lookup_field='slug',
-                                             lookup_url_kwarg='cloud_pk')
 
     class Meta:
         model = models.Cloud
         exclude = ('kind',)
+
+
+class ComputeSerializer(serializers.Serializer):
+    machine_images = CustomHyperlinkedIdentityField(view_name='machine_image-list',
+                                                    parent_url_kwargs=['cloud_pk'])
+    instance_types = CustomHyperlinkedIdentityField(view_name='instance_type-list',
+                                                    parent_url_kwargs=['cloud_pk'])
+    instances = CustomHyperlinkedIdentityField(view_name='instance-list',
+                                               parent_url_kwargs=['cloud_pk'])
+    regions = CustomHyperlinkedIdentityField(view_name='region-list',
+                                             parent_url_kwargs=['cloud_pk'])
+
+
+class SecuritySerializer(serializers.Serializer):
+    keypairs = CustomHyperlinkedIdentityField(view_name='keypair-list',
+                                              parent_url_kwargs=['cloud_pk'])
+    security_groups = CustomHyperlinkedIdentityField(view_name='security_group-list',
+                                                     parent_url_kwargs=['cloud_pk'])
+
+
+class BlockStoreSerializer(serializers.Serializer):
+    volumes = CustomHyperlinkedIdentityField(view_name='volume-list',
+                                             parent_url_kwargs=['cloud_pk'])
+    snapshots = CustomHyperlinkedIdentityField(view_name='snapshot-list',
+                                               parent_url_kwargs=['cloud_pk'])
+
+
+class ObjectStoreSerializer(serializers.Serializer):
+    buckets = CustomHyperlinkedIdentityField(view_name='bucket-list',
+                                             parent_url_kwargs=['cloud_pk'])
 
 
 class CloudImageSerializer(serializers.HyperlinkedModelSerializer):

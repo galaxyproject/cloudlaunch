@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from django.http.response import Http404
+from rest_framework import mixins
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -56,6 +57,20 @@ class CustomModelViewSet(CustomNonModelObjectMixin, viewsets.ModelViewSet):
 class CustomReadOnlyModelViewSet(CustomNonModelObjectMixin,
                                  viewsets.ReadOnlyModelViewSet):
     pass
+
+
+class CustomReadOnlySingleViewSet(CustomNonModelObjectMixin,
+                                  mixins.ListModelMixin,
+                                  viewsets.GenericViewSet):
+
+    def list(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def get_object(self):
+        # return an empty data row so that the serializer can emit fields
+        return {}
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -118,6 +133,14 @@ class CloudViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.CloudSerializer
 
 
+class ComputeViewSet(CustomReadOnlySingleViewSet):
+    """
+    List compute related urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.ComputeSerializer
+
+
 class RegionViewSet(CustomReadOnlyModelViewSet):
     """
     List regions in a given cloud.
@@ -174,6 +197,14 @@ class ZoneViewSet(CustomReadOnlyModelViewSet):
     def get_object(self):
         return next((s for s in self.list_objects()
                      if s.id == self.kwargs["pk"]), None)
+
+
+class SecurityViewSet(CustomReadOnlySingleViewSet):
+    """
+    List security related urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.SecuritySerializer
 
 
 class KeyPairViewSet(CustomModelViewSet):
@@ -316,6 +347,14 @@ class InstanceViewSet(CustomModelViewSet):
         return obj
 
 
+class BlockStoreViewSet(CustomReadOnlySingleViewSet):
+    """
+    List blockstore urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.BlockStoreSerializer
+
+
 class VolumeViewSet(CustomModelViewSet):
     """
     List volumes in a given cloud.
@@ -349,6 +388,14 @@ class SnapshotViewSet(CustomModelViewSet):
         provider = view_helpers.get_cloud_provider(self)
         obj = provider.block_store.snapshots.get(self.kwargs["pk"])
         return obj
+
+
+class ObjectStoreViewSet(CustomReadOnlySingleViewSet):
+    """
+    List compute related urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.ObjectStoreSerializer
 
 
 class BucketViewSet(CustomModelViewSet):
