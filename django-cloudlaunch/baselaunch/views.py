@@ -277,8 +277,6 @@ class SubnetViewSet(CustomModelViewSet):
     List networks in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
-    # Required for the Browsable API renderer to have a nice form.
-    serializer_class = serializers.SubnetSerializer
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
@@ -287,6 +285,11 @@ class SubnetViewSet(CustomModelViewSet):
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
         return provider.network.subnets.get(self.kwargs["pk"])
+
+    def get_serializer_class(self):
+        if self.request.method == 'PUT':
+            return serializers.SubnetSerializerUpdate
+        return serializers.SubnetSerializer
 
 
 class InstanceTypeViewSet(CustomReadOnlyModelViewSet):

@@ -185,12 +185,24 @@ class NetworkSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    state = serializers.CharField()
-    cidr_block = serializers.CharField()
+    state = serializers.CharField(read_only=True)
+    cidr_block = serializers.CharField(read_only=True)
     subnets = CustomHyperlinkedIdentityField(view_name='subnet-list',
                                              lookup_field='id',
                                              lookup_url_kwarg='network_pk',
                                              parent_url_kwargs=['cloud_pk'])
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        return provider.network.create(name=validated_data.get('name'))
+
+    def update(self, instance, validated_data):
+        try:
+            if instance.name != validated_data.get('name'):
+                instance.name = validated_data.get('name')
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class SubnetSerializer(serializers.Serializer):
@@ -200,9 +212,28 @@ class SubnetSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk',
                                                             'network_pk'])
-    name = serializers.CharField()
+    name = serializers.CharField(allow_blank=True)
     cidr_block = serializers.CharField()
-    network_id = serializers.CharField()
+    network_id = serializers.CharField(read_only=True)
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        net_id = self.context.get('view').kwargs.get('network_pk')
+        return provider.network.subnets.create(
+            net_id, validated_data.get('cidr_block'),
+            name=validated_data.get('name'))
+
+
+class SubnetSerializerUpdate(SubnetSerializer):
+    cidr_block = serializers.CharField(read_only=True)
+
+    def update(self, instance, validated_data):
+        try:
+            if instance.name != validated_data.get('name'):
+                instance.name = validated_data.get('name')
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class InstanceTypeSerializer(serializers.Serializer):
