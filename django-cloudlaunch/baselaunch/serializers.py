@@ -217,6 +217,15 @@ class InstanceTypeSerializer(serializers.Serializer):
     extra_data = serializers.DictField(serializers.CharField())
 
 
+class AttachmentInfoSerializer(serializers.Serializer):
+    device = serializers.CharField()
+    instance_id = serializers.CharField(label="Instance ID")
+    instance = CustomHyperlinkedIdentityField(view_name='instance-detail',
+                                              lookup_field='instance_id',
+                                              lookup_url_kwarg='pk',
+                                              parent_url_kwargs=['cloud_pk'])
+
+
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='volume-detail',
@@ -224,7 +233,13 @@ class VolumeSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    state = serializers.CharField()
+    description = serializers.CharField()
+    state = serializers.CharField(read_only=True)
+    size = serializers.IntegerField()
+    create_time = serializers.CharField(read_only=True)
+    zone_id = serializers.CharField()
+    source = serializers.CharField()
+    attachments = AttachmentInfoSerializer()
 
 
 class SnapshotSerializer(serializers.Serializer):
@@ -234,7 +249,11 @@ class SnapshotSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    state = serializers.CharField()
+    description = serializers.CharField()
+    state = serializers.CharField(read_only=True)
+    size = serializers.IntegerField()
+    volume_id = serializers.CharField()
+    create_time = serializers.CharField(read_only=True)
 
 
 class InstanceSerializer(serializers.Serializer):
