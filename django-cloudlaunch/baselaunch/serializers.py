@@ -217,6 +217,11 @@ class InstanceTypeSerializer(serializers.Serializer):
     extra_data = serializers.DictField(serializers.CharField())
 
 
+class AttachmentInfoSerializer(serializers.Serializer):
+    instance_id = serializers.CharField(allow_blank=True)
+    device = serializers.CharField(read_only=True)
+
+
 class VolumeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='volume-detail',
@@ -224,7 +229,37 @@ class VolumeSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    state = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    size = serializers.IntegerField(min_value=0)
+    create_time = serializers.CharField(read_only=True)
+    zone = serializers.CharField(source='zone_id')
+    state = serializers.CharField(read_only=True)
+    snapshot_id = serializers.CharField(write_only=True, max_length=50,
+                                        allow_blank=True)
+    attachments = AttachmentInfoSerializer()
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        try:
+            return provider.block_store.volumes.create(
+                validated_data.get('name'),
+                validated_data.get('size'),
+                validated_data.get('zone_id'),
+                description=validated_data.get('description'),
+                snapshot=validated_data.get('snapshot_id') if
+                validated_data.get('snapshot_id') else None)
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
+
+    def update(self, instance, validated_data):
+        try:
+            if instance.name != validated_data.get('name'):
+                instance.name = validated_data.get('name')
+            if instance.description != validated_data.get('description'):
+                instance.description = validated_data.get('description')
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class SnapshotSerializer(serializers.Serializer):
@@ -234,7 +269,10 @@ class SnapshotSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    state = serializers.CharField()
+    description = serializers.CharField()
+    size = serializers.IntegerField(min_value=0)
+    create_time = serializers.CharField(read_only=True)
+    state = serializers.CharField(read_only=True)
 
 
 class InstanceSerializer(serializers.Serializer):
