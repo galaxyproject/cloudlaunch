@@ -81,22 +81,6 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ApplicationSerializer
 
 
-# class AWSEC2ViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows AWS EC2 cloud info to be viewed or edited.
-#     """
-#     queryset = models.AWSEC2.objects.all()
-#     serializer_class = serializers.AWSEC2Serializer
-
-
-# class ImageViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows image info to be viewed or edited.
-#     """
-#     queryset = models.CloudImage.objects.all()
-#     serializer_class = serializers.CloudImageSerializer
-
-
 class InfrastructureView(APIView):
     """
     List kinds in infrastructures.

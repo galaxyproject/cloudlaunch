@@ -149,9 +149,9 @@ REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'baselaunch.serializers.UserSerializer'
 }
 
-# Allow settings to be overridden in a biocloudcentral/settings_local.py
+# Allow settings to be overridden in a cloudlaunch/settings_local.py
 try:
-    from settings_local import *  # noqa
+    from cloudlaunch.settings_local import *  # noqa
 except ImportError:
     pass
 

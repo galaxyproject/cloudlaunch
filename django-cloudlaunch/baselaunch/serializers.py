@@ -130,7 +130,8 @@ class SecurityGroupRuleSerializer(serializers.Serializer):
             A template for a Security Group Rule.
 
             This is necessary unless a specific security group rule can be
-            retrieved via CloudBridge (i.e., ``SecurityGroupService`` is added).
+            retrieved via CloudBridge (i.e., ``SecurityGroupRuleService``
+            is added).
             """
 
             def __init__(self, ip_protocol, from_port, to_port, cidr_ip=None):
@@ -162,7 +163,10 @@ class SecurityGroupSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    description = serializers.CharField()
+    # Technically, the description is required but when wanting to reuse an
+    # existing security group with a different resource (eg, creating an
+    # instance), we need to be able to call this serializer w/o it.
+    description = serializers.CharField(required=False)
     rules = CustomHyperlinkedIdentityField(view_name='security_group_rule-list',
                                            lookup_field='id',
                                            lookup_url_kwarg='security_group_pk',
@@ -275,9 +279,29 @@ class SnapshotSerializer(serializers.Serializer):
     name = serializers.CharField()
     description = serializers.CharField()
     state = serializers.CharField(read_only=True)
-    volume_id = serializers.CharField()
+    volume_id = serializers.CharField(label="Volume ID")
     create_time = serializers.CharField(read_only=True)
-    size = serializers.IntegerField(min_value=0)
+    size = serializers.IntegerField(min_value=0, read_only=True)
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        try:
+            return provider.block_store.snapshots.create(
+                validated_data.get('name'),
+                validated_data.get('volume_id'),
+                description=validated_data.get('description'))
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
+
+    def update(self, instance, validated_data):
+        try:
+            if instance.name != validated_data.get('name'):
+                instance.name = validated_data.get('name')
+            if instance.description != validated_data.get('description'):
+                instance.description = validated_data.get('description')
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class InstanceSerializer(serializers.Serializer):
@@ -294,26 +318,30 @@ class InstanceSerializer(serializers.Serializer):
                                                        lookup_field='instance_type.id',
                                                        lookup_url_kwarg='pk',
                                                        parent_url_kwargs=['cloud_pk'])
-    image_id = serializers.CharField()
+    image_id = serializers.CharField(read_only=True)
     image_id_url = CustomHyperlinkedIdentityField(view_name='machine_image-detail',
                                                   lookup_field='image_id',
                                                   lookup_url_kwarg='pk',
                                                   parent_url_kwargs=['cloud_pk'])
-
     placement_zone = ZoneSerializer()
+    security_groups = SecurityGroupSerializer(many=True)
+    key_pair_name = serializers.CharField()
 
     def __init__(self, *args, **kwargs):
         super(InstanceSerializer, self).__init__(*args, **kwargs)
-        # Grabbing instance type for OpenStack is slow because for each
+        # Grabbing the following fields for OpenStack is slow because for each
         # instance, an additional request is made to retrieve the actual
-        # instance type and this takes ages. Hence, display instance_type only
+        # data and this takes ages. Hence, display full details only
         # in detail view.
         if isinstance(self.instance, list):
             self.fields.pop('instance_type')
             self.fields.pop('instance_type_url')
-        else:
-            # For the detail view, do not include the url field
-            self.fields.pop('url')
+            self.fields.pop('security_groups')
+
+    def create(self, validated_data):
+        # provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        print('validated_data: %s' % validated_data)
+        # return provider.compute.instances.create()
 
 
 class BucketSerializer(serializers.Serializer):
