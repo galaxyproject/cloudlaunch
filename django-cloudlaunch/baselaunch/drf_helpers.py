@@ -204,8 +204,13 @@ class ProviderFieldMixin(object):
 
     def get_queryset(self):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
-        return util.getattrd(
-            provider, self.queryset + '.list')()
+        list_method = util.getattrd(
+            provider, self.queryset + '.list')
+        if list_method:
+            return list_method()
+        else:
+            return util.getattrd(
+                provider, self.queryset)
 
     def get_provider_object(self, pk):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
