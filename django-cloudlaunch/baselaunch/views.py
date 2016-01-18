@@ -1,5 +1,3 @@
-from abc import ABCMeta, abstractmethod
-
 from django.http.response import Http404
 from rest_framework import mixins
 from rest_framework import viewsets
@@ -8,69 +6,10 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
+from baselaunch import drf_helpers
 from baselaunch import models
 from baselaunch import serializers
 from baselaunch import view_helpers
-
-
-class CustomNonModelObjectMixin(object):
-    """
-    A custom viewset mixin to make it easier to work with non-django-model viewsets.
-    Only the list_objects() and retrieve_object() methods need to be implemented.
-    Create and update methods will work normally through DRF's serializers.
-    """
-    __metaclass__ = ABCMeta
-
-    def get_queryset(self):
-        return self.list_objects()
-
-    def get_object(self):
-        obj = self.retrieve_object()
-        if obj is None:
-            raise Http404
-
-        # May raise a permission denied
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-    @abstractmethod
-    def list_objects(self):
-        """
-        Override this method to return the list of objects for
-        list() methods.
-        """
-        pass
-
-    @abstractmethod
-    def retrieve_object(self):
-        """
-        Override this method to return the object for the get method.
-        If the returned object is None, an HTTP404 will be raised.
-        """
-        pass
-
-
-class CustomModelViewSet(CustomNonModelObjectMixin, viewsets.ModelViewSet):
-    pass
-
-
-class CustomReadOnlyModelViewSet(CustomNonModelObjectMixin,
-                                 viewsets.ReadOnlyModelViewSet):
-    pass
-
-
-class CustomReadOnlySingleViewSet(CustomNonModelObjectMixin,
-                                  mixins.ListModelMixin,
-                                  viewsets.GenericViewSet):
-
-    def list(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
-    def get_object(self):
-        # return an empty data row so that the serializer can emit fields
-        return {}
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -117,7 +56,7 @@ class CloudViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.CloudSerializer
 
 
-class ComputeViewSet(CustomReadOnlySingleViewSet):
+class ComputeViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     """
     List compute related urls.
     """
@@ -125,7 +64,7 @@ class ComputeViewSet(CustomReadOnlySingleViewSet):
     serializer_class = serializers.ComputeSerializer
 
 
-class RegionViewSet(CustomReadOnlyModelViewSet):
+class RegionViewSet(drf_helpers.CustomReadOnlyModelViewSet):
     """
     List regions in a given cloud.
     """
@@ -143,7 +82,7 @@ class RegionViewSet(CustomReadOnlyModelViewSet):
         return obj
 
 
-class MachineImageViewSet(CustomModelViewSet):
+class MachineImageViewSet(drf_helpers.CustomModelViewSet):
     """
     List machine images in a given cloud.
     """
@@ -161,7 +100,7 @@ class MachineImageViewSet(CustomModelViewSet):
         return obj
 
 
-class ZoneViewSet(CustomReadOnlyModelViewSet):
+class ZoneViewSet(drf_helpers.CustomReadOnlyModelViewSet):
     """
     List zones in a given cloud.
     """
@@ -183,7 +122,7 @@ class ZoneViewSet(CustomReadOnlyModelViewSet):
                      if s.id == self.kwargs["pk"]), None)
 
 
-class SecurityViewSet(CustomReadOnlySingleViewSet):
+class SecurityViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     """
     List security related urls.
     """
@@ -191,7 +130,7 @@ class SecurityViewSet(CustomReadOnlySingleViewSet):
     serializer_class = serializers.SecuritySerializer
 
 
-class KeyPairViewSet(CustomModelViewSet):
+class KeyPairViewSet(drf_helpers.CustomModelViewSet):
     """
     List key pairs in a given cloud.
     """
@@ -209,7 +148,7 @@ class KeyPairViewSet(CustomModelViewSet):
         return obj
 
 
-class SecurityGroupViewSet(CustomModelViewSet):
+class SecurityGroupViewSet(drf_helpers.CustomModelViewSet):
     """
     List security groups in a given cloud.
     """
@@ -227,7 +166,7 @@ class SecurityGroupViewSet(CustomModelViewSet):
         return obj
 
 
-class SecurityGroupRuleViewSet(CustomModelViewSet):
+class SecurityGroupRuleViewSet(drf_helpers.CustomModelViewSet):
     """
     List security group rules in a given cloud.
     """
@@ -254,7 +193,7 @@ class SecurityGroupRuleViewSet(CustomModelViewSet):
             return provider.security.security_groups.rules.get(pk)
 
 
-class NetworkViewSet(CustomModelViewSet):
+class NetworkViewSet(drf_helpers.CustomModelViewSet):
     """
     List networks in a given cloud.
     """
@@ -272,7 +211,7 @@ class NetworkViewSet(CustomModelViewSet):
         return obj
 
 
-class SubnetViewSet(CustomModelViewSet):
+class SubnetViewSet(drf_helpers.CustomModelViewSet):
     """
     List networks in a given cloud.
     """
@@ -292,7 +231,7 @@ class SubnetViewSet(CustomModelViewSet):
         return serializers.SubnetSerializer
 
 
-class InstanceTypeViewSet(CustomReadOnlyModelViewSet):
+class InstanceTypeViewSet(drf_helpers.CustomReadOnlyModelViewSet):
     """
     List compute instance types in a given cloud.
     """
@@ -316,7 +255,7 @@ class InstanceTypeViewSet(CustomReadOnlyModelViewSet):
             raise Http404
 
 
-class InstanceViewSet(CustomModelViewSet):
+class InstanceViewSet(drf_helpers.CustomModelViewSet):
     """
     List compute instances in a given cloud.
     """
@@ -334,7 +273,7 @@ class InstanceViewSet(CustomModelViewSet):
         return obj
 
 
-class BlockStoreViewSet(CustomReadOnlySingleViewSet):
+class BlockStoreViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     """
     List blockstore urls.
     """
@@ -342,7 +281,7 @@ class BlockStoreViewSet(CustomReadOnlySingleViewSet):
     serializer_class = serializers.BlockStoreSerializer
 
 
-class VolumeViewSet(CustomModelViewSet):
+class VolumeViewSet(drf_helpers.CustomModelViewSet):
     """
     List volumes in a given cloud.
     """
@@ -360,7 +299,7 @@ class VolumeViewSet(CustomModelViewSet):
         return obj
 
 
-class SnapshotViewSet(CustomModelViewSet):
+class SnapshotViewSet(drf_helpers.CustomModelViewSet):
     """
     List snapshots in a given cloud.
     """
@@ -377,7 +316,7 @@ class SnapshotViewSet(CustomModelViewSet):
         return obj
 
 
-class ObjectStoreViewSet(CustomReadOnlySingleViewSet):
+class ObjectStoreViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     """
     List compute related urls.
     """
@@ -385,7 +324,7 @@ class ObjectStoreViewSet(CustomReadOnlySingleViewSet):
     serializer_class = serializers.ObjectStoreSerializer
 
 
-class BucketViewSet(CustomModelViewSet):
+class BucketViewSet(drf_helpers.CustomModelViewSet):
     """
     List buckets in a given cloud.
     """
@@ -402,13 +341,15 @@ class BucketViewSet(CustomModelViewSet):
         return obj
 
 
-class BucketObjectViewSet(CustomModelViewSet):
+class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
     """
     List objects in a given cloud bucket.
     """
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.BucketObjectSerializer
+    # Capture everything as a single value
+    lookup_value_regex = '^.*'
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
