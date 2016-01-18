@@ -7,6 +7,7 @@ from rest_framework import serializers
 from baselaunch import models
 from baselaunch import view_helpers
 from baselaunch.drf_helpers import CustomHyperlinkedIdentityField
+from baselaunch.drf_helpers import PlacementZonePKRelatedField
 from baselaunch.drf_helpers import ProviderPKRelatedField
 
 
@@ -213,7 +214,12 @@ class VolumeSerializer(serializers.Serializer):
     description = serializers.CharField(allow_blank=True)
     size = serializers.IntegerField(min_value=0)
     create_time = serializers.CharField(read_only=True)
-    zone = serializers.CharField(source='zone_id')
+    zone_id = PlacementZonePKRelatedField(label="Zone",
+                                          queryset='non_empty_value',
+                                          display_fields=[
+                                              'id'],
+                                          display_format="{0}",
+                                          required=True)
     state = serializers.CharField(read_only=True)
     snapshot_id = ProviderPKRelatedField(label="Snapshot ID",
                                          queryset='block_store.snapshots',
@@ -315,11 +321,11 @@ class InstanceSerializer(serializers.Serializer):
                                                'id'],
                                            display_format="{0}",
                                            required=True)
-    placement_zone = ProviderPKRelatedField(queryset='compute.regions.current.zones',
-                                            display_fields=[
-                                                'id'],
-                                            display_format="{0}",
-                                            required=True)
+    placement_zone = PlacementZonePKRelatedField(queryset='non_empty_value',
+                                                 display_fields=[
+                                                     'id'],
+                                                 display_format="{0}",
+                                                 required=True)
     security_groups = SecurityGroupSerializer(many=True)
 
     def __init__(self, *args, **kwargs):

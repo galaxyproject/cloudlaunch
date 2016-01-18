@@ -204,13 +204,7 @@ class ProviderFieldMixin(object):
 
     def get_queryset(self):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
-        list_method = util.getattrd(
-            provider, self.queryset + '.list')
-        if list_method:
-            return list_method()
-        else:
-            return util.getattrd(
-                provider, self.queryset)
+        return util.getattrd(provider, self.queryset + '.list')()
 
     def get_provider_object(self, pk):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
@@ -309,3 +303,22 @@ class ProviderPKRelatedField(
             return value.id
         else:
             return value
+
+
+class PlacementZonePKRelatedField(ProviderPKRelatedField):
+    """
+    A class dedicated to handling placement zone relations.
+    """
+
+    def get_queryset(self):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        return provider.compute.regions.current.zones
+
+    def get_provider_object(self, pk):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        zones = [zone for zone in provider.compute.regions.current.zones
+                 if zone.id == pk]
+        if zones:
+            return zones[0]
+        else:
+            return ObjectDoesNotExist()
