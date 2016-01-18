@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
 
+from cloudbridge.cloud.interfaces.resources import CloudResource
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import NoReverseMatch
+from django.http.response import Http404
 from rest_framework import mixins
 from rest_framework import relations
 from rest_framework import serializers
@@ -9,11 +11,12 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 
 from baselaunch import util
+from baselaunch import view_helpers
 
 
-#-----------------------------------
+# -----------------------------------
 # Django Rest Framework View Helpers
-#-----------------------------------
+# -----------------------------------
 class CustomNonModelObjectMixin(object):
     """
     A custom viewset mixin to make it easier to work with non-django-model viewsets.
@@ -73,9 +76,9 @@ class CustomReadOnlySingleViewSet(CustomNonModelObjectMixin,
         # return an empty data row so that the serializer can emit fields
         return {}
 
-#--------------------------------------------
+# --------------------------------------------
 # Django Rest Framework Serialization Helpers
-#--------------------------------------------
+# --------------------------------------------
 
 
 class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
@@ -207,7 +210,7 @@ class ProviderFieldMixin(object):
     def get_provider_object(self, pk):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         obj = util.getattrd(
-            provider, self.queryset + '.get')(data)
+            provider, self.queryset + '.get')(pk)
         if obj:
             return obj
         else:
@@ -288,7 +291,7 @@ class ProviderPKRelatedField(
         Return the object corresponding to a matched
         primary key.
         """
-        return get_provider_object(data)
+        return self.get_provider_object(data)
 
     def to_representation(self, value):
         """

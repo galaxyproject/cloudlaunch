@@ -1,13 +1,7 @@
-import cloudbridge
-from cloudbridge.cloud.interfaces.resources import CloudResource
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import NoReverseMatch
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 
-from baselaunch import drf_helpers
 from baselaunch import models
-from baselaunch import util
 from baselaunch import view_helpers
 from baselaunch.drf_helpers import CustomHyperlinkedIdentityField
 from baselaunch.drf_helpers import ProviderPKRelatedField
@@ -312,9 +306,9 @@ class InstanceSerializer(serializers.Serializer):
                                                   lookup_field='image_id',
                                                   lookup_url_kwarg='pk',
                                                   parent_url_kwargs=['cloud_pk'])
+    key_pair_name = serializers.CharField()
     placement_zone = ZoneSerializer()
     security_groups = SecurityGroupSerializer(many=True)
-    key_pair_name = serializers.CharField()
 
     def __init__(self, *args, **kwargs):
         super(InstanceSerializer, self).__init__(*args, **kwargs)
