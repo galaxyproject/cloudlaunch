@@ -265,6 +265,9 @@ class InstanceViewSet(drf_helpers.CustomModelViewSet):
         obj = provider.compute.instances.get(self.kwargs["pk"])
         return obj
 
+    def perform_destroy(self, instance):
+        instance.terminate()
+
 
 class BlockStoreViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     """
