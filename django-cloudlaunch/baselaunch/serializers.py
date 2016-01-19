@@ -315,7 +315,12 @@ class InstanceSerializer(serializers.Serializer):
                                                        lookup_field='instance_type_id',
                                                        lookup_url_kwarg='pk',
                                                        parent_url_kwargs=['cloud_pk'])
-    image_id = serializers.CharField(read_only=True)
+    image_id = ProviderPKRelatedField(label="Image",
+                                      queryset='compute.images',
+                                      display_fields=[
+                                               'name', 'id'],
+                                      display_format="{0} ({1})",
+                                      required=True)
     image_id_url = CustomHyperlinkedIdentityField(view_name='machine_image-detail',
                                                   lookup_field='image_id',
                                                   lookup_url_kwarg='pk',
@@ -332,22 +337,38 @@ class InstanceSerializer(serializers.Serializer):
                                               'id'],
                                           display_format="{0}",
                                           required=True)
-    security_groups = SecurityGroupSerializer(many=True)
-
-    def __init__(self, *args, **kwargs):
-        super(InstanceSerializer, self).__init__(*args, **kwargs)
-        # Grabbing the following fields for OpenStack is slow because for each
-        # instance, an additional request is made to retrieve the actual
-        # data and this takes ages. Hence, display full details only
-        # in detail view.
-        if isinstance(self.instance, list):
-            self.fields.pop('instance_type_url')
-            self.fields.pop('security_groups')
+    security_group_ids = ProviderPKRelatedField(label="Security Groups",
+                                                queryset='security.security_groups',
+                                                display_fields=[
+                                                    'name'],
+                                                display_format="{0}",
+                                                many=True)
+    user_data = serializers.CharField(write_only=True,
+                                      style={'base_template': 'textarea.html'})
 
     def create(self, validated_data):
-        # provider = view_helpers.get_cloud_provider(self.context.get('view'))
-        print('validated_data: %s' % validated_data)
-        # return provider.compute.instances.create()
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        name = validated_data.get('name')
+        image_id = validated_data.get('image_id')
+        instance_type = validated_data.get('instance_type_id')
+        kp_name = validated_data.get('key_pair_name')
+        zone_id = validated_data.get('zone_id')
+        security_group_ids = validated_data.get('security_group_ids')
+        user_data = validated_data.get('user_data')
+        try:
+            return provider.compute.instances.create(
+                name, image_id, instance_type, zone=zone_id, key_pair=kp_name,
+                security_groups=security_group_ids, user_data=user_data)
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
+
+    def update(self, instance, validated_data):
+        try:
+            if instance.name != validated_data.get('name'):
+                instance.name = validated_data.get('name')
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class BucketSerializer(serializers.Serializer):
