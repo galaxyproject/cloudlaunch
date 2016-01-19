@@ -175,7 +175,7 @@ class SubnetSerializerUpdate(SubnetSerializer):
 class InstanceTypeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
-                                         lookup_field='name',
+                                         lookup_field='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     family = serializers.CharField()
@@ -305,9 +305,14 @@ class InstanceSerializer(serializers.Serializer):
     name = serializers.CharField()
     public_ips = serializers.ListField(serializers.IPAddressField())
     private_ips = serializers.ListField(serializers.IPAddressField())
-    instance_type = serializers.CharField(source='instance_type.name')
-    instance_type_url = CustomHyperlinkedIdentityField(view_name='instance-detail',
-                                                       lookup_field='instance_type.id',
+    instance_type_id = ProviderPKRelatedField(label="Instance Type",
+                                              queryset='compute.instance_types',
+                                              display_fields=[
+                                                  'name'],
+                                              display_format="{0}",
+                                              required=True)
+    instance_type_url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
+                                                       lookup_field='instance_type_id',
                                                        lookup_url_kwarg='pk',
                                                        parent_url_kwargs=['cloud_pk'])
     image_id = serializers.CharField(read_only=True)
@@ -321,11 +326,12 @@ class InstanceSerializer(serializers.Serializer):
                                                'id'],
                                            display_format="{0}",
                                            required=True)
-    placement_zone = PlacementZonePKRelatedField(queryset='non_empty_value',
-                                                 display_fields=[
-                                                     'id'],
-                                                 display_format="{0}",
-                                                 required=True)
+    zone_id = PlacementZonePKRelatedField(label="Placement Zone",
+                                          queryset='non_empty_value',
+                                          display_fields=[
+                                              'id'],
+                                          display_format="{0}",
+                                          required=True)
     security_groups = SecurityGroupSerializer(many=True)
 
     def __init__(self, *args, **kwargs):
@@ -335,7 +341,6 @@ class InstanceSerializer(serializers.Serializer):
         # data and this takes ages. Hence, display full details only
         # in detail view.
         if isinstance(self.instance, list):
-            self.fields.pop('instance_type')
             self.fields.pop('instance_type_url')
             self.fields.pop('security_groups')
 

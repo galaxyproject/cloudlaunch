@@ -237,7 +237,6 @@ class InstanceTypeViewSet(drf_helpers.CustomReadOnlyModelViewSet):
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.InstanceTypeSerializer
-    lookup_field = 'name'
     lookup_value_regex = '[^/]+'
 
     def list_objects(self):
@@ -246,12 +245,7 @@ class InstanceTypeViewSet(drf_helpers.CustomReadOnlyModelViewSet):
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        name = self.kwargs.get('name')
-        obj = provider.compute.instance_types.find(name=name)
-        if obj:
-            return obj[0]
-        else:
-            raise Http404
+        return provider.compute.instance_types.get(self.kwargs.get('pk'))
 
 
 class InstanceViewSet(drf_helpers.CustomModelViewSet):
