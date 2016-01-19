@@ -2,7 +2,7 @@ from django.http.response import FileResponse
 from django.http.response import Http404
 from rest_framework import renderers
 from rest_framework import viewsets
-from rest_framework.decorators import renderer_classes
+# from rest_framework.decorators import renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -192,7 +192,10 @@ class SecurityGroupRuleViewSet(drf_helpers.CustomModelViewSet):
             raise Http404
         else:
             pk = self.kwargs.get("pk")
-            return provider.security.security_groups.rules.get(pk)
+            for rule in sg.rules:
+                if rule.id == pk:
+                    return rule
+            raise Http404
 
 
 class NetworkViewSet(drf_helpers.CustomModelViewSet):

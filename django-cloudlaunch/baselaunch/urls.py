@@ -72,7 +72,8 @@ region_router = HybridNestedRouter(cloud_router, r'compute/regions',
 region_router.register(r'zones', views.ZoneViewSet,
                        base_name='zone')
 
-security_group_router = HybridNestedRouter(cloud_router, r'security/security_groups',
+security_group_router = HybridNestedRouter(cloud_router,
+                                           r'security/security_groups',
                                            lookup='security_group')
 security_group_router.register(r'rules', views.SecurityGroupRuleViewSet,
                                base_name='security_group_rule')

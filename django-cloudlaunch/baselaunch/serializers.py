@@ -1,8 +1,5 @@
 import urllib
 
-import cloudbridge
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import NoReverseMatch
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -61,6 +58,11 @@ class SecurityGroupRuleSerializer(serializers.Serializer):
     from_port = serializers.CharField()
     to_port = serializers.CharField()
     cidr_ip = serializers.CharField(label="CIDR IP")
+    url = CustomHyperlinkedIdentityField(view_name='security_group_rule-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk',
+                                                            'security_group_pk'])
 
     def create(self, validated_data):
 
@@ -431,7 +433,6 @@ class BucketObjectSerializer(serializers.Serializer):
             raise serializers.ValidationError("{0}".format(e))
 
     def update(self, instance, validated_data):
-        provider = view_helpers.get_cloud_provider(self.context.get('view'))
         try:
             instance.upload(
                 validated_data.get('upload_content').file.getvalue())
