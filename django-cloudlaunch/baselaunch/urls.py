@@ -83,7 +83,8 @@ network_router.register(r'subnets', views.SubnetViewSet, base_name='subnet')
 bucket_router = HybridNestedRouter(cloud_router, r'object_store/buckets',
                                    lookup='bucket')
 bucket_router.register(r'objects', views.BucketObjectViewSet,
-                       base_name='object')
+                       base_name='bucketobject')
+
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),

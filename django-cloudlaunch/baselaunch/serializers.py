@@ -1,8 +1,11 @@
+import urllib
+
 import cloudbridge
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import NoReverseMatch
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
+from rest_framework.reverse import reverse
 
 from baselaunch import models
 from baselaunch import view_helpers
@@ -378,7 +381,7 @@ class BucketSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    contents = CustomHyperlinkedIdentityField(view_name='object-list',
+    contents = CustomHyperlinkedIdentityField(view_name='bucketobject-list',
                                               lookup_field='id',
                                               lookup_url_kwarg='bucket_pk',
                                               parent_url_kwargs=['cloud_pk'])
@@ -394,6 +397,16 @@ class BucketSerializer(serializers.Serializer):
 class BucketObjectSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField()
+    download_url = serializers.SerializerMethodField()
+
+    def get_download_url(self, obj):
+        """Create a URL for accessing a single instance."""
+        kwargs = self.context['view'].kwargs.copy()
+        kwargs.update({'pk': obj.id})
+        obj_url = reverse('bucketobject-detail',
+                          kwargs=kwargs,
+                          request=self.context['request'])
+        return urllib.parse.urljoin(obj_url, '?format=binary')
 
 
 class CloudSerializer(serializers.ModelSerializer):

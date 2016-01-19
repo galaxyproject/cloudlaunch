@@ -1,5 +1,8 @@
+from django.http.response import FileResponse
 from django.http.response import Http404
+from rest_framework import renderers
 from rest_framework import viewsets
+from rest_framework.decorators import renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -337,6 +340,16 @@ class BucketViewSet(drf_helpers.CustomModelViewSet):
         return obj
 
 
+class BucketObjectBinaryRenderer(renderers.BaseRenderer):
+    media_type = 'application/octet-stream'
+    format = 'binary'
+    charset = None
+    render_style = 'binary'
+
+    def render(self, data, media_type=None, renderer_context=None):
+        return data
+
+
 class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
     """
     List objects in a given cloud bucket.
@@ -345,7 +358,9 @@ class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.BucketObjectSerializer
     # Capture everything as a single value
-    lookup_value_regex = '^.*'
+    lookup_value_regex = '.*'
+    renderer_classes = drf_helpers.CustomModelViewSet.renderer_classes + \
+        [BucketObjectBinaryRenderer]
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
@@ -356,7 +371,26 @@ class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
         else:
             raise Http404
 
+    def retrieve(self, request, *args, **kwargs):
+        bucket_object = self.get_object()
+        format = request.query_params.get('format')
+        # TODO: This is a bit ugly, since ideally, only the renderer
+        # should be aware of the format
+        if format == "binary":
+            response = FileResponse(streaming_content=bucket_object.iter_content(),
+                                    content_type='application/octet-stream')
+            response[
+                'Content-Disposition'] = 'attachment; filename="%s"' % bucket_object.name
+            return response
+        else:
+            serializer = self.get_serializer(bucket_object)
+            return Response(serializer.data)
+
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        obj = provider.object_store.get(self.kwargs["pk"])
-        return obj
+        bucket_pk = self.kwargs.get("bucket_pk")
+        bucket = provider.object_store.get(bucket_pk)
+        if bucket:
+            return bucket.get(self.kwargs["pk"])
+        else:
+            raise Http404
