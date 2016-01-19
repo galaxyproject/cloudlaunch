@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
+from fernet_fields import EncryptedCharField
 from model_utils.managers import InheritanceManager
 
 
@@ -155,7 +156,7 @@ class Credentials(DateNameAwareModel):
 
 class AWSCredentials(Credentials):
     access_key = models.CharField(max_length=50)
-    secret_key = models.CharField(max_length=50, blank=True, null=True)
+    secret_key = EncryptedCharField(max_length=50, blank=True, null=True)
 
     class Meta:
         verbose_name = "AWS Credentials"
@@ -169,7 +170,7 @@ class AWSCredentials(Credentials):
 
 class OpenStackCredentials(Credentials):
     username = models.CharField(max_length=50)
-    password = models.CharField(max_length=50, blank=True, null=True)
+    password = EncryptedCharField(max_length=50, blank=True, null=True)
     tenant_name = models.CharField(max_length=50)
 
     class Meta:

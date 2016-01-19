@@ -18,6 +18,11 @@ DATABASES = {
     }
 }
 
+# Read more about the encryption keys at django-fernet-fields.readthedocs.org
+FERNET_KEYS = [
+    'A key for encrypting sensitive data - change this and keep it safe!',
+]
+
 # Set this absolute path then run: python biocloudcentral/manage.py collectstatic
 STATIC_ROOT = '/srv/cloudlaunch/media'
 
