@@ -381,10 +381,10 @@ class BucketSerializer(serializers.Serializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
-    contents = CustomHyperlinkedIdentityField(view_name='bucketobject-list',
-                                              lookup_field='id',
-                                              lookup_url_kwarg='bucket_pk',
-                                              parent_url_kwargs=['cloud_pk'])
+    objects = CustomHyperlinkedIdentityField(view_name='bucketobject-list',
+                                             lookup_field='id',
+                                             lookup_url_kwarg='bucket_pk',
+                                             parent_url_kwargs=['cloud_pk'])
 
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
@@ -396,8 +396,13 @@ class BucketSerializer(serializers.Serializer):
 
 class BucketObjectSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-    name = serializers.CharField()
+    name = serializers.CharField(allow_blank=True)
+    url = CustomHyperlinkedIdentityField(view_name='bucketobject-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['cloud_pk', 'bucket_pk'])
     download_url = serializers.SerializerMethodField()
+    upload_content = serializers.FileField(write_only=True)
 
     def get_download_url(self, obj):
         """Create a URL for accessing a single instance."""
@@ -407,6 +412,32 @@ class BucketObjectSerializer(serializers.Serializer):
                           kwargs=kwargs,
                           request=self.context['request'])
         return urllib.parse.urljoin(obj_url, '?format=binary')
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        bucket_id = self.context.get('view').kwargs.get('bucket_pk')
+        bucket = provider.object_store.get(bucket_id)
+        try:
+            name = validated_data.get('name')
+            content = validated_data.get('upload_content')
+            if name:
+                object = bucket.create_object(name)
+            else:
+                object = bucket.create_object(content.name)
+            if content:
+                object.upload(content.file.getvalue())
+            return object
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
+
+    def update(self, instance, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        try:
+            instance.upload(
+                validated_data.get('upload_content').file.getvalue())
+            return instance
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class CloudSerializer(serializers.ModelSerializer):
