@@ -142,12 +142,18 @@ STATIC_URL = '/static/'
 # Installed apps settings
 
 REST_FRAMEWORK = {
-    'PAGE_SIZE': 50
+    'PAGE_SIZE': 50,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication'
+    )
 }
 
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'baselaunch.serializers.UserSerializer'
 }
+
 
 # Allow settings to be overridden in a cloudlaunch/settings_local.py
 try:
