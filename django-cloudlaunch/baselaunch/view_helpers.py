@@ -1,9 +1,5 @@
-from rest_framework import status
-from rest_framework.response import Response
-
 from baselaunch import domain_model
 from baselaunch import models
-from baselaunch import util
 
 
 def get_cloud_provider(view):

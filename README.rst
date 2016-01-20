@@ -34,7 +34,12 @@ Use of virtualenv is also highly advised.
     $ python manage.py runserver
     $ python manage.py createsuperuser
 
-2. Start the development server and visit http://127.0.0.1:8000/admin/
-   to define your application properties.
+2. Copy ``cloudlaunch/settings_local.py.sample`` to
+   ``cloudlaunch/settings_local.py`` and make any desired configuration
+   changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
+   because it is used to encrypt sensitive database fields.
 
-3. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
+3. Start the development server and visit http://127.0.0.1:8000/admin/
+   to define your application and infrastructure properties.
+
+4. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
