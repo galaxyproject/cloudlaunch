@@ -40,9 +40,9 @@ def get_credentials_from_request(cloud, request):
     cloud. Returns an empty dict if not available.
     """
     if isinstance(cloud, models.OpenStack):
-        os_username = request.META.get('os_username')
-        os_password = request.META.get('os_password')
-        os_tenant_name = request.META.get('os_tenant_name')
+        os_username = request.META.get('HTTP_CL_OS_USERNAME')
+        os_password = request.META.get('HTTP_CL_OS_PASSWORD')
+        os_tenant_name = request.META.get('HTTP_CL_OS_TENANT_NAME')
         if os_username and os_password and os_tenant_name:
             return {'os_username': os_username,
                     'os_password': os_password,
@@ -51,8 +51,8 @@ def get_credentials_from_request(cloud, request):
         else:
             return {}
     elif isinstance(cloud, models.AWS):
-        aws_access_key = request.META.get('aws_access_key')
-        aws_secret_key = request.META.get('aws_secret_key')
+        aws_access_key = request.META.get('HTTP_CL_AWS_ACCESS_KEY')
+        aws_secret_key = request.META.get('HTTP_CL_AWS_SECRET_KEY')
         if aws_access_key and aws_secret_key:
             return {'aws_access_key': aws_access_key,
                     'aws_secret_key': aws_secret_key,
