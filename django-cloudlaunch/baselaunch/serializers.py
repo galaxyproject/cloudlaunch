@@ -54,10 +54,16 @@ class KeyPairSerializer(serializers.Serializer):
 
 
 class SecurityGroupRuleSerializer(serializers.Serializer):
-    ip_protocol = serializers.CharField(label="IP protocol")
-    from_port = serializers.CharField()
-    to_port = serializers.CharField()
-    cidr_ip = serializers.CharField(label="CIDR IP")
+    ip_protocol = serializers.CharField(label="IP protocol", allow_blank=True)
+    from_port = serializers.CharField(allow_blank=True)
+    to_port = serializers.CharField(allow_blank=True)
+    cidr_ip = serializers.CharField(label="CIDR IP", allow_blank=True)
+    group = ProviderPKRelatedField(label="Source group",
+                                   queryset='security.security_groups',
+                                   display_fields=['name', 'id'],
+                                   display_format="{0} (ID: {1})",
+                                   required=False,
+                                   allow_null=True)
     url = CustomHyperlinkedIdentityField(view_name='security_group_rule-detail',
                                          lookup_field='id',
                                          lookup_url_kwarg='pk',
@@ -65,35 +71,18 @@ class SecurityGroupRuleSerializer(serializers.Serializer):
                                                             'security_group_pk'])
 
     def create(self, validated_data):
-
-        class SGRule(object):
-            """
-            A template for a Security Group Rule.
-
-            This is necessary unless a specific security group rule can be
-            retrieved via CloudBridge (i.e., ``SecurityGroupRuleService``
-            is added).
-            """
-
-            def __init__(self, ip_protocol, from_port, to_port, cidr_ip=None):
-                self.ip_protocol = ip_protocol
-                self.from_port = from_port
-                self.to_port = to_port
-                self.cidr_ip = cidr_ip
-
         view = self.context.get('view')
         provider = view_helpers.get_cloud_provider(view)
         sg_pk = view.kwargs.get('security_group_pk')
         if sg_pk:
             sg = provider.security.security_groups.get(sg_pk)
-            if sg and sg.add_rule(validated_data.get('ip_protocol'),
-                                  validated_data.get('from_port'),
-                                  validated_data.get('to_port'),
-                                  validated_data.get('cidr_ip')):
-                return SGRule(validated_data.get('ip_protocol'),
-                              validated_data.get('from_port'),
-                              validated_data.get('to_port'),
-                              validated_data.get('cidr_ip'))
+            if sg and validated_data.get('group'):
+                return sg.add_rule(src_group=validated_data.get('group'))
+            elif sg:
+                return sg.add_rule(validated_data.get('ip_protocol'),
+                                   validated_data.get('from_port'),
+                                   validated_data.get('to_port'),
+                                   validated_data.get('cidr_ip'))
         return None
 
 
