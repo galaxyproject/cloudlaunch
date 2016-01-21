@@ -1,8 +1,8 @@
 from django.http.response import FileResponse
 from django.http.response import Http404
+from rest_framework import permissions
 from rest_framework import renderers
 from rest_framework import viewsets
-# from rest_framework.decorators import renderer_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -397,3 +397,45 @@ class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
             return bucket.get(self.kwargs["pk"])
         else:
             raise Http404
+
+
+class CredentialsRouteViewSet(drf_helpers.CustomReadOnlySingleViewSet):
+    """
+    List compute related urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.CredentialsSerializer
+
+
+class CredentialsViewSet(viewsets.ModelViewSet):
+
+    def perform_create(self, serializer):
+        serializer.save(user_profile=self.request.user.userprofile)
+
+
+class AWSCredentialsViewSet(CredentialsViewSet):
+    """
+    API endpoint that allows AWS credentials to be viewed or edited.
+    """
+    queryset = models.AWSCredentials.objects.all()
+    serializer_class = serializers.AWSCredsSerializer
+    permission_classes = [permissions.DjangoModelPermissions]
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.userprofile.credentials.filter(
+            awscredentials__isnull=False).select_subclasses()
+
+
+class OpenstackCredentialsViewSet(CredentialsViewSet):
+    """
+    API endpoint that allows OpenStack credentials to be viewed or edited.
+    """
+    queryset = models.OpenStackCredentials.objects.all()
+    serializer_class = serializers.OpenstackCredsSerializer
+    permission_classes = [permissions.DjangoModelPermissions]
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.userprofile.credentials.filter(
+            openstackcredentials__isnull=False).select_subclasses()

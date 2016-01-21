@@ -507,21 +507,41 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Application
 
 
-class AWSCredsSerializer(serializers.ModelSerializer):
+class CredentialsSerializer(serializers.Serializer):
+    aws = CustomHyperlinkedIdentityField(view_name='awscredentials-list')
+    openstack = CustomHyperlinkedIdentityField(
+        view_name='openstackcredentials-list')
+
+
+class AWSCredsSerializer(serializers.HyperlinkedModelSerializer):
+
+    secret_key = serializers.CharField(
+        style={'input_type': 'password'},
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = models.AWSCredentials
-        exclude = ('secret_key', )
+        exclude = ('secret_key', 'user_profile')
 
 
-class OpenStackCredsSerializer(serializers.ModelSerializer):
+class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
+
+    password = serializers.CharField(
+        style={'input_type': 'password'},
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = models.OpenStackCredentials
-        exclude = ('password', )
+        exclude = ('password', 'user_profile')
 
 
 class UserSerializer(UserDetailsSerializer):
+    credentials = CustomHyperlinkedIdentityField(view_name='credentialsroute-list',
+                                                 lookup_field=None)
     aws_creds = serializers.SerializerMethodField()
     openstack_creds = serializers.SerializerMethodField()
 
@@ -532,7 +552,8 @@ class UserSerializer(UserDetailsSerializer):
         try:
             creds = obj.userprofile.credentials.filter(
                 awscredentials__isnull=False).select_subclasses()
-            return AWSCredsSerializer(instance=creds, many=True).data
+            return AWSCredsSerializer(instance=creds, many=True,
+                                      context=self.context).data
         except models.UserProfile.DoesNotExist:
             return ""
 
@@ -543,10 +564,11 @@ class UserSerializer(UserDetailsSerializer):
         try:
             creds = obj.userprofile.credentials.filter(
                 openstackcredentials__isnull=False).select_subclasses()
-            return OpenStackCredsSerializer(instance=creds, many=True).data
+            return OpenstackCredsSerializer(instance=creds, many=True,
+                                            context=self.context).data
         except models.UserProfile.DoesNotExist:
             return ""
 
     class Meta(UserDetailsSerializer.Meta):
-        fields = UserDetailsSerializer.Meta.fields + ('aws_creds',
-                                                      'openstack_creds')
+        fields = UserDetailsSerializer.Meta.fields + \
+            ('aws_creds', 'openstack_creds', 'credentials')

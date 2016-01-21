@@ -14,9 +14,9 @@ from baselaunch import util
 from baselaunch import view_helpers
 
 
-# -----------------------------------
+# ==================================
 # Django Rest Framework View Helpers
-# -----------------------------------
+# ==================================
 class CustomNonModelObjectMixin(object):
     """
     A custom viewset mixin to make it easier to work with non-django-model viewsets.
@@ -76,9 +76,9 @@ class CustomReadOnlySingleViewSet(CustomNonModelObjectMixin,
         # return an empty data row so that the serializer can emit fields
         return {}
 
-# --------------------------------------------
+# ===========================================
 # Django Rest Framework Serialization Helpers
-# --------------------------------------------
+# ===========================================
 
 
 class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
@@ -116,16 +116,17 @@ class CustomHyperlinkedRelatedField(relations.HyperlinkedRelatedField):
         # Let serializer context values override view kwargs
         reverse_kwargs.update({key: val for key, val in self.context.items()
                                if key in self.parent_url_kwargs})
-        lookup_value = util.getattrd(obj, self.lookup_field)
-        if lookup_value:
-            reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
+        if self.lookup_field:
+            lookup_value = util.getattrd(obj, self.lookup_field)
+            if lookup_value:
+                reverse_kwargs.update({self.lookup_url_kwarg: lookup_value})
         try:
             return self.reverse(
                 view_name, kwargs=reverse_kwargs, request=request, format=format)
         except NoReverseMatch as e:
             # If the reverse() failed when the lookup_value is empty, just
             # ignore, since it's probably a null value in the dataset
-            if lookup_value:
+            if self.lookup_field and lookup_value:
                 raise e
             return ""
 

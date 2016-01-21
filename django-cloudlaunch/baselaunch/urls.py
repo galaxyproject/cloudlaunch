@@ -86,6 +86,13 @@ bucket_router = HybridNestedRouter(cloud_router, r'object_store/buckets',
 bucket_router.register(r'objects', views.BucketObjectViewSet,
                        base_name='bucketobject')
 
+profile_router = HybridSimpleRouter()
+profile_router.register(r'credentials', views.CredentialsRouteViewSet,
+                        base_name='credentialsroute')
+profile_router.register(r'credentials/aws', views.AWSCredentialsViewSet)
+profile_router.register(r'credentials/openstack',
+                        views.OpenstackCredentialsViewSet)
+
 
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
@@ -100,6 +107,7 @@ urlpatterns = [
                                               namespace='rest_auth_reg')),
     url(r'^api/v1/auth/', include('rest_framework.urls',
                                   namespace='rest_framework')),
+    url(r'^api/v1/auth/user/', include(profile_router.urls)),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
     url(r'^accounts/', include('allauth.urls')),
