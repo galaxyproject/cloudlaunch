@@ -93,7 +93,7 @@ def launch_status(request):
     ``error``, and ``starting_text``.
     """
     # task_id = request.POST.get('task_id', '')
-    task_id = request.session['ec2data']['task_id']
+    task_id = request.session.get('ec2data').get('task_id')
     r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': '', 'instance_id': '',
          'sg_name': '', 'kp_name': ''}
     if task_id:
