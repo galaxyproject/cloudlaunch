@@ -92,9 +92,7 @@ def launch_status(request):
     Return a JSON object with the following keys: ``task_id``, ``ready``,
     ``error``, and ``starting_text``.
     """
-    task_id = None
-    if request.session:
-        task_id = request.session.get('ec2data').get('task_id')
+    task_id = request.session.get('ec2data', {}).get('task_id')
     r = {'task_id': '', 'ready': '', 'error': '', 'starting_text': '', 'instance_id': '',
          'sg_name': '', 'kp_name': ''}
     if task_id:
