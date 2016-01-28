@@ -388,6 +388,8 @@ class BucketSerializer(serializers.Serializer):
 class BucketObjectSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
     name = serializers.CharField(allow_blank=True)
+    size = serializers.IntegerField(read_only=True)
+    last_modified = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='bucketobject-detail',
                                          lookup_field='id',
                                          lookup_url_kwarg='pk',
