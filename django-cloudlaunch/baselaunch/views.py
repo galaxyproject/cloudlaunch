@@ -423,8 +423,10 @@ class AWSCredentialsViewSet(CredentialsViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.userprofile.credentials.filter(
-            awscredentials__isnull=False).select_subclasses()
+        if hasattr(user, 'userprofile'):
+            return user.userprofile.credentials.filter(
+                awscredentials__isnull=False).select_subclasses()
+        return models.AWSCredentials.objects.none()
 
 
 class OpenstackCredentialsViewSet(CredentialsViewSet):
@@ -437,5 +439,7 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.userprofile.credentials.filter(
-            openstackcredentials__isnull=False).select_subclasses()
+        if hasattr(user, 'userprofile'):
+            return user.userprofile.credentials.filter(
+                openstackcredentials__isnull=False).select_subclasses()
+        return models.OpenStackCredentials.objects.none()
