@@ -410,6 +410,9 @@ class CredentialsRouteViewSet(drf_helpers.CustomReadOnlySingleViewSet):
 class CredentialsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
+        if not hasattr(self.request.user, 'userprofile'):
+            # Create a user profile if it does not exist
+            models.UserProfile.objects.create(user=self.request.user)
         serializer.save(user_profile=self.request.user.userprofile)
 
 
