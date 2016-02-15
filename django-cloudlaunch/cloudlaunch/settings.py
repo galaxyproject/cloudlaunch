@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'corsheaders',
-    'rest_framework',
     'rest_framework.authtoken',
     'rest_auth',
     'allauth',
@@ -58,7 +57,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.twitter',
     'djcelery',
-    'baselaunch'
+    'baselaunch',
+    # rest framework must come after baselaunch so templates can be overridden
+    'rest_framework'
 ]
 
 MIDDLEWARE_CLASSES = [
