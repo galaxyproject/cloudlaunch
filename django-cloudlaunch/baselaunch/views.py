@@ -410,6 +410,9 @@ class CredentialsRouteViewSet(drf_helpers.CustomReadOnlySingleViewSet):
 class CredentialsViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
+        if not hasattr(self.request.user, 'userprofile'):
+            # Create a user profile if it does not exist
+            models.UserProfile.objects.create(user=self.request.user)
         serializer.save(user_profile=self.request.user.userprofile)
 
 
@@ -423,8 +426,10 @@ class AWSCredentialsViewSet(CredentialsViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.userprofile.credentials.filter(
-            awscredentials__isnull=False).select_subclasses()
+        if hasattr(user, 'userprofile'):
+            return user.userprofile.credentials.filter(
+                awscredentials__isnull=False).select_subclasses()
+        return models.AWSCredentials.objects.none()
 
 
 class OpenstackCredentialsViewSet(CredentialsViewSet):
@@ -437,5 +442,7 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return user.userprofile.credentials.filter(
-            openstackcredentials__isnull=False).select_subclasses()
+        if hasattr(user, 'userprofile'):
+            return user.userprofile.credentials.filter(
+                openstackcredentials__isnull=False).select_subclasses()
+        return models.OpenStackCredentials.objects.none()
