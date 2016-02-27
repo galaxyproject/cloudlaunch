@@ -39,13 +39,26 @@ def get_credentials_from_request(cloud, request):
         os_username = request.META.get('HTTP_CL_OS_USERNAME')
         os_password = request.META.get('HTTP_CL_OS_PASSWORD')
         os_tenant_name = request.META.get('HTTP_CL_OS_TENANT_NAME')
-        if os_username and os_password and os_tenant_name:
-            return {'os_username': os_username,
-                    'os_password': os_password,
-                    'os_tenant_name': os_tenant_name
-                    }
-        else:
-            return {}
+        os_project_name = request.META.get('HTTP_CL_OS_PROJECT_NAME')
+        os_project_domain_name = request.META.get(
+            'HTTP_CL_OS_PROJECT_TENANT_NAME')
+        os_user_domain_name = request.META.get('HTTP_CL_OS_USER_DOMAIN_NAME')
+        os_identity_api_version = request.META.get(
+            'HTTP_CL_OS_IDENTITY_API_VERSION')
+        d = {}
+        if os_username and os_password:
+            d = {'os_username': os_username, 'os_password': os_password}
+            if os_tenant_name:
+                d['os_tenant_name'] = os_tenant_name
+            if os_project_name:
+                d['os_project_name'] = os_project_name
+            if os_project_domain_name:
+                d['os_project_domain_name'] = os_project_domain_name
+            if os_user_domain_name:
+                d['os_user_domain_name'] = os_user_domain_name
+            if os_identity_api_version:
+                d['os_identity_api_version'] = os_identity_api_version
+        return d
     elif isinstance(cloud, models.AWS):
         aws_access_key = request.META.get('HTTP_CL_AWS_ACCESS_KEY')
         aws_secret_key = request.META.get('HTTP_CL_AWS_SECRET_KEY')
