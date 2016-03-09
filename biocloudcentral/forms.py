@@ -117,6 +117,11 @@ class CloudManForm(forms.Form):
         initial="10",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
         help_text="The size of the storage (in GB; number only). The default is 10.")
+    iops = forms.CharField(
+        required=False,
+        label="AWS volume IOPS",
+        widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
+        help_text="Min: 100; max: 20000; max 30:1 IOPS to size ratio.")
     placement = DynamicChoiceField(
         (("", "Fill above fields & click refresh to fetch"),),
         help_text="A specific placement zone where your server will run. This "

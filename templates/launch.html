@@ -375,17 +375,20 @@
           $('#id_storage_type_0').parent().parent().parent().parent().parent().parent().show();
           $('#id_storage_size').parent().parent().parent().show();
           $('#id_storage_size').parent().parent().show();
+          $('#id_iops').parent().parent().show();
           break;
         case "Data":
           $('#id_storage_type_1').prop('disabled', false);
           $('#id_storage_type_1').prop('checked', true);
           $('#id_storage_type_1').parent().parent().parent().parent().parent().parent().show();
           $('#id_storage_size').parent().parent().hide();
+          $('#id_iops').parent().parent().hide();
           break;
         case "None":
           $('#id_storage_type_0').prop('checked', true);
           $('#id_storage_size').parent().parent().hide();
           $('#id_storage_type_0').parent().parent().parent().parent().parent().parent().hide();
+          $('#id_iops').parent().parent().show();
           break;
       }
     }
@@ -394,9 +397,11 @@
       switch (storage_type) {
         case "transient":
           $('#id_storage_size').parent().parent().hide();
+          $('#id_iops').parent().parent().hide();
           break;
         case "volume":
           $('#id_storage_size').parent().parent().show();
+          $('#id_iops').parent().parent().show();
           break;
       }
     }
