@@ -169,6 +169,7 @@ def run_instance(form):
 
     instance_type = (form['custom_instance_type'] if form['custom_instance_type']
                      else form['instance_type'])
+    ebs_optimized = True if form.get('ebs_optimized', None) == 'on' else False
     # Create cloudman connection with provided creds
     cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
     form["freenxpass"] = form["password"]
@@ -181,7 +182,8 @@ def run_instance(form):
         kwargs['key_name'] = form['key_pair']
     for key in form.iterkeys():
         if key in ['cluster_name', 'image_id', 'instance_type', 'password',
-                   'placement', 'access_key', 'secret_key', 'cloud', 'key_pair']:
+                   'placement', 'access_key', 'secret_key', 'cloud', 'key_pair',
+                   'ebs_optimized']:
             del kwargs[key]
 
     response = {}
@@ -197,6 +199,7 @@ def run_instance(form):
                               kernel_id=kernel_id,
                               ramdisk_id=ramdisk_id,
                               placement=form['placement'],
+                              ebs_optimized=ebs_optimized,
                               **kwargs)
     # Keep these parts of the form as part of the response
     response['cluster_name'] = form['cluster_name']

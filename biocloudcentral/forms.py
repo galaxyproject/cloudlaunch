@@ -33,6 +33,7 @@ class CloudManForm(forms.Form):
     key_url = "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key"
     ud_url = "https://wiki.galaxyproject.org/CloudMan/UserData"
     types_url = "https://wiki.galaxyproject.org/CloudMan/ClusterTypes"
+    ebs_url = "http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html"
     target = "target='_blank'"
     textbox_size = "ui-input"
     cloud = forms.ModelChoiceField(
@@ -119,9 +120,16 @@ class CloudManForm(forms.Form):
         help_text="The size of the storage (in GB; number only). The default is 10.")
     iops = forms.CharField(
         required=False,
-        label="AWS volume IOPS",
+        label="Volume IOPS",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
-        help_text="Min: 100; max: 20000; max 30:1 IOPS to size ratio.")
+        help_text="Min: 100; max: 20000; max 30:1 IOPS to size ratio (AWS only).")
+    ebs_optimized = forms.ChoiceField(
+        required=False,
+        label="EBS-optimized",
+        widget=forms.CheckboxInput(),
+        choices=[('on', True), ('False', False)],
+        help_text="If checked, use an <a href='{0}' {1} tabindex='-1'>"
+                  "EBS-optimized</a> instance (AWS only).".format(ebs_url, target))
     placement = DynamicChoiceField(
         (("", "Fill above fields & click refresh to fetch"),),
         help_text="A specific placement zone where your server will run. This "
