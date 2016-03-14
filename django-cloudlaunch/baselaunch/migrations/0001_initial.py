@@ -24,8 +24,13 @@ class Migration(migrations.Migration):
                 ('updated', models.DateTimeField(auto_now=True)),
                 ('name', models.CharField(max_length=60)),
                 ('slug', models.SlugField(primary_key=True, serialize=False)),
+                ('summary', models.TextField(blank=True, max_length=140, null=True)),
                 ('description', models.TextField(blank=True, null=True)),
                 ('info_url', models.URLField(blank=True, null=True)),
+                ('icon_url', models.URLField(blank=True, null=True)),
+                ('maintainer', models.TextField(blank=True, null=True)),
+                ('frontend_component_path', models.TextField(blank=True, null=True)),
+                ('frontend_component_name', models.TextField(blank=True, null=True)),
             ],
             options={
                 'abstract': False,

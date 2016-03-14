@@ -105,8 +105,14 @@ class CloudImage(Image):
 
 class Application(DateNameAwareModel):
     slug = models.SlugField(max_length=50, primary_key=True)
+    # summary is the size of a tweet. description can be of arbitrary length
+    summary = models.TextField(max_length=140, blank=True, null=True)
+    maintainer = models.TextField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     info_url = models.URLField(blank=True, null=True)
+    icon_url = models.URLField(blank=True, null=True)
+    frontend_component_path = models.TextField(blank=True, null=True)
+    frontend_component_name = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return "{0}".format(self.name)
