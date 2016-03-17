@@ -386,6 +386,37 @@ def get_key_pairs(request):
     return HttpResponse(simplejson.dumps(response), mimetype="application/json")
 
 
+def get_subnets(request):
+    """
+    Fetch all subnets available under the supplied account.
+    """
+    response = {}
+    if request.is_ajax():
+        if request.method == 'POST':
+            cloud_id = request.POST.get('cloud_id', '')
+            a_key = request.POST.get('a_key', '')
+            s_key = request.POST.get('s_key', '')
+            subnets = []
+            if a_key != '' and s_key != '':
+                # Needed to get the cloud connection
+                cloud = models.Cloud.objects.get(pk=cloud_id)
+                cml = CloudManLauncher(a_key, s_key, cloud)
+                snl = cml.vpc_conn.get_all_subnets()
+                for sn in snl:
+                    subnets.append({'id': sn.id, 'name': sn.tags.get('Name'),
+                                    'vpc_id': sn.vpc_id})
+                response = {'subnets': subnets}
+        else:
+            response = {"error": "Not a POST request", "subnets": []}
+            log.error("Not a POST request")
+    else:
+        response = {"error": "Not an AJAX request", "subnets": []}
+        log.error("No XHR")
+    if not response:
+        response = {"error": "Please specify access and secret keys", "subnets": []}
+    return HttpResponse(simplejson.dumps(response), mimetype="application/json")
+
+
 def fetch_clusters(request):
     """
     Intiate retrieval of a list of clusters associated with a given account on

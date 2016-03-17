@@ -19,6 +19,7 @@ urlpatterns = patterns(
     url(r'^get-flavors$', 'biocloudcentral.views.get_flavors', name='get_flavors'),
     url(r'^get-placements$', 'biocloudcentral.views.get_placements', name='get_placements'),
     url(r'^get-key-pairs$', 'biocloudcentral.views.get_key_pairs', name='get_key_pairs'),
+    url(r'^get-subnets$', 'biocloudcentral.views.get_subnets', name='get_subnets'),
     url(r'^fetch-clusters$', 'biocloudcentral.views.fetch_clusters', name='fetch_clusters'),
     url(r'^update-clusters$', 'biocloudcentral.views.update_clusters',
         name='update_clusters'),

@@ -180,6 +180,44 @@
       });
     }
 
+    function get_subnets(){
+      var jqxhr = $.ajax({
+        url: "{% url get_subnets %}",
+        type: "post",
+        data: {'cloud_id': $('#id_cloud').val(),
+               'a_key': $('#id_access_key').val(),
+               's_key': $('#id_secret_key').val(),
+               csrfmiddlewaretoken: csrf_token},
+        beforeSend: function(){
+            disable_fields(false);
+            $(this).attr('value', "Fetching data... please wait");
+        },
+        success: function(data) {
+            enable_fields();
+            if (data.subnets.length > 0){
+                var subnets = '';
+                for (var i=0; i<data.subnets.length; i++) {
+                    subnets += '<option value="' + data.subnets[i].id + '">'
+                        + data.subnets[i].id + " | " + data.subnets[i].name
+                        + " (" + data.subnets[i].vpc_id + ")</option>";
+                }
+                $('#id_subnet_id').html(subnets);
+                $('#id_subnet_id').removeAttr('disabled');
+            } else if (data.error) {
+                $('#id_subnet_id').attr('disabled', 'disabled');
+                $('#id_subnet_id').html("<option>" + data.error + "</option>");
+            } else {
+                $('#id_subnet_id').attr('disabled', 'disabled');
+                $('#id_subnet_id').html("<option>Click refresh to update</option>");
+            }
+        },
+        error: function(data){
+            $('#id_subnet_id').attr('disabled', 'disabled');
+            $('#id_subnet_id').html("<option>" + data.error + "</option>");
+        }
+      });
+    }
+
     function disable_fields(all){
       // Disable inptu fields. Parameter ``all`` (default value is ``true``)
       // indicates that all the input fields should be disabled. If the provided
@@ -462,6 +500,13 @@
         $('#get_gey_pair_btn').tooltip({"placement": "right",
           'title': 'Fetch available key pairs'});
 
+        $('#get_subnets_btn').click(function(event){
+          event.preventDefault();
+          get_subnets(true);
+        });
+        $('#get_subnets_btn').tooltip({"placement": "right",
+          'title': 'Fetch available subnets.'});
+
         $('#abort_clusters_fetch').tooltip({"placement": "right",
           'title': 'Abort cluster fetch request'});
 
@@ -608,6 +653,9 @@
           {% endif %}
           {% if field.label == 'Key pair' %}
             <i id="get_gey_pair_btn" class="icon-location-arrow action-icons"></i>
+          {% endif %}
+          {% if field.label == 'Subnet IDs' %}
+            <i id="get_subnets_btn" class="icon-location-arrow action-icons"></i>
           {% endif %}
         </div>
         {% include "bootstrap_toolkit/field_errors.html" with display="inline" %}

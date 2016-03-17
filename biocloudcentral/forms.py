@@ -140,6 +140,12 @@ class CloudManForm(forms.Form):
         help_text="A specific key pair to be used when launching your server. This "
         "requires you have filled out the initial 6 fields!", required=False,
         widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
+    subnet_id = DynamicChoiceField(
+        (("", "Fill above fields & click refresh to fetch"),),
+        label="Subnet IDs",
+        help_text="A specific subnet to be used when launching your server. This "
+        "requires you have filled out the initial 6 fields!", required=False,
+        widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled'}))
     bucket_default = forms.CharField(
         required=False,
         label="Default bucket",
