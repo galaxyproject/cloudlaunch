@@ -177,14 +177,15 @@ def userdata(request):
     Provide file download of user-data to enable re-start an instance from
     cloud's console or the API.
     """
-    ec2data = request.session["ec2data"]
+    ec2data = request.session.get("ec2data", {})
     response = HttpResponse(mimetype='text/plain')
-    response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
-        **ec2data)
-    form = request.session["ec2data"]
-    cml = CloudManLauncher(form["access_key"], form["secret_key"], form['cloud'])
-    ud = cml._compose_user_data(ec2data)
-    response.write(ud)
+    if ec2data:
+        response['Content-Disposition'] = 'attachment; filename={cluster_name}-userdata.txt'.format(
+            **ec2data)
+        # form = request.session["ec2data"]
+        cml = CloudManLauncher(ec2data.get("access_key"), ec2data.get("secret_key"), ec2data.get('cloud'))
+        ud = cml._compose_user_data(ec2data)
+        response.write(ud)
     return response
 
 
