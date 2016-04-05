@@ -264,6 +264,7 @@
               var clusters = Array();
               if (data.error != null){
                 $('#error_container').text(data.error);
+                $('#error_container').addClass('alert alert-error');
                 enable_fields();
               }
               else if (data.clusters_list.length > 0) {
@@ -288,6 +289,11 @@
                 enable_fields();
                 c_name_el.attr("value", "No exiting clusters; enter any desired name");
               }
+            }
+            else if (data.error != null){
+              $('#error_container').text(data.error);
+              $('#error_container').addClass('alert alert-error');
+              enable_fields();
             }
             else {
               c_name_el.attr('value', data.wait_text);

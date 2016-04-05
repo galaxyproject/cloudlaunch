@@ -420,17 +420,20 @@ def get_subnets(request):
 
 def fetch_clusters(request):
     """
-    Intiate retrieval of a list of clusters associated with a given account on
+    Initiate retrieval of a list of clusters associated with a given account on
     a given cloud. Returns a JSON with a ``task_id`` key to be used to get the
     status and the actual list of clusters (via ``fetch_clusters_status`` method).
     """
     cloud_id = request.POST.get('cloud_id', '')
     a_key = request.POST.get('a_key', '')
     s_key = request.POST.get('s_key', '')
-    cloud = models.Cloud.objects.get(pk=cloud_id)
-    # Queue the task and return the task ID
-    r = tasks.fetch_clusters.delay(cloud, a_key, s_key)
-    task_id = {'task_id': r.id}
+    if cloud_id and a_key and s_key:
+        cloud = models.Cloud.objects.get(pk=cloud_id)
+        # Queue the task and return the task ID
+        r = tasks.fetch_clusters.delay(cloud, a_key, s_key)
+        task_id = {'task_id': r.id}
+    else:
+        task_id = {'task_id': 'missing_form_data'}  # Pass on context
     return HttpResponse(simplejson.dumps(task_id), mimetype="application/json")
 
 
@@ -454,7 +457,9 @@ def update_clusters(request):
          'clusters_list': [],
          'wait_text': fdt,
          'error': None}
-    if result.ready():
+    if task_id == 'missing_form_data':  # See `fetch_clusters` method
+        r['error'] = "Missing form data. Please supply the data and try again."
+    elif result.ready():
         clusters_pd = result.get()
         r['clusters_list'] = clusters_pd.get('clusters', [])
         if clusters_pd.get('error', None):
