@@ -67,6 +67,12 @@ cloud_router.register(r'object_store/buckets', views.BucketViewSet,
 
 cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
 
+
+# Deployments should probably go into cloudlaunch, instead of being in baselaunch
+# but doing this here for now
+cloud_router.register(r'deployments', views.DeploymentViewSet,
+                      base_name='deployment')
+
 region_router = HybridNestedRouter(cloud_router, r'compute/regions',
                                    lookup='region')
 region_router.register(r'zones', views.ZoneViewSet,

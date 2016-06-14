@@ -449,6 +449,9 @@ class CloudSerializer(serializers.ModelSerializer):
     networks = CustomHyperlinkedIdentityField(view_name='network-list',
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
+    deployments = CustomHyperlinkedIdentityField(view_name='deployment-list',
+                                              lookup_field='slug',
+                                              lookup_url_kwarg='cloud_pk')
 
     class Meta:
         model = models.Cloud
@@ -507,6 +510,24 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Application
+
+
+class DeploymentSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    config_cloudlaunch = serializers.CharField()
+    config_app = serializers.CharField()
+
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        try:
+            # Task outline
+            #user_data = backendcomponent.convert_to_user_data(validated_data)
+            #celery_task_id = celery_launch(provider, deployment_model, user_data)
+            #deployment_model.celery_task_id = celery_task_id
+            print("Will deploy with provider: ", validated_data.get('config_cloudlaunch'))
+            return validated_data
+        except Exception as e:
+            raise serializers.ValidationError("{0}".format(e))
 
 
 class CredentialsSerializer(serializers.Serializer):

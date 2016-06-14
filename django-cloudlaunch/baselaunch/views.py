@@ -446,3 +446,14 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
             return user.userprofile.credentials.filter(
                 openstackcredentials__isnull=False).select_subclasses()
         return models.OpenStackCredentials.objects.none()
+
+
+class DeploymentViewSet(drf_helpers.CustomModelViewSet):
+    """
+    List compute related urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.DeploymentSerializer
+
+    def list_objects(self):
+        return []
