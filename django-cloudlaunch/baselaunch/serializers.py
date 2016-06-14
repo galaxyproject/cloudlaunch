@@ -489,7 +489,6 @@ class ObjectStoreSerializer(serializers.Serializer):
 
 
 class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
-    cloud = CloudSerializer(read_only=True, source='cloudimage.cloud')
 
     class Meta:
         model = models.CloudImage
@@ -497,11 +496,12 @@ class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
+    cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
 
     class Meta:
         model = models.ApplicationVersionCloudConfig
-        fields = ('image', 'default_launch_config', 'default_instance_type')
+        fields = ('cloud', 'image', 'default_launch_config', 'default_instance_type')
 
 
 class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
