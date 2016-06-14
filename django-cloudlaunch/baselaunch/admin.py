@@ -1,15 +1,22 @@
 from django.contrib import admin
+import nested_admin
 
 from baselaunch import forms
 from baselaunch import models
 
 
-class AppVersionInline(admin.StackedInline):
-    model = models.ApplicationVersion
+class AppVersionCloudConfigInline(nested_admin.NestedTabularInline):
+    model = models.ApplicationVersionCloudConfig
     extra = 1
 
 
-class AppAdmin(admin.ModelAdmin):
+class AppVersionInline(nested_admin.NestedStackedInline):
+    model = models.ApplicationVersion
+    extra = 0
+    inlines = [AppVersionCloudConfigInline]
+
+
+class AppAdmin(nested_admin.NestedModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     inlines = [AppVersionInline]
 
