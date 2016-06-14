@@ -3,6 +3,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from fernet_fields import EncryptedCharField
 from model_utils.managers import InheritanceManager
+from smart_selects.db_fields import ChainedForeignKey 
 
 
 class DateNameAwareModel(models.Model):
@@ -131,15 +132,16 @@ class ApplicationVersion(models.Model):
 
 
 class ApplicationVersionCloudConfig(models.Model):
-    application_version = models.ForeignKey(ApplicationVersion, related_name="app_version")
-    image = models.ForeignKey(CloudImage, related_name="versions")
+    application_version = models.ForeignKey(ApplicationVersion, related_name="app_version_config")
+    cloud = models.ForeignKey(Cloud, related_name="app_version_config")
+    image = ChainedForeignKey(CloudImage, chained_field="cloud", chained_model_field="cloud")
     default_instance_type = models.CharField(max_length=256, blank=True, null=True)
     # Userdata max length is 16KB
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Instance "
                                    "Initial configuration data to parameterize the launch.",
                                    blank=True, null=True)
     class Meta:
-        unique_together = (("application_version", "image"),)
+        unique_together = (("application_version", "cloud"),)
 
 class Credentials(DateNameAwareModel):
     default = models.BooleanField(

@@ -22,5 +22,6 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^nested_admin/', include('nested_admin.urls')),
+    url(r'^chaining/', include('smart_selects.urls')),
     url(r'', include('baselaunch.urls'))
 ]
