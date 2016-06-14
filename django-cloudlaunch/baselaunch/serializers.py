@@ -509,7 +509,7 @@ class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.ApplicationVersion
-        fields = ('version','cloud_config')
+        fields = ('version','cloud_config', 'frontend_component_path', 'frontend_component_name')
 
 
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
