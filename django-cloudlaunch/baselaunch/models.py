@@ -111,8 +111,6 @@ class Application(DateNameAwareModel):
     description = models.TextField(max_length=32767, blank=True, null=True)
     info_url = models.URLField(max_length=2048, blank=True, null=True)
     icon_url = models.URLField(max_length=2048, blank=True, null=True)
-    frontend_component_path = models.TextField(max_length=2048, blank=True, null=True)
-    frontend_component_name = models.TextField(max_length=2048, blank=True, null=True)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -127,16 +125,21 @@ class Application(DateNameAwareModel):
 class ApplicationVersion(models.Model):
     application = models.ForeignKey(Application, related_name="versions")
     version = models.CharField(max_length=30)
-    # Image provides a link to the infrastructure and is hence a ManyToMany
-    # field as the same application definition and version may be available
-    # on multiple infrastructures.
-    images = models.ManyToManyField(Image, blank=True,
-                                    related_name="applications")
-    # Userdata max length is 16KB
-    launch_data = models.TextField(max_length=1024 * 16, help_text="Instance "
-                                   "user data to parameterize the launch.",
-                                   blank=True, null=True)
+    frontend_component_path = models.TextField(max_length=2048, blank=True, null=True)
+    frontend_component_name = models.TextField(max_length=2048, blank=True, null=True)
+    backend_component_name = models.TextField(max_length=2048, blank=True, null=True)
 
+
+class ApplicationVersionCloudConfig(models.Model):
+    application_version = models.ForeignKey(ApplicationVersion, related_name="app_version")
+    image = models.ForeignKey(CloudImage, related_name="versions")
+    default_instance_type = models.CharField(max_length=256, blank=True, null=True)
+    # Userdata max length is 16KB
+    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Instance "
+                                   "Initial configuration data to parameterize the launch.",
+                                   blank=True, null=True)
+    class Meta:
+        unique_together = (("application_version", "image"),)
 
 class Credentials(DateNameAwareModel):
     default = models.BooleanField(
