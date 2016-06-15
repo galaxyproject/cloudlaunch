@@ -520,11 +520,23 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Application
 
 
-class DeploymentSerializer(serializers.Serializer):
-    id = serializers.CharField(read_only=True)
-    config_cloudlaunch = serializers.CharField()
-    config_app = serializers.CharField()
+class DeploymentSerializer(serializers.ModelSerializer):
+    instance_type = serializers.CharField(read_only=True)
+    placement_zone = serializers.CharField(read_only=True)
+    keypair_name = serializers.CharField(read_only=True)
+    network = serializers.CharField(read_only=True)
+    subnet = serializers.CharField(read_only=True)
+    provider_settings = serializers.CharField(read_only=True)
+    application_config = serializers.CharField(read_only=True)
+    config_cloudlaunch = serializers.CharField(write_only=True, required=True)
+    config_app = serializers.CharField(write_only=True, required=False, allow_blank=True)
 
+    class Meta:
+        model = models.ApplicationDeployment
+        fields = ('id','name', 'application_version', 'target_cloud', 'instance_type',
+                  'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
+                  'application_config', 'added', 'updated', 'config_cloudlaunch', 'config_app')
+        
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         try:
@@ -537,7 +549,7 @@ class DeploymentSerializer(serializers.Serializer):
         except Exception as e:
             raise serializers.ValidationError("{0}".format(e))
 
-
+    
 class CredentialsSerializer(serializers.Serializer):
     aws = CustomHyperlinkedIdentityField(view_name='awscredentials-list')
     openstack = CustomHyperlinkedIdentityField(
