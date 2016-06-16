@@ -148,6 +148,7 @@ class ApplicationVersionCloudConfig(models.Model):
 
 
 class ApplicationDeployment(DateNameAwareModel):
+    owner = models.OneToOneField(User, null=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
     target_cloud = models.ForeignKey(Cloud, null=False)
     instance_type = models.TextField(max_length=256, help_text="Instance Type for this"

@@ -521,6 +521,7 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class DeploymentSerializer(serializers.ModelSerializer):
+    owner = serializers.CharField(read_only=True)
     instance_type = serializers.CharField(read_only=True)
     placement_zone = serializers.CharField(read_only=True)
     keypair_name = serializers.CharField(read_only=True)
@@ -535,7 +536,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = models.ApplicationDeployment
         fields = ('id','name', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
-                  'application_config', 'added', 'updated', 'config_cloudlaunch', 'config_app')
+                  'application_config', 'added', 'updated', 'owner', 'config_cloudlaunch', 'config_app')
         
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
