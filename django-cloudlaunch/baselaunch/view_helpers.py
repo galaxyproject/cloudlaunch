@@ -2,14 +2,14 @@ from baselaunch import domain_model
 from baselaunch import models
 
 
-def get_cloud_provider(view):
+def get_cloud_provider(view, cloud_id = None):
     """
     Returns a cloud provider for the current user. The relevant
     cloud is discovered from the view and the credentials are retrieved
     from the request or user profile. Return ``None`` if no credentials were
     retrieved.
     """
-    cloud_pk = view.kwargs.get("cloud_pk")
+    cloud_pk = cloud_id or view.kwargs.get("cloud_pk")
     cloud = models.Cloud.objects.filter(
         slug=cloud_pk).select_subclasses().first()
 

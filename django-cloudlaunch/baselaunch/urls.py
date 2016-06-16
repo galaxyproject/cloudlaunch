@@ -29,6 +29,7 @@ router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
 router.register(r'infrastructure', views.InfrastructureView,
                 base_name='infrastructure')
+router.register(r'deployments', views.DeploymentViewSet)
 router.register(r'auth', views.AuthView, base_name='auth')
 
 infra_router = HybridSimpleRouter()

@@ -448,12 +448,10 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
         return models.OpenStackCredentials.objects.none()
 
 
-class DeploymentViewSet(drf_helpers.CustomModelViewSet):
+class DeploymentViewSet(viewsets.ModelViewSet):
     """
     List compute related urls.
     """
+    queryset = models.ApplicationDeployment.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
-
-    def list_objects(self):
-        return []

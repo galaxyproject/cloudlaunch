@@ -449,9 +449,6 @@ class CloudSerializer(serializers.ModelSerializer):
     networks = CustomHyperlinkedIdentityField(view_name='network-list',
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
-    deployments = CustomHyperlinkedIdentityField(view_name='deployment-list',
-                                              lookup_field='slug',
-                                              lookup_url_kwarg='cloud_pk')
 
     class Meta:
         model = models.Cloud
@@ -522,6 +519,7 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
+    name = serializers.CharField(required=False)
     instance_type = serializers.CharField(read_only=True)
     placement_zone = serializers.CharField(read_only=True)
     keypair_name = serializers.CharField(read_only=True)
@@ -529,20 +527,43 @@ class DeploymentSerializer(serializers.ModelSerializer):
     subnet = serializers.CharField(read_only=True)
     provider_settings = serializers.CharField(read_only=True)
     application_config = serializers.CharField(read_only=True)
-    config_cloudlaunch = serializers.CharField(write_only=True, required=True)
-    config_app = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    application = serializers.CharField(write_only=True, required=True)
+    config_cloudlaunch = serializers.JSONField(write_only=True, required=True)
+    config_app = serializers.JSONField(write_only=True, required=False)
 
     class Meta:
         model = models.ApplicationDeployment
-        fields = ('id','name', 'application_version', 'target_cloud', 'instance_type',
+        fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_cloudlaunch', 'config_app')
         
+    def to_internal_value(self, data):
+        application = data.get('application')
+        version = data.get('application_version')
+        if version:
+            version = models.ApplicationVersion.objects.get(application=application, version=version)
+            data['application_version'] = version.id
+        return super(DeploymentSerializer, self).to_internal_value(data)
+    
+    def import_class(self, name):
+        """
+        TODO: Move out to a different util class
+        """
+        from importlib import import_module
+
+        parts = name.rsplit('.', 1)
+        cls = getattr(import_module(parts[0]), parts[1])
+        return cls
+        
     def create(self, validated_data):
-        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        cloud = validated_data.get("target_cloud")
+        version = validated_data.get("application_version")
+        provider = view_helpers.get_cloud_provider(self.context.get('view'), cloud.slug)
         try:
             # Task outline
-            #user_data = backendcomponent.convert_to_user_data(validated_data)
+            handler = self.import_class(version.backend_component_name)()
+            config = handler.process_config_data(validated_data.get("config_app", {}))
+            print(config)
             #celery_task_id = celery_launch(provider, deployment_model, user_data)
             #deployment_model.celery_task_id = celery_task_id
             print("Will deploy with provider: ", validated_data.get('config_cloudlaunch'))
