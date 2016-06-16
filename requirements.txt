@@ -9,4 +9,5 @@ django-model-utils>=2.4
 django-celery>=3.1.17
 django-fernet-fields==0.4
 django-cors-headers>=1.1.0
-django-nested-admin
+django-nested-admin>=3.0.8
+django-smart-selects>=1.2.2
