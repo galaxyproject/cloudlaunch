@@ -454,6 +454,16 @@ class CloudSerializer(serializers.ModelSerializer):
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
 
+    region_name = serializers.SerializerMethodField()
+
+    def get_region_name(self, obj):
+        if hasattr(obj, 'aws'):
+            return obj.aws.compute.ec2_region_name
+        elif hasattr(obj, 'openstack'):
+            return obj.openstack.region_name
+        else:
+            return "Cloud provider not recognized"
+
     class Meta:
         model = models.Cloud
         exclude = ('kind',)
@@ -508,11 +518,11 @@ class StringToJSONField(serializers.JSONField):
 
 
 class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
-    
-        
+
+
     cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
-    default_launch_config = StringToJSONField() 
+    default_launch_config = StringToJSONField()
 
     class Meta:
         model = models.ApplicationVersionCloudConfig
@@ -554,7 +564,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_cloudlaunch', 'config_app')
-        
+
     def to_internal_value(self, data):
         application = data.get('application')
         version = data.get('application_version')
@@ -562,7 +572,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             version = models.ApplicationVersion.objects.get(application=application, version=version)
             data['application_version'] = version.id
         return super(DeploymentSerializer, self).to_internal_value(data)
-    
+
     def import_class(self, name):
         """
         TODO: Move out to a different util class
@@ -573,7 +583,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
         cls = getattr(import_module(parts[0]), parts[1])
         return cls
 
-     
     def create(self, validated_data):
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
@@ -594,7 +603,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError("{0}".format(e))
 
-    
+
 class CredentialsSerializer(serializers.Serializer):
     aws = CustomHyperlinkedIdentityField(view_name='awscredentials-list')
     openstack = CustomHyperlinkedIdentityField(
