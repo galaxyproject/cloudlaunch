@@ -8,6 +8,7 @@ from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from baselaunch import models
+from baselaunch import tasks
 from baselaunch import view_helpers
 from baselaunch.drf_helpers import CustomHyperlinkedIdentityField
 from baselaunch.drf_helpers import PlacementZonePKRelatedField
@@ -586,18 +587,23 @@ class DeploymentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
+        launch_config = validated_data.get("config_cloudlaunch")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
         default_config = json.loads(cloud_version_config.default_launch_config)
         provider = view_helpers.get_cloud_provider(self.context.get('view'), cloud.slug)
         try:
+            # print("validated_data: %s" % validated_data)
             # Task outline
             handler = self.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
+            # print ("app_config: %s" % app_config)
             merged_config = jsonmerge.merge(default_config.get("config_app", {}), app_config)
-            final_config = handler.process_config_data(merged_config)
+            # print ("merged_config: %s" % merged_config)
+            final_ud_config = handler.process_config_data(merged_config)
             print("--------------------------------")
-            print(yaml.dump(final_config))
-            #celery_task_id = celery_launch(provider, deployment_model, user_data)
+            celery_task_id = tasks.launch_appliance(
+                provider, version, launch_config, final_ud_config)
+            #celery_task_id = tasks.launch_appliance(provider, deployment_model, user_data)
             #deployment_model.celery_task_id = celery_task_id
             return validated_data
         except Exception as e:
