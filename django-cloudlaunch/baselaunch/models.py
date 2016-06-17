@@ -4,6 +4,7 @@ from django.template.defaultfilters import slugify
 from fernet_fields import EncryptedCharField
 from model_utils.managers import InheritanceManager
 from smart_selects.db_fields import ChainedForeignKey 
+import json
 
 
 class DateNameAwareModel(models.Model):
@@ -146,6 +147,14 @@ class ApplicationVersionCloudConfig(models.Model):
     class Meta:
         unique_together = (("application_version", "cloud"),)
 
+    def save(self, *args, **kwargs):
+        # validate user data
+        if self.default_launch_config:
+            try:
+                json.loads(self.default_launch_config)
+            except Exception as e:
+                raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
+        return super(ApplicationVersionCloudConfig, self).save()
 
 class ApplicationDeployment(DateNameAwareModel):
     owner = models.OneToOneField(User, null=False)

@@ -13,8 +13,8 @@ class CloudManConfigHandler():
         cloudman_config = self.get_required_val(data, "config_cloudman",
                                                 "CloudMan configuration data must be provided.")
         user_data = {}
-#         user_data['bucket_default'] = self.get_required_val(cloudman_config, "defaultBucket",
-#                                                             "default bucket is required.")
+        user_data['bucket_default'] = self.get_required_val(cloudman_config, "defaultBucket",
+                                                            "default bucket is required.")
         user_data['cluster_name'] = self.get_required_val(cloudman_config, "clusterName",
                                                           "cluster name is required.")
         user_data['password'] = self.get_required_val(cloudman_config, "clusterPassword",
@@ -27,5 +27,6 @@ class CloudManConfigHandler():
         user_data['post_start_script_url'] = cloudman_config.get("masterPostStartScript")
         user_data['worker_post_start_script_url'] = cloudman_config.get("workerPostStartScript")
         user_data['share_string'] = cloudman_config.get("clusterSharedString")
+        user_data['cluster_templates'] = cloudman_config.get("cluster_templates")
         return user_data;
     

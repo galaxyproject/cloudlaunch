@@ -1,4 +1,7 @@
 import urllib
+import json
+import jsonmerge
+import yaml
 
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
@@ -9,6 +12,7 @@ from baselaunch import view_helpers
 from baselaunch.drf_helpers import CustomHyperlinkedIdentityField
 from baselaunch.drf_helpers import PlacementZonePKRelatedField
 from baselaunch.drf_helpers import ProviderPKRelatedField
+from django.contrib.sessions.serializers import JSONSerializer
 
 
 class ZoneSerializer(serializers.Serializer):
@@ -492,9 +496,23 @@ class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'cloud', 'image_id', 'description')
 
 
+class StringToJSONField(serializers.JSONField):
+    def __init__(self, *args, **kwargs):
+        super(StringToJSONField, self).__init__(*args, **kwargs)
+
+    def to_representation(self, value):
+        if value:
+            return json.loads(value)
+        else:
+            return value
+
+
 class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
+    
+        
     cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
+    default_launch_config = StringToJSONField() 
 
     class Meta:
         model = models.ApplicationVersionCloudConfig
@@ -554,19 +572,24 @@ class DeploymentSerializer(serializers.ModelSerializer):
         parts = name.rsplit('.', 1)
         cls = getattr(import_module(parts[0]), parts[1])
         return cls
-        
+
+     
     def create(self, validated_data):
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
+        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
+        default_config = json.loads(cloud_version_config.default_launch_config)
         provider = view_helpers.get_cloud_provider(self.context.get('view'), cloud.slug)
         try:
             # Task outline
             handler = self.import_class(version.backend_component_name)()
-            config = handler.process_config_data(validated_data.get("config_app", {}))
-            print(config)
+            app_config = validated_data.get("config_app", {})
+            merged_config = jsonmerge.merge(default_config.get("config_app", {}), app_config)
+            final_config = handler.process_config_data(merged_config)
+            print("--------------------------------")
+            print(yaml.dump(final_config))
             #celery_task_id = celery_launch(provider, deployment_model, user_data)
             #deployment_model.celery_task_id = celery_task_id
-            print("Will deploy with provider: ", validated_data.get('config_cloudlaunch'))
             return validated_data
         except Exception as e:
             raise serializers.ValidationError("{0}".format(e))
