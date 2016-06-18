@@ -602,7 +602,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             final_ud_config = handler.process_config_data(merged_config)
             print("--------------------------------")
             celery_task_id = tasks.launch_appliance(
-                provider, version, launch_config, final_ud_config)
+                provider, cloud_version_config, launch_config, final_ud_config)
             #celery_task_id = tasks.launch_appliance(provider, deployment_model, user_data)
             #deployment_model.celery_task_id = celery_task_id
             return validated_data
