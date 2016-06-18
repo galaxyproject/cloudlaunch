@@ -558,14 +558,13 @@ class DeploymentSerializer(serializers.ModelSerializer):
     provider_settings = serializers.CharField(read_only=True)
     application_config = serializers.CharField(read_only=True)
     application = serializers.CharField(write_only=True, required=True)
-    config_cloudlaunch = serializers.JSONField(write_only=True, required=True)
     config_app = serializers.JSONField(write_only=True, required=False)
 
     class Meta:
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
-                  'application_config', 'added', 'updated', 'owner', 'config_cloudlaunch', 'config_app')
+                  'application_config', 'added', 'updated', 'owner', 'config_app')
 
     def to_internal_value(self, data):
         application = data.get('application')
@@ -580,16 +579,15 @@ class DeploymentSerializer(serializers.ModelSerializer):
         cloud = models.Cloud.objects.filter(slug=base_cloud.slug).select_subclasses().first()
         version = validated_data.get("application_version")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
-        cloudlaunch_config = validated_data.get("config_cloudlaunch")
         default_config = json.loads(cloud_version_config.default_launch_config)
         credentials = view_helpers.get_credentials(cloud, self.context.get('view').request)
         try:
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
-            merged_config = jsonmerge.merge(default_config.get("config_app", {}), app_config)
+            merged_config = jsonmerge.merge(default_config, app_config)
             final_ud_config = handler.process_config_data(cloud_version_config, merged_config)
             async_result = tasks.launch_appliance.delay(credentials, cloud, version, cloud_version_config,
-                                                  cloudlaunch_config, final_ud_config)
+                                                        merged_config, final_ud_config)
             #validated_data['celery_task_id'] = async_result.task_id
             #deployment_model.celery_task_id = celery_task_id
             return validated_data
