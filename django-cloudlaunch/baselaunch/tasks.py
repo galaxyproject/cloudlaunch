@@ -4,14 +4,16 @@ def _get_or_create_key_pair(provider, kp_name):
     """
     If a key pair with the provided ``kp_name`` does not exist, create it.
     """
-    if kp_name:
-        kp = provider.security.key_pairs.find(name=kp_name)[0]
+    kp = provider.security.key_pairs.find(name=kp_name)
+    if kp:
+        kp = kp[0]
     else:
-        kp = provider.security.key_pairs.find(name='cloudman_key_pair')[0]
+        kp = provider.security.key_pairs.create(name=kp_name)
     return kp
 
 def launch_appliance(provider, version, launch_config, user_data):
-    kp = _get_or_create_key_pair(provider, launch_config.get('keyPair', None))
+    kp = _get_or_create_key_pair(provider, launch_config.get(
+        'keyPair', 'cloudman_key_pair'))
     sg = provider.security.security_groups.find('CloudMan')[0]
     img = provider.compute.images.get('ami-b45e59de')
     inst_type = provider.compute.instance_types.get(launch_config.get('instanceType'))
