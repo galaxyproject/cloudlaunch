@@ -60,8 +60,8 @@ INSTALLED_APPS = [
     'baselaunch',
     # rest framework must come after baselaunch so templates can be overridden
     'rest_framework',
+    'kombu.transport.django', # must be last so all celery tasks are discovered
     'djcelery',
-    'kombu.transport.django' # must be last so all celery tasks are discovered
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -178,6 +178,5 @@ except ImportError:
 
 # django-celery configuration
 
-BROKER_URL = 'django://'
 import djcelery
 djcelery.setup_loader()
