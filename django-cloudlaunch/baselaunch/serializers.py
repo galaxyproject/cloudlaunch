@@ -15,6 +15,7 @@ from baselaunch.drf_helpers import PlacementZonePKRelatedField
 from baselaunch.drf_helpers import ProviderPKRelatedField
 from django.contrib.sessions.serializers import JSONSerializer
 
+from baselaunch import util
 
 class ZoneSerializer(serializers.Serializer):
     id = serializers.CharField()
@@ -574,36 +575,22 @@ class DeploymentSerializer(serializers.ModelSerializer):
             data['application_version'] = version.id
         return super(DeploymentSerializer, self).to_internal_value(data)
 
-    def import_class(self, name):
-        """
-        TODO: Move out to a different util class
-        """
-        from importlib import import_module
-
-        parts = name.rsplit('.', 1)
-        cls = getattr(import_module(parts[0]), parts[1])
-        return cls
-
     def create(self, validated_data):
-        cloud = validated_data.get("target_cloud")
+        base_cloud = validated_data.get("target_cloud")
+        cloud = models.Cloud.objects.filter(slug=base_cloud.slug).select_subclasses().first()
         version = validated_data.get("application_version")
-        launch_config = validated_data.get("config_cloudlaunch")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
+        cloudlaunch_config = validated_data.get("config_cloudlaunch")
         default_config = json.loads(cloud_version_config.default_launch_config)
-        provider = view_helpers.get_cloud_provider(self.context.get('view'), cloud.slug)
+        credentials = view_helpers.get_credentials(cloud, self.context.get('view').request)
         try:
-            # print("validated_data: %s" % validated_data)
-            # Task outline
-            handler = self.import_class(version.backend_component_name)()
+            handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
-            # print ("app_config: %s" % app_config)
             merged_config = jsonmerge.merge(default_config.get("config_app", {}), app_config)
-            # print ("merged_config: %s" % merged_config)
             final_ud_config = handler.process_config_data(cloud_version_config, merged_config)
-            print("--------------------------------")
-            celery_task_id = tasks.launch_appliance(
-                provider, cloud_version_config, launch_config, final_ud_config)
-            #celery_task_id = tasks.launch_appliance(provider, deployment_model, user_data)
+            async_result = tasks.launch_appliance.delay(credentials, cloud, version, cloud_version_config,
+                                                  cloudlaunch_config, final_ud_config)
+            #validated_data['celery_task_id'] = async_result.task_id
             #deployment_model.celery_task_id = celery_task_id
             return validated_data
         except Exception as e:

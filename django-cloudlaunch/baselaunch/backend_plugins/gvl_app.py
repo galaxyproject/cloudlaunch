@@ -1,9 +1,11 @@
 from rest_framework.serializers import ValidationError
 from .cloudman_app import CloudManConfigHandler
+from .app_plugin import BaseAppPlugin
 
-class GVLConfigHandler():
+class GVLConfigHandler(BaseAppPlugin):
     
-    def process_config_data(self, cloud_version_config, data):
+    @staticmethod
+    def process_config_data(cloud_version_config, data):
         gvl_config = data.get("config_gvl")
         if not gvl_config:
             raise ValidationError("GVL configuration data must be provided.")
@@ -17,4 +19,3 @@ class GVLConfigHandler():
             install_list.append('smrt_portal')
         user_data['gvl_config'] = { 'install' : install_list }
         return user_data;
-    
