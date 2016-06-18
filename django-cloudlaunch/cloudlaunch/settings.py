@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'kombu.transport.django',
     'nested_admin',
     'smart_selects',
     'corsheaders',
@@ -58,10 +57,11 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.twitter',
-    'djcelery',
     'baselaunch',
     # rest framework must come after baselaunch so templates can be overridden
-    'rest_framework'
+    'rest_framework',
+    'djcelery',
+    'kombu.transport.django' # must be last so all celery tasks are discovered
 ]
 
 MIDDLEWARE_CLASSES = [
