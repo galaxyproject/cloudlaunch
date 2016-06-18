@@ -1,15 +1,15 @@
 from rest_framework.serializers import ValidationError
-from .cloudman_app import CloudManConfigHandler
+from .cloudman_app import CloudManAppPlugin
 from .app_plugin import BaseAppPlugin
 
-class GVLConfigHandler(BaseAppPlugin):
+class GVLAppPlugin(BaseAppPlugin):
     
     @staticmethod
     def process_config_data(cloud_version_config, data):
         gvl_config = data.get("config_gvl")
         if not gvl_config:
             raise ValidationError("GVL configuration data must be provided.")
-        user_data = CloudManConfigHandler().process_config_data(cloud_version_config, gvl_config)
+        user_data = CloudManAppPlugin().process_config_data(cloud_version_config, gvl_config)
         install_list = []
         install_cmdline = gvl_config.get('gvl_cmdline_utilities', False)
         if install_cmdline:

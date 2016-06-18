@@ -9,7 +9,7 @@ def get_required_val(data, name, message):
     return val
 
 
-class CloudManConfigHandler(BaseAppPlugin):
+class CloudManAppPlugin(BaseAppPlugin):
 
     @staticmethod
     def process_config_data(cloud_version_config, data):
