@@ -16,12 +16,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-# Celery configuration
-BROKER_URL = 'django://'
-import djcelery
-djcelery.setup_loader()
-CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
@@ -67,6 +61,7 @@ INSTALLED_APPS = [
     # rest framework must come after baselaunch so templates can be overridden
     'rest_framework',
     'djcelery',
+    'kombu.transport.django' # must be last so all celery tasks are discovered
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -182,3 +177,7 @@ except ImportError:
     pass
 
 # django-celery configuration
+
+BROKER_URL = 'django://'
+import djcelery
+djcelery.setup_loader()
