@@ -599,7 +599,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             # print ("app_config: %s" % app_config)
             merged_config = jsonmerge.merge(default_config.get("config_app", {}), app_config)
             # print ("merged_config: %s" % merged_config)
-            final_ud_config = handler.process_config_data(merged_config)
+            final_ud_config = handler.process_config_data(cloud_version_config, merged_config)
             print("--------------------------------")
             celery_task_id = tasks.launch_appliance(
                 provider, cloud_version_config, launch_config, final_ud_config)
