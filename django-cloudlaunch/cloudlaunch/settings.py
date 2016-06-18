@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'kombu.transport.django',
     'nested_admin',
     'smart_selects',
     'corsheaders',
