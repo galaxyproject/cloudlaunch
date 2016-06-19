@@ -43,7 +43,15 @@ Use of virtualenv is also highly advised.
    changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
    because it is used to encrypt sensitive database fields.
 
-3. Start the development server and visit http://127.0.0.1:8000/admin/
-   to define your application and infrastructure properties.
+3. Start the development server and celery task queue, each process
+   in its own tab.
 
-4. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
+.. code-block:: bash
+
+    $ python manage.py runserver
+    $ celery -A cloudlaunch worker -l info
+
+4. Visit http://127.0.0.1:8000/admin/ to define your application and
+   infrastructure properties.
+
+5. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
