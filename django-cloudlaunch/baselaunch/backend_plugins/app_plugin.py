@@ -24,7 +24,9 @@ class BaseAppPlugin():
     def apply_app_firewall_settings(self, provider, firewall_settings):
         """
         Apply any firewall settings defined for the app in cloudlaunch
-        settings. The following format is expected:
+        settings and return the encompassing security group.
+
+        The following format is expected:
 
         "firewall": [
             {
@@ -51,6 +53,7 @@ class BaseAppPlugin():
                             to_port=rule.get('to'),
                             cidr_ip=rule.get('cidr'))
                             #src_group=rule.get('src_group'))
+            return sg
 
     def launch_app(self, credentials, cloud, version,
                    cloud_version_config, app_config, user_data):
@@ -59,7 +62,8 @@ class BaseAppPlugin():
         img = provider.compute.images.get(cloud_version_config.image.image_id)
         kp = provider.security.key_pairs.create(
             name=cloudlaunch_config.get('keyPair') or 'cloudlaunch_key_pair')
-        self.apply_app_firewall_settings(provider, cloudlaunch_config.get('firewall', []))
+        sg = self.apply_app_firewall_settings(
+            provider, cloudlaunch_config.get('firewall', []))
 
         it = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
