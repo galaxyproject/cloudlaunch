@@ -12,7 +12,7 @@ def get_required_val(data, name, message):
 class CloudManAppPlugin(BaseAppPlugin):
 
     @staticmethod
-    def process_config_data(cloud_version_config, data):
+    def process_config_data(credentials, cloud_version_config, data):
         cloudman_config = get_required_val(
             data, "config_cloudman", "CloudMan configuration data must be provided.")
         user_data = {}
@@ -46,6 +46,8 @@ class CloudManAppPlugin(BaseAppPlugin):
             user_data['s3_conn_path'] = cloud.aws.object_store.s3_conn_path
             user_data['s3_host'] = cloud.aws.object_store.s3_host
             user_data['s3_port'] = cloud.aws.object_store.s3_port
+            user_data['access_key'] = credentials.get('aws_access_key')
+            user_data['secret_key'] = credentials.get('aws_secret_key')
         else:
             raise ValidationError(
                 "This version of CloudMan supports only EC2 based clouds.")

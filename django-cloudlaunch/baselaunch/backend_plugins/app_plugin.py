@@ -7,7 +7,7 @@ from baselaunch import domain_model
 class BaseAppPlugin():
 
     @abc.abstractstaticmethod
-    def process_config_data(cloud_version_config, data):
+    def process_config_data(credentials, cloud_version_config, data):
         pass
 
     def _get_or_create_key_sg(self, provider, sg_name, description):
@@ -55,7 +55,6 @@ class BaseAppPlugin():
     def launch_app(self, credentials, cloud, version,
                    cloud_version_config, app_config, user_data):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
-        print(cloudlaunch_config)
         provider = domain_model.get_cloud_provider(cloud, credentials)
         img = provider.compute.images.get(cloud_version_config.image.image_id)
         kp = provider.security.key_pairs.create(

@@ -585,7 +585,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
             merged_config = jsonmerge.merge(default_config, app_config)
-            final_ud_config = handler.process_config_data(cloud_version_config, merged_config)
+            final_ud_config = handler.process_config_data(
+                credentials, cloud_version_config, merged_config)
             async_result = tasks.launch_appliance.delay(credentials, cloud, version, cloud_version_config,
                                                         merged_config, final_ud_config)
             #validated_data['celery_task_id'] = async_result.task_id
