@@ -23,7 +23,7 @@ class CloudManAppPlugin(BaseAppPlugin):
             cloudman_config, "clusterPassword", "cluster name is required.")
         user_data['initial_cluster_type'] = get_required_val(
             cloudman_config, "clusterType", "cluster type is required.")
-        user_data['storageType'] = get_required_val(
+        user_data['cluster_storage_type'] = get_required_val(
             cloudman_config, "storageType", "storage type is required.")
         user_data['storage_size'] = cloudman_config.get("storageSize")
         user_data['post_start_script_url'] = cloudman_config.get(
