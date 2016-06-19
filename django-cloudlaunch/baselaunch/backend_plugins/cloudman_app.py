@@ -5,21 +5,20 @@ from .app_plugin import BaseAppPlugin
 def get_required_val(data, name, message):
     val = data.get(name)
     if not val:
-        raise ValidationError(message)
+        raise ValidationError({ "error" : message })
     return val
 
 
 class CloudManAppPlugin(BaseAppPlugin):
 
     @staticmethod
-    def process_config_data(credentials, cloud_version_config, data):
+    def process_app_config(name, cloud_version_config, credentials, app_config):
         cloudman_config = get_required_val(
-            data, "config_cloudman", "CloudMan configuration data must be provided.")
+            app_config, "config_cloudman", "CloudMan configuration data must be provided.")
         user_data = {}
         user_data['bucket_default'] = get_required_val(
             cloudman_config, "defaultBucket", "default bucket is required.")
-        user_data['cluster_name'] = get_required_val(
-            cloudman_config, "clusterName", "cluster name is required.")
+        user_data['cluster_name'] = name
         user_data['password'] = get_required_val(
             cloudman_config, "clusterPassword", "cluster name is required.")
         user_data['initial_cluster_type'] = get_required_val(
@@ -49,8 +48,7 @@ class CloudManAppPlugin(BaseAppPlugin):
             user_data['access_key'] = credentials.get('aws_access_key')
             user_data['secret_key'] = credentials.get('aws_secret_key')
         else:
-            raise ValidationError(
-                "This version of CloudMan supports only EC2 based clouds.")
+            raise ValidationError({ "error":
+                "This version of CloudMan supports only EC2 based clouds."})
 
         return user_data
-

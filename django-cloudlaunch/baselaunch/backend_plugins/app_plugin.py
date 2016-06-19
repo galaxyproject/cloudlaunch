@@ -7,7 +7,7 @@ from baselaunch import domain_model
 class BaseAppPlugin():
 
     @abc.abstractstaticmethod
-    def process_config_data(credentials, cloud_version_config, data):
+    def process_app_config(name, cloud_version_config, credentials, app_config):
         pass
 
     def _get_or_create_kp(self, provider, kp_name):
@@ -49,7 +49,8 @@ class BaseAppPlugin():
                         "protocol": "tcp"
                     }
                 ],
-                "securityGroup": "CloudMan"
+                "securityGroup": "MyApp",
+                "description": "My App SG"
             }
         ]
         """
@@ -80,8 +81,7 @@ class BaseAppPlugin():
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         print("Launching an instance type %s, KP %s, with ud: %s" %
               (inst_type, kp, ud))
-        inst = provider.compute.instances.create(
-            name=launch_data.get('cluster_name'), image=img,
+        inst = provider.compute.instances.create(name=name, image=img,
             instance_type=inst_type, key_pair=kp, security_groups=[sg],
             user_data=ud)
         print("Launched instance with ID: %s" % inst.id)

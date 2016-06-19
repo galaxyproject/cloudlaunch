@@ -549,7 +549,7 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=True)
     instance_type = serializers.CharField(read_only=True)
     placement_zone = serializers.CharField(read_only=True)
     keypair_name = serializers.CharField(read_only=True)
@@ -585,15 +585,15 @@ class DeploymentSerializer(serializers.ModelSerializer):
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
             merged_config = jsonmerge.merge(default_config, app_config)
-            final_ud_config = handler.process_config_data(
-                credentials, cloud_version_config, merged_config)
+            final_ud_config = handler.process_app_config(name, cloud_version_config,
+                                                         credentials, merged_config)
             async_result = tasks.launch_appliance.delay(name, cloud_version_config,
                                                         credentials, merged_config, final_ud_config)
             #validated_data['celery_task_id'] = async_result.task_id
             #deployment_model.celery_task_id = celery_task_id
             return validated_data
         except Exception as e:
-            raise serializers.ValidationError("{0}".format(e))
+            raise e
 
 
 class CredentialsSerializer(serializers.Serializer):
