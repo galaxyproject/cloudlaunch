@@ -20,6 +20,11 @@ def get_cloud_provider(cloud, cred_dict):
     :rtype: ``object`` of :class:`.dict`
     :return:  A dict containing the necessary credentials for the cloud.
     """
+    # In case a base class instance is sent in, attempt to retrieve the actual
+    # subclass.
+    if type(cloud) is models.Cloud:
+        cloud = models.Cloud.objects.get_subclass(slug=cloud.slug)
+    
     if isinstance(cloud, models.OpenStack):
         config = {'os_auth_url': cloud.auth_url,
                   'os_region_name': cloud.region_name

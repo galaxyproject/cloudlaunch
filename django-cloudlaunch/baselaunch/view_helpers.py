@@ -35,6 +35,10 @@ def get_credentials_from_request(cloud, request):
     Extracts and returns the credentials from the current request for a given
     cloud. Returns an empty dict if not available.
     """
+    # In case a base class instance is sent in, attempt to retrieve the actual
+    # subclass.
+    if type(cloud) is models.Cloud:
+        cloud = models.Cloud.objects.get_subclass(slug=cloud.slug)
     if isinstance(cloud, models.OpenStack):
         os_username = request.META.get('HTTP_CL_OS_USERNAME')
         os_password = request.META.get('HTTP_CL_OS_PASSWORD')

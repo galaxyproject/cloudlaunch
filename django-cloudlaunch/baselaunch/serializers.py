@@ -575,8 +575,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
         return super(DeploymentSerializer, self).to_internal_value(data)
 
     def create(self, validated_data):
-        base_cloud = validated_data.get("target_cloud")
-        cloud = models.Cloud.objects.filter(slug=base_cloud.slug).select_subclasses().first()
+        name = validated_data.get("name")
+        cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
         default_config = json.loads(cloud_version_config.default_launch_config)
@@ -587,8 +587,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
             merged_config = jsonmerge.merge(default_config, app_config)
             final_ud_config = handler.process_config_data(
                 credentials, cloud_version_config, merged_config)
-            async_result = tasks.launch_appliance.delay(credentials, cloud, version, cloud_version_config,
-                                                        merged_config, final_ud_config)
+            async_result = tasks.launch_appliance.delay(name, cloud_version_config,
+                                                        credentials, merged_config, final_ud_config)
             #validated_data['celery_task_id'] = async_result.task_id
             #deployment_model.celery_task_id = celery_task_id
             return validated_data
