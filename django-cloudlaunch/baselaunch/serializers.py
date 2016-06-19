@@ -508,9 +508,9 @@ class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'cloud', 'image_id', 'description')
 
 
-class StringToJSONField(serializers.JSONField):
+class StoredJSONField(serializers.JSONField):
     def __init__(self, *args, **kwargs):
-        super(StringToJSONField, self).__init__(*args, **kwargs)
+        super(StoredJSONField, self).__init__(*args, **kwargs)
 
     def to_representation(self, value):
         if value:
@@ -524,7 +524,7 @@ class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
 
     cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
-    default_launch_config = StringToJSONField()
+    default_launch_config = StoredJSONField()
 
     class Meta:
         model = models.ApplicationVersionCloudConfig
@@ -556,7 +556,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
     network = serializers.CharField(read_only=True)
     subnet = serializers.CharField(read_only=True)
     provider_settings = serializers.CharField(read_only=True)
-    application_config = serializers.CharField(read_only=True)
+    application_config = StoredJSONField(read_only=True)
     application = serializers.CharField(write_only=True, required=True)
     config_app = serializers.JSONField(write_only=True, required=False)
 
@@ -564,7 +564,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
-                  'application_config', 'added', 'updated', 'owner', 'config_app')
+                  'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id')
 
     def to_internal_value(self, data):
         application = data.get('application')
@@ -580,7 +580,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
         version = validated_data.get("application_version")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
         default_config = json.loads(cloud_version_config.default_launch_config)
-        credentials = view_helpers.get_credentials(cloud, self.context.get('view').request)
+        request = self.context.get('view').request
+        credentials = view_helpers.get_credentials(cloud, request)
         try:
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
@@ -589,11 +590,17 @@ class DeploymentSerializer(serializers.ModelSerializer):
                                                          credentials, merged_config)
             async_result = tasks.launch_appliance.delay(name, cloud_version_config,
                                                         credentials, merged_config, final_ud_config)
-            #validated_data['celery_task_id'] = async_result.task_id
-            #deployment_model.celery_task_id = celery_task_id
-            return validated_data
+            
+            del validated_data['application']
+            del validated_data['config_app']
+            validated_data['owner_id'] = request.user.id
+            validated_data['application_config'] = json.dumps(merged_config)
+            validated_data['celery_task_id'] = async_result.task_id
+            return super(DeploymentSerializer, self).create(validated_data)
+        except serializers.ValidationError as ve:
+            raise ve
         except Exception as e:
-            raise e
+            raise serializers.ValidationError({ "error" : e })
 
 
 class CredentialsSerializer(serializers.Serializer):

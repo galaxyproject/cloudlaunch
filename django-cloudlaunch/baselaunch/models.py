@@ -157,7 +157,7 @@ class ApplicationVersionCloudConfig(models.Model):
         return super(ApplicationVersionCloudConfig, self).save()
 
 class ApplicationDeployment(DateNameAwareModel):
-    owner = models.OneToOneField(User, null=False)
+    owner = models.ForeignKey(User, null=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
     target_cloud = models.ForeignKey(Cloud, null=False)
     instance_type = models.TextField(max_length=256, help_text="Instance Type for this"
@@ -181,6 +181,9 @@ class ApplicationDeployment(DateNameAwareModel):
     application_config = models.TextField(max_length=1024 * 16, help_text="Application "
                                    "configuration data used for this launch.",
                                    blank=True, null=True)
+    celery_task_id = models.TextField(max_length=64, help_text="Celery task id for"
+                                      "any background jobs running on this deployment",
+                                      blank=True, null=True)
 
 
 class Credentials(DateNameAwareModel):
