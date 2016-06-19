@@ -59,11 +59,15 @@ class BaseAppPlugin():
             sg_desc = group.get('description') or 'Created by CloudLaunch'
             sg = self._get_or_create_sg(provider, sg_name, sg_desc)
             for rule in group.get('rules', []):
-                sg.add_rule(ip_protocol=rule.get('protocol'),
-                            from_port=rule.get('from'),
-                            to_port=rule.get('to'),
-                            cidr_ip=rule.get('cidr'))
-                            #src_group=rule.get('src_group'))
+                try:
+                    sg.add_rule(ip_protocol=rule.get('protocol'),
+                                from_port=rule.get('from'),
+                                to_port=rule.get('to'),
+                                cidr_ip=rule.get('cidr'),
+                                src_group=rule.get('src_group'))
+                except Exception as e:
+                    print(e)
+                    pass
             return sg
 
     def launch_app(self, name, cloud_version_config, credentials, app_config, user_data):
@@ -74,14 +78,14 @@ class BaseAppPlugin():
         sg = self.apply_app_firewall_settings(
             provider, cloudlaunch_config.get('firewall', []))
 
-        it = cloudlaunch_config.get(
+        inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
-        inst_type = provider.compute.instance_types.get(it)
-
+        placement_zone = cloudlaunch_config.get('placementZone')
+        
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
-        print("Launching an instance type %s, KP %s, with ud: %s" %
-              (inst_type, kp, ud))
+        print("Launching with ud: %s" % (ud,))
+        print("Launching an instance of type %s with KP %s in zone %s" % (inst_type, kp, placement_zone))
         inst = provider.compute.instances.create(name=name, image=img,
             instance_type=inst_type, key_pair=kp, security_groups=[sg],
-            user_data=ud)
+            zone = placement_zone, user_data=ud)
         print("Launched instance with ID: %s" % inst.id)
