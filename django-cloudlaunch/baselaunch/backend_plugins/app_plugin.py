@@ -10,9 +10,9 @@ class BaseAppPlugin():
     def process_config_data(credentials, cloud_version_config, data):
         pass
 
-    def _get_or_create_key_sg(self, provider, sg_name, description):
+    def _get_or_create_sg(self, provider, sg_name, description):
         """
-        If a key pair with the provided ``kp_name`` does not exist, create it.
+        If a security group with the provided ``sg_name`` does not exist, create it.
         """
         sg = provider.security.security_groups.find(name=sg_name)
         if sg:
@@ -44,7 +44,7 @@ class BaseAppPlugin():
         for group in firewall_settings:
             sg_name = group.get('securityGroup') or 'CloudLaunchDefault'
             sg_desc = group.get('description') or 'Created by CloudLaunch'
-            sg = self._get_or_create_key_sg(provider, sg_name, sg_desc)
+            sg = self._get_or_create_sg(provider, sg_name, sg_desc)
             for rule in group.get('rules', []):
                 sg.add_rule(ip_protocol=rule.get('protocol'),
                             from_port=rule.get('from'),
