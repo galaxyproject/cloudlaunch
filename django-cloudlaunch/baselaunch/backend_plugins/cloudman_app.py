@@ -82,3 +82,8 @@ class CloudManAppPlugin(BaseAppPlugin):
                 "This version of CloudMan supports only EC2-compatible clouds."})
 
         return user_data
+
+    def launch_app(self, name, cloud_version_config, credentials, app_config, user_data):
+        result = super(CloudManAppPlugin, self).launch_app(name, cloud_version_config, credentials, app_config, user_data)
+        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result)
+        return result
