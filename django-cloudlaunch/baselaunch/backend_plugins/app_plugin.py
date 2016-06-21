@@ -89,8 +89,9 @@ class BaseAppPlugin():
             instance_type=inst_type, key_pair=kp, security_groups=[sg],
             zone = placement_zone, user_data=ud)
         print("Launched instance with ID: %s" % inst.id)
-        result = {}
-        result['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
+        inst.wait_till_ready()
+        results = {}
+        results['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
         results['securityGroup'] = {'id' : sg.id, 'name' : sg.name }
         results['publicIP'] = inst.public_ips[0]
         return {'cloudLaunch' : results }

@@ -3,6 +3,7 @@ import json
 import jsonmerge
 import yaml
 
+
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -14,7 +15,7 @@ from baselaunch.drf_helpers import CustomHyperlinkedIdentityField
 from baselaunch.drf_helpers import PlacementZonePKRelatedField
 from baselaunch.drf_helpers import ProviderPKRelatedField
 from django.contrib.sessions.serializers import JSONSerializer
-
+from celery.result import AsyncResult
 from baselaunch import util
 
 class ZoneSerializer(serializers.Serializer):
@@ -559,12 +560,15 @@ class DeploymentSerializer(serializers.ModelSerializer):
     application_config = StoredJSONField(read_only=True)
     application = serializers.CharField(write_only=True, required=True)
     config_app = serializers.JSONField(write_only=True, required=False)
+    task_status = serializers.SerializerMethodField()
+    task_result = StoredJSONField(read_only=True)
 
     class Meta:
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
-                  'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id')
+                  'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id',
+                  'task_status', 'task_result')
 
     def to_internal_value(self, data):
         application = data.get('application')
@@ -573,6 +577,13 @@ class DeploymentSerializer(serializers.ModelSerializer):
             version = models.ApplicationVersion.objects.get(application=application, version=version)
             data['application_version'] = version.id
         return super(DeploymentSerializer, self).to_internal_value(data)
+    
+    def get_task_status(self, obj):
+        try:
+            if obj.celery_task_id:
+                return AsyncResult(obj.celery_task_id).status
+        except Exception:
+            return None
 
     def create(self, validated_data):
         name = validated_data.get("name")

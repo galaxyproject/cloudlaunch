@@ -181,9 +181,11 @@ class ApplicationDeployment(DateNameAwareModel):
     application_config = models.TextField(max_length=1024 * 16, help_text="Application "
                                    "configuration data used for this launch.",
                                    blank=True, null=True)
-    celery_task_id = models.TextField(max_length=64, help_text="Celery task id for"
+    celery_task_id = models.TextField(max_length=64, help_text="Celery task id for "
                                       "any background jobs running on this deployment",
-                                      blank=True, null=True)
+                                      blank=True, null=True, unique=True)
+    task_result = models.TextField(max_length=1024 * 16, help_text="Result of celery "
+                                      "task", blank=True, null=True)
 
 
 class Credentials(DateNameAwareModel):

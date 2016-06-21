@@ -85,5 +85,5 @@ class CloudManAppPlugin(BaseAppPlugin):
 
     def launch_app(self, name, cloud_version_config, credentials, app_config, user_data):
         result = super(CloudManAppPlugin, self).launch_app(name, cloud_version_config, credentials, app_config, user_data)
-        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result)
+        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
         return result
