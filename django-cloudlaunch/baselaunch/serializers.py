@@ -580,10 +580,11 @@ class DeploymentSerializer(serializers.ModelSerializer):
     
     def get_task_status(self, obj):
         try:
+            task = AsyncResult(obj.celery_task_id)
             if obj.celery_task_id:
-                return AsyncResult(obj.celery_task_id).status
+                return task.backend.get_task_meta(task.id)
         except Exception:
-            return None
+            return { 'state' : 'UNKNOWN' }
 
     def create(self, validated_data):
         name = validated_data.get("name")

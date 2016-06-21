@@ -107,11 +107,13 @@ class BaseAppPlugin():
                     pass
             return sg
 
-    def launch_app(self, name, cloud_version_config, credentials, app_config, user_data):
+    def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud, credentials)
         img = provider.compute.images.get(cloud_version_config.image.image_id)
+        task.update_state(state='PROGRESSING', meta={'action': "Retrieving or creating a keypair"})
         kp = self._get_or_create_kp(provider, cloudlaunch_config.get('keyPair') or 'cloudlaunch_key_pair')
+        task.update_state(state='PROGRESSING', meta={'action': "Applying firewall settings"})
         sg = self.apply_app_firewall_settings(
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, cloudlaunch_config)
@@ -121,15 +123,16 @@ class BaseAppPlugin():
 
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         print("Launching with ud:\n%s" % (ud,))
-        print("Launching an instance of type %s with KP %s in zone %s." %
-              (inst_type, kp.name, placement_zone))
+        task.update_state(state='PROGRESSING', meta={'action': "Launching an instance of type %s with keypair %s in zone %s" %
+              (inst_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(name=name, image=img,
             instance_type=inst_type, key_pair=kp, security_groups=[sg],
             zone = placement_zone, user_data=ud, launch_config=cb_launch_config)
-        print("Launched instance with ID: %s" % inst.id)
+        task.update_state(state='PROGRESSING', meta={'action': "Waiting for instance %s to be ready.." % (inst.id, )})
         inst.wait_till_ready()
         results = {}
         results['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
         results['securityGroup'] = {'id' : sg.id, 'name' : sg.name }
         results['publicIP'] = inst.public_ips[0]
+        task.update_state(state='PROGRESSING', meta={'action': "Launch successful. Public IP %s" % (inst.public_ips[0], )})
         return {'cloudLaunch' : results }
