@@ -29,8 +29,8 @@ Use of virtualenv is also highly advised.
 .. code-block:: bash
 
     $ mkdir launcher && cd launcher
-    $ virtualenv -p python3 venv --prompt "(cloudlaunch)" && source venv/bin/activate
-    $ git clone -b dev git@github.com:galaxyproject/cloudlaunch.git
+    $ virtualenv -p python3.5 venv --prompt "(cloudlaunch)" && source venv/bin/activate
+    $ git clone -b dev https://github.com/galaxyproject/cloudlaunch.git
     $ cd cloudlaunch
     $ pip install -r requirements.txt
     $ cd django-cloudlaunch

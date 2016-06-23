@@ -12,3 +12,7 @@ django-cors-headers>=1.1.0
 django-nested-admin>=3.0.8 # for nested object editing in django admin
 django-smart-selects>=1.2.2 # For dependencies between key fields in django admin
 jsonmerge>=1.2.0 # For merging userdata/config dictionaries
+pyyaml>=3.11
+kombu==3.0.35
+billiard==3.3.0.23
+pytz==2016.4
