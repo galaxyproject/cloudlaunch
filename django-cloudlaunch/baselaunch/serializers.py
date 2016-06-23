@@ -612,7 +612,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         except serializers.ValidationError as ve:
             raise ve
         except Exception as e:
-            raise serializers.ValidationError({ "error" : e })
+            raise serializers.ValidationError({ "error" : str(e) })
 
 
 class CredentialsSerializer(serializers.Serializer):
@@ -623,11 +623,14 @@ class CredentialsSerializer(serializers.Serializer):
 
 class AWSCredsSerializer(serializers.HyperlinkedModelSerializer):
 
+    id = serializers.IntegerField(read_only=True)
     secret_key = serializers.CharField(
         style={'input_type': 'password'},
         write_only=True,
         required=False
     )
+    cloud_id = serializers.CharField(write_only=True)
+    cloud = CloudSerializer(read_only=True)
 
     class Meta:
         model = models.AWSCredentials
@@ -636,11 +639,13 @@ class AWSCredsSerializer(serializers.HyperlinkedModelSerializer):
 
 class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
 
+    id = serializers.IntegerField(read_only=True)
     password = serializers.CharField(
         style={'input_type': 'password'},
         write_only=True,
         required=False
     )
+    cloud = CloudSerializer(read_only=True)
 
     class Meta:
         model = models.OpenStackCredentials

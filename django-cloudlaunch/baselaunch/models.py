@@ -191,7 +191,7 @@ class ApplicationDeployment(DateNameAwareModel):
 class Credentials(DateNameAwareModel):
     default = models.BooleanField(
         help_text="If set, use as default credentials for the selected cloud",
-        blank=True)
+        blank=True, default=False)
     cloud = models.ForeignKey('Cloud', related_name='credentials')
     objects = InheritanceManager()
     user_profile = models.ForeignKey('UserProfile', related_name='credentials')
