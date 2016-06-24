@@ -645,6 +645,7 @@ class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
         write_only=True,
         required=False
     )
+    cloud_id = serializers.CharField(write_only=True)
     cloud = CloudSerializer(read_only=True)
 
     class Meta:
