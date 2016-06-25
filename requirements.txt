@@ -16,3 +16,4 @@ pyyaml>=3.11
 kombu==3.0.35
 billiard==3.3.0.23
 pytz==2016.4
+gunicorn
