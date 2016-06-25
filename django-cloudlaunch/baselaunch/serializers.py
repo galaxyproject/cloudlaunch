@@ -688,6 +688,11 @@ class UserSerializer(UserDetailsSerializer):
             ('aws_creds', 'openstack_creds', 'credentials')
 
 
+### Public Services Serializers ###
+class SponsorSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = models.Sponsor
+
 class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.PublicService

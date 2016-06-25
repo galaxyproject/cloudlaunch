@@ -34,7 +34,8 @@ router.register(r'auth', views.AuthView, base_name='auth')
 
 ### Public services ###
 router.register(r'public_services', views.PublicServiceViewSet)
-public_services_router = 
+public_services_router = HybridSimpleRouter()
+public_services_router.register(r'sponsors', views.SponsorViewSet)
 
 infra_router = HybridSimpleRouter()
 infra_router.register(r'clouds', views.CloudViewSet)
@@ -104,22 +105,25 @@ profile_router.register(r'credentials/aws', views.AWSCredentialsViewSet)
 profile_router.register(r'credentials/openstack',
                         views.OpenstackCredentialsViewSet)
 
-
+infrastructure_regex_pattern = r'^api/v1/infrastructure/'
+auth_regex_pattern = r'^api/v1/auth/'
 urlpatterns = [
     url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v1/infrastructure/', include(infra_router.urls)),
-    url(r'^api/v1/infrastructure/', include(cloud_router.urls)),
-    url(r'^api/v1/infrastructure/', include(region_router.urls)),
-    url(r'^api/v1/infrastructure/', include(security_group_router.urls)),
-    url(r'^api/v1/infrastructure/', include(network_router.urls)),
-    url(r'^api/v1/infrastructure/', include(bucket_router.urls)),
-    url(r'^api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),
+    url(infrastructure_regex_pattern, include(infra_router.urls)),
+    url(infrastructure_regex_pattern, include(cloud_router.urls)),
+    url(infrastructure_regex_pattern, include(region_router.urls)),
+    url(infrastructure_regex_pattern, include(security_group_router.urls)),
+    url(infrastructure_regex_pattern, include(network_router.urls)),
+    url(infrastructure_regex_pattern, include(bucket_router.urls)),
+    url(auth_regex_pattern, include('rest_auth.urls', namespace='rest_auth')),
     url(r'^api/v1/auth/registration', include('rest_auth.registration.urls',
                                               namespace='rest_auth_reg')),
-    url(r'^api/v1/auth/', include('rest_framework.urls',
+    url(auth_regex_pattern, include('rest_framework.urls',
                                   namespace='rest_framework')),
     url(r'^api/v1/auth/user/', include(profile_router.urls)),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
     url(r'^accounts/', include('allauth.urls')),
+    # Public services
+    url(r'^api/v1/public_services/', include(public_services_router.urls))
 ]

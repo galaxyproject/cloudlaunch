@@ -281,7 +281,9 @@ class Sponsor(models.Model):
     """
     name = models.TextField()
     url = models.URLField(null=True)
-    user_profile = models.ForeignKey(User)
+
+    def __str__(self):
+        return "{0}".format(self.name)
 
 
 class PublicService(DateNameAwareModel):

@@ -457,6 +457,15 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DeploymentSerializer
 
 
+### Public Services ###
+class SponsorViewSet(viewsets.ModelViewSet):
+    """
+    List sponsors
+    """
+    queryset = models.Sponsor.objects.all()
+    serializer_class = serializers.SponsorSerializer
+
+
 class PublicServiceViewSet(viewsets.ModelViewSet):
     """
     List public services
