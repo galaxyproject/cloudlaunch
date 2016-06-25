@@ -455,3 +455,12 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     queryset = models.ApplicationDeployment.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
+
+
+class PublicServiceViewSet(viewsets.ModelViewSet):
+    """
+    List public services
+    """
+    queryset = models.PublicService.objects.all()
+    serializer_class = serializers.PublicServiceSerializer
+
