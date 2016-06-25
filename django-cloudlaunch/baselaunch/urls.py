@@ -105,10 +105,10 @@ profile_router.register(r'credentials/aws', views.AWSCredentialsViewSet)
 profile_router.register(r'credentials/openstack',
                         views.OpenstackCredentialsViewSet)
 
-infrastructure_regex_pattern = r'^api/v1/infrastructure/'
-auth_regex_pattern = r'^api/v1/auth/'
+infrastructure_regex_pattern = r'api/v1/infrastructure/'
+auth_regex_pattern = r'api/v1/auth/'
 urlpatterns = [
-    url(r'^api/v1/', include(router.urls)),
+    url(r'api/v1/', include(router.urls)),
     url(infrastructure_regex_pattern, include(infra_router.urls)),
     url(infrastructure_regex_pattern, include(cloud_router.urls)),
     url(infrastructure_regex_pattern, include(region_router.urls)),
@@ -116,15 +116,14 @@ urlpatterns = [
     url(infrastructure_regex_pattern, include(network_router.urls)),
     url(infrastructure_regex_pattern, include(bucket_router.urls)),
     url(auth_regex_pattern, include('rest_auth.urls', namespace='rest_auth')),
-    url(r'^api/v1/auth/registration', include('rest_auth.registration.urls',
+    url(r'api/v1/auth/registration', include('rest_auth.registration.urls',
                                               namespace='rest_auth_reg')),
     url(auth_regex_pattern, include('rest_framework.urls',
-    url(r'api/v1/auth/', include('rest_framework.urls',
                                   namespace='rest_framework')),
     url(r'api/v1/auth/user/', include(profile_router.urls)),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
-    url(r'^accounts/', include('allauth.urls')),
+    url(r'accounts/', include('allauth.urls')),
     # Public services
-    url(r'^api/v1/public_services/', include(public_services_router.urls))
+    url(r'api/v1/public_services/', include(public_services_router.urls)),
 ]
