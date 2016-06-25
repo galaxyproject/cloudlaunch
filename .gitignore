@@ -9,6 +9,10 @@ local
 
 django-cloudlaunch/cloudlaunch/settings_local.py
 django-cloudlaunch/db.sqlite3
+django-cloudlaunch/cloudlaunch/db.sqlite3
+django-cloudlaunch/baselaunch/migrations
+
+.idea
 
 docs/_build/
 
