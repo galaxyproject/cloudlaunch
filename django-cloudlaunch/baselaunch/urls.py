@@ -102,20 +102,20 @@ profile_router.register(r'credentials/openstack',
 
 
 urlpatterns = [
-    url(r'^api/v1/', include(router.urls)),
-    url(r'^api/v1/infrastructure/', include(infra_router.urls)),
-    url(r'^api/v1/infrastructure/', include(cloud_router.urls)),
-    url(r'^api/v1/infrastructure/', include(region_router.urls)),
-    url(r'^api/v1/infrastructure/', include(security_group_router.urls)),
-    url(r'^api/v1/infrastructure/', include(network_router.urls)),
-    url(r'^api/v1/infrastructure/', include(bucket_router.urls)),
-    url(r'^api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),
-    url(r'^api/v1/auth/registration', include('rest_auth.registration.urls',
+    url(r'api/v1/', include(router.urls)),
+    url(r'api/v1/infrastructure/', include(infra_router.urls)),
+    url(r'api/v1/infrastructure/', include(cloud_router.urls)),
+    url(r'api/v1/infrastructure/', include(region_router.urls)),
+    url(r'api/v1/infrastructure/', include(security_group_router.urls)),
+    url(r'api/v1/infrastructure/', include(network_router.urls)),
+    url(r'api/v1/infrastructure/', include(bucket_router.urls)),
+    url(r'api/v1/auth/', include('rest_auth.urls', namespace='rest_auth')),
+    url(r'api/v1/auth/registration', include('rest_auth.registration.urls',
                                               namespace='rest_auth_reg')),
-    url(r'^api/v1/auth/', include('rest_framework.urls',
+    url(r'api/v1/auth/', include('rest_framework.urls',
                                   namespace='rest_framework')),
-    url(r'^api/v1/auth/user/', include(profile_router.urls)),
+    url(r'api/v1/auth/user/', include(profile_router.urls)),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
-    url(r'^accounts/', include('allauth.urls')),
+    url(r'accounts/', include('allauth.urls')),
 ]
