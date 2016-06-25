@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-
+import manage
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -33,6 +33,13 @@ ALLOWED_HOSTS = []
 CORS_ORIGIN_ALLOW_ALL = True
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_EMAIL_REQUIRED = True
+
+# Absolute path to the directory static files should be collected to.
+# Don't put anything in this directory yourself; store your static files
+# in apps' "static/" subdirectories and in STATICFILES_DIRS.
+# Example: "/var/www/example.com/static/"
+SITE_ROOT = os.path.dirname(os.path.realpath(manage.__file__))
+STATIC_ROOT = os.path.join(SITE_ROOT, 'static')
 
 # Application definition
 
