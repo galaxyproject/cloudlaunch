@@ -31,7 +31,10 @@ router.register(r'infrastructure', views.InfrastructureView,
                 base_name='infrastructure')
 router.register(r'deployments', views.DeploymentViewSet)
 router.register(r'auth', views.AuthView, base_name='auth')
-router.register(r'public_servers', views.PublicServiceViewSet, base_name='public_servers')
+
+### Public services ###
+router.register(r'public_services', views.PublicServiceViewSet)
+public_services_router = 
 
 infra_router = HybridSimpleRouter()
 infra_router.register(r'clouds', views.CloudViewSet)

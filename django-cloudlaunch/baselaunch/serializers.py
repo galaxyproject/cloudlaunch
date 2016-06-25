@@ -688,19 +688,6 @@ class UserSerializer(UserDetailsSerializer):
             ('aws_creds', 'openstack_creds', 'credentials')
 
 
-class PublicServiceSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-    links = serializers.URLField(allow_blank=True)
-    purpose = serializers.CharField(allow_blank=True)
-    comments = serializers.CharField(allow_blank=True)
-    email_user_support = serializers.EmailField(allow_blank=True)
-    quotas = serializers.CharField(allow_blank=True)
-    # TODO: Sponsors
-    featured = serializers.BooleanField()
-    logo = serializers.URLField(allow_blank=True)
-    # TODO: Tags
-    location = serializers.CharField(allow_blank=True)
-    country = serializers.CharField(allow_blank=True)
-
+class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.PublicService

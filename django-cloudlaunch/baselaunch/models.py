@@ -284,19 +284,19 @@ class Sponsor(models.Model):
     user_profile = models.ForeignKey(User)
 
 
-class PublicService(models.Model):
+class PublicService(DateNameAwareModel):
     """
     Public Service class to display the public services available,
     for example, on https://wiki.galaxyproject.org/PublicGalaxyServers
     The fields have been inspired by this public galaxy page
     """
-    name = models.TextField()
+    slug = models.SlugField(max_length=100, primary_key=True)
     links = models.URLField()
     purpose = models.TextField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     email_user_support = models.EmailField(blank=True, null=True)
     quotas = models.TextField(blank=True, null=True)
-    sponsors = models.ForeignKey(Sponsor, blank=True, null=True)
+    sponsors = models.ManyToManyField(Sponsor, blank=True, null=True)
     # Featured links means a more important link to show "first"
     featured = models.BooleanField(default=False)
     # The referenced application, if existing
@@ -311,4 +311,8 @@ class PublicService(models.Model):
     def __str__(self):
         return "{0}".format(self.name)
 
-
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Newly created object, so set slug
+            self.slug = slugify(self.name)
+        super(PublicService, self).save(*args, **kwargs)
