@@ -17,6 +17,8 @@ from baselaunch.drf_helpers import ProviderPKRelatedField
 from django.contrib.sessions.serializers import JSONSerializer
 from celery.result import AsyncResult
 from baselaunch import util
+from django_countries.serializer_fields import CountryField
+
 
 class ZoneSerializer(serializers.Serializer):
     id = serializers.CharField()
@@ -693,6 +695,9 @@ class SponsorSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Sponsor
 
+
 class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
+    country = CountryField(country_dict=True)
+
     class Meta:
         model = models.PublicService

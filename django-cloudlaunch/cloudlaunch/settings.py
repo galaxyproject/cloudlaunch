@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'kombu.transport.django', # must be last so all celery tasks are discovered
     'djcelery',
+    'django_countries',
 ]
 
 MIDDLEWARE_CLASSES = [

@@ -4,6 +4,10 @@ from django.template.defaultfilters import slugify
 from fernet_fields import EncryptedCharField
 from model_utils.managers import InheritanceManager
 from smart_selects.db_fields import ChainedForeignKey
+
+# For Public Service
+from django_countries.fields import CountryField
+
 import json
 
 
@@ -298,7 +302,7 @@ class PublicService(DateNameAwareModel):
     comments = models.TextField(blank=True, null=True)
     email_user_support = models.EmailField(blank=True, null=True)
     quotas = models.TextField(blank=True, null=True)
-    sponsors = models.ManyToManyField(Sponsor, blank=True, null=True)
+    sponsors = models.ManyToManyField(Sponsor, blank=True)
     # Featured links means a more important link to show "first"
     featured = models.BooleanField(default=False)
     # The referenced application, if existing
@@ -308,7 +312,7 @@ class PublicService(DateNameAwareModel):
     tags = models.ManyToManyField(Tag, blank=True)
     location = models.TextField(blank=True, null=True)
     # Country => TODO: Add the https://github.com/SmileyChris/django-countries to manage this field
-    country = models.TextField(blank=True, null=True)
+    country = CountryField(blank_label='(select country)')
 
     def __str__(self):
         return "{0}".format(self.name)
