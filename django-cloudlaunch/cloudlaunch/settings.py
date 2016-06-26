@@ -28,7 +28,7 @@ SECRET_KEY = 'apsm2@#*opag-b7ae=&!w8r_q7077y%$wd@@0zfz1empu)r*!p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 CORS_ORIGIN_ALLOW_ALL = True
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
