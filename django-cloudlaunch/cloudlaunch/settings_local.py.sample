@@ -1,6 +1,7 @@
 import os
 BASE_DIR = os.path.realpath(os.path.dirname(__file__))
 
+DEBUG = True
 #
 # Edit the following Django settings
 #
