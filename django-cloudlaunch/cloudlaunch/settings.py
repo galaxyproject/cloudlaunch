@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 
 CORS_ORIGIN_ALLOW_ALL = True
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_REQUIRED = False
 LOGIN_REDIRECT_URL="/marketplace"
 
 # Absolute path to the directory static files should be collected to.
