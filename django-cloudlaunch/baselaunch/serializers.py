@@ -516,9 +516,12 @@ class StoredJSONField(serializers.JSONField):
         super(StoredJSONField, self).__init__(*args, **kwargs)
 
     def to_representation(self, value):
-        if value:
-            return json.loads(value)
-        else:
+        try:
+            if value:
+                return json.loads(value)
+            else:
+                return value
+        except Exception:
             return value
 
 
