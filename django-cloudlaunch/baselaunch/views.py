@@ -466,6 +466,14 @@ class DeploymentViewSet(viewsets.ModelViewSet):
 
 
 ### Public Services ###
+class LocationViewSet(viewsets.ModelViewSet):
+    """
+    List of all locations
+    """
+    queryset = models.Location.objects.all()
+    serializer_class = serializers.LocationSerializer
+
+
 class SponsorViewSet(viewsets.ModelViewSet):
     """
     List sponsors

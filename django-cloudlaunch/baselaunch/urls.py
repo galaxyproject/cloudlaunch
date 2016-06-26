@@ -36,6 +36,7 @@ router.register(r'auth', views.AuthView, base_name='auth')
 router.register(r'public_services', views.PublicServiceViewSet)
 public_services_router = HybridSimpleRouter()
 public_services_router.register(r'sponsors', views.SponsorViewSet)
+public_services_router.register(r'locations', views.LocationViewSet)
 
 infra_router = HybridSimpleRouter()
 infra_router.register(r'clouds', views.CloudViewSet)
@@ -107,6 +108,7 @@ profile_router.register(r'credentials/openstack',
 
 infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'
+public_services_regex_pattern = r'api/v1/public_services/'
 urlpatterns = [
     url(r'api/v1/', include(router.urls)),
     url(infrastructure_regex_pattern, include(infra_router.urls)),
@@ -125,5 +127,5 @@ urlpatterns = [
     # reverse urls need to be resolved.
     url(r'accounts/', include('allauth.urls')),
     # Public services
-    url(r'api/v1/public_services/', include(public_services_router.urls)),
+    url(public_services_regex_pattern, include(public_services_router.urls)),
 ]
