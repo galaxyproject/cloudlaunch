@@ -117,6 +117,10 @@ class Application(DateNameAwareModel):
     description = models.TextField(max_length=32767, blank=True, null=True)
     info_url = models.URLField(max_length=2048, blank=True, null=True)
     icon_url = models.URLField(max_length=2048, blank=True, null=True)
+    # Userdata max length is 16KB
+    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Application-wide "
+                                   "initial configuration data to parameterize the launch with.",
+                                   blank=True, null=True)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -125,6 +129,13 @@ class Application(DateNameAwareModel):
         if not self.slug:
             # Newly created object, so set slug
             self.slug = slugify(self.name)
+
+        if self.default_launch_config:
+            try:
+                json.loads(self.default_launch_config)
+            except Exception as e:
+                raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
+
         super(Application, self).save(*args, **kwargs)
 
 
@@ -134,6 +145,19 @@ class ApplicationVersion(models.Model):
     frontend_component_path = models.TextField(max_length=2048, blank=True, null=True)
     frontend_component_name = models.TextField(max_length=2048, blank=True, null=True)
     backend_component_name = models.TextField(max_length=2048, blank=True, null=True)
+    # Userdata max length is 16KB
+    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Version "
+                                   "specific configuration data to parameterize the launch with.",
+                                   blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # validate user data
+        if self.default_launch_config:
+            try:
+                json.loads(self.default_launch_config)
+            except Exception as e:
+                raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
+        return super(ApplicationVersion, self).save()
 
     def __str__(self):
         return "{0}".format(self.version)
@@ -145,8 +169,8 @@ class ApplicationVersionCloudConfig(models.Model):
     image = ChainedForeignKey(CloudImage, chained_field="cloud", chained_model_field="cloud")
     default_instance_type = models.CharField(max_length=256, blank=True, null=True)
     # Userdata max length is 16KB
-    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Instance "
-                                   "Initial configuration data to parameterize the launch.",
+    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Cloud "
+                                   "specific initial configuration data to parameterize the launch with.",
                                    blank=True, null=True)
     class Meta:
         unique_together = (("application_version", "cloud"),)

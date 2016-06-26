@@ -593,17 +593,22 @@ class DeploymentSerializer(serializers.ModelSerializer):
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
-        default_config = json.loads(cloud_version_config.default_launch_config)
+        default_appwide_config = json.loads(version.application.default_launch_config or "{}")
+        default_version_config = json.loads(version.default_launch_config or "{}")
+        default_cloud_config = json.loads(cloud_version_config.default_launch_config or "{}")
+        default_combined_config = jsonmerge.merge(default_appwide_config, default_version_config)
+        default_combined_config = jsonmerge.merge(default_combined_config, default_cloud_config)
         request = self.context.get('view').request
         credentials = view_helpers.get_credentials(cloud, request)
         try:
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
-            merged_config = jsonmerge.merge(default_config, app_config)
+            
+            merged_config = jsonmerge.merge(default_combined_config, app_config)
             final_ud_config = handler.process_app_config(name, cloud_version_config,
                                                          credentials, merged_config)
-            async_result = tasks.launch_appliance.delay(name, cloud_version_config,
-                                                        credentials, merged_config, final_ud_config)
+#             async_result = tasks.launch_appliance.delay(name, cloud_version_config,
+#                                                         credentials, merged_config, final_ud_config)
             
             del validated_data['application']
             del validated_data['config_app']
