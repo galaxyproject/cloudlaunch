@@ -422,7 +422,7 @@ class AWSCredentialsViewSet(CredentialsViewSet):
     """
     queryset = models.AWSCredentials.objects.all()
     serializer_class = serializers.AWSCredsSerializer
-    permission_classes = [permissions.DjangoModelPermissions]
+    #permission_classes = [permissions.DjangoModelPermissions]
 
     def get_queryset(self):
         user = self.request.user
@@ -438,7 +438,7 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
     """
     queryset = models.OpenStackCredentials.objects.all()
     serializer_class = serializers.OpenstackCredsSerializer
-    permission_classes = [permissions.DjangoModelPermissions]
+    #permission_classes = [permissions.DjangoModelPermissions]
 
     def get_queryset(self):
         user = self.request.user
