@@ -587,7 +587,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         try:
             task = AsyncResult(obj.celery_task_id)
             if obj.celery_task_id:
-                return json.loads(json.dumps(task.backend.get_task_meta(task.id)))
+                return task.backend.get_task_meta(task.id)
         except Exception:
             return { 'state' : 'UNKNOWN' }
 
