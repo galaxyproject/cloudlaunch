@@ -3,7 +3,11 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from fernet_fields import EncryptedCharField
 from model_utils.managers import InheritanceManager
-from smart_selects.db_fields import ChainedForeignKey 
+from smart_selects.db_fields import ChainedForeignKey
+
+# For Public Service
+from django_countries.fields import CountryField
+
 import json
 
 
@@ -265,3 +269,56 @@ class UserProfile(models.Model):
         if not self.slug:
             self.slug = slugify(self.user.username)
         super(UserProfile, self).save(*args, **kwargs)
+
+### PublicServer Models ###
+class Tag(models.Model):
+    """
+    Tag referencing a keyword for search features
+    """
+    name = models.TextField(primary_key=True)
+
+
+class Sponsor(models.Model):
+    """
+    A Sponsor is defined by his name and his link url.
+    Directly inspired by https://wiki.galaxyproject.org/PublicGalaxyServers Sponsor(s) part
+    """
+    name = models.TextField()
+    url = models.URLField(null=True)
+
+    def __str__(self):
+        return "{0}".format(self.name)
+
+
+class PublicService(DateNameAwareModel):
+    """
+    Public Service class to display the public services available,
+    for example, on https://wiki.galaxyproject.org/PublicGalaxyServers
+    The fields have been inspired by this public galaxy page
+    """
+    slug = models.SlugField(max_length=100, primary_key=True)
+    links = models.URLField()
+    purpose = models.TextField(blank=True, null=True)
+    comments = models.TextField(blank=True, null=True)
+    email_user_support = models.EmailField(blank=True, null=True)
+    quotas = models.TextField(blank=True, null=True)
+    sponsors = models.ManyToManyField(Sponsor, blank=True)
+    # Featured links means a more important link to show "first"
+    featured = models.BooleanField(default=False)
+    # The referenced application, if existing
+    application = models.ForeignKey(Application, blank=True, null=True)
+    # The url link to the logo of the Service
+    logo = models.URLField(blank=True, null=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+    location = models.TextField(blank=True, null=True)
+    # Country => TODO: Add the https://github.com/SmileyChris/django-countries to manage this field
+    country = CountryField(blank_label='(select country)')
+
+    def __str__(self):
+        return "{0}".format(self.name)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            # Newly created object, so set slug
+            self.slug = slugify(self.name)
+        super(PublicService, self).save(*args, **kwargs)
