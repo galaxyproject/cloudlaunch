@@ -607,8 +607,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
             merged_config = jsonmerge.merge(default_combined_config, app_config)
             final_ud_config = handler.process_app_config(name, cloud_version_config,
                                                          credentials, merged_config)
-#             async_result = tasks.launch_appliance.delay(name, cloud_version_config,
-#                                                         credentials, merged_config, final_ud_config)
+            async_result = tasks.launch_appliance.delay(name, cloud_version_config,
+                                                        credentials, merged_config, final_ud_config)
             
             del validated_data['application']
             del validated_data['config_app']
