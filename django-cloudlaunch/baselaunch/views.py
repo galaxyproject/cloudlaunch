@@ -455,6 +455,14 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     queryset = models.ApplicationDeployment.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
+    
+    def get_queryset(self):
+        """
+        This view should return a list of all the purchases
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return models.ApplicationDeployment.objects.filter(owner=user)
 
 
 ### Public Services ###
