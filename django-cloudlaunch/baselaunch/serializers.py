@@ -553,6 +553,20 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
         model = models.Application
 
 
+class DeploymentAppSerializer(serializers.ModelSerializer):
+    slug = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = models.Application
+
+class DeploymentAppVersionSerializer(serializers.ModelSerializer):
+    application = DeploymentAppSerializer(read_only=True)
+    
+    class Meta:
+        model = models.ApplicationVersion
+        fields = ('version', 'frontend_component_path', 'frontend_component_name', 'application')
+
+
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
@@ -567,13 +581,14 @@ class DeploymentSerializer(serializers.ModelSerializer):
     config_app = serializers.JSONField(write_only=True, required=False)
     task_status = serializers.SerializerMethodField()
     task_result = StoredJSONField(read_only=True)
+    app_version_details = DeploymentAppVersionSerializer(source="application_version", read_only=True)
 
     class Meta:
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
                   'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id',
-                  'task_status', 'task_result')
+                  'task_status', 'task_result', 'app_version_details')
 
     def to_internal_value(self, data):
         application = data.get('application')

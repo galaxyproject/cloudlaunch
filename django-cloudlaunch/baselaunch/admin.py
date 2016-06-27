@@ -64,11 +64,12 @@ class UserProfileAdmin(admin.ModelAdmin):
 class SponsorsAdmin(admin.ModelAdmin):
     models = models.Sponsor
 
-class ApplicationDeploymentsAdmin(admin.ModelAdmin):
+class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
 
+
 admin.site.register(models.Application, AppAdmin)
-admin.site.register(models.ApplicationDeployment, AppAdmin)
+admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
 admin.site.register(models.AWS, CloudAdmin)
 admin.site.register(models.EC2, EC2Admin)
 admin.site.register(models.S3, S3Admin)
