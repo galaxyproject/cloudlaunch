@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
+from rest_framework import filters
 
 from baselaunch import drf_helpers
 from baselaunch import models
@@ -455,6 +456,8 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     queryset = models.ApplicationDeployment.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
+    filter_backends = (filters.OrderingFilter,)
+    ordering = ('-added',)
     
     def get_queryset(self):
         """
