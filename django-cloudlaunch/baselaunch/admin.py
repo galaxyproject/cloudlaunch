@@ -64,8 +64,14 @@ class UserProfileAdmin(admin.ModelAdmin):
 class SponsorsAdmin(admin.ModelAdmin):
     models = models.Sponsor
 
+
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
+
+
+class PublicServicesAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ("name",)}
+    models = models.PublicService
 
 
 admin.site.register(models.Application, AppAdmin)
@@ -75,4 +81,5 @@ admin.site.register(models.EC2, EC2Admin)
 admin.site.register(models.S3, S3Admin)
 admin.site.register(models.OpenStack, CloudAdmin)
 admin.site.register(models.UserProfile, UserProfileAdmin)
+admin.site.register(models.PublicService, PublicServicesAdmin)
 admin.site.register(models.Sponsor, SponsorsAdmin)
