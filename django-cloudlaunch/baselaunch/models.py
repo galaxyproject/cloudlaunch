@@ -325,22 +325,15 @@ class Location(models.Model):
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
 
+    city = models.TextField(blank=True, null=True)
+
     country = CountryField(blank='(select country)')
 
     def __str__(self):
         return "Country: {0}, Latitude: {1}, Longitude: {2}".format(self.country,
                                                                     self.latitude,
-                                                                    self.longitude)
-
-    def save(self, *args, **kwargs):
-        try:
-            obj = Location.objects.get(latitude=self.latitude,
-                                       longitude=self.longitude)
-        except Location.DoesNotExist:
-            obj = Location(latitude=self.latitude,
-                           longitude=self.longitude,
-                           country=self.country)
-            super(Location, self).save(*args, **kwargs)
+                                                                    self.longitude,
+                                                                    self.city)
 
 
 class PublicService(DateNameAwareModel):
@@ -388,7 +381,8 @@ class PublicService(DateNameAwareModel):
         self.location = Location.objects.get_or_create(longitude=json_geoloc["lon"],
                                     latitude=json_geoloc["lat"],
                                     defaults={
-                                        'country': json_geoloc["countryCode"]
+                                        'country': json_geoloc["countryCode"],
+                                        'city': json_geoloc["city"],
                                     },)[0]
 
         super(PublicService, self).save(*args, **kwargs)
