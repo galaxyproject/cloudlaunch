@@ -38,9 +38,12 @@ class BaseAppPlugin():
         """
         networks = self._get_networks(provider, cloudlaunch_config)
         lc = None
-        if networks.get('subnet_id'):
+        if networks.get('subnet_id') or networks.get('network_id'):
             lc = provider.compute.instances.create_launch_config()
-            lc.add_network_interface(networks.get('subnet_id'))
+            if networks.get('subnet_id'):
+                lc.add_network_interface(networks.get('subnet_id'))
+            else:
+                lc.add_network_interface(networks.get('network_id'))
         return lc
 
     def _get_networks(self, provider, cloudlaunch_config):
@@ -132,7 +135,7 @@ class BaseAppPlugin():
         inst.wait_till_ready()
         static_ip = cloudlaunch_config.get('staticIP')
         if static_ip:
-            task.update_state(state='PROGRESSING', meta={'action': "Assigning requested static IP.." % (static_ip, )})
+            task.update_state(state='PROGRESSING', meta={'action': "Assigning requested static IP: %s" % (static_ip, )})
             inst.add_floating_ip(static_ip)
             inst.refresh()
         results = {}
