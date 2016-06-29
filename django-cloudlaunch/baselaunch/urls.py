@@ -74,6 +74,8 @@ cloud_router.register(r'object_store/buckets', views.BucketViewSet,
 
 cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
 
+cloud_router.register(r'static_ips', views.StaticIPViewSet, base_name='static_ip')
+
 
 # Deployments should probably go into cloudlaunch, instead of being in baselaunch
 # but doing this here for now
