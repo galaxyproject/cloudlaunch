@@ -384,6 +384,5 @@ class PublicService(DateNameAwareModel):
                                         'country': json_geoloc["countryCode"],
                                         'city': json_geoloc["city"],
                                     },)[0]
-        print(self.location.city)
 
         super(PublicService, self).save(*args, **kwargs)
