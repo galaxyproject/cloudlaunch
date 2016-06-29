@@ -61,12 +61,17 @@ class UserProfileAdmin(admin.ModelAdmin):
     inlines = [AWSCredsInline, OSCredsInline]
 
 
+class AppDeploymentsAdmin(admin.ModelAdmin):
+    models = models.ApplicationDeployment
+
+
+### Public Services ###
 class SponsorsAdmin(admin.ModelAdmin):
     models = models.Sponsor
 
 
-class AppDeploymentsAdmin(admin.ModelAdmin):
-    models = models.ApplicationDeployment
+class LocationAdmin(admin.ModelAdmin):
+    models = models.Location
 
 
 class PublicServicesAdmin(admin.ModelAdmin):
@@ -81,5 +86,8 @@ admin.site.register(models.EC2, EC2Admin)
 admin.site.register(models.S3, S3Admin)
 admin.site.register(models.OpenStack, CloudAdmin)
 admin.site.register(models.UserProfile, UserProfileAdmin)
+
+### Public Services Admin Registration ###
 admin.site.register(models.PublicService, PublicServicesAdmin)
 admin.site.register(models.Sponsor, SponsorsAdmin)
+admin.site.register(models.Location, LocationAdmin)

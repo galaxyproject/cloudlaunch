@@ -714,13 +714,18 @@ class UserSerializer(UserDetailsSerializer):
 
 
 ### Public Services Serializers ###
+class LocationSerializer(serializers.HyperlinkedModelSerializer):
+    country = CountryField(country_dict=True)
+
+    class Meta:
+        model = models.Location
+
+
 class SponsorSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Sponsor
 
 
 class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
-    country = CountryField(country_dict=True)
-
     class Meta:
         model = models.PublicService
