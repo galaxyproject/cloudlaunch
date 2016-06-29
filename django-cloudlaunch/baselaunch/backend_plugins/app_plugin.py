@@ -130,6 +130,11 @@ class BaseAppPlugin():
             zone = placement_zone, user_data=ud, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING', meta={'action': "Waiting for instance %s to be ready.." % (inst.id, )})
         inst.wait_till_ready()
+        static_ip = cloudlaunch_config.get('staticIP')
+        if static_ip:
+            task.update_state(state='PROGRESSING', meta={'action': "Assigning requested static IP.." % (static_ip, )})
+            inst.add_floating_ip(static_ip)
+            inst.refresh()
         results = {}
         results['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
         results['securityGroup'] = {'id' : sg.id, 'name' : sg.name }
