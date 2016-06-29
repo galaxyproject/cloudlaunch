@@ -7,6 +7,9 @@ from smart_selects.db_fields import ChainedForeignKey
 
 # For Public Service
 from django_countries.fields import CountryField
+import requests
+from urllib.parse import urlparse
+from django.core.exceptions import ObjectDoesNotExist
 
 import json
 
@@ -314,6 +317,32 @@ class Sponsor(models.Model):
         return "{0}".format(self.name)
 
 
+class Location(models.Model):
+    """
+    A location containing the latitude and longitude (fetched from the ip) and
+    a django_country https://github.com/SmileyChris/django-countries
+    """
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+
+    country = CountryField(blank='(select country)')
+
+    def __str__(self):
+        return "Country: {0}, Latitude: {1}, Longitude: {2}".format(self.country,
+                                                                    self.latitude,
+                                                                    self.longitude)
+
+    def save(self, *args, **kwargs):
+        try:
+            obj = Location.objects.get(latitude=self.latitude,
+                                       longitude=self.longitude)
+        except Location.DoesNotExist:
+            obj = Location(latitude=self.latitude,
+                           longitude=self.longitude,
+                           country=self.country)
+            super(Location, self).save(*args, **kwargs)
+
+
 class PublicService(DateNameAwareModel):
     """
     Public Service class to display the public services available,
@@ -322,6 +351,7 @@ class PublicService(DateNameAwareModel):
     """
     slug = models.SlugField(max_length=100, primary_key=True)
     links = models.URLField()
+    location = models.ForeignKey(Location, blank=True, null=True)
     purpose = models.TextField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     email_user_support = models.EmailField(blank=True, null=True)
@@ -334,9 +364,6 @@ class PublicService(DateNameAwareModel):
     # The url link to the logo of the Service
     logo = models.URLField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
-    location = models.TextField(blank=True, null=True)
-    # Country => TODO: Add the https://github.com/SmileyChris/django-countries to manage this field
-    country = CountryField(blank_label='(select country)')
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -345,4 +372,23 @@ class PublicService(DateNameAwareModel):
         if not self.slug:
             # Newly created object, so set slug
             self.slug = slugify(self.name)
+
+        # Construct the API to find geolocation from ip
+        api_hostname = 'http://ip-api.com'
+        return_format = 'json'
+        parsed_url = urlparse(self.links)
+        netloc = parsed_url.netloc
+        geolocation_api = '{0}/{1}/{2}'.format(api_hostname, return_format, netloc)
+
+        response = requests.get(geolocation_api)
+        if  response.status_code != 200:
+            raise Exception("Couldn't find the geolocation from ip {0}: {1}".format(geolocation_api, response.status_code))
+        # Construct or get the Location
+        json_geoloc = response.json()
+        self.location = Location.objects.get_or_create(longitude=json_geoloc["lon"],
+                                    latitude=json_geoloc["lat"],
+                                    defaults={
+                                        'country': json_geoloc["countryCode"]
+                                    },)[0]
+
         super(PublicService, self).save(*args, **kwargs)
