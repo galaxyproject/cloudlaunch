@@ -734,5 +734,7 @@ class SponsorSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
+    location = LocationSerializer(read_only=True)
+
     class Meta:
         model = models.PublicService
