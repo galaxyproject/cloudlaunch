@@ -122,7 +122,8 @@ class CloudManForm(forms.Form):
         required=False,
         label="Volume IOPS",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
-        help_text="Min: 100; max: 20000; max 30:1 IOPS to size ratio (AWS only).")
+        help_text="Min: 100; max: 20000; max 50:1 IOPS to size ratio; for example, "
+                  "with a 100GB volume, can request max 5000 IOPS (AWS only).")
     ebs_optimized = forms.ChoiceField(
         required=False,
         label="EBS-optimized",
