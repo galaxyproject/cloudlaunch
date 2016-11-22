@@ -24,29 +24,29 @@ class BaseAppPlugin():
         """
         If a security group with the provided ``sg_name`` does not exist, create it.
         """
+        network_id = self._get_network_id(provider, cloudlaunch_config)
         sgs = provider.security.security_groups.find(name=sg_name)
-        if sgs:
-            return sgs[0]
-        else:
-            network_id = self._get_networks(provider, cloudlaunch_config).get('network_id')
-            return provider.security.security_groups.create(
-                name=sg_name, description=description, network_id=network_id)
+        for sg in sgs:
+            if network_id:
+                if sg.network_id == network_id:
+                    return sg
+            else:
+                return sg
+        return provider.security.security_groups.create(
+            name=sg_name, description=description, network_id=network_id)
 
     def _get_cb_launch_config(self, provider, cloudlaunch_config):
         """
         Compose a CloudBridge launch config object.
         """
-        networks = self._get_networks(provider, cloudlaunch_config)
+        network_id = self._get_network_id(provider, cloudlaunch_config)
         lc = None
-        if networks.get('subnet_id') or networks.get('network_id'):
+        if network_id:
             lc = provider.compute.instances.create_launch_config()
-            if networks.get('subnet_id'):
-                lc.add_network_interface(networks.get('subnet_id'))
-            else:
-                lc.add_network_interface(networks.get('network_id'))
+            lc.add_network_interface(network_id)
         return lc
 
-    def _get_networks(self, provider, cloudlaunch_config):
+    def _get_network_id(self, provider, cloudlaunch_config):
         """
         Figure out the IDs of relevant networks.
 
@@ -55,21 +55,14 @@ class BaseAppPlugin():
         supplied in the request. For the AWS case, if not network is supplied,
         the default VPC is used.
         """
-        networks = {'network_id': None, 'subnet_id': None}
-        if provider.cloud_type == 'aws':
-            subnet_id = cloudlaunch_config.get('subnet', None)
-            if subnet_id:
-                networks['subnet_id'] = subnet_id
-                sn = provider.network.subnets.get(subnet_id)
-                networks['network_id'] = sn.network_id
-            else:
-                # User did not specify a network so find the default one
-                for n in provider.network.list():
-                    if n._vpc.is_default:
-                        networks['network_id'] = n.id
-        elif provider.cloud_type == 'openstack':
-            networks['network_id'] = cloudlaunch_config.get('network', None)
-        return networks
+        network_id = cloudlaunch_config.get('network', None)
+        # TODO: fix this in CloudBridge so no provider-specific code is needed
+        if provider.cloud_type == 'aws' and not network_id:
+            # User did not specify a network so find the default one
+            for n in provider.network.list():
+                if n._vpc.is_default:
+                    network_id = n.id
+        return network_id
 
     def apply_app_firewall_settings(self, provider, cloudlaunch_config):
         """
