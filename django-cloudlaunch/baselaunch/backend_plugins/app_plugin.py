@@ -55,14 +55,7 @@ class BaseAppPlugin():
         supplied in the request. For the AWS case, if not network is supplied,
         the default VPC is used.
         """
-        network_id = cloudlaunch_config.get('network', None)
-        # TODO: fix this in CloudBridge so no provider-specific code is needed
-        if provider.cloud_type == 'aws' and not network_id:
-            # User did not specify a network so find the default one
-            for n in provider.network.list():
-                if n._vpc.is_default:
-                    network_id = n.id
-        return network_id
+        return cloudlaunch_config.get('network', None)
 
     def apply_app_firewall_settings(self, provider, cloudlaunch_config):
         """
