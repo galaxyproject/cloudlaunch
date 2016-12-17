@@ -30,10 +30,28 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-CORS_ORIGIN_ALLOW_ALL = True
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_EMAIL_REQUIRED = False
 LOGIN_REDIRECT_URL="/marketplace"
+
+# Begin: django-cors-headers settings
+CORS_ORIGIN_ALLOW_ALL = True
+
+# Django filters out headers with an underscore by default, so make sure they
+# have dashes instead.
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = default_headers + (
+    'cl-os-username',
+    'cl-os-password',
+    'cl-os-tenant-name',
+    'cl-os-project-name',
+    'cl-os-project-tenant_name',
+    'cl-os-user-domain-name',
+    'cl-os-identity-api-version',
+    'cl-aws-access-key',
+    'cl-aws-secret-key',
+)
+# End: django-cors-headers settings
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
