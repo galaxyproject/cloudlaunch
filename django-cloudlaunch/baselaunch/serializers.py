@@ -468,6 +468,8 @@ class CloudSerializer(serializers.ModelSerializer):
 
     region_name = serializers.SerializerMethodField()
 
+    cloud_type = serializers.SerializerMethodField()
+
     def get_region_name(self, obj):
         if hasattr(obj, 'aws'):
             return obj.aws.compute.ec2_region_name
@@ -475,6 +477,14 @@ class CloudSerializer(serializers.ModelSerializer):
             return obj.openstack.region_name
         else:
             return "Cloud provider not recognized"
+        
+    def get_cloud_type(self, obj):
+        if hasattr(obj, 'aws'):
+            return 'aws';
+        elif hasattr(obj, 'openstack'):
+            return 'openstack';
+        else:
+            return 'unknown';
 
     class Meta:
         model = models.Cloud
