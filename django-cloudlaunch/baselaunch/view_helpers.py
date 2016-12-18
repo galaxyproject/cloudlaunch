@@ -35,6 +35,10 @@ def get_credentials_from_request(cloud, request):
     Extracts and returns the credentials from the current request for a given
     cloud. Returns an empty dict if not available.
     """
+    if request.META.get('HTTP_CL_CREDENTIALS_ID'):
+        return get_credentials_by_id(cloud, request,
+                                     request.META.get('HTTP_CL_CREDENTIALS_ID'))
+    
     # In case a base class instance is sent in, attempt to retrieve the actual
     # subclass.
     if type(cloud) is models.Cloud:
@@ -79,12 +83,30 @@ def get_credentials_from_request(cloud, request):
         raise Exception("Unrecognised cloud provider: %s" % cloud)
 
 
+def get_credentials_by_id(cloud, request, credentials_id):
+    """
+    Returns the stored database credentials with the given id from the
+    current user's profile. If the user is not logged in or no credentials
+    are found, returns an empty dict.
+    """
+    if request.user.is_anonymous():
+        return {}
+    profile = request.user.userprofile
+    
+    if credentials_id:
+        credentials = profile.credentials.filter(cloud=cloud, id=credentials_id). \
+            select_subclasses().first()
+        if credentials:
+            return credentials.as_dict()
+    return {}
+
+
 def get_credentials_from_profile(cloud, request):
     """
     Returns the stored database credentials for a given cloud for the currently
     logged in user. If the user is not logged in or no credentials are found,
-    return an empty dict.
-
+    returns an empty dict.
+    
     .. note:: If no credentials are found but the server has environment
     variables required by Cloudbridge available, those credentials will
     be used!
@@ -92,6 +114,7 @@ def get_credentials_from_profile(cloud, request):
     if request.user.is_anonymous():
         return {}
     profile = request.user.userprofile
+    
     # Check for default credentials
     credentials = profile.credentials.filter(cloud=cloud, default=True). \
         select_subclasses().first()
