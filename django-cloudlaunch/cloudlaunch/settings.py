@@ -41,6 +41,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # have dashes instead.
 from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = default_headers + (
+    'cl-credentials-id',
     'cl-os-username',
     'cl-os-password',
     'cl-os-tenant-name',
