@@ -118,6 +118,7 @@ class CloudManForm(forms.Form):
         initial="10",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
         help_text="The size of the storage (in GB; number only). The default is 10.")
+    #  Advanced options
     iops = forms.CharField(
         required=False,
         label="Volume IOPS",
