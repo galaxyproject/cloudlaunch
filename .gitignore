@@ -6,5 +6,5 @@ man
 local
 .Python
 *.pyc
-biocloudcentral/settings_local.py
+#biocloudcentral/settings_local.py
 biocloudcentral/db/

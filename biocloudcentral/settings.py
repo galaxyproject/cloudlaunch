@@ -8,11 +8,11 @@ djcelery.setup_loader()
 BROKER_URL = 'django://'
 
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Enis Afgan', 'afgane@gmail.com'),
+    ('Nitesh Turaga', 'nitesh.turaga@gmail.com'),
 )
 
 MANAGERS = ADMINS
