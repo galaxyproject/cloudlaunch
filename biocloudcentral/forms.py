@@ -92,14 +92,14 @@ class CloudManForm(forms.Form):
         help_text="Having selected 'Custom instance type' in the previous drop "
         "down, provide desired instance type (e.g., c3.large)")
     initial_cluster_type = forms.ChoiceField(
-        (("Galaxy", "Cluster with Galaxy"), ("Data", "Cluster only"),
+        (("Bioc", "Bioconductor recommended cluster"),
          ("None", "Do not set cluster type now")),
         help_text="The cluster type determines the initial startup template "
                   "used by CloudMan. See <a href='{0}' {1} tabindex='-1'>this page"
                   "</a> for details on cluster types.".format(types_url, target),
         label="Cluster type",
         required=True,
-        initial="Galaxy",
+        initial="Bioc",
         widget=forms.RadioSelect(attrs={"class": "radio_select cluster-type-choice",
                                         "onChange": "change_cluster_type(this.value)"}))
     storage_type = forms.ChoiceField(
@@ -109,13 +109,13 @@ class CloudManForm(forms.Form):
                   "</a> for more details on storage types.".format(types_url, target),
         label="Storage type",
         required=False,
-        initial="volume",
+        initial="transient",
         widget=forms.RadioSelect(attrs={"class": "radio_select cluster-type-choice",
                                         "onChange": "change_storage_option(this.value)"}))
     storage_size = forms.CharField(
         required=False,
         label="Storage size",
-        initial="10",
+        initial="30",
         widget=NumberInput(attrs={"onkeypress": "return is_number_key(event)"}),
         help_text="The size of the storage (in GB; number only). The default is 10.")
     #  Advanced options

@@ -23,11 +23,11 @@
     "pk": 3,
     "model": "biocloudcentral.instancetype",
     "fields": {
-      "updated": "2012-03-27 21:15:12",
+      "updated": "2016-12-16 13:45:12",
       "added": "2012-03-25 19:55:32",
-      "description": "4 ECUs / 7.5GB RAM",
-      "pretty_name": "Large",
-      "tech_name": "m1.large",
+      "description": "2 vCPUs / 8GB RAM",
+      "pretty_name": "General Purpose",
+      "tech_name": "m4.large",
       "cloud": 1
     }
   },
@@ -37,9 +37,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:11",
       "added": "2012-03-25 19:55:32",
-      "description": "2 ECUs / 613MB RAM",
-      "pretty_name": "Micro",
-      "tech_name": "t1.micro",
+      "description": "4 vCPUs / 16GB RAM",
+      "pretty_name": "General Purpose Large",
+      "tech_name": "m4.xlarge",
       "cloud": 1
     }
   },
@@ -49,9 +49,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:10",
       "added": "2012-03-25 19:55:32",
-      "description": "1 ECU / 1.7GB RAM",
-      "pretty_name": "Small",
-      "tech_name": "m1.small",
+      "description": "8 vCPU / 64 RAM",
+      "pretty_name": "General Purpose 2x Large",
+      "tech_name": "m4.2xlarge",
       "cloud": 1
     }
   },
@@ -61,9 +61,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:09",
       "added": "2012-03-27 21:15:12",
-      "description": "2 ECUs / 3.75GB RAM",
-      "pretty_name": "Medium",
-      "tech_name": "m1.medium",
+      "description": "2 vCPU / 3.75GB RAM",
+      "pretty_name": "Compute Optimized Large",
+      "tech_name": "c3.large",
       "cloud": 1
     }
   },
@@ -73,69 +73,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:08",
       "added": "2012-03-27 21:06:39",
-      "description": "8 ECUs / 15GB RAM",
-      "pretty_name": "Extra Large",
-      "tech_name": "m1.xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 8,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:07",
-      "added": "2012-03-27 21:06:39",
-      "description": "5 ECUs / 1.7GB RAM",
-      "pretty_name": "High-CPU Medium",
-      "tech_name": "c1.medium",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 9,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:06",
-      "added": "2012-03-27 21:06:39",
-      "description": "20 ECUs / 7GB RAM",
-      "pretty_name": "High-CPU Extra Large",
-      "tech_name": "c1.xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 10,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:05",
-      "added": "2012-03-27 21:06:39",
-      "description": "6.5 ECUs / 17.1GB RAM",
-      "pretty_name": "High-Memory Extra Large",
-      "tech_name": "m2.xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 11,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:04",
-      "added": "2012-03-27 21:06:39",
-      "description": "13 ECUs / 34.2GB RAM",
-      "pretty_name": "High-Memory Double Extra Large",
-      "tech_name": "m2.2xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 12,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:03",
-      "added": "2012-03-27 21:06:39",
-      "description": "26 ECUs / 68.4GB RAM",
-      "pretty_name": "High-Memory Quadruple Extra Large",
-      "tech_name": "m2.4xlarge",
+      "description": "8 vCPU / 15GB RAM",
+      "pretty_name": "Compute Optimized 2x large",
+      "tech_name": "c3.2xlarge",
       "cloud": 1
     }
   },
