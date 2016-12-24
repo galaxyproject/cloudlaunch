@@ -20,18 +20,15 @@ class BaseAppPlugin():
         else:
             return provider.security.key_pairs.create(name=kp_name)
 
-    def _get_or_create_sg(self, provider, cloudlaunch_config, sg_name, description):
-        """
-        If a security group with the provided ``sg_name`` does not exist, create it.
-        """
+    def _get_or_create_sg(self, provider, cloudlaunch_config, sg_name,
+                          description):
+        """Fetch an existing security group named ``sg_name`` or create one."""
         network_id = self._get_network_id(provider, cloudlaunch_config)
         sgs = provider.security.security_groups.find(name=sg_name)
-        for sg in sgs:
-            if network_id:
-                if sg.network_id == network_id:
-                    return sg
-            else:
-                return sg
+        for sg1 in sgs:
+            for sg2 in sgs:
+                if sg1 == sg2:
+                    return sg1
         return provider.security.security_groups.create(
             name=sg_name, description=description, network_id=network_id)
 
@@ -110,8 +107,9 @@ class BaseAppPlugin():
             'instanceType', cloud_version_config.default_instance_type)
         placement_zone = cloudlaunch_config.get('placementZone')
 
+        print("YAML UD:\n%s" % user_data)
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
-        print("Launching with ud:\n%s" % (ud,))
+        print("Launching with ud:\n%s" % ud)
         task.update_state(state='PROGRESSING', meta={'action': "Launching an instance of type %s with keypair %s in zone %s" %
               (inst_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(name=name, image=img,
