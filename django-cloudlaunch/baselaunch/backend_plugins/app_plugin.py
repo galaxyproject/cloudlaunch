@@ -125,6 +125,9 @@ class BaseAppPlugin():
         results = {}
         results['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
         results['securityGroup'] = {'id' : sg.id, 'name' : sg.name }
-        results['publicIP'] = inst.public_ips[0]
-        task.update_state(state='PROGRESSING', meta={'action': "Launch successful. Public IP %s" % (inst.public_ips[0], )})
+        results['publicIP'] = inst.public_ips[0] if len(inst.public_ips) > 0 else None
+        task.update_state(
+            state='PROGRESSING',
+            meta={'action': "Launch successful. Public IP (if available): %s"
+                  % results['publicIP']})
         return {'cloudLaunch' : results }
