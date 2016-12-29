@@ -1,8 +1,8 @@
 Django==1.9
-celery<4
+celery<=3.1.25
 djangorestframework==3.3.1
 wheel==0.24.0
-django-rest-auth>=0.6.0
+django-rest-auth==0.8.2
 django-allauth>=0.24.1
 drf-nested-routers>=0.11.1
 git+git://github.com/gvlproject/cloudbridge
