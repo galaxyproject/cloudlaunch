@@ -91,6 +91,20 @@ class CloudManForm(forms.Form):
         widget=forms.TextInput(attrs={"class": textbox_size}),
         help_text="Having selected 'Custom instance type' in the previous drop "
         "down, provide desired instance type (e.g., c3.large)")
+    image_id = DynamicChoiceField(
+        (("", "Choose cloud type first"),),
+        help_text="The machine image to start (* indicates the default machine image).",
+        label="Image",
+        required=False,
+        widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled',
+                                   "onChange": "get_flavors(this.options[this.selectedIndex].value)"}))
+    custom_image_id = forms.CharField(
+        required=False,
+        label="Custom image ID",
+        widget=forms.TextInput(attrs={"class": textbox_size}),
+        help_text="Having selected 'Custom image' in the previous drop down, "
+        "provide desired maching image ID (e.g., ami-da5532cs)")
+
     initial_cluster_type = forms.ChoiceField(
         (("Bioc", "Bioconductor recommended cluster"),
          ("None", "Do not set cluster type now")),
@@ -98,7 +112,7 @@ class CloudManForm(forms.Form):
                   "used by CloudMan. See <a href='{0}' {1} tabindex='-1'>this page"
                   "</a> for details on cluster types.".format(types_url, target),
         label="Cluster type",
-        required=True,
+        required=False,
         initial="Bioc",
         widget=forms.RadioSelect(attrs={"class": "radio_select cluster-type-choice",
                                         "onChange": "change_cluster_type(this.value)"}))
@@ -188,19 +202,6 @@ class CloudManForm(forms.Form):
         help_text="Pass advanced properties to CloudMan via the the cloud "
         "infrastructure's user-data mechanism. Properties should be in YAML "
         "formatted key-value pairs.")
-    image_id = DynamicChoiceField(
-        (("", "Choose cloud type first"),),
-        help_text="The machine image to start (* indicates the default machine image).",
-        label="Image",
-        required=False,
-        widget=forms.Select(attrs={"class": textbox_size, 'disabled': 'disabled',
-                                   "onChange": "get_flavors(this.options[this.selectedIndex].value)"}))
-    custom_image_id = forms.CharField(
-        required=False,
-        label="Custom image ID",
-        widget=forms.TextInput(attrs={"class": textbox_size}),
-        help_text="Having selected 'Custom image' in the previous drop down, "
-        "provide desired maching image ID (e.g., ami-da5532cs)")
     flavor_id = DynamicChoiceField(
         (("", "Choose image first"),),
         help_text="The flavor to use (* indicates the default flavor).",
