@@ -32,7 +32,7 @@ class BaseAppPlugin():
         return provider.security.security_groups.create(
             name=sg_name, description=description, network_id=network_id)
 
-    def _get_cb_launch_config(self, provider, cloudlaunch_config):
+    def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
         """
         Compose a CloudBridge launch config object.
         """
@@ -41,6 +41,13 @@ class BaseAppPlugin():
         if network_id:
             lc = provider.compute.instances.create_launch_config()
             lc.add_network_interface(network_id)
+        if cloudlaunch_config.get("rootStorageType", "instance") == "volume":
+            if not lc:
+                lc = provider.compute.instances.create_launch_config()
+            lc.add_volume_device(source=image,
+                                 size=int(cloudlaunch_config.get("rootStorageSize", 20)),
+                                 is_root=True)
+            
         return lc
 
     def _get_network_id(self, provider, cloudlaunch_config):
@@ -102,7 +109,7 @@ class BaseAppPlugin():
         task.update_state(state='PROGRESSING', meta={'action': "Applying firewall settings"})
         sg = self.apply_app_firewall_settings(
             provider, cloudlaunch_config)
-        cb_launch_config = self._get_cb_launch_config(provider, cloudlaunch_config)
+        cb_launch_config = self._get_cb_launch_config(provider, img, cloudlaunch_config)
         inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
         placement_zone = cloudlaunch_config.get('placementZone')
