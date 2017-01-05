@@ -1,4 +1,5 @@
 from .app_plugin import BaseAppPlugin
+from baselaunch import domain_model
 
 
 class BaseVMAppPlugin(BaseAppPlugin):
@@ -45,7 +46,7 @@ class BaseVMAppPlugin(BaseAppPlugin):
             lc.add_volume_device(source=image,
                                  size=int(cloudlaunch_config.get("rootStorageSize", 20)),
                                  is_root=True)
-            
+
         return lc
 
     def _get_network_id(self, provider, cloudlaunch_config):
