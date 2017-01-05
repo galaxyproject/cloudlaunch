@@ -217,7 +217,7 @@
             if (data.public_ip) {
               txt += "We have the instance IP address below.";
               $('#cloud_url').html('<a href="http://' +
-                 data.public_ip + '/cloud" target="_blank">' +
+                 data.public_ip + '/auth-sign-in" target="_blank">' +
                  data.public_ip + '</a>');
               $('#copy-ip').attr("data-clipboard-text", data.public_ip);
               $('#copy-ip').show();
@@ -235,7 +235,7 @@
           $('#nx_public_ip').html(data.public_ip);
           $('#placement').html(data.placement);
           $('#cloud_url').html('<a href="http://' +
-             data.public_ip + '/cloud" target="_blank">' +
+             data.public_ip + '/auth-sign-in" target="_blank">' +
              data.public_ip + '</a> - Click the address to access the cluster');
           $('#copy-ip').attr("data-clipboard-text", data.public_ip);
           $('#copy-ip').show();
@@ -444,7 +444,7 @@
       </td>
    </tr>
    <tr>
-      <th>Cluster address (CloudMan console)</th>
+      <th>Cluster address (Rstudio Login)</th>
       <td>
       <span id="cloud_url"><i>Please wait</i></span>
       <button id="copy-ip" class="pull-right btn btn-mini action-button" data-clipboard-text="127.0.0.1"  type="button" style="display: none" title="Copy IP address into your clipboard" data-copied-hint="Copied!">
@@ -511,7 +511,7 @@
     </table>
 
 </div>
-<div class="well">
+<!-- <div class="well">
     User data contains information necessary to recreate this particular cloud
     cluster. After terminating the cluster, unless deleted, you can
     easily recreate it from this website by using the same access credentials
@@ -524,7 +524,7 @@
     <div style="padding-top: 10px">
       <a class="btn btn-success" href="{% url ud %}">Download user-data</a>
     </div>
-</div>
+</div> -->
 
 <script src="{{ STATIC_URL }}js/ZeroClipboard.min.js"></script>
 <script src="{{ STATIC_URL }}js/ZeroMain.js"></script>
