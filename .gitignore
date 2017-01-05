@@ -7,4 +7,5 @@ local
 .Python
 *.pyc
 biocloudcentral/settings_local.py
+migrations.sh
 biocloudcentral/db/

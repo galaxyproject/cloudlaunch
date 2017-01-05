@@ -23,11 +23,11 @@
     "pk": 3,
     "model": "biocloudcentral.instancetype",
     "fields": {
-      "updated": "2012-03-27 21:15:12",
+      "updated": "2016-12-16 13:45:12",
       "added": "2012-03-25 19:55:32",
-      "description": "4 ECUs / 7.5GB RAM",
-      "pretty_name": "Large",
-      "tech_name": "m1.large",
+      "description": "2 vCPUs / 8GB RAM",
+      "pretty_name": "General Purpose",
+      "tech_name": "m4.large",
       "cloud": 1
     }
   },
@@ -37,9 +37,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:11",
       "added": "2012-03-25 19:55:32",
-      "description": "2 ECUs / 613MB RAM",
-      "pretty_name": "Micro",
-      "tech_name": "t1.micro",
+      "description": "4 vCPUs / 16GB RAM",
+      "pretty_name": "General Purpose Large",
+      "tech_name": "m4.xlarge",
       "cloud": 1
     }
   },
@@ -49,9 +49,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:10",
       "added": "2012-03-25 19:55:32",
-      "description": "1 ECU / 1.7GB RAM",
-      "pretty_name": "Small",
-      "tech_name": "m1.small",
+      "description": "8 vCPU / 64 RAM",
+      "pretty_name": "General Purpose 2x Large",
+      "tech_name": "m4.2xlarge",
       "cloud": 1
     }
   },
@@ -61,9 +61,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:09",
       "added": "2012-03-27 21:15:12",
-      "description": "2 ECUs / 3.75GB RAM",
-      "pretty_name": "Medium",
-      "tech_name": "m1.medium",
+      "description": "2 vCPU / 3.75GB RAM",
+      "pretty_name": "Compute Optimized Large",
+      "tech_name": "c3.large",
       "cloud": 1
     }
   },
@@ -73,111 +73,9 @@
     "fields": {
       "updated": "2012-03-27 21:15:08",
       "added": "2012-03-27 21:06:39",
-      "description": "8 ECUs / 15GB RAM",
-      "pretty_name": "Extra Large",
-      "tech_name": "m1.xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 8,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:07",
-      "added": "2012-03-27 21:06:39",
-      "description": "5 ECUs / 1.7GB RAM",
-      "pretty_name": "High-CPU Medium",
-      "tech_name": "c1.medium",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 9,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:06",
-      "added": "2012-03-27 21:06:39",
-      "description": "20 ECUs / 7GB RAM",
-      "pretty_name": "High-CPU Extra Large",
-      "tech_name": "c1.xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 10,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:05",
-      "added": "2012-03-27 21:06:39",
-      "description": "6.5 ECUs / 17.1GB RAM",
-      "pretty_name": "High-Memory Extra Large",
-      "tech_name": "m2.xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 11,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:04",
-      "added": "2012-03-27 21:06:39",
-      "description": "13 ECUs / 34.2GB RAM",
-      "pretty_name": "High-Memory Double Extra Large",
-      "tech_name": "m2.2xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 12,
-    "model": "biocloudcentral.instancetype",
-    "fields": {
-      "updated": "2012-03-27 21:15:03",
-      "added": "2012-03-27 21:06:39",
-      "description": "26 ECUs / 68.4GB RAM",
-      "pretty_name": "High-Memory Quadruple Extra Large",
-      "tech_name": "m2.4xlarge",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 4,
-    "model": "biocloudcentral.image",
-    "fields": {
-      "updated": "2012-06-26 07:11:27",
-      "added": "2012-06-26 07:11:27",
-      "kernel_id": "",
-      "default": true,
-      "ramdisk_id": "",
-      "image_id": "ami-46d4792f",
-      "description": "CloudBioLinux and CloudMan Ubuntu 12.04: 27 June 2012",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 5,
-    "model": "biocloudcentral.image",
-    "fields": {
-      "updated": "2012-03-26 19:41:27",
-      "added": "2012-03-26 19:41:27",
-      "kernel_id": "",
-      "default": false,
-      "ramdisk_id": "",
-      "image_id": "ami-500cd139",
-      "description": "CloudBioLinux and CloudMan Ubuntu 11.10: 5 March 2012",
-      "cloud": 1
-    }
-  },
-  {
-    "pk": 6,
-    "model": "biocloudcentral.image",
-    "fields": {
-      "updated": "2012-03-26 19:42:02",
-      "added": "2012-03-26 19:42:02",
-      "kernel_id": "",
-      "default": false,
-      "ramdisk_id": "",
-      "image_id": "ami-da58aab3",
-      "description": "Galaxy CloudMan on Ubuntu 10.04: 22 March 2011",
+      "description": "8 vCPU / 15GB RAM",
+      "pretty_name": "Compute Optimized 2x large",
+      "tech_name": "c3.2xlarge",
       "cloud": 1
     }
   },
@@ -185,13 +83,181 @@
     "pk": 13,
     "model": "biocloudcentral.image",
     "fields": {
-      "updated": "2013-08-01",
-      "added": "2013-08-01",
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": true,
+      "ramdisk_id": "",
+      "image_id": "ami-e43e1af3",
+      "description": "Bioconductor 3.4, R-release(recommended)",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 14,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
       "kernel_id": "",
       "default": false,
       "ramdisk_id": "",
-      "image_id": "ami-3df7ff54",
-      "description": "JCVI Viral and Prokaryotic Pipelines",
+      "image_id": "ami-343c1823",
+      "description": "Bioconductor 3.5 (devel)",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 15,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-abd0b3bc",
+      "description": "Bioconductor-3.3, R-3.3.0",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 16,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-85d88de0",
+      "description": "Bioconductor-3.2, R-3.2.0",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 17,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-a3d126c8",
+      "description": "Bioconductor-3.1, R-3.2.0",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 18,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-be7917d6",
+      "description": "Bioconductor-3.0, R-3.1.0",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 19,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-9c25fff4",
+      "description": "Bioconductor-2.14, R-3.1.0",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 20,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-4a25ff22",
+      "description": "Bioconductor-2.13, R-3.0.2",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 21,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-7224fe1a",
+      "description": "Bioconductor-2.12, R-3.0",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 22,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-f827fd90",
+      "description": "Bioconductor-2.11, R-2.15",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 23,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-5621fb3e",
+      "description": "Bioconductor-2.10, R-2.15",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 24,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-2623f94e",
+      "description": "Bioconductor-2.9, R-2.14",
+      "cloud": 1
+    }
+  },
+  {
+    "pk": 25,
+    "model": "biocloudcentral.image",
+    "fields": {
+      "updated": "2016-12-14",
+      "added": "2016-12-14",
+      "kernel_id": "",
+      "default": false,
+      "ramdisk_id": "",
+      "image_id": "ami-3a2ef452",
+      "description": "Bioconductor-2.8, R-2.13",
       "cloud": 1
     }
   }
