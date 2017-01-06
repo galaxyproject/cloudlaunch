@@ -84,6 +84,8 @@ class CloudManAppPlugin(BaseAppPlugin):
         return user_data
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
-        result = super(CloudManAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, user_data)
-        result['cloudLaunch']['instancePublicIP'] = '{0}'.format(result['cloudLaunch']['publicIP'])
+        print("YAML UD:\n%s" % user_data)
+        ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
+        result = super(CloudManAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
+        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
         return result
