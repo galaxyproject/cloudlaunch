@@ -150,7 +150,7 @@ class BaseVMAppPlugin(BaseAppPlugin):
             state='PROGRESSING',
             meta={'action': "Launch successful. Public IP (if available): %s"
                   % results['publicIP']})
-        results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
+        results['applicationURL'] = '{0}'.format(results['applicationURL'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for application to become ready at: %s"

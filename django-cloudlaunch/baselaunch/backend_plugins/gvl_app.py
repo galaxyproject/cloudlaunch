@@ -19,8 +19,8 @@ class GVLAppPlugin(BaseAppPlugin):
             install_list.append('smrt_portal')
         user_data['gvl_config'] = { 'install' : install_list }
         return user_data;
-    
+
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         result = super(GVLAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, user_data)
-        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
+        result['cloudLaunch']['instancePublicIP'] = '{0}'.format(result['cloudLaunch']['publicIP'])
         return result
