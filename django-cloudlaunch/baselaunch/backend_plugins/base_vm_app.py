@@ -1,6 +1,7 @@
 from .app_plugin import BaseAppPlugin
 from baselaunch import domain_model
 import requests
+import time
 
 
 class BaseVMAppPlugin(BaseAppPlugin):
@@ -99,7 +100,7 @@ class BaseVMAppPlugin(BaseAppPlugin):
                     print(e)
                     pass
             return sg
-        
+
     def wait_for_http(self, url, max_retries=200,
                  poll_interval=5):
         """Wait till app is responding at http URL"""
@@ -113,7 +114,7 @@ class BaseVMAppPlugin(BaseAppPlugin):
                 if e.response.status_code in (200, 401, 403):
                     return
             count += 1
-            
+
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
@@ -150,7 +151,7 @@ class BaseVMAppPlugin(BaseAppPlugin):
             state='PROGRESSING',
             meta={'action': "Launch successful. Public IP (if available): %s"
                   % results['publicIP']})
-        results['applicationURL'] = '{0}'.format(results['applicationURL'])
+        results['applicationURL'] = '{0}'.format(results['publicIP'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for application to become ready at: %s"
