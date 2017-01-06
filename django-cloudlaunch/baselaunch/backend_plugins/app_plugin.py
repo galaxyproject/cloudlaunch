@@ -20,6 +20,21 @@ class BaseAppPlugin():
         running operations, and is designed to provide quick feedback on
         configuration errors to the client.
 
+        @type  name: ``str``
+        @param name: Name of this deployment
+        
+        @type  version_config: :class:`.cloudlaunch.models.ApplicationVersionCloudConfig`
+        @param version_config: A django model containing infrastructure specific
+               configuration for this app.
+        
+        @type  credentials: ``dict``
+        @param credentials: A dict containing provider specific credentials.
+                
+        @type  app_config: ``dict``
+        @param app_config: A dict containing the original, unprocessed version
+               of the app config. The app config is a merged dict of database
+               stored settings and user-entered settings.
+
         :rtype: ``dict``
         :return: a ``dict` containing the launch configuration
         """
@@ -28,5 +43,34 @@ class BaseAppPlugin():
     @abc.abstractmethod
     def launch_app(self, task, name, version_config, credentials, app_config,
                    user_data):
-        """Launch a given application on the target infrastructure."""
+        """
+        Launch a given application on the target infrastructure. This operation
+        is designed to be a celery task, and thus, can contain long-running
+        operations.
+        
+        @type  task: :class:`.celery.app.task`
+        @param task: celery Task object, which can be used to report progress
+        
+        @type  name: ``str``
+        @param name: Name of this deployment
+        
+        @type  version_config: :class:`.cloudlaunch.models.ApplicationVersionCloudConfig`
+        @param version_config: A django model containing infrastructure specific
+               configuration for this app.
+        
+        @type  credentials: ``dict``
+        @param credentials: A dict containing provider specific credentials.
+                
+        @type  app_config: ``dict``
+        @param app_config: A dict containing the original, unprocessed version
+               of the app config. The app config is a merged dict of database
+               stored settings and user-entered settings.
+                           
+        @type  user_data: ``object``
+        @param user_data: An object returned by the process_app_config() method which
+               contains a validated and processed version of the app_config.
+
+        :rtype: ``dict``
+        :return: a ``dict` containing the results of the launch.
+        """
         pass
