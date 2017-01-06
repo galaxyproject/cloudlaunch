@@ -1,5 +1,6 @@
 from .app_plugin import BaseAppPlugin
 from baselaunch import domain_model
+import requests
 
 
 class BaseVMAppPlugin(BaseAppPlugin):
@@ -98,6 +99,21 @@ class BaseVMAppPlugin(BaseAppPlugin):
                     print(e)
                     pass
             return sg
+        
+    def wait_for_http(self, url, max_retries=200,
+                 poll_interval=5):
+        """Wait till app is responding at http URL"""
+        count = 0
+        while time.sleep(poll_interval) and count < max_retries:
+            try:
+                r = requests.head(url)
+                r.raise_for_status()
+                return
+            except requests.exception.HTTPError as e:
+                if e.response.status_code in (200, 401, 403):
+                    return
+            count += 1
+            
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
@@ -113,14 +129,12 @@ class BaseVMAppPlugin(BaseAppPlugin):
             'instanceType', cloud_version_config.default_instance_type)
         placement_zone = cloudlaunch_config.get('placementZone')
 
-        print("YAML UD:\n%s" % user_data)
-        ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
-        print("Launching with ud:\n%s" % ud)
+        print("Launching with ud:\n%s" % user_data)
         task.update_state(state='PROGRESSING', meta={'action': "Launching an instance of type %s with keypair %s in zone %s" %
               (inst_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(name=name, image=img,
             instance_type=inst_type, key_pair=kp, security_groups=[sg],
-            zone = placement_zone, user_data=ud, launch_config=cb_launch_config)
+            zone = placement_zone, user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING', meta={'action': "Waiting for instance %s to be ready.." % (inst.id, )})
         inst.wait_till_ready()
         static_ip = cloudlaunch_config.get('staticIP')
@@ -137,4 +151,9 @@ class BaseVMAppPlugin(BaseAppPlugin):
             meta={'action': "Launch successful. Public IP (if available): %s"
                   % results['publicIP']})
         results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
+        task.update_state(
+            state='PROGRESSING',
+            meta={'action': "Waiting for application to become ready at: %s"
+                  % results['applicationURL']})
+        self.wait_for_http(results['applicationURL'])
         return {'cloudLaunch' : results }
