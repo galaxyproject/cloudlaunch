@@ -65,7 +65,7 @@ class CloudManAppPlugin(BaseAppPlugin):
             user_data['ec2_port'] = uri_comp.port
             user_data['ec2_conn_path'] = uri_comp.path
             user_data['is_secure'] = uri_comp.scheme == "https"
-            
+
             if ec2_endpoints.get('s3_endpoint'):
                 uri_comp = urlparse(ec2_endpoints.get('s3_endpoint'))
                 user_data['s3_host'] = uri_comp.hostname
@@ -73,7 +73,7 @@ class CloudManAppPlugin(BaseAppPlugin):
                 user_data['s3_conn_path'] = uri_comp.path
             else:
                 user_data['use_object_store'] = False
-            
+
             ec2_creds = provider.security.get_ec2_credentials()
             user_data['access_key'] = ec2_creds.access
             user_data['secret_key'] = ec2_creds.secret
@@ -85,5 +85,5 @@ class CloudManAppPlugin(BaseAppPlugin):
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         result = super(CloudManAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, user_data)
-        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
+        result['cloudLaunch']['instancePublicIP'] = '{0}'.format(result['cloudLaunch']['publicIP'])
         return result

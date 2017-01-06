@@ -136,5 +136,5 @@ class BaseVMAppPlugin(BaseAppPlugin):
             state='PROGRESSING',
             meta={'action': "Launch successful. Public IP (if available): %s"
                   % results['publicIP']})
-        results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
+        results['instancePublicIP'] = '{0}'.format(results['publicIP'])
         return {'cloudLaunch' : results }
