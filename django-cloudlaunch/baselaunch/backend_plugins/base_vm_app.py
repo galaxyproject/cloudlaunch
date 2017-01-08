@@ -111,7 +111,7 @@ class BaseVMAppPlugin(AppPlugin):
                 r.raise_for_status()
                 return
             except requests.exception.HTTPError as e:
-                if e.response.status_code in (200, 401, 403):
+                if e.response.status_code in (401, 403):
                     return
             count += 1
 
@@ -151,7 +151,7 @@ class BaseVMAppPlugin(AppPlugin):
             state='PROGRESSING',
             meta={'action': "VM creation successful. Public IP (if available): %s"
                   % results['publicIP']})
-        results['applicationURL'] = '{0}'.format(results['publicIP'])
+        results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for application to become ready at: %s"
