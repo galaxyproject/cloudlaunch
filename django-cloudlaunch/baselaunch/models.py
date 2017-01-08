@@ -84,8 +84,8 @@ class S3(DateNameAwareModel):
 
 
 class OpenStack(Cloud):
-    auth_url = models.CharField(max_length=255)
-    region_name = models.CharField(max_length=100)
+    auth_url = models.CharField(max_length=255, blank=False, null=False)
+    region_name = models.CharField(max_length=100, blank=False, null=False)
 
     class Meta:
         verbose_name = "OpenStack"
@@ -242,8 +242,8 @@ class Credentials(DateNameAwareModel):
 
 
 class AWSCredentials(Credentials):
-    access_key = models.CharField(max_length=50)
-    secret_key = EncryptedCharField(max_length=50, blank=True, null=True)
+    access_key = models.CharField(max_length=50, blank=False, null=False)
+    secret_key = EncryptedCharField(max_length=50, blank=False, null=False)
 
     class Meta:
         verbose_name = "AWS Credentials"
@@ -256,10 +256,9 @@ class AWSCredentials(Credentials):
 
 
 class OpenStackCredentials(Credentials):
-    username = models.CharField(max_length=50)
-    password = EncryptedCharField(max_length=50, blank=True, null=True)
-    tenant_name = models.CharField(max_length=50, blank=True, null=True)
-    project_name = models.CharField(max_length=50, blank=True, null=True)
+    username = models.CharField(max_length=50, blank=False, null=False)
+    password = EncryptedCharField(max_length=50, blank=False, null=False)
+    project_name = models.CharField(max_length=50, blank=False, null=False)
     project_domain_name = models.CharField(max_length=50, blank=True, null=True)
     user_domain_name = models.CharField(max_length=50, blank=True, null=True)
     identity_api_version = models.IntegerField(blank=True, null=True)
@@ -270,8 +269,6 @@ class OpenStackCredentials(Credentials):
 
     def as_dict(self):
         d = {'os_username': self.username, 'os_password': self.password}
-        if self.tenant_name:
-            d['os_tenant_name'] = self.tenant_name
         if self.project_name:
             d['os_project_name'] = self.project_name
         if self.project_domain_name:

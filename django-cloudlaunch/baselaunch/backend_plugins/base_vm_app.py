@@ -1,10 +1,10 @@
-from .app_plugin import BaseAppPlugin
+from .app_plugin import AppPlugin
 from baselaunch import domain_model
 import requests
 import time
 
 
-class BaseVMAppPlugin(BaseAppPlugin):
+class BaseVMAppPlugin(AppPlugin):
 
 
     @staticmethod
@@ -149,7 +149,7 @@ class BaseVMAppPlugin(BaseAppPlugin):
         results['publicIP'] = inst.public_ips[0] if len(inst.public_ips) > 0 else None
         task.update_state(
             state='PROGRESSING',
-            meta={'action': "Launch successful. Public IP (if available): %s"
+            meta={'action': "VM creation successful. Public IP (if available): %s"
                   % results['publicIP']})
         results['applicationURL'] = '{0}'.format(results['publicIP'])
         task.update_state(
