@@ -1,8 +1,10 @@
+import yaml
 from rest_framework.serializers import ValidationError
 from .cloudman_app import CloudManAppPlugin
-from .app_plugin import BaseAppPlugin
+from .base_vm_app import BaseVMAppPlugin
 
-class GVLAppPlugin(BaseAppPlugin):
+
+class GVLAppPlugin(BaseVMAppPlugin):
 
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials, app_config):
@@ -21,6 +23,8 @@ class GVLAppPlugin(BaseAppPlugin):
         return user_data;
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
-        result = super(GVLAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, user_data)
-        result['cloudLaunch']['instancePublicIP'] = '{0}'.format(result['cloudLaunch']['publicIP'])
+        print("YAML UD:\n%s" % user_data)
+        ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
+        result = super(GVLAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
+        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
         return result

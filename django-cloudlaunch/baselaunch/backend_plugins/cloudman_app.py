@@ -1,6 +1,7 @@
+import yaml
 from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
-from .app_plugin import BaseAppPlugin
+from .app_plugin import AppPlugin
 from baselaunch import domain_model
 
 
@@ -11,7 +12,7 @@ def get_required_val(data, name, message):
     return val
 
 
-class CloudManAppPlugin(BaseAppPlugin):
+class CloudManAppPlugin(AppPlugin):
 
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials, app_config):

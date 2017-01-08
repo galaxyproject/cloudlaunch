@@ -1,8 +1,8 @@
-"""Base interfaces for app plugins."""
+"""interface for app plugins."""
 import abc
 
 
-class BaseAppPlugin():
+class AppPlugin():
     """Interface class for an application."""
 
     __metaclass__ = abc.ABCMeta
