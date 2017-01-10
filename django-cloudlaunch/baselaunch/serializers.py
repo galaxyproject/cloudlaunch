@@ -469,6 +469,7 @@ class CloudSerializer(serializers.ModelSerializer):
     region_name = serializers.SerializerMethodField()
 
     cloud_type = serializers.SerializerMethodField()
+    extra_data = serializers.SerializerMethodField()
 
     def get_region_name(self, obj):
         if hasattr(obj, 'aws'):
@@ -485,6 +486,34 @@ class CloudSerializer(serializers.ModelSerializer):
             return 'openstack';
         else:
             return 'unknown';
+        
+    def get_extra_data(self, obj):
+        if hasattr(obj, 'aws'):
+            aws = obj.aws
+            extra_data = {}
+            if aws.compute:
+                compute = aws.compute
+                extra_data['ec2_region_name'] = compute.ec2_region_name
+                extra_data['ec2_region_endpoint'] = compute.ec2_region_endpoint
+                extra_data['ec2_conn_path'] = compute.ec2_conn_path
+                extra_data['ec2_port'] = compute.ec2_port
+                extra_data['ec2_is_secure'] = compute.ec2_is_secure
+            if aws.object_store:
+                s3 = aws.object_store
+                extra_data['s3_host'] = s3.s3_host
+                extra_data['s3_conn_path'] = s3.s3_conn_path
+                extra_data['s3_port'] = s3.s3_port
+                extra_data['s3_is_secure'] = s3.s3_is_secure
+            return extra_data
+        elif hasattr(obj, 'openstack'):
+            os = obj.openstack
+            return {
+                'auth_url': os.auth_url,
+                'region_name': os.region_name,
+                'identity_api_version': os.identity_api_version
+            }
+        else:
+            return {}
 
     class Meta:
         model = models.Cloud
@@ -587,11 +616,6 @@ class DeploymentAppVersionSerializer(serializers.ModelSerializer):
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
-    instance_type = serializers.CharField(read_only=True)
-    placement_zone = serializers.CharField(read_only=True)
-    keypair_name = serializers.CharField(read_only=True)
-    network = serializers.CharField(read_only=True)
-    subnet = serializers.CharField(read_only=True)
     provider_settings = serializers.CharField(read_only=True)
     application_config = StoredJSONField(read_only=True)
     application = serializers.CharField(write_only=True, required=True)
@@ -602,8 +626,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ApplicationDeployment
-        fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
-                  'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
+        fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id',
                   'task_status', 'task_result', 'app_version_details')
 
@@ -627,7 +650,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
         name = validated_data.get("name")
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
-        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
+        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
+            application_version=version.id, cloud=cloud.slug)
         default_appwide_config = json.loads(version.application.default_launch_config or "{}")
         default_version_config = json.loads(version.default_launch_config or "{}")
         default_cloud_config = json.loads(cloud_version_config.default_launch_config or "{}")
@@ -642,6 +666,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             merged_config = jsonmerge.merge(default_combined_config, app_config)
             final_ud_config = handler.process_app_config(name, cloud_version_config,
                                                          credentials, merged_config)
+            sanitised_app_config = handler.sanitise_app_config(merged_config)
             async_result = tasks.launch_appliance.delay(name, cloud_version_config,
                                                         credentials, merged_config, final_ud_config)
 
@@ -650,11 +675,18 @@ class DeploymentSerializer(serializers.ModelSerializer):
             validated_data['owner_id'] = request.user.id
             validated_data['application_config'] = json.dumps(merged_config)
             validated_data['celery_task_id'] = async_result.task_id
-            return super(DeploymentSerializer, self).create(validated_data)
+            app_deployment = super(DeploymentSerializer, self).create(validated_data)
+            self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)
+            return app_deployment
         except serializers.ValidationError as ve:
             raise ve
         except Exception as e:
             raise serializers.ValidationError({ "error" : str(e) })
+
+    def log_usage(self, app_version_cloud_config, app_deployment, sanitised_app_config, user):
+        u = models.Usage(app_version_cloud_config=app_version_cloud_config,
+                         app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
+        u.save()
 
 
 class CredentialsSerializer(serializers.Serializer):

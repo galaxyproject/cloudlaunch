@@ -1,7 +1,7 @@
 import yaml
 from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
-from .app_plugin import AppPlugin
+from .base_vm_app import BaseVMAppPlugin
 from baselaunch import domain_model
 
 
@@ -12,7 +12,7 @@ def get_required_val(data, name, message):
     return val
 
 
-class CloudManAppPlugin(AppPlugin):
+class CloudManAppPlugin(BaseVMAppPlugin):
 
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials, app_config):
@@ -83,6 +83,12 @@ class CloudManAppPlugin(AppPlugin):
                 "This version of CloudMan supports only EC2-compatible clouds."})
 
         return user_data
+    
+    @staticmethod
+    def sanitise_app_config(app_config):
+        app_config = super(CloudManAppPlugin, CloudManAppPlugin).sanitise_app_config(app_config)
+        app_config['config_cloudman']['clusterPassword'] = '********'
+        return app_config
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         print("YAML UD:\n%s" % user_data)

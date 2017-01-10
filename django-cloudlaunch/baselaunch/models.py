@@ -84,8 +84,14 @@ class S3(DateNameAwareModel):
 
 
 class OpenStack(Cloud):
+    KEYSTONE_VERSION_CHOICES = (
+            ('v2.0', 'v2.0'),
+            ('v3.0', 'v3.0')
+        )
     auth_url = models.CharField(max_length=255, blank=False, null=False)
     region_name = models.CharField(max_length=100, blank=False, null=False)
+    identity_api_version = models.CharField(max_length=10, blank=True, null=True,
+                                            choices=KEYSTONE_VERSION_CHOICES)
 
     class Meta:
         verbose_name = "OpenStack"
@@ -191,21 +197,6 @@ class ApplicationDeployment(DateNameAwareModel):
     owner = models.ForeignKey(User, null=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
     target_cloud = models.ForeignKey(Cloud, null=False)
-    instance_type = models.TextField(max_length=256, help_text="Instance Type for this"
-                                     " deployment",
-                                   blank=True, null=False)
-    placement_zone = models.TextField(max_length=256, help_text="Placement zone in which "
-                                   "this deployment was made.",
-                                   blank=True, null=True)
-    keypair_name = models.TextField(max_length=256, help_text="Keypair names "
-                                   "for this virtual machine.",
-                                   blank=True, null=True)
-    network = models.TextField(max_length=256, help_text="Network "
-                                   "for this virtual machine.",
-                                   blank=True, null=True)
-    subnet = models.TextField(max_length=256, help_text="Network "
-                                   "for this virtual machine.",
-                                   blank=True, null=True)
     provider_settings = models.TextField(max_length=1024 * 16, help_text="Cloud provider "
                                    "specific settings used for this launch.",
                                    blank=True, null=True)
@@ -261,7 +252,6 @@ class OpenStackCredentials(Credentials):
     project_name = models.CharField(max_length=50, blank=False, null=False)
     project_domain_name = models.CharField(max_length=50, blank=True, null=True)
     user_domain_name = models.CharField(max_length=50, blank=True, null=True)
-    identity_api_version = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = "OpenStack Credentials"
@@ -275,8 +265,6 @@ class OpenStackCredentials(Credentials):
             d['os_project_domain_name'] = self.project_domain_name
         if self.user_domain_name:
             d['os_user_domain_name'] = self.user_domain_name
-        if self.identity_api_version:
-            d['os_identity_api_version'] = self.identity_api_version
         return d
 
 
@@ -383,3 +371,21 @@ class PublicService(DateNameAwareModel):
                                     },)[0]
 
         super(PublicService, self).save(*args, **kwargs)
+
+
+class Usage(models.Model):
+    """
+    Keep some usage information about instances that are being launched.
+    """
+    #automatically add timestamps when object is created
+    added = models.DateTimeField(auto_now_add=True)
+    app_version_cloud_config = models.ForeignKey(ApplicationVersionCloudConfig,
+                                                 related_name="app_version_cloud_config", null=False)
+    app_deployment = models.ForeignKey(ApplicationDeployment, related_name="app_version_cloud_config",
+                                       null=True, on_delete=models.SET_NULL)
+    app_config =  models.TextField(max_length=1024 * 16, blank=True, null=True)
+    user = models.ForeignKey(User, null=False)
+    
+    class Meta:
+        ordering = ['added']
+        verbose_name_plural = 'Usage'
