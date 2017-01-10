@@ -84,8 +84,14 @@ class S3(DateNameAwareModel):
 
 
 class OpenStack(Cloud):
+    KEYSTONE_VERSION_CHOICES = (
+            ('v2.0', 'v2.0'),
+            ('v3.0', 'v3.0')
+        )
     auth_url = models.CharField(max_length=255, blank=False, null=False)
     region_name = models.CharField(max_length=100, blank=False, null=False)
+    identity_api_version = models.CharField(max_length=10, blank=True, null=True,
+                                            choices=KEYSTONE_VERSION_CHOICES)
 
     class Meta:
         verbose_name = "OpenStack"
@@ -246,7 +252,6 @@ class OpenStackCredentials(Credentials):
     project_name = models.CharField(max_length=50, blank=False, null=False)
     project_domain_name = models.CharField(max_length=50, blank=True, null=True)
     user_domain_name = models.CharField(max_length=50, blank=True, null=True)
-    identity_api_version = models.IntegerField(blank=True, null=True)
 
     class Meta:
         verbose_name = "OpenStack Credentials"
@@ -260,8 +265,6 @@ class OpenStackCredentials(Credentials):
             d['os_project_domain_name'] = self.project_domain_name
         if self.user_domain_name:
             d['os_user_domain_name'] = self.user_domain_name
-        if self.identity_api_version:
-            d['os_identity_api_version'] = self.identity_api_version
         return d
 
 
