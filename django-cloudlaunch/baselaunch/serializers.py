@@ -637,6 +637,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             merged_config = jsonmerge.merge(default_combined_config, app_config)
             final_ud_config = handler.process_app_config(name, cloud_version_config,
                                                          credentials, merged_config)
+            sanitised_app_config = handler.sanitise_app_config(merged_config)
             async_result = tasks.launch_appliance.delay(name, cloud_version_config,
                                                         credentials, merged_config, final_ud_config)
 
@@ -645,11 +646,18 @@ class DeploymentSerializer(serializers.ModelSerializer):
             validated_data['owner_id'] = request.user.id
             validated_data['application_config'] = json.dumps(merged_config)
             validated_data['celery_task_id'] = async_result.task_id
-            return super(DeploymentSerializer, self).create(validated_data)
+            app_deployment = super(DeploymentSerializer, self).create(validated_data)
+            self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)
+            return app_deployment
         except serializers.ValidationError as ve:
             raise ve
         except Exception as e:
             raise serializers.ValidationError({ "error" : str(e) })
+
+    def log_usage(self, app_version_cloud_config, app_deployment, sanitised_app_config, user):
+        u = models.Usage(app_version_cloud_config=app_version_cloud_config,
+                         app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
+        u.save()
 
 
 class CredentialsSerializer(serializers.Serializer):

@@ -64,6 +64,20 @@ class UserProfileAdmin(admin.ModelAdmin):
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
 
+class UsageAdmin(admin.ModelAdmin):
+    models = models.Usage
+    # Enable column-based display&filtering of entries
+    list_display = ('added', 'app_version_cloud_config', 'app_deployment', 'app_config',
+                    'user')
+    # Enable filtering of displayed entries
+    list_filter = ('added', 'app_version_cloud_config', 'app_deployment', 'app_config',
+                    'user')
+    # Enable hierarchical navigation by date
+    date_hierarchy = 'added'
+    ordering = ('-added',)
+    # Add search
+    search_fields = ['user']
+
 
 ### Public Services ###
 class SponsorsAdmin(admin.ModelAdmin):
@@ -86,6 +100,7 @@ admin.site.register(models.EC2, EC2Admin)
 admin.site.register(models.S3, S3Admin)
 admin.site.register(models.OpenStack, CloudAdmin)
 admin.site.register(models.UserProfile, UserProfileAdmin)
+admin.site.register(models.Usage, UsageAdmin)
 
 ### Public Services Admin Registration ###
 admin.site.register(models.PublicService, PublicServicesAdmin)

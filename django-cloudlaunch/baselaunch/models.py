@@ -371,3 +371,21 @@ class PublicService(DateNameAwareModel):
                                     },)[0]
 
         super(PublicService, self).save(*args, **kwargs)
+
+
+class Usage(models.Model):
+    """
+    Keep some usage information about instances that are being launched.
+    """
+    #automatically add timestamps when object is created
+    added = models.DateTimeField(auto_now_add=True)
+    app_version_cloud_config = models.ForeignKey(ApplicationVersionCloudConfig,
+                                                 related_name="app_version_cloud_config", null=False)
+    app_deployment = models.ForeignKey(ApplicationDeployment, related_name="app_version_cloud_config",
+                                       null=True, on_delete=models.SET_NULL)
+    app_config =  models.TextField(max_length=1024 * 16, blank=True, null=True)
+    user = models.ForeignKey(User, null=False)
+    
+    class Meta:
+        ordering = ['added']
+        verbose_name_plural = 'Usage'

@@ -2,6 +2,7 @@ from .app_plugin import AppPlugin
 from baselaunch import domain_model
 import requests
 import time
+import copy
 
 
 class BaseVMAppPlugin(AppPlugin):
@@ -10,6 +11,10 @@ class BaseVMAppPlugin(AppPlugin):
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials, app_config):
         return app_config.get("config_cloudlaunch", {}).get("instance_user_data", {})
+
+    @staticmethod
+    def sanitise_app_config(app_config):
+        return copy.deepcopy(app_config)
 
     def _get_or_create_kp(self, provider, kp_name):
         """

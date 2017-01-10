@@ -8,7 +8,7 @@ class AppPlugin():
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractstaticmethod
-    def process_app_config(self, name, cloud_version_config, credentials,
+    def process_app_config(name, cloud_version_config, credentials,
                            app_config):
         """
         Validate and build an internal app config.
@@ -30,6 +30,24 @@ class AppPlugin():
         @type  credentials: ``dict``
         @param credentials: A dict containing provider specific credentials.
                 
+        @type  app_config: ``dict``
+        @param app_config: A dict containing the original, unprocessed version
+               of the app config. The app config is a merged dict of database
+               stored settings and user-entered settings.
+
+        :rtype: ``dict``
+        :return: a ``dict` containing the launch configuration
+        """
+        pass
+
+    @abc.abstractstaticmethod
+    def sanitise_app_config(app_config):
+        """
+        Sanitises values in the app_config and returns it.
+
+        The returned representation should have all sensitive data such
+        as passwords and keys removed, so that it can be safely logged.
+
         @type  app_config: ``dict``
         @param app_config: A dict containing the original, unprocessed version
                of the app config. The app config is a merged dict of database
