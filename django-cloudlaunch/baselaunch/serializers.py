@@ -587,11 +587,6 @@ class DeploymentAppVersionSerializer(serializers.ModelSerializer):
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
-    instance_type = serializers.CharField(read_only=True)
-    placement_zone = serializers.CharField(read_only=True)
-    keypair_name = serializers.CharField(read_only=True)
-    network = serializers.CharField(read_only=True)
-    subnet = serializers.CharField(read_only=True)
     provider_settings = serializers.CharField(read_only=True)
     application_config = StoredJSONField(read_only=True)
     application = serializers.CharField(write_only=True, required=True)
@@ -602,8 +597,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ApplicationDeployment
-        fields = ('id','name', 'application', 'application_version', 'target_cloud', 'instance_type',
-                  'placement_zone', 'keypair_name', 'network', 'subnet', 'provider_settings',
+        fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id',
                   'task_status', 'task_result', 'app_version_details')
 
@@ -627,7 +621,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
         name = validated_data.get("name")
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
-        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(application_version=version.id, cloud=cloud.slug)
+        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
+            application_version=version.id, cloud=cloud.slug)
         default_appwide_config = json.loads(version.application.default_launch_config or "{}")
         default_version_config = json.loads(version.default_launch_config or "{}")
         default_cloud_config = json.loads(cloud_version_config.default_launch_config or "{}")

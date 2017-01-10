@@ -191,21 +191,6 @@ class ApplicationDeployment(DateNameAwareModel):
     owner = models.ForeignKey(User, null=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
     target_cloud = models.ForeignKey(Cloud, null=False)
-    instance_type = models.TextField(max_length=256, help_text="Instance Type for this"
-                                     " deployment",
-                                   blank=True, null=False)
-    placement_zone = models.TextField(max_length=256, help_text="Placement zone in which "
-                                   "this deployment was made.",
-                                   blank=True, null=True)
-    keypair_name = models.TextField(max_length=256, help_text="Keypair names "
-                                   "for this virtual machine.",
-                                   blank=True, null=True)
-    network = models.TextField(max_length=256, help_text="Network "
-                                   "for this virtual machine.",
-                                   blank=True, null=True)
-    subnet = models.TextField(max_length=256, help_text="Network "
-                                   "for this virtual machine.",
-                                   blank=True, null=True)
     provider_settings = models.TextField(max_length=1024 * 16, help_text="Cloud provider "
                                    "specific settings used for this launch.",
                                    blank=True, null=True)
