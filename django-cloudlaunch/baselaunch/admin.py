@@ -14,11 +14,13 @@ class AppVersionInline(nested_admin.NestedStackedInline):
     model = models.ApplicationVersion
     extra = 0
     inlines = [AppVersionCloudConfigInline]
+    form = forms.ApplicationVersionForm
 
 
 class AppAdmin(nested_admin.NestedModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     inlines = [AppVersionInline]
+    form = forms.ApplicationForm
 
 
 class CloudImageInline(admin.StackedInline):
