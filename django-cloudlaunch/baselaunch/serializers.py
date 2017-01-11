@@ -585,15 +585,17 @@ class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
 
 class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
     cloud_config = AppVersionCloudConfigSerializer(many=True, read_only=True, source='app_version_config')
+    default_cloud = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.ApplicationVersion
-        fields = ('version','cloud_config', 'frontend_component_path', 'frontend_component_name')
+        fields = ('version','cloud_config', 'frontend_component_path', 'frontend_component_name', 'default_cloud')
 
 
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
     slug = serializers.CharField(read_only=True)
     versions = AppVersionSerializer(many=True, read_only=True)
+    default_version = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Application

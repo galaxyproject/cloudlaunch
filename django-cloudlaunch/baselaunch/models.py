@@ -130,6 +130,8 @@ class Application(DateNameAwareModel):
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Application-wide "
                                    "initial configuration data to parameterize the launch with.",
                                    blank=True, null=True)
+    default_version = models.ForeignKey('ApplicationVersion', related_name='+',
+                                        blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return "{0}".format(self.name)
@@ -144,6 +146,8 @@ class Application(DateNameAwareModel):
                 json.loads(self.default_launch_config)
             except Exception as e:
                 raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
+        if self.default_version and not self.versions.filter(application=self, version=self.default_version).exists():
+            raise Exception("The default application version must be a version belonging to this application")
 
         super(Application, self).save(*args, **kwargs)
 
@@ -158,6 +162,8 @@ class ApplicationVersion(models.Model):
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Version "
                                    "specific configuration data to parameterize the launch with.",
                                    blank=True, null=True)
+    default_cloud = models.ForeignKey('Cloud', related_name='+', blank=True, null=True,
+                                      on_delete=models.SET_NULL)
 
     def save(self, *args, **kwargs):
         # validate user data
@@ -166,6 +172,9 @@ class ApplicationVersion(models.Model):
                 json.loads(self.default_launch_config)
             except Exception as e:
                 raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
+        if self.default_cloud and not self.app_version_config.filter(application_version=self, cloud=self.default_cloud).exists():
+            raise Exception("The default cloud must be a cloud that this version of the application is supported on.")
+
         return super(ApplicationVersion, self).save()
 
     def __str__(self):
