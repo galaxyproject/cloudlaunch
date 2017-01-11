@@ -572,8 +572,6 @@ class StoredJSONField(serializers.JSONField):
 
 
 class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
-
-
     cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
     default_launch_config = StoredJSONField()
@@ -585,7 +583,7 @@ class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
 
 class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
     cloud_config = AppVersionCloudConfigSerializer(many=True, read_only=True, source='app_version_config')
-    default_cloud = serializers.CharField(read_only=True)
+    default_cloud = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = models.ApplicationVersion
@@ -595,7 +593,7 @@ class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
     slug = serializers.CharField(read_only=True)
     versions = AppVersionSerializer(many=True, read_only=True)
-    default_version = serializers.CharField(read_only=True)
+    default_version = serializers.SlugRelatedField(read_only=True, slug_field='version')
 
     class Meta:
         model = models.Application
@@ -698,7 +696,6 @@ class CredentialsSerializer(serializers.Serializer):
 
 
 class AWSCredsSerializer(serializers.HyperlinkedModelSerializer):
-
     id = serializers.IntegerField(read_only=True)
     secret_key = serializers.CharField(
         style={'input_type': 'password'},
@@ -714,7 +711,6 @@ class AWSCredsSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
-
     id = serializers.IntegerField(read_only=True)
     password = serializers.CharField(
         style={'input_type': 'password'},

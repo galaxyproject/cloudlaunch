@@ -179,6 +179,9 @@ class ApplicationVersion(models.Model):
 
     def __str__(self):
         return "{0}".format(self.version)
+    
+    class Meta:
+        unique_together = (("application", "version"),)
 
 
 class ApplicationVersionCloudConfig(models.Model):
