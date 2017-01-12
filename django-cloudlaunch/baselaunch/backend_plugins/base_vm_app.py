@@ -120,6 +120,34 @@ class BaseVMAppPlugin(AppPlugin):
                     return
             count += 1
 
+    def attach_public_ip(self, provider, inst):
+        """
+        If instance has no public IP, try to attach one.
+
+        The method will attach a random floating IP that's available in the
+        account. If there are no available IPs, try to allocate a new one.
+
+        :rtype: ``str``
+        :return: The attached IP address. This can be one that's already
+                 available on the instance or one that has been attached.
+        """
+        if not inst.public_ips:
+            fip = None
+            fips = provider.network.floating_ips()
+            for ip in fips:
+                if not ip.in_use():
+                    fip = ip
+            if fip:
+                print("Attaching an existing floating IP %s" % fip.public_ip)
+                inst.add_floating_ip(fip.public_ip)
+            else:
+                fip = provider.network.create_floating_ip()
+                inst.add_floating_ip(fip.public_ip)
+            return fip.public_ip
+        elif len(inst.public_ips) > 0:
+            return inst.public_ips[0]
+        else:
+            return None
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
@@ -151,15 +179,18 @@ class BaseVMAppPlugin(AppPlugin):
         results = {}
         results['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
         results['securityGroup'] = {'id' : sg.id, 'name' : sg.name }
-        results['publicIP'] = inst.public_ips[0] if len(inst.public_ips) > 0 else None
+        results['publicIP'] = self.attach_public_ip(provider, inst)
         task.update_state(
             state='PROGRESSING',
             meta={'action': "VM creation successful. Public IP (if available): %s"
                   % results['publicIP']})
-        results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
-        task.update_state(
-            state='PROGRESSING',
-            meta={'action': "Waiting for application to become ready at: %s"
-                  % results['applicationURL']})
-        self.wait_for_http(results['applicationURL'])
+        if results['publicIP']:
+            results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
+            task.update_state(
+                state='PROGRESSING',
+                meta={'action': "Waiting for application to become ready at %s"
+                      % results['applicationURL']})
+            self.wait_for_http(results['applicationURL'])
+        else:
+            results['applicationURL'] = 'N/A'
         return {'cloudLaunch' : results }
