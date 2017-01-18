@@ -1,6 +1,9 @@
+import copy
+import datetime
 import urllib
 import json
 import jsonmerge
+import requests
 import yaml
 
 
@@ -15,6 +18,7 @@ from baselaunch.drf_helpers import CustomHyperlinkedIdentityField
 from baselaunch.drf_helpers import PlacementZonePKRelatedField
 from baselaunch.drf_helpers import ProviderPKRelatedField
 from django.contrib.sessions.serializers import JSONSerializer
+from django.utils.timezone import utc
 from celery.result import AsyncResult
 from baselaunch import util
 from django_countries.serializer_fields import CountryField
@@ -478,7 +482,7 @@ class CloudSerializer(serializers.ModelSerializer):
             return obj.openstack.region_name
         else:
             return "Cloud provider not recognized"
-        
+
     def get_cloud_type(self, obj):
         if hasattr(obj, 'aws'):
             return 'aws';
@@ -486,7 +490,7 @@ class CloudSerializer(serializers.ModelSerializer):
             return 'openstack';
         else:
             return 'unknown';
-        
+
     def get_extra_data(self, obj):
         if hasattr(obj, 'aws'):
             aws = obj.aws
@@ -639,14 +643,44 @@ class DeploymentSerializer(serializers.ModelSerializer):
         return super(DeploymentSerializer, self).to_internal_value(data)
 
     def get_task_status(self, obj):
+        """
+        Get the status info from the task that performed the deployment.
+
+        :type obj: ``baselaunch.models.ApplicationDeployment``
+        :param obj: Application deployment object whose status to check on.
+
+        :rtype: ``dict``
+        :return: A dictionary with the status of the given deployment.
+        """
         try:
-            task = AsyncResult(obj.celery_task_id)
             if obj.celery_task_id:
-                return task.backend.get_task_meta(task.id)
-        except Exception:
-            return { 'state' : 'UNKNOWN' }
+                task = AsyncResult(obj.celery_task_id)
+                task_meta = task.backend.get_task_meta(task.id)
+                td = datetime.datetime.utcnow().replace(tzinfo=utc) - obj.added
+                # Forget the task after an hour, shifting to a clean DB table
+                if td.total_seconds() >= 3600:
+                    obj.task_status = task_meta.get('status')
+                    obj.task_traceback = task_meta.get('traceback')
+                    obj.celery_task_id = None
+                    sanitized_result = copy.deepcopy(task_meta['result'])
+                    if sanitized_result.get('cloudLaunch', {}).get('keyPair',
+                       {}).get('material'):
+                        sanitized_result['cloudLaunch']['keyPair']['material']\
+                            = None
+                    obj.task_result = json.dumps(sanitized_result)
+                    obj.save()
+                    print("Saved task %s info to the DB; forgetting it." %
+                          task.id)
+                    task.forget()
+                return task_meta
+            else:
+                return {'status': obj.task_status,
+                        'task_result': json.loads(obj.task_result)}
+        except Exception as exc:
+            return {'state': 'UNKNOWN: %s' % exc}
 
     def create(self, validated_data):
+        print("DeploymentSerializer create")
         name = validated_data.get("name")
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
