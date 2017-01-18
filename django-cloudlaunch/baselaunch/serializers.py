@@ -675,7 +675,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 return task_meta
             else:
                 return {'status': obj.task_status,
-                        'task_result': json.loads(obj.task_result)}
+                        'result': json.loads(obj.task_result)}
         except Exception as exc:
             return {'state': 'UNKNOWN: %s' % exc}
 
