@@ -655,24 +655,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         try:
             if obj.celery_task_id:
                 task = AsyncResult(obj.celery_task_id)
-                task_meta = task.backend.get_task_meta(task.id)
-                td = datetime.datetime.utcnow().replace(tzinfo=utc) - obj.added
-                # Forget the task after an hour, shifting to a clean DB table
-                if td.total_seconds() >= 3600:
-                    obj.task_status = task_meta.get('status')
-                    obj.task_traceback = task_meta.get('traceback')
-                    obj.celery_task_id = None
-                    sanitized_result = copy.deepcopy(task_meta['result'])
-                    if sanitized_result.get('cloudLaunch', {}).get('keyPair',
-                       {}).get('material'):
-                        sanitized_result['cloudLaunch']['keyPair']['material']\
-                            = None
-                    obj.task_result = json.dumps(sanitized_result)
-                    obj.save()
-                    print("Saved task %s info to the DB; forgetting it." %
-                          task.id)
-                    task.forget()
-                return task_meta
+                return task.backend.get_task_meta(task.id)
             else:
                 return {'status': obj.task_status,
                         'result': json.loads(obj.task_result)}
@@ -680,7 +663,11 @@ class DeploymentSerializer(serializers.ModelSerializer):
             return {'state': 'UNKNOWN: %s' % exc}
 
     def create(self, validated_data):
-        print("DeploymentSerializer create")
+        """
+        Create a new ApplicationDeployment object.
+
+        Called automatically by the DRF following a POST request.
+        """
         name = validated_data.get("name")
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
