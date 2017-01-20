@@ -179,7 +179,7 @@ class ApplicationVersion(models.Model):
 
     def __str__(self):
         return "{0}".format(self.version)
-    
+
     class Meta:
         unique_together = (("application", "version"),)
 
@@ -205,21 +205,29 @@ class ApplicationVersionCloudConfig(models.Model):
                 raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
         return super(ApplicationVersionCloudConfig, self).save()
 
+
 class ApplicationDeployment(DateNameAwareModel):
+    """Application deployment details."""
+
     owner = models.ForeignKey(User, null=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
     target_cloud = models.ForeignKey(Cloud, null=False)
-    provider_settings = models.TextField(max_length=1024 * 16, help_text="Cloud provider "
-                                   "specific settings used for this launch.",
-                                   blank=True, null=True)
-    application_config = models.TextField(max_length=1024 * 16, help_text="Application "
-                                   "configuration data used for this launch.",
-                                   blank=True, null=True)
-    celery_task_id = models.TextField(max_length=64, help_text="Celery task id for "
-                                      "any background jobs running on this deployment",
-                                      blank=True, null=True, unique=True)
-    task_result = models.TextField(max_length=1024 * 16, help_text="Result of celery "
-                                      "task", blank=True, null=True)
+    provider_settings = models.TextField(
+        max_length=1024 * 16, help_text="Cloud provider specific settings "
+        "used for this launch.", blank=True, null=True)
+    application_config = models.TextField(
+        max_length=1024 * 16, help_text="Application configuration data used "
+        "for this launch.", blank=True, null=True)
+    celery_task_id = models.TextField(
+        max_length=64, help_text="Celery task id for any background jobs "
+        "running on this deployment", blank=True, null=True, unique=True)
+    task_result = models.TextField(
+        max_length=1024 * 16, help_text="Result of Celery task", blank=True,
+        null=True)
+    task_status = models.CharField(max_length=64, blank=True, null=True)
+    task_traceback = models.TextField(
+        max_length=1024 * 16, help_text="Celery task traceback, if any",
+        blank=True, null=True)
 
 
 class Credentials(DateNameAwareModel):
@@ -397,7 +405,7 @@ class Usage(models.Model):
                                        null=True, on_delete=models.SET_NULL)
     app_config =  models.TextField(max_length=1024 * 16, blank=True, null=True)
     user = models.ForeignKey(User, null=False)
-    
+
     class Meta:
         ordering = ['added']
         verbose_name_plural = 'Usage'

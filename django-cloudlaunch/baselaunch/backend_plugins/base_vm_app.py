@@ -1,3 +1,4 @@
+"""Base VM plugin implementations."""
 from .app_plugin import AppPlugin
 from baselaunch import domain_model
 import requests
@@ -6,20 +7,27 @@ import copy
 
 
 class BaseVMAppPlugin(AppPlugin):
+    """
+    Implementation for the basic VM app.
 
+    It is expected that other apps inherit this class and override or
+    complement methods provided here.
+    """
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials, app_config):
-        return app_config.get("config_cloudlaunch", {}).get("instance_user_data", {})
+    def process_app_config(name, cloud_version_config, credentials,
+                           app_config):
+        """Extract any extra user data from the app config and return it."""
+        return app_config.get("config_cloudlaunch", {}).get(
+            "instance_user_data", {})
 
     @staticmethod
     def sanitise_app_config(app_config):
+        """Return a sanitized copy of the supplied app config object."""
         return copy.deepcopy(app_config)
 
     def _get_or_create_kp(self, provider, kp_name):
-        """
-        If a keypair with the provided ``kp_name`` does not exist, create it.
-        """
+        """Get or create an SSH key pair with the supplied name."""
         kps = provider.security.key_pairs.find(name=kp_name)
         if kps:
             return kps[0]
@@ -39,9 +47,7 @@ class BaseVMAppPlugin(AppPlugin):
             name=sg_name, description=description, network_id=network_id)
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
-        """
-        Compose a CloudBridge launch config object.
-        """
+        """Compose a CloudBridge launch config object."""
         network_id = self._get_network_id(provider, cloudlaunch_config)
         lc = None
         if network_id:
@@ -51,7 +57,8 @@ class BaseVMAppPlugin(AppPlugin):
             if not lc:
                 lc = provider.compute.instances.create_launch_config()
             lc.add_volume_device(source=image,
-                                 size=int(cloudlaunch_config.get("rootStorageSize", 20)),
+                                 size=int(cloudlaunch_config.get(
+                                          "rootStorageSize", 20)),
                                  is_root=True)
 
         return lc
@@ -69,8 +76,7 @@ class BaseVMAppPlugin(AppPlugin):
 
     def apply_app_firewall_settings(self, provider, cloudlaunch_config):
         """
-        Apply any firewall settings defined for the app in cloudlaunch
-        settings and return the encompassing security group.
+        Apply firewall settings defined for the app in CloudLaunch settings.
 
         The following format is expected:
 
@@ -89,11 +95,15 @@ class BaseVMAppPlugin(AppPlugin):
                 "description": "My App SG"
             }
         ]
+
+        :rtype: CloudBridge SecurityGroup
+        :return: Security group satisfying the request.
         """
         for group in cloudlaunch_config.get('firewall', []):
             sg_name = group.get('securityGroup') or 'CloudLaunchDefault'
             sg_desc = group.get('description') or 'Created by CloudLaunch'
-            sg = self._get_or_create_sg(provider, cloudlaunch_config, sg_name, sg_desc)
+            sg = self._get_or_create_sg(provider, cloudlaunch_config, sg_name,
+                                        sg_desc)
             for rule in group.get('rules', []):
                 try:
                     sg.add_rule(ip_protocol=rule.get('protocol'),
@@ -103,12 +113,10 @@ class BaseVMAppPlugin(AppPlugin):
                                 src_group=rule.get('src_group'))
                 except Exception as e:
                     print(e)
-                    pass
             return sg
 
-    def wait_for_http(self, url, max_retries=200,
-                 poll_interval=5):
-        """Wait till app is responding at http URL"""
+    def wait_for_http(self, url, max_retries=200, poll_interval=5):
+        """Wait till app is responding at http URL."""
         count = 0
         while time.sleep(poll_interval) and count < max_retries:
             try:
@@ -149,43 +157,58 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             return None
 
-    def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
+    def launch_app(self, task, name, cloud_version_config, credentials,
+                   app_config, user_data):
+        """Initiate the app launch process."""
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
-        provider = domain_model.get_cloud_provider(cloud_version_config.cloud, credentials)
+        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
+                                                   credentials)
         img = provider.compute.images.get(cloud_version_config.image.image_id)
-        task.update_state(state='PROGRESSING', meta={'action': "Retrieving or creating a keypair"})
-        kp = self._get_or_create_kp(provider, cloudlaunch_config.get('keyPair') or 'cloudlaunch_key_pair')
-        task.update_state(state='PROGRESSING', meta={'action': "Applying firewall settings"})
-        sg = self.apply_app_firewall_settings(
-            provider, cloudlaunch_config)
-        cb_launch_config = self._get_cb_launch_config(provider, img, cloudlaunch_config)
+        task.update_state(state='PROGRESSING',
+                          meta={'action': "Retrieving or creating a keypair"})
+        kp = self._get_or_create_kp(provider,
+                                    cloudlaunch_config.get('keyPair') or
+                                    'cloudlaunch_key_pair')
+        task.update_state(state='PROGRESSING',
+                          meta={'action': "Applying firewall settings"})
+        sg = self.apply_app_firewall_settings(provider, cloudlaunch_config)
+        cb_launch_config = self._get_cb_launch_config(provider, img,
+                                                      cloudlaunch_config)
         inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
         placement_zone = cloudlaunch_config.get('placementZone')
 
         print("Launching with ud:\n%s" % user_data)
-        task.update_state(state='PROGRESSING', meta={'action': "Launching an instance of type %s with keypair %s in zone %s" %
-              (inst_type, kp.name, placement_zone)})
-        inst = provider.compute.instances.create(name=name, image=img,
-            instance_type=inst_type, key_pair=kp, security_groups=[sg],
-            zone = placement_zone, user_data=user_data, launch_config=cb_launch_config)
-        task.update_state(state='PROGRESSING', meta={'action': "Waiting for instance %s to be ready.." % (inst.id, )})
+        task.update_state(state='PROGRESSING',
+                          meta={'action': "Launching an instance of type %s "
+                                "with keypair %s in zone %s" %
+                                (inst_type, kp.name, placement_zone)})
+        inst = provider.compute.instances.create(
+            name=name, image=img, instance_type=inst_type, key_pair=kp,
+            security_groups=[sg], zone=placement_zone, user_data=user_data,
+            launch_config=cb_launch_config)
+        task.update_state(state='PROGRESSING',
+                          meta={'action': "Waiting for instance %s" % inst.id})
         inst.wait_till_ready()
         static_ip = cloudlaunch_config.get('staticIP')
         if static_ip:
-            task.update_state(state='PROGRESSING', meta={'action': "Assigning requested static IP: %s" % (static_ip, )})
+            task.update_state(state='PROGRESSING',
+                              meta={'action': "Assigning requested floating "
+                                    "IP: %s" % static_ip})
             inst.add_floating_ip(static_ip)
             inst.refresh()
         results = {}
-        results['keyPair'] = { 'id' : kp.id, 'name' : kp.name, 'material' : kp.material }
-        results['securityGroup'] = {'id' : sg.id, 'name' : sg.name }
+        results['keyPair'] = {'id': kp.id, 'name': kp.name,
+                              'material': kp.material}
+        results['securityGroup'] = {'id': sg.id, 'name': sg.name}
+        results['instance'] = {'id': inst.id}
         results['publicIP'] = self.attach_public_ip(provider, inst)
         task.update_state(
             state='PROGRESSING',
-            meta={'action': "VM creation successful. Public IP (if available): %s"
-                  % results['publicIP']})
+            meta={'action': "Instance creation successful. Public IP "
+                  "(if available): %s" % results['publicIP']})
         if results['publicIP']:
-            results['applicationURL'] = 'http://{0}'.format(results['publicIP'])
+            results['applicationURL'] = ('http://%s' % results['publicIP'])
             task.update_state(
                 state='PROGRESSING',
                 meta={'action': "Waiting for application to become ready at %s"
@@ -193,4 +216,4 @@ class BaseVMAppPlugin(AppPlugin):
             self.wait_for_http(results['applicationURL'])
         else:
             results['applicationURL'] = 'N/A'
-        return {'cloudLaunch' : results }
+        return {'cloudLaunch': results}
