@@ -725,6 +725,22 @@ class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
         exclude = ('password', 'user_profile')
 
 
+class CloudConnectionAuthSerializer(serializers.Serializer):
+    aws_creds = AWSCredsSerializer(write_only=True, required=False)
+    openstack_creds = OpenstackCredsSerializer(write_only=True, required=False)
+    result = serializers.CharField(read_only=True)
+    details = serializers.CharField(read_only=True)
+    
+    def create(self, validated_data):
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        try:
+             provider.authenticate()
+             return { 'result': 'SUCCESS' }
+        except Exception as e:
+            return { 'result': 'FAILURE', 'details': str(e) }
+        
+
+
 class UserSerializer(UserDetailsSerializer):
     credentials = CustomHyperlinkedIdentityField(view_name='credentialsroute-list',
                                                  lookup_field=None)

@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from rest_framework import filters
-
+from rest_framework import status
+from rest_framework import mixins
 from baselaunch import drf_helpers
 from baselaunch import models
 from baselaunch import serializers
@@ -123,6 +124,14 @@ class ZoneViewSet(drf_helpers.CustomReadOnlyModelViewSet):
     def get_object(self):
         return next((s for s in self.list_objects()
                      if s.id == self.kwargs["pk"]), None)
+
+
+class CloudConnectionTestViewSet(mixins.CreateModelMixin,
+                                 viewsets.GenericViewSet):
+    """
+    Authenticates given credentials against a provider
+    """
+    serializer_class = serializers.CloudConnectionAuthSerializer
 
 
 class SecurityViewSet(drf_helpers.CustomReadOnlySingleViewSet):
