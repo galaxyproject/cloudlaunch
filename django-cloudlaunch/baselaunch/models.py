@@ -36,6 +36,7 @@ class Cloud(DateNameAwareModel):
     # https://docs.djangoproject.com/en/1.9/topics/db/
     #   models/#base-class-restrictions
     objects = InheritanceManager()
+    access_instructions_url = models.URLField(max_length=2048, blank=True, null=True)
     kind = models.CharField(max_length=10, default='cloud', editable=False)
     slug = models.SlugField(max_length=50, primary_key=True)
 
