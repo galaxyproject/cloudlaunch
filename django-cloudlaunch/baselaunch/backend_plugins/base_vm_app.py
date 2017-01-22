@@ -163,7 +163,8 @@ class BaseVMAppPlugin(AppPlugin):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
-        img = provider.compute.images.get(cloud_version_config.image.image_id)
+        custom_image_id = app_config.get("customImageID", None)
+        img = provider.compute.images.get(custom_image_id or cloud_version_config.image.image_id)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Retrieving or creating a keypair"})
         kp = self._get_or_create_kp(provider,

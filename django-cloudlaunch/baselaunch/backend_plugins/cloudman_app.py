@@ -37,6 +37,10 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             user_data['share_string'] = cloudman_config.get("clusterSharedString")
         user_data['cluster_templates'] = cloudman_config.get(
             "cluster_templates")
+        extra_user_data = cloudman_config.get("extraUserData")
+        if extra_user_data:
+            for key, value in yaml.load(extra_user_data).iteritems():
+                user_data[key] = value
 
         cloud = cloud_version_config.cloud
         if hasattr(cloud, 'aws'):
