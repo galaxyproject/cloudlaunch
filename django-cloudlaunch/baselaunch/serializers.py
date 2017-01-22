@@ -578,7 +578,7 @@ class StoredJSONField(serializers.JSONField):
 class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
     cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
-    default_launch_config = StoredJSONField(source='compute_merged_config')
+    default_launch_config = serializers.JSONField(source='compute_merged_config')
 
     class Meta:
         model = models.ApplicationVersionCloudConfig
