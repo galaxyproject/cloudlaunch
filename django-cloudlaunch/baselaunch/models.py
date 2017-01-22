@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from django.core.exceptions import ObjectDoesNotExist
 
 import json
+import jsonmerge
 
 
 class DateNameAwareModel(models.Model):
@@ -205,6 +206,13 @@ class ApplicationVersionCloudConfig(models.Model):
             except Exception as e:
                 raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
         return super(ApplicationVersionCloudConfig, self).save()
+
+    def compute_merged_config(self):
+        default_appwide_config = json.loads(self.application_version.application.default_launch_config or "{}")
+        default_version_config = json.loads(self.application_version.default_launch_config or "{}")
+        default_cloud_config = json.loads(self.default_launch_config or "{}")
+        default_combined_config = jsonmerge.merge(default_appwide_config, default_version_config)
+        return jsonmerge.merge(default_combined_config, default_cloud_config)
 
 
 class ApplicationDeployment(DateNameAwareModel):

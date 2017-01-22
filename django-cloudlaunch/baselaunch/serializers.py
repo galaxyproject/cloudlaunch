@@ -578,7 +578,7 @@ class StoredJSONField(serializers.JSONField):
 class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
     cloud = CloudSerializer(read_only=True)
     image = CloudImageSerializer(read_only=True)
-    default_launch_config = StoredJSONField()
+    default_launch_config = StoredJSONField(source='compute_merged_config')
 
     class Meta:
         model = models.ApplicationVersionCloudConfig
@@ -673,11 +673,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         version = validated_data.get("application_version")
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
             application_version=version.id, cloud=cloud.slug)
-        default_appwide_config = json.loads(version.application.default_launch_config or "{}")
-        default_version_config = json.loads(version.default_launch_config or "{}")
-        default_cloud_config = json.loads(cloud_version_config.default_launch_config or "{}")
-        default_combined_config = jsonmerge.merge(default_appwide_config, default_version_config)
-        default_combined_config = jsonmerge.merge(default_combined_config, default_cloud_config)
+        default_combined_config = cloud_version_config.compute_merged_config()
         request = self.context.get('view').request
         credentials = view_helpers.get_credentials(cloud, request)
         try:
