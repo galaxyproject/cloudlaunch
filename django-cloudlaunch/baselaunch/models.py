@@ -153,6 +153,9 @@ class Application(DateNameAwareModel):
 
         super(Application, self).save(*args, **kwargs)
 
+    class Meta:
+        ordering = ['name']
+
 
 class ApplicationVersion(models.Model):
     application = models.ForeignKey(Application, related_name="versions")
