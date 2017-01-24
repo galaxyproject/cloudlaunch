@@ -14,6 +14,9 @@ def get_required_val(data, name, message):
 
 class CloudManAppPlugin(BaseVMAppPlugin):
 
+    def __init__(self):
+        self.base_app = False
+
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials, app_config):
         cloudman_config = get_required_val(
@@ -28,6 +31,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             cloudman_config, "clusterType", "cluster type is required.")
         user_data['cluster_storage_type'] = get_required_val(
             cloudman_config, "storageType", "storage type is required.")
+        user_data['storage_type'] = user_data['cluster_storage_type']
         user_data['storage_size'] = cloudman_config.get("storageSize")
         user_data['post_start_script_url'] = cloudman_config.get(
             "masterPostStartScript")
@@ -36,7 +40,13 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         if cloudman_config.get("clusterSharedString"):
             user_data['share_string'] = cloudman_config.get("clusterSharedString")
         user_data['cluster_templates'] = cloudman_config.get(
-            "cluster_templates")
+            "cluster_templates", [])
+        # File system template default value for file system size overwrites
+        # the user-provided storage_size value so remove it if both exits
+        for ct in user_data['cluster_templates']:
+            for ft in ct.get('filesystem_templates', []):
+                if ft.get('size') and user_data['storage_size']:
+                    del ft['size']
         extra_user_data = cloudman_config.get("extraUserData")
         if extra_user_data:
             for key, value in yaml.load(extra_user_data).iteritems():
@@ -87,7 +97,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
                 "This version of CloudMan supports only EC2-compatible clouds."})
 
         return user_data
-    
+
     @staticmethod
     def sanitise_app_config(app_config):
         app_config = super(CloudManAppPlugin, CloudManAppPlugin).sanitise_app_config(app_config)
@@ -98,5 +108,10 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         print("YAML UD:\n%s" % user_data)
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         result = super(CloudManAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
-        result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
+        result['cloudLaunch']['applicationURL'] = 'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
+        task.update_state(
+            state='PROGRESSING',
+            meta={'action': "Waiting for CloudMan to become ready at %s"
+                  % result['cloudLaunch']['applicationURL']})
+        self.wait_for_http(result['cloudLaunch']['applicationURL'])
         return result

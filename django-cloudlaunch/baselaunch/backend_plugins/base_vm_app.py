@@ -1,9 +1,12 @@
 """Base VM plugin implementations."""
-from .app_plugin import AppPlugin
-from baselaunch import domain_model
-import requests
-import time
 import copy
+import time
+
+import requests
+import requests.exceptions
+
+from baselaunch import domain_model
+from .app_plugin import AppPlugin
 
 
 class BaseVMAppPlugin(AppPlugin):
@@ -13,6 +16,10 @@ class BaseVMAppPlugin(AppPlugin):
     It is expected that other apps inherit this class and override or
     complement methods provided here.
     """
+
+    def __init__(self):
+        """Init any base app vars."""
+        self.base_app = True
 
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials,
@@ -118,14 +125,17 @@ class BaseVMAppPlugin(AppPlugin):
     def wait_for_http(self, url, max_retries=200, poll_interval=5):
         """Wait till app is responding at http URL."""
         count = 0
-        while time.sleep(poll_interval) and count < max_retries:
+        while count < max_retries:
+            time.sleep(poll_interval)
             try:
                 r = requests.head(url)
                 r.raise_for_status()
                 return
-            except requests.exception.HTTPError as e:
+            except requests.exceptions.HTTPError as e:
                 if e.response.status_code in (401, 403):
                     return
+            except requests.exceptions.ConnectionError:
+                pass
             count += 1
 
     def attach_public_ip(self, provider, inst):
@@ -164,7 +174,8 @@ class BaseVMAppPlugin(AppPlugin):
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
         custom_image_id = app_config.get("customImageID", None)
-        img = provider.compute.images.get(custom_image_id or cloud_version_config.image.image_id)
+        img = provider.compute.images.get(
+            custom_image_id or cloud_version_config.image.image_id)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Retrieving or creating a keypair"})
         kp = self._get_or_create_kp(provider,
@@ -208,13 +219,14 @@ class BaseVMAppPlugin(AppPlugin):
             state='PROGRESSING',
             meta={'action': "Instance creation successful. Public IP "
                   "(if available): %s" % results['publicIP']})
-        if results['publicIP']:
-            results['applicationURL'] = ('http://%s' % results['publicIP'])
-            task.update_state(
-                state='PROGRESSING',
-                meta={'action': "Waiting for application to become ready at %s"
-                      % results['applicationURL']})
-            self.wait_for_http(results['applicationURL'])
-        else:
-            results['applicationURL'] = 'N/A'
+        if self.base_app:
+            if results['publicIP']:
+                results['applicationURL'] = 'http://%s/' % results['publicIP']
+                task.update_state(
+                    state='PROGRESSING',
+                    meta={'action': "Waiting for application to become ready "
+                          "at %s" % results['applicationURL']})
+                self.wait_for_http(results['applicationURL'])
+            else:
+                results['applicationURL'] = 'N/A'
         return {'cloudLaunch': results}
