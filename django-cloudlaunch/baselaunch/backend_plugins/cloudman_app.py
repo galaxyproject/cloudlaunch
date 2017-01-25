@@ -25,7 +25,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         user_data['bucket_default'] = get_required_val(
             cloudman_config, "defaultBucket", "default bucket is required.")
         user_data['cluster_name'] = name
-        if cloudman_config.get('restartCluster', {}).get('cluster_name'):
+        if cloudman_config.get('restartCluster') and cloudman_config['restartCluster'].get('cluster_name'):
             user_data['cluster_name'] = cloudman_config['restartCluster']['cluster_name']
             user_data['placement'] = cloudman_config['restartCluster']['placement']['placement']
         user_data['password'] = get_required_val(
