@@ -20,14 +20,14 @@ class GVLAppPlugin(BaseVMAppPlugin):
         if install_smrtportal:
             install_list.append('smrt_portal')
         user_data['gvl_config'] = { 'install' : install_list }
-        return user_data;
+        return user_data
     
     @staticmethod
     def sanitise_app_config(app_config):
         sanitised_config = super(GVLAppPlugin, GVLAppPlugin).sanitise_app_config(app_config)
         gvl_config = sanitised_config.get("config_gvl")
         sanitised_config['config_gvl'] = CloudManAppPlugin().sanitise_app_config(gvl_config)
-        return sanitised_config;
+        return sanitised_config
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         print("YAML UD:\n%s" % user_data)

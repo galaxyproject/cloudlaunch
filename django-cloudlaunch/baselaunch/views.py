@@ -14,6 +14,7 @@ from baselaunch import drf_helpers
 from baselaunch import models
 from baselaunch import serializers
 from baselaunch import view_helpers
+import requests
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -50,6 +51,16 @@ class AuthView(APIView):
                 'password/reset/change': request.build_absolute_uri(reverse('rest_auth:rest_password_change')),
                 }
         return Response(data)
+
+
+class CorsProxyView(APIView):
+    """
+    API endpoint that allows applications to be viewed or edited.
+    """
+    def get(self, request, format=None):
+        url = self.request.query_params.get('url')
+        r = requests.get(url)
+        return Response(r.json())
 
 
 class CloudViewSet(viewsets.ModelViewSet):

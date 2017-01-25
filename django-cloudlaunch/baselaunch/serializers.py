@@ -601,6 +601,7 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Application
+        exclude = ('default_launch_config',)
 
 
 class DeploymentAppSerializer(serializers.ModelSerializer):
