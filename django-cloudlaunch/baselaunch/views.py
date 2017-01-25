@@ -63,6 +63,14 @@ class CorsProxyView(APIView):
         return Response(r.json())
 
 
+class CloudManViewSet(drf_helpers.CustomReadOnlySingleViewSet):
+    """
+    List CloudMan related urls.
+    """
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.CloudManSerializer
+
+
 class CloudViewSet(viewsets.ModelViewSet):
     """
     API endpoint to view and or edit cloud infrastructure info.

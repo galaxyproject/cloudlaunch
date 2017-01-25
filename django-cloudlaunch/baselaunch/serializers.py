@@ -7,6 +7,7 @@ import requests
 import yaml
 
 
+from bioblend.cloudman.launch import CloudManLauncher
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -449,6 +450,32 @@ class BucketObjectSerializer(serializers.Serializer):
             raise serializers.ValidationError("{0}".format(e))
 
 
+class CloudManSerializer(serializers.Serializer):
+    """
+    Handle CloudMan application requests.
+
+    Note that this serializer (and the endpoint) are temporary until the
+    new CloudMan is developed that natively supports multiple clouds.
+    """
+
+    saved_clusters = serializers.SerializerMethodField()
+
+    def get_saved_clusters(self, obj):
+        """
+        Fetch a list of saved CloudMan clusters from AWS.
+
+        This only fetches saved clusters that used AWS since it appears that
+        was the only place this feature was actively used.
+        """
+        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        if provider.cloud_type != 'aws':
+            return []
+        # Since we're only working with the AWS, there's no need to specify
+        # the cloud argument as it defaults to AWS in BioBlend.
+        cml = CloudManLauncher(provider.a_key, provider.s_key, None)
+        return cml.get_clusters_pd().get('clusters', [])
+
+
 class CloudSerializer(serializers.ModelSerializer):
     slug = serializers.CharField(read_only=True)
     compute = CustomHyperlinkedIdentityField(view_name='compute-list',
@@ -469,7 +496,9 @@ class CloudSerializer(serializers.ModelSerializer):
     static_ips = CustomHyperlinkedIdentityField(view_name='static_ip-list',
                                                 lookup_field='slug',
                                                 lookup_url_kwarg='cloud_pk')
-
+    cloudman = CustomHyperlinkedIdentityField(view_name='cloudman-list',
+                                              lookup_field='slug',
+                                              lookup_url_kwarg='cloud_pk')
     region_name = serializers.SerializerMethodField()
 
     cloud_type = serializers.SerializerMethodField()
@@ -748,7 +777,7 @@ class CloudConnectionAuthSerializer(serializers.Serializer):
     openstack_creds = OpenstackCredsSerializer(write_only=True, required=False)
     result = serializers.CharField(read_only=True)
     details = serializers.CharField(read_only=True)
-    
+
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         try:
@@ -756,7 +785,7 @@ class CloudConnectionAuthSerializer(serializers.Serializer):
              return { 'result': 'SUCCESS' }
         except Exception as e:
             return { 'result': 'FAILURE', 'details': str(e) }
-        
+
 
 
 class UserSerializer(UserDetailsSerializer):

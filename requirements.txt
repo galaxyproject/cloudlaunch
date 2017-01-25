@@ -20,3 +20,4 @@ billiard==3.3.0.23
 pytz==2016.4
 gunicorn
 psycopg2
+bioblend

@@ -85,6 +85,10 @@ cloud_router.register(r'static_ips', views.StaticIPViewSet, base_name='static_ip
 cloud_router.register(r'deployments', views.DeploymentViewSet,
                       base_name='deployment')
 
+### Temp endpoints ###
+cloud_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
+
+
 region_router = HybridNestedRouter(cloud_router, r'compute/regions',
                                    lookup='region')
 region_router.register(r'zones', views.ZoneViewSet,
