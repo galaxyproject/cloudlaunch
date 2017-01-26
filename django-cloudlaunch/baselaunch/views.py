@@ -1,5 +1,6 @@
 from django.http.response import FileResponse
 from django.http.response import Http404
+from django.http import HttpResponse
 from rest_framework import permissions
 from rest_framework import renderers
 from rest_framework import viewsets
@@ -59,8 +60,9 @@ class CorsProxyView(APIView):
     """
     def get(self, request, format=None):
         url = self.request.query_params.get('url')
-        r = requests.get(url)
-        return Response(r.json())
+        response = requests.get(url)
+        return HttpResponse(response.text, status=response.status_code,
+                    content_type=response.headers.get('content-type'))
 
 
 class CloudManViewSet(drf_helpers.CustomReadOnlySingleViewSet):
