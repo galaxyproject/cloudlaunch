@@ -55,11 +55,7 @@ class BaseVMAppPlugin(AppPlugin):
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
         """Compose a CloudBridge launch config object."""
-        network_id = self._get_network_id(provider, cloudlaunch_config)
         lc = None
-        if network_id:
-            lc = provider.compute.instances.create_launch_config()
-            lc.add_network_interface(network_id)
         if cloudlaunch_config.get("rootStorageType", "instance") == "volume":
             if not lc:
                 lc = provider.compute.instances.create_launch_config()
@@ -67,7 +63,6 @@ class BaseVMAppPlugin(AppPlugin):
                                  size=int(cloudlaunch_config.get(
                                           "rootStorageSize", 20)),
                                  is_root=True)
-
         return lc
 
     def _get_network_id(self, provider, cloudlaunch_config):
@@ -189,6 +184,7 @@ class BaseVMAppPlugin(AppPlugin):
         inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
         placement_zone = cloudlaunch_config.get('placementZone')
+        network_id = self._get_network_id(provider, cloudlaunch_config)
 
         print("Launching with ud:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
@@ -196,9 +192,9 @@ class BaseVMAppPlugin(AppPlugin):
                                 "with keypair %s in zone %s" %
                                 (inst_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
-            name=name, image=img, instance_type=inst_type, key_pair=kp,
-            security_groups=[sg], zone=placement_zone, user_data=user_data,
-            launch_config=cb_launch_config)
+            name=name, image=img, instance_type=inst_type, network=network_id,
+            key_pair=kp, security_groups=[sg], zone=placement_zone,
+            user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Waiting for instance %s" % inst.id})
         inst.wait_till_ready()
