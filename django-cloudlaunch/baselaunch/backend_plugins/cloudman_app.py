@@ -25,6 +25,9 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         user_data['bucket_default'] = get_required_val(
             cloudman_config, "defaultBucket", "default bucket is required.")
         user_data['cluster_name'] = name
+        if cloudman_config.get('restartCluster') and cloudman_config['restartCluster'].get('cluster_name'):
+            user_data['cluster_name'] = cloudman_config['restartCluster']['cluster_name']
+            user_data['placement'] = cloudman_config['restartCluster']['placement']['placement']
         user_data['password'] = get_required_val(
             cloudman_config, "clusterPassword", "cluster name is required.")
         user_data['initial_cluster_type'] = get_required_val(
@@ -107,6 +110,9 @@ class CloudManAppPlugin(BaseVMAppPlugin):
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
         print("YAML UD:\n%s" % user_data)
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
+        # Make sure the app placement (eg from a saved cluster) propagates
+        if user_data.get('placement'):
+            app_config.get('config_cloudlaunch')['placementZone'] = user_data['placement']
         result = super(CloudManAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
         result['cloudLaunch']['applicationURL'] = 'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
         task.update_state(
