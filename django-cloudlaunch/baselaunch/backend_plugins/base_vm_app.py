@@ -168,7 +168,7 @@ class BaseVMAppPlugin(AppPlugin):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
-        custom_image_id = app_config.get("customImageID", None)
+        custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
             custom_image_id or cloud_version_config.image.image_id)
         task.update_state(state='PROGRESSING',
