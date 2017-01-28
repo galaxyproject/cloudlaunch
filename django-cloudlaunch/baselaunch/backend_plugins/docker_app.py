@@ -9,6 +9,9 @@ class DockerAppPlugin(BaseVMAppPlugin):
     @staticmethod
     def process_app_config(name, cloud_version_config, credentials, app_config):
         docker_config = app_config.get('config_docker')
+        if not docker_config:
+            raise ValidationError("Docker configuration data must be provided.")
+        docker_file_config = docker_config.get('docker_file')
         config_cloudlaunch = app_config.get('config_cloudlaunch')
         firewall_config = config_cloudlaunch.get('firewall', [])
         if firewall_config:
@@ -20,13 +23,11 @@ class DockerAppPlugin(BaseVMAppPlugin):
                               description: 'Security group for docker containers',
                               rules: security_rules }
             firewall_config.append(security_group)
-        if not docker_config:
-            raise ValidationError("Docker configuration data must be provided.")
         user_data = "#!/bin/bash\ndocker run -d"
-        for mapping in docker_config.get('port_mappings', {}):
+        for mapping in docker_file_config.get('port_mappings', {}):
             host_port = mapping.get('host_port')
             if host_port:
-                user_data += " -p {0}:{1}".format(mapping.get('container_port'), host_port)
+                user_data += " -p {0}:{1}".format(host_port, mapping.get('container_port'))
                 security_rules.append(
                     {
                         'protocol': 'tcp',
@@ -35,8 +36,20 @@ class DockerAppPlugin(BaseVMAppPlugin):
                         'cidr': '0.0.0.0/0' })
         security_group['rules'] = security_rules
         config_cloudlaunch['firewall'] = firewall_config
-        user_data += " {0}".format(docker_config.get('repo_name'))
         
+        for envvar in docker_file_config.get('env_vars', {}):
+            envvar_name = envvar.get('variable')
+            if envvar_name:
+                user_data += " -e \"{0}={1}\"".format(envvar_name, envvar.get('value'))
+
+        for vol in docker_file_config.get('volumes', {}):
+            container_path = vol.get('container_path')
+            if container_path:
+                user_data += " -v {0}:{1}:{2}".format(vol.get('host_path'),
+                                                      container_path,
+                                                      'rw' if vol.get('read_write') else 'r')
+
+        user_data += " {0}".format(docker_config.get('repo_name'))
         return user_data
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
