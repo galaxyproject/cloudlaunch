@@ -82,21 +82,33 @@ class BaseVMAppPlugin(AppPlugin):
 
         The following format is expected:
 
+        ```
         "firewall": [
             {
                 "rules": [
                     {
-                        "from": "1",
-                        "to": "65535",
-                        "src_group": "CloudMan",
+                        "from": "22",
+                        "to": "22",
                         "cidr": "0.0.0.0/0",
                         "protocol": "tcp"
+                    },
+                    {
+                        "src_group": "MyApp"
+                    },
+                    {
+                        "src_group": 'bd9756b8-e9ab-41b1-8a1b-e466a04a997c'
                     }
                 ],
                 "securityGroup": "MyApp",
                 "description": "My App SG"
             }
         ]
+        ```
+
+        Note that if ``src_group`` is supplied, it must be either the current
+        security group name or an ID of a different security group for which
+        a rule should be added (i.e., different security groups cannot be
+        identified by name and their ID must be used).
 
         :rtype: CloudBridge SecurityGroup
         :return: Security group satisfying the request.
@@ -108,11 +120,13 @@ class BaseVMAppPlugin(AppPlugin):
                                         sg_desc)
             for rule in group.get('rules', []):
                 try:
-                    sg.add_rule(ip_protocol=rule.get('protocol'),
-                                from_port=rule.get('from'),
-                                to_port=rule.get('to'),
-                                cidr_ip=rule.get('cidr'),
-                                src_group=rule.get('src_group'))
+                    if rule.get('src_group'):
+                        sg.add_rule(src_group=sg)
+                    else:
+                        sg.add_rule(ip_protocol=rule.get('protocol'),
+                                    from_port=rule.get('from'),
+                                    to_port=rule.get('to'),
+                                    cidr_ip=rule.get('cidr'))
                 except Exception as e:
                     print(e)
             return sg
