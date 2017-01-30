@@ -93,7 +93,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             else:
                 user_data['use_object_store'] = False
 
-            ec2_creds = provider.security.get_ec2_credentials()
+            ec2_creds = provider.security.get_or_create_ec2_credentials()
             user_data['access_key'] = ec2_creds.access
             user_data['secret_key'] = ec2_creds.secret
         else:
