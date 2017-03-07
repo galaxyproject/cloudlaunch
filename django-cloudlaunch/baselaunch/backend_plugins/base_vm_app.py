@@ -44,12 +44,12 @@ class BaseVMAppPlugin(AppPlugin):
     def _get_or_create_sg(self, provider, cloudlaunch_config, sg_name,
                           description):
         """Fetch an existing security group named ``sg_name`` or create one."""
-        network_id = self._get_network_id(provider, cloudlaunch_config)
         sgs = provider.security.security_groups.find(name=sg_name)
         for sg1 in sgs:
             for sg2 in sgs:
                 if sg1 == sg2:
                     return sg1
+        network_id = self._get_network_id(provider, cloudlaunch_config)
         return provider.security.security_groups.create(
             name=sg_name, description=description, network_id=network_id)
 
@@ -67,14 +67,17 @@ class BaseVMAppPlugin(AppPlugin):
 
     def _get_network_id(self, provider, cloudlaunch_config):
         """
-        Figure out the IDs of relevant networks.
+        Figure out the IDs of relevant network.
 
-        Return a dictionary with ``network_id`` and ``subnet_id`` keys.
-        Values for the networks come from ``cloudlaunch_config`` field, as
-        supplied in the request. For the AWS case, if not network is supplied,
-        the default VPC is used.
+        Return a ``network_id`` as supplied in the ``cloudlaunch_config`` or
+        the default network on a given provider.
         """
-        return cloudlaunch_config.get('network', None)
+        net_id = cloudlaunch_config.get('network', None)
+        if not net_id:
+            net = provider.network.get_or_create_default()
+            if net:
+                net_id = net.id
+        return net_id
 
     def apply_app_firewall_settings(self, provider, cloudlaunch_config):
         """
@@ -93,10 +96,16 @@ class BaseVMAppPlugin(AppPlugin):
                         "protocol": "tcp"
                     },
                     {
-                        "src_group": "MyApp"
+                        "src_group": "MyApp",
+                        "from": "1",
+                        "to": "65535",
+                        "protocol": "tcp"
                     },
                     {
-                        "src_group": 'bd9756b8-e9ab-41b1-8a1b-e466a04a997c'
+                        "src_group": 'bd9756b8-e9ab-41b1-8a1b-e466a04a997c',
+                        "from": "22",
+                        "to": "22",
+                        "protocol": "tcp"
                     }
                 ],
                 "securityGroup": "MyApp",
@@ -200,6 +209,7 @@ class BaseVMAppPlugin(AppPlugin):
         placement_zone = cloudlaunch_config.get('placementZone')
         network_id = self._get_network_id(provider, cloudlaunch_config)
 
+        print("Launching with net %s and sg %s" % (network_id, sg))
         print("Launching with ud:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
