@@ -67,9 +67,9 @@ class BaseVMAppPlugin(AppPlugin):
 
     def _get_network_id(self, provider, cloudlaunch_config):
         """
-        Figure out the IDs of relevant network.
+        Figure out the ID of a relevant network.
 
-        Return a ``network_id`` as supplied in the ``cloudlaunch_config`` or
+        Return a ``network`` as supplied in the ``cloudlaunch_config`` or
         the default network on a given provider.
         """
         net_id = cloudlaunch_config.get('network', None)
@@ -207,16 +207,16 @@ class BaseVMAppPlugin(AppPlugin):
         inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
         placement_zone = cloudlaunch_config.get('placementZone')
-        network_id = self._get_network_id(provider, cloudlaunch_config)
+        subnet_id = cloudlaunch_config.get('subnet')
 
-        print("Launching with net %s and sg %s" % (network_id, sg))
+        print("Launching with subnet %s and sg %s" % (subnet_id, sg))
         print("Launching with ud:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
                                 "with keypair %s in zone %s" %
                                 (inst_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
-            name=name, image=img, instance_type=inst_type, network=network_id,
+            name=name, image=img, instance_type=inst_type, subnet=subnet_id,
             key_pair=kp, security_groups=[sg], zone=placement_zone,
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING',
