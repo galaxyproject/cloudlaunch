@@ -41,17 +41,17 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             return provider.security.key_pairs.create(name=kp_name)
 
-    def _get_or_create_sg(self, provider, cloudlaunch_config, sg_name,
-                          description):
+    def _get_or_create_sg(self, provider, subnet_id, sg_name, description):
         """Fetch an existing security group named ``sg_name`` or create one."""
         sgs = provider.security.security_groups.find(name=sg_name)
         for sg1 in sgs:
             for sg2 in sgs:
                 if sg1 == sg2:
                     return sg1
-        network_id = self._get_network_id(provider, cloudlaunch_config)
+        subnet = provider.network.subnets.get(subnet_id)
         return provider.security.security_groups.create(
-            name=sg_name, description=description, network_id=network_id)
+            name=sg_name, description=description,
+            network_id=subnet.network_id)
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
         """Compose a CloudBridge launch config object."""
@@ -64,81 +64,6 @@ class BaseVMAppPlugin(AppPlugin):
                                           "rootStorageSize", 20)),
                                  is_root=True)
         return lc
-
-    def _get_network_id(self, provider, cloudlaunch_config):
-        """
-        Figure out the ID of a relevant network.
-
-        Return a ``network`` as supplied in the ``cloudlaunch_config`` or
-        the default network on a given provider.
-        """
-        net_id = cloudlaunch_config.get('network', None)
-        if not net_id:
-            net = provider.network.get_or_create_default()
-            if net:
-                net_id = net.id
-        return net_id
-
-    def apply_app_firewall_settings(self, provider, cloudlaunch_config):
-        """
-        Apply firewall settings defined for the app in CloudLaunch settings.
-
-        The following format is expected:
-
-        ```
-        "firewall": [
-            {
-                "rules": [
-                    {
-                        "from": "22",
-                        "to": "22",
-                        "cidr": "0.0.0.0/0",
-                        "protocol": "tcp"
-                    },
-                    {
-                        "src_group": "MyApp",
-                        "from": "1",
-                        "to": "65535",
-                        "protocol": "tcp"
-                    },
-                    {
-                        "src_group": 'bd9756b8-e9ab-41b1-8a1b-e466a04a997c',
-                        "from": "22",
-                        "to": "22",
-                        "protocol": "tcp"
-                    }
-                ],
-                "securityGroup": "MyApp",
-                "description": "My App SG"
-            }
-        ]
-        ```
-
-        Note that if ``src_group`` is supplied, it must be either the current
-        security group name or an ID of a different security group for which
-        a rule should be added (i.e., different security groups cannot be
-        identified by name and their ID must be used).
-
-        :rtype: CloudBridge SecurityGroup
-        :return: Security group satisfying the request.
-        """
-        for group in cloudlaunch_config.get('firewall', []):
-            sg_name = group.get('securityGroup') or 'CloudLaunchDefault'
-            sg_desc = group.get('description') or 'Created by CloudLaunch'
-            sg = self._get_or_create_sg(provider, cloudlaunch_config, sg_name,
-                                        sg_desc)
-            for rule in group.get('rules', []):
-                try:
-                    if rule.get('src_group'):
-                        sg.add_rule(src_group=sg)
-                    else:
-                        sg.add_rule(ip_protocol=rule.get('protocol'),
-                                    from_port=rule.get('from'),
-                                    to_port=rule.get('to'),
-                                    cidr_ip=rule.get('cidr'))
-                except Exception as e:
-                    print(e)
-            return sg
 
     def wait_for_http(self, url, max_retries=200, poll_interval=5):
         """Wait till app is responding at http URL."""
@@ -185,6 +110,109 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             return None
 
+    def configure_security_groups(self, provider, subnet_id, firewall):
+        """
+        Ensure any supplied firewall rules are represented in a Security Group.
+
+        The following format is expected:
+
+        ```
+        "firewall": [
+            {
+                "rules": [
+                    {
+                        "from": "22",
+                        "to": "22",
+                        "cidr": "0.0.0.0/0",
+                        "protocol": "tcp"
+                    },
+                    {
+                        "src_group": "MyApp",
+                        "from": "1",
+                        "to": "65535",
+                        "protocol": "tcp"
+                    },
+                    {
+                        "src_group": 'bd9756b8-e9ab-41b1-8a1b-e466a04a997c',
+                        "from": "22",
+                        "to": "22",
+                        "protocol": "tcp"
+                    }
+                ],
+                "securityGroup": "MyApp",
+                "description": "My App SG"
+            }
+        ]
+        ```
+
+        Note that if ``src_group`` is supplied, it must be either the current
+        security group name or an ID of a different security group for which
+        a rule should be added (i.e., different security groups cannot be
+        identified by name and their ID must be used).
+
+        :rtype: List of CloudBridge SecurityGroup
+        :return: Security groups satisfying the constraints.
+        """
+        sgs = []
+        for group in firewall:
+            # Get a handle on the SG
+            sg_name = group.get('securityGroup') or 'CloudLaunchDefault'
+            sg_desc = group.get('description') or 'Created by CloudLaunch'
+            sg = self._get_or_create_sg(provider, subnet_id, sg_name, sg_desc)
+            sgs.append(sg)
+            # Apply firewall rules
+            for rule in group.get('rules', []):
+                try:
+                    if rule.get('src_group'):
+                        sg.add_rule(src_group=sg)
+                    else:
+                        sg.add_rule(ip_protocol=rule.get('protocol'),
+                                    from_port=rule.get('from'),
+                                    to_port=rule.get('to'),
+                                    cidr_ip=rule.get('cidr'))
+                except Exception as e:
+                    print(e)
+            return sgs
+
+    def get_or_create_subnet(self, provider, net_id=None, placement=None):
+        """
+        Figure out a subnet matching the supplied constraints.
+        """
+        subnet = None
+        if not net_id:
+            subnet = provider.network.subnets.get_or_create_default(placement)
+        else:
+            net = provider.network.get(net_id)
+            for sn in net.subnets():
+                # No placement necessary; pick a (random) subnet
+                if not placement:
+                    subnet = sn
+                    break
+                # Placement match is necessary
+                elif sn.zone == placement:
+                    subnet = sn
+                    break
+            # TODO: No subnets exists for this network, should we create some?
+        return subnet.id if subnet else None
+
+    def resolve_launch_properties(self, provider, cloudlaunch_config):
+        """
+        Resolve inter-dependent launch properties.
+
+        Subnet, Placement, and Security Groups have launch dependencies among
+        themselves so deduce what does are.
+        """
+        net_id = cloudlaunch_config.get('network', None)
+        subnet_id = cloudlaunch_config.get('subnet', None)
+        placement = cloudlaunch_config.get('placementZone', None)
+        if not subnet_id:
+            subnet_id = self.get_or_create_subnet(provider, net_id, placement)
+        sgs = None
+        if cloudlaunch_config.get('firewall', []):
+            sgs = self.configure_security_groups(
+                provider, subnet_id, cloudlaunch_config.get('firewall', []))
+        return subnet_id, placement, sgs
+
     def launch_app(self, task, name, cloud_version_config, credentials,
                    app_config, user_data):
         """Initiate the app launch process."""
@@ -195,21 +223,20 @@ class BaseVMAppPlugin(AppPlugin):
         img = provider.compute.images.get(
             custom_image_id or cloud_version_config.image.image_id)
         task.update_state(state='PROGRESSING',
-                          meta={'action': "Retrieving or creating a keypair"})
+                          meta={'action': "Retrieving or creating a key pair"})
         kp = self._get_or_create_kp(provider,
                                     cloudlaunch_config.get('keyPair') or
                                     'cloudlaunch_key_pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
-        sg = self.apply_app_firewall_settings(provider, cloudlaunch_config)
+        subnet_id, placement_zone, sgs = self.resolve_launch_properties(
+            provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
         inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
-        placement_zone = cloudlaunch_config.get('placementZone')
-        subnet_id = cloudlaunch_config.get('subnet')
 
-        print("Launching with subnet %s and sg %s" % (subnet_id, sg))
+        print("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
         print("Launching with ud:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
@@ -217,7 +244,7 @@ class BaseVMAppPlugin(AppPlugin):
                                 (inst_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
             name=name, image=img, instance_type=inst_type, subnet=subnet_id,
-            key_pair=kp, security_groups=[sg], zone=placement_zone,
+            key_pair=kp, security_groups=sgs, zone=placement_zone,
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Waiting for instance %s" % inst.id})
@@ -232,7 +259,8 @@ class BaseVMAppPlugin(AppPlugin):
         results = {}
         results['keyPair'] = {'id': kp.id, 'name': kp.name,
                               'material': kp.material}
-        results['securityGroup'] = {'id': sg.id, 'name': sg.name}
+        # FIXME: this does not account for multiple SGs and expects one
+        results['securityGroup'] = {'id': sgs[0].id, 'name': sgs[0].name}
         results['instance'] = {'id': inst.id}
         results['publicIP'] = self.attach_public_ip(provider, inst)
         task.update_state(
