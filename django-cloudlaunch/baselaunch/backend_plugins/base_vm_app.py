@@ -179,9 +179,7 @@ class BaseVMAppPlugin(AppPlugin):
         Figure out a subnet matching the supplied constraints.
         """
         subnet = None
-        if not net_id:
-            subnet = provider.network.subnets.get_or_create_default(placement)
-        else:
+        if net_id:
             net = provider.network.get(net_id)
             for sn in net.subnets():
                 # No placement necessary; pick a (random) subnet
@@ -192,8 +190,9 @@ class BaseVMAppPlugin(AppPlugin):
                 elif sn.zone == placement:
                     subnet = sn
                     break
-            # TODO: No subnets exists for this network, should we create some?
-        return subnet.id if subnet else None
+        return subnet.id if subnet \
+            else provider.network.subnets.get_or_create_default(placement)
+
 
     def resolve_launch_properties(self, provider, cloudlaunch_config):
         """
