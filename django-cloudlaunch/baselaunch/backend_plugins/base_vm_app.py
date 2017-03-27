@@ -44,10 +44,12 @@ class BaseVMAppPlugin(AppPlugin):
     def _get_or_create_sg(self, provider, subnet_id, sg_name, description):
         """Fetch an existing security group named ``sg_name`` or create one."""
         sgs = provider.security.security_groups.find(name=sg_name)
-        for sg1 in sgs:
-            for sg2 in sgs:
-                if sg1 == sg2:
-                    return sg1
+        if len(sgs) > 0:
+            return sgs[0]
+        # for sg1 in sgs:
+        #     for sg2 in sgs:
+        #         if sg1 == sg2:
+        #             return sg1
         subnet = provider.network.subnets.get(subnet_id)
         return provider.security.security_groups.create(
             name=sg_name, description=description,
@@ -178,21 +180,17 @@ class BaseVMAppPlugin(AppPlugin):
         """
         Figure out a subnet matching the supplied constraints.
         """
-        subnet = None
         if net_id:
             net = provider.network.get(net_id)
             for sn in net.subnets():
                 # No placement necessary; pick a (random) subnet
                 if not placement:
-                    subnet = sn
-                    break
+                    return sn
                 # Placement match is necessary
                 elif sn.zone == placement:
-                    subnet = sn
-                    break
-        return subnet.id if subnet \
-            else provider.network.subnets.get_or_create_default(placement)
-
+                    return sn
+        sn = provider.network.subnets.get_or_create_default(placement)
+        return sn.id if sn else None
 
     def resolve_launch_properties(self, provider, cloudlaunch_config):
         """
