@@ -21,7 +21,7 @@ class GVLAppPlugin(BaseVMAppPlugin):
             install_list.append('smrt_portal')
         user_data['gvl_config'] = { 'install' : install_list }
         return user_data
-    
+
     @staticmethod
     def sanitise_app_config(app_config):
         sanitised_config = super(GVLAppPlugin, GVLAppPlugin).sanitise_app_config(app_config)
@@ -30,7 +30,6 @@ class GVLAppPlugin(BaseVMAppPlugin):
         return sanitised_config
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
-        print("YAML UD:\n%s" % user_data)
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         result = super(GVLAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
         result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])

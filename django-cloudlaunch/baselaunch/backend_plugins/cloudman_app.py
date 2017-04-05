@@ -4,6 +4,9 @@ from rest_framework.serializers import ValidationError
 from .base_vm_app import BaseVMAppPlugin
 from baselaunch import domain_model
 
+import logging
+log = logging.getLogger(__name__)
+
 
 def get_required_val(data, name, message):
     val = data.get(name)
@@ -53,6 +56,8 @@ class CloudManAppPlugin(BaseVMAppPlugin):
                     del ft['size']
         extra_user_data = cloudman_config.get("extraUserData")
         if extra_user_data:
+            log.debug("Processing CloudMan extra user data: {0}"
+                      .format(extra_user_data))
             for key, value in yaml.load(extra_user_data).items():
                 user_data[key] = value
 
@@ -109,7 +114,6 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         return app_config
 
     def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
-        print("YAML UD:\n%s" % user_data)
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         # Make sure the placement and image ID (eg from a saved cluster) propagate
         if user_data.get('placement'):

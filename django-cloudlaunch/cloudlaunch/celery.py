@@ -7,6 +7,8 @@ import os
 from celery import Celery
 from django.conf import settings  # noqa
 
+import logging
+log = logging.getLogger(__name__)
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cloudlaunch.settings')
@@ -25,4 +27,4 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 @app.task(bind=True)
 def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
+    log.debug('Request: {0!r}'.format(self.request))

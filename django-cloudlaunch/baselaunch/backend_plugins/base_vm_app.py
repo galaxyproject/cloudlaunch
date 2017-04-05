@@ -8,6 +8,9 @@ import requests.exceptions
 from baselaunch import domain_model
 from .app_plugin import AppPlugin
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class BaseVMAppPlugin(AppPlugin):
     """
@@ -101,10 +104,13 @@ class BaseVMAppPlugin(AppPlugin):
                 if not ip.in_use():
                     fip = ip
             if fip:
-                print("Attaching an existing floating IP %s" % fip.public_ip)
+                log.debug("Attaching an existing floating IP %s" %
+                          fip.public_ip)
                 inst.add_floating_ip(fip.public_ip)
             else:
                 fip = provider.network.create_floating_ip()
+                log.debug("Attaching a just-created floating IP %s" %
+                          fip.public_ip)
                 inst.add_floating_ip(fip.public_ip)
             return fip.public_ip
         elif len(inst.public_ips) > 0:
@@ -173,12 +179,14 @@ class BaseVMAppPlugin(AppPlugin):
                                     to_port=rule.get('to'),
                                     cidr_ip=rule.get('cidr'))
                 except Exception as e:
-                    print(e)
+                    log.error("Exception applying firewall rules: %s" % e)
             return sgs
 
     def get_or_create_subnet(self, provider, net_id=None, placement=None):
         """
         Figure out a subnet matching the supplied constraints.
+
+        Any combination of the optional parameters is accepted.
         """
         if net_id:
             net = provider.network.get(net_id)
@@ -233,8 +241,8 @@ class BaseVMAppPlugin(AppPlugin):
         inst_type = cloudlaunch_config.get(
             'instanceType', cloud_version_config.default_instance_type)
 
-        print("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
-        print("Launching with ud:\n%s" % user_data)
+        log.debug("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
+        log.info("Launching base_vm with UD:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
                                 "with keypair %s in zone %s" %
