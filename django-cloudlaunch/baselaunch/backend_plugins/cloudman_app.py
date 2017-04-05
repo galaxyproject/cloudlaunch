@@ -53,7 +53,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
                     del ft['size']
         extra_user_data = cloudman_config.get("extraUserData")
         if extra_user_data:
-            for key, value in yaml.load(extra_user_data).iteritems():
+            for key, value in yaml.load(extra_user_data).items():
                 user_data[key] = value
 
         cloud = cloud_version_config.cloud
