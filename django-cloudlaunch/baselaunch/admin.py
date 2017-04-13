@@ -1,3 +1,4 @@
+import ast
 from django.contrib import admin
 import nested_admin
 
@@ -66,19 +67,27 @@ class UserProfileAdmin(admin.ModelAdmin):
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
 
+
 class UsageAdmin(admin.ModelAdmin):
     models = models.Usage
     # Enable column-based display&filtering of entries
-    list_display = ('added', 'app_version_cloud_config', 'app_deployment', 'app_config',
+    list_display = ('added', 'target_cloud', 'instance_type', 'app_deployment',
                     'user')
     # Enable filtering of displayed entries
-    list_filter = ('added', 'app_version_cloud_config', 'app_deployment', 'app_config',
-                    'user')
+    list_filter = ('added', 'app_deployment__target_cloud', 'user')
     # Enable hierarchical navigation by date
     date_hierarchy = 'added'
     ordering = ('-added',)
     # Add search
     search_fields = ['user']
+
+    def target_cloud(self, obj):
+        return obj.app_deployment.target_cloud.name
+    target_cloud.short_description = 'Target cloud'
+
+    def instance_type(self, obj):
+        app_config = ast.literal_eval(obj.app_config)
+        return app_config.get('config_cloudlaunch', {}).get('instanceType')
 
 
 ### Public Services ###
