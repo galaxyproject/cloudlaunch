@@ -10,12 +10,12 @@
 CloudLaunch
 ===========
 
-CloudLaunch is a reusable Django app for discovering and launching applications 
+CloudLaunch is a reusable Django app for discovering and launching applications
 on cloud, container, or local infrastructure. A live version is available at
 https://beta.launch.usegalaxy.org/.
 
-This is an all-new version of Cloudlaunch that replaces the original 
-BioCloudCentral launcher. Code for that version is available in the 
+This is an all-new version of Cloudlaunch that replaces the original
+BioCloudCentral launcher. Code for that version is available in the
 `BioCloudCentral branch <https://github.com/galaxyproject/cloudlaunch/tree/BioCloudCentral>`_.
 
 Install
@@ -55,3 +55,6 @@ versions, 3.5 is the only supported version. Use of virtualenv is also highly ad
    infrastructure properties.
 
 5. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
+
+You will probably also want to install the UI for the server. The default UI
+is available at https://github.com/galaxyproject/cloudlaunch-ui.
