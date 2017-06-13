@@ -47,6 +47,8 @@ class Cloud(DateNameAwareModel):
             self.slug = slugify(self.name)
         super(Cloud, self).save(*args, **kwargs)
 
+    class Meta:
+        ordering = ['name']
 
 class AWS(Cloud):
     compute = models.ForeignKey('EC2', blank=True, null=True)
@@ -123,8 +125,8 @@ class CloudImage(Image):
 class Application(DateNameAwareModel):
     slug = models.SlugField(max_length=100, primary_key=True)
     # summary is the size of a tweet. description can be of arbitrary length
-    summary = models.TextField(max_length=140, blank=True, null=True)
-    maintainer = models.TextField(max_length=2048, blank=True, null=True)
+    summary = models.CharField(max_length=140, blank=True, null=True)
+    maintainer = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(max_length=32767, blank=True, null=True)
     info_url = models.URLField(max_length=2048, blank=True, null=True)
     icon_url = models.URLField(max_length=2048, blank=True, null=True)
@@ -160,9 +162,9 @@ class Application(DateNameAwareModel):
 class ApplicationVersion(models.Model):
     application = models.ForeignKey(Application, related_name="versions")
     version = models.CharField(max_length=30)
-    frontend_component_path = models.TextField(max_length=2048, blank=True, null=True)
-    frontend_component_name = models.TextField(max_length=2048, blank=True, null=True)
-    backend_component_name = models.TextField(max_length=2048, blank=True, null=True)
+    frontend_component_path = models.CharField(max_length=255, blank=True, null=True)
+    frontend_component_name = models.CharField(max_length=255, blank=True, null=True)
+    backend_component_name = models.CharField(max_length=255, blank=True, null=True)
     # Userdata max length is 16KB
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Version "
                                    "specific configuration data to parameterize the launch with.",
