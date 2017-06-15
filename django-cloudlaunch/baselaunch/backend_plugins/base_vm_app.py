@@ -42,6 +42,7 @@ class BaseVMAppPlugin(AppPlugin):
         if kps:
             return kps[0]
         else:
+            log.debug("Creating key pair {0}".format(kp_name))
             return provider.security.key_pairs.create(name=kp_name)
 
     def _get_or_create_sg(self, provider, subnet_id, sg_name, description):
@@ -253,6 +254,7 @@ class BaseVMAppPlugin(AppPlugin):
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Waiting for instance %s" % inst.id})
+        log.debug("Waiting for instance {0} to be ready...".format(inst.id))
         inst.wait_till_ready()
         static_ip = cloudlaunch_config.get('staticIP')
         if static_ip:
@@ -270,8 +272,9 @@ class BaseVMAppPlugin(AppPlugin):
         results['publicIP'] = self.attach_public_ip(provider, inst)
         task.update_state(
             state='PROGRESSING',
-            meta={'action': "Instance creation successful. Public IP "
-                  "(if available): %s" % results['publicIP']})
+            meta={"action": "Instance created successfully. " +
+                  "Public IP: %s" % results['publicIP'] if results['publicIP']
+                  else ""})
         if self.base_app:
             if results['publicIP']:
                 results['applicationURL'] = 'http://%s/' % results['publicIP']
