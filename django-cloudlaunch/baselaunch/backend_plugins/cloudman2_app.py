@@ -25,7 +25,7 @@ ANSIBLE_PLAYBOOK_REPO = 'https://github.com/afgane/Rancher-Ansible'
 
 INVENTORY_TEMPLATE = Template("""
 [Rancher]
-${master}
+rancher ansible_ssh_host=${master}
 
 [Agents]
 
