@@ -59,6 +59,11 @@ class OSCredsInline(admin.StackedInline):
     formset = forms.DefaultRequiredInlineFormSet
     extra = 1
 
+class GCECredsInline(admin.StackedInline):
+    model = models.GCECredentials
+    form = forms.GCECredentialsForm
+    formset = forms.DefaultRequiredInlineFormSet
+    extra = 1
 
 class AzureCredsInline(admin.StackedInline):
     model = models.AzureCredentials
@@ -68,7 +73,7 @@ class AzureCredsInline(admin.StackedInline):
 
 
 class UserProfileAdmin(admin.ModelAdmin):
-    inlines = [AWSCredsInline, OSCredsInline, AzureCredsInline]
+    inlines = [AWSCredsInline, OSCredsInline, AzureCredsInline, GCECredsInline]
 
 
 class AppDeploymentsAdmin(admin.ModelAdmin):
@@ -118,6 +123,7 @@ admin.site.register(models.EC2, EC2Admin)
 admin.site.register(models.S3, S3Admin)
 admin.site.register(models.Azure, CloudAdmin)
 admin.site.register(models.OpenStack, CloudAdmin)
+admin.site.register(models.GCE, CloudAdmin)
 admin.site.register(models.UserProfile, UserProfileAdmin)
 admin.site.register(models.Usage, UsageAdmin)
 
