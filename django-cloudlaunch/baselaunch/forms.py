@@ -37,6 +37,22 @@ class OpenStackCredentialsForm(ModelForm):
         fields = '__all__'
 
 
+class AzureCredentialsForm(ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(AzureCredentialsForm, self).__init__(*args, **kwargs)
+        # restrict choices to Azure clouds only
+        self.fields['cloud'].queryset = models.AZURE \
+            .objects.all()
+
+    azure_secret = forms.CharField(widget=PasswordInput(render_value=True),
+                               required=False)
+
+    class Meta:
+        model = models.AzureCredentials
+        fields = '__all__'
+
+
 class DefaultRequiredInlineFormSet(BaseInlineFormSet):
 
     def clean(self):

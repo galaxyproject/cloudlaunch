@@ -102,6 +102,18 @@ class OpenStack(Cloud):
         verbose_name_plural = "OpenStack"
 
 
+class AZURE(Cloud):
+    resource_group = models.CharField(max_length=100, blank=True, null=False)
+    region_name = models.CharField(max_length=100, blank=True, null=False)
+    storage_account = models.CharField(max_length=100, blank=True, null=False)
+    azure_vm_default_user_name = models.CharField(max_length=100, blank=True, null=False)
+
+
+    class Meta:
+        verbose_name = "Azure"
+        verbose_name_plural = "Azure"
+
+
 class Image(DateNameAwareModel):
     """
     A base Image model used by a virtual appliance.
@@ -299,6 +311,26 @@ class OpenStackCredentials(Credentials):
             d['os_project_domain_name'] = self.project_domain_name
         if self.user_domain_name:
             d['os_user_domain_name'] = self.user_domain_name
+        return d
+
+
+class AzureCredentials(Credentials):
+    azure_subscription_id = models.CharField(max_length=50, blank=False, null=False)
+    azure_client_id = models.CharField(max_length=50, blank=False, null=False)
+    azure_secret = EncryptedCharField(max_length=50, blank=False, null=False)
+    azure_tenant = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Azure Credentials"
+        verbose_name_plural = "Azure Credentials"
+
+    def as_dict(self):
+        d = {
+                'azure_subscription_id': self.azure_subscription_id,
+                'azure_client_id': self.azure_client_id,
+                'azure_secret': self.azure_secret,
+                'azure_tenant': self.azure_tenant
+            }
         return d
 
 

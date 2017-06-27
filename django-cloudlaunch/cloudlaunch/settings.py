@@ -27,7 +27,7 @@ SITE_ID = 1
 SECRET_KEY = 'apsm2@#*opag-b7ae=&!w8r_q7077y%$wd@@0zfz1empu)r*!p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -52,6 +52,15 @@ CORS_ALLOW_HEADERS = default_headers + (
     'cl-os-identity-api-version',
     'cl-aws-access-key',
     'cl-aws-secret-key',
+    'cl-azure-region-name',
+    'cl-azure-resource_group',
+    'cl-azure-subscription-id'
+    'cl-azure-client-id',
+    'cl-azure-secret',
+    'cl-azure-tenant',
+    'cl-storage-account',
+    'cl-azure-vm-default-user-name'
+
 )
 # End: django-cors-headers settings
 
@@ -139,13 +148,13 @@ if 'test' in sys.argv:
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': 'cloudlaunch',                      # Or path to database file if using sqlite3.
+            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),                      # Or path to database file if using sqlite3.
             # The following settings are not used with sqlite3:
-            'USER': 'cloudlaunch',
-            'PASSWORD': 'DBPWDCHANGEMEONINSTALL',
-            'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-            'PORT': '5432',                      # Set to empty string for default.
+            # 'USER': 'cloudlaunch',
+            # 'PASSWORD': 'cloudlaunch@123',
+            # 'HOST': 'localhost',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+            # 'PORT': '5432',                      # Set to empty string for default.
         }
     }
 

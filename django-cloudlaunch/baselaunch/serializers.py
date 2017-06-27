@@ -509,6 +509,8 @@ class CloudSerializer(serializers.ModelSerializer):
             return obj.aws.compute.ec2_region_name
         elif hasattr(obj, 'openstack'):
             return obj.openstack.region_name
+        elif hasattr(obj, 'azure'):
+            return obj.azure.region_name
         else:
             return "Cloud provider not recognized"
 
@@ -517,6 +519,8 @@ class CloudSerializer(serializers.ModelSerializer):
             return 'aws';
         elif hasattr(obj, 'openstack'):
             return 'openstack';
+        elif hasattr(obj, 'azure'):
+            return 'azure';
         else:
             return 'unknown';
 
@@ -545,6 +549,14 @@ class CloudSerializer(serializers.ModelSerializer):
                 'region_name': os.region_name,
                 'identity_api_version': os.identity_api_version
             }
+        elif hasattr(obj, 'azure'):
+            azure = obj.azure
+            return {
+                'region_name': azure.region_name,
+                'resource_group': azure.resource_group,
+                'storage_account': azure.storage_account,
+                'azure_vm_default_user_name': azure.azure_vm_default_user_name
+                }
         else:
             return {}
 
@@ -740,6 +752,8 @@ class CredentialsSerializer(serializers.Serializer):
     aws = CustomHyperlinkedIdentityField(view_name='awscredentials-list')
     openstack = CustomHyperlinkedIdentityField(
         view_name='openstackcredentials-list')
+    azure = CustomHyperlinkedIdentityField(
+        view_name='azurecredentials-list')
 
 
 class AWSCredsSerializer(serializers.HyperlinkedModelSerializer):
@@ -772,9 +786,25 @@ class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
         exclude = ('password', 'user_profile')
 
 
+class AzureCredsSerializer(serializers.HyperlinkedModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    azure_secret = serializers.CharField(
+        style={'input_type': 'password'},
+        write_only=True,
+        required=False
+    )
+    cloud_id = serializers.CharField(write_only=True)
+    cloud = CloudSerializer(read_only=True)
+
+    class Meta:
+        model = models.AzureCredentials
+        exclude = ('azure_secret', 'user_profile')
+
+
 class CloudConnectionAuthSerializer(serializers.Serializer):
     aws_creds = AWSCredsSerializer(write_only=True, required=False)
     openstack_creds = OpenstackCredsSerializer(write_only=True, required=False)
+    azure_creds = AzureCredsSerializer(write_only=True, required=False)
     result = serializers.CharField(read_only=True)
     details = serializers.CharField(read_only=True)
 
@@ -793,6 +823,7 @@ class UserSerializer(UserDetailsSerializer):
                                                  lookup_field=None)
     aws_creds = serializers.SerializerMethodField()
     openstack_creds = serializers.SerializerMethodField()
+    azure_creds = serializers.SerializerMethodField()
 
     def get_aws_creds(self, obj):
         """
@@ -818,9 +849,21 @@ class UserSerializer(UserDetailsSerializer):
         except models.UserProfile.DoesNotExist:
             return ""
 
+    def get_azure_creds(self, obj):
+        """
+        Include a URL for listing this bucket's contents
+        """
+        try:
+            creds = obj.userprofile.credentials.filter(
+                azurecredentials__isnull=False).select_subclasses()
+            return AzureCredsSerializer(instance=creds, many=True,
+                                            context=self.context).data
+        except models.UserProfile.DoesNotExist:
+            return ""
+
     class Meta(UserDetailsSerializer.Meta):
         fields = UserDetailsSerializer.Meta.fields + \
-            ('aws_creds', 'openstack_creds', 'credentials')
+            ('aws_creds', 'openstack_creds', 'azure_creds', 'credentials')
 
 
 ### Public Services Serializers ###
