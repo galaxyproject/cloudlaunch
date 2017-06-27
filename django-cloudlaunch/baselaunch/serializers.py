@@ -555,7 +555,7 @@ class CloudSerializer(serializers.ModelSerializer):
                 'region_name': azure.region_name,
                 'resource_group': azure.resource_group,
                 'storage_account': azure.storage_account,
-                'azure_vm_default_user_name': azure.azure_vm_default_user_name
+                'vm_default_user_name': azure.vm_default_user_name
                 }
         else:
             return {}
@@ -788,7 +788,7 @@ class OpenstackCredsSerializer(serializers.HyperlinkedModelSerializer):
 
 class AzureCredsSerializer(serializers.HyperlinkedModelSerializer):
     id = serializers.IntegerField(read_only=True)
-    azure_secret = serializers.CharField(
+    secret = serializers.CharField(
         style={'input_type': 'password'},
         write_only=True,
         required=False
@@ -798,7 +798,7 @@ class AzureCredsSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.AzureCredentials
-        exclude = ('azure_secret', 'user_profile')
+        exclude = ('secret', 'user_profile')
 
 
 class CloudConnectionAuthSerializer(serializers.Serializer):

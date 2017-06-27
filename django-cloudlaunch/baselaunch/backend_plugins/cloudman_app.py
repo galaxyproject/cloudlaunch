@@ -107,11 +107,11 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             user_data['region_name'] = cloud.azure.region_name
             user_data['resource_group'] = cloud.azure.resource_group
             user_data['storage_account'] = cloud.azure.storage_account
-            user_data['azure_vm_default_user_name'] = cloud.azure.azure_vm_default_user_name
-            user_data['azure_subscription_id'] = credentials.get('azure_subscription_id')
-            user_data['azure_client_id'] = credentials.get('azure_client_id')
-            user_data['azure_secret'] = credentials.get('azure_secret')
-            user_data['azure_tenant'] = credentials.get('azure_tenant')
+            user_data['vm_default_user_name'] = cloud.azure.vm_default_user_name
+            user_data['subscription_id'] = credentials.get('azure_subscription_id')
+            user_data['client_id'] = credentials.get('azure_client_id')
+            user_data['secret'] = credentials.get('azure_secret')
+            user_data['tenant'] = credentials.get('azure_tenant')
         else:
             raise ValidationError({ "error":
                 "This version of CloudMan supports only EC2-compatible clouds."})

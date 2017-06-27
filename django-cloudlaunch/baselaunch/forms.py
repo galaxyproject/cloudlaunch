@@ -45,7 +45,7 @@ class AzureCredentialsForm(ModelForm):
         self.fields['cloud'].queryset = models.AZURE \
             .objects.all()
 
-    azure_secret = forms.CharField(widget=PasswordInput(render_value=True),
+    secret = forms.CharField(widget=PasswordInput(render_value=True),
                                required=False)
 
     class Meta:

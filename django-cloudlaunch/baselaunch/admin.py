@@ -68,7 +68,7 @@ class AzureCredsInline(admin.StackedInline):
 
 
 class UserProfileAdmin(admin.ModelAdmin):
-    inlines = [AWSCredsInline, OSCredsInline, AzureCredsInline]
+    inlines = [AzureCredsInline]
 
 
 class AppDeploymentsAdmin(admin.ModelAdmin):
