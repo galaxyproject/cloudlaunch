@@ -42,7 +42,7 @@ class AzureCredentialsForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(AzureCredentialsForm, self).__init__(*args, **kwargs)
         # restrict choices to Azure clouds only
-        self.fields['cloud'].queryset = models.AZURE \
+        self.fields['cloud'].queryset = models.Azure \
             .objects.all()
 
     secret = forms.CharField(widget=PasswordInput(render_value=True),

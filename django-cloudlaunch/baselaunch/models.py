@@ -102,7 +102,7 @@ class OpenStack(Cloud):
         verbose_name_plural = "OpenStack"
 
 
-class AZURE(Cloud):
+class Azure(Cloud):
     resource_group = models.CharField(max_length=100, blank=True, null=False)
     region_name = models.CharField(max_length=100, blank=True, null=False)
     storage_account = models.CharField(max_length=100, blank=True, null=False)
