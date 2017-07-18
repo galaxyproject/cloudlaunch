@@ -494,6 +494,21 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
                 openstackcredentials__isnull=False).select_subclasses()
         return models.OpenStackCredentials.objects.none()
 
+class AzureCredentialsViewSet(CredentialsViewSet):
+    """
+    API endpoint that allows Azure credentials to be viewed or edited.
+    """
+    queryset = models.AzureCredentials.objects.all()
+    serializer_class = serializers.AzureCredsSerializer
+    #permission_classes = [permissions.DjangoModelPermissions]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'userprofile'):
+            return user.userprofile.credentials.filter(
+                azurecredentials__isnull=False).select_subclasses()
+        return models.AzureCredentials.objects.none()
+
 
 class DeploymentViewSet(viewsets.ModelViewSet):
     """
