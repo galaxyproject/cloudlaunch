@@ -11,7 +11,7 @@ class DockerAppPlugin(BaseVMAppPlugin):
         docker_config = app_config.get('config_docker')
         if not docker_config:
             raise ValidationError("Docker configuration data must be provided.")
-        docker_file_config = docker_config.get('docker_file')
+        docker_file_config = {} if not docker_config.get('docker_file') else docker_config['docker_file']
         config_cloudlaunch = app_config.get('config_cloudlaunch')
         firewall_config = config_cloudlaunch.get('firewall', [])
         if firewall_config:
