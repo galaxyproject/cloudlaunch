@@ -101,8 +101,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             ec2_creds = provider.security.get_or_create_ec2_credentials()
             user_data['access_key'] = ec2_creds.access
             user_data['secret_key'] = ec2_creds.secret
-
-        if hasattr(cloud, 'azure'):
+        elif hasattr(cloud, 'azure'):
             user_data['cloud_type'] = 'azure'
             user_data['region_name'] = cloud.azure.region_name
             user_data['resource_group'] = cloud.azure.resource_group
@@ -112,9 +111,14 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             user_data['client_id'] = credentials.get('azure_client_id')
             user_data['secret'] = credentials.get('azure_secret')
             user_data['tenant'] = credentials.get('azure_tenant')
+        elif hasattr(cloud, 'gce'):
+            user_data['cloud_type'] = 'gce'
+            user_data['region_name'] = cloud.gce.region_name
+            user_data['zone_name'] = cloud.gce.zone_name
+            user_data['credentials'] = credentials
         else:
             raise ValidationError({ "error":
-                "This version of CloudMan supports only EC2-compatible clouds."})
+                "This version of CloudMan does not have support for cloud of type {}".format(cloud._meta.verbose_name)})
 
         return user_data
 

@@ -494,6 +494,7 @@ class OpenstackCredentialsViewSet(CredentialsViewSet):
                 openstackcredentials__isnull=False).select_subclasses()
         return models.OpenStackCredentials.objects.none()
 
+
 class AzureCredentialsViewSet(CredentialsViewSet):
     """
     API endpoint that allows Azure credentials to be viewed or edited.
@@ -508,6 +509,22 @@ class AzureCredentialsViewSet(CredentialsViewSet):
             return user.userprofile.credentials.filter(
                 azurecredentials__isnull=False).select_subclasses()
         return models.AzureCredentials.objects.none()
+
+
+class GCECredentialsViewSet(CredentialsViewSet):
+    """
+    API endpoint that allows GCE credentials to be viewed or edited.
+    """
+    queryset = models.GCECredentials.objects.all()
+    serializer_class = serializers.GCECredsSerializer
+    #permission_classes = [permissions.DjangoModelPermissions]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'userprofile'):
+            return user.userprofile.credentials.filter(
+                gcecredentials__isnull=False).select_subclasses()
+        return models.GCECredentials.objects.none()
 
 
 class DeploymentViewSet(viewsets.ModelViewSet):

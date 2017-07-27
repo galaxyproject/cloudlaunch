@@ -331,11 +331,14 @@ class GCECredentials(Credentials):
             except Exception as e:
                 raise Exception("Invalid JSON syntax. GCE Credentials must be in JSON format. Cause: {0}".format(e))
 
-        super(Application, self).save(*args, **kwargs)
+        super(GCECredentials, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = "GCE Credentials"
         verbose_name_plural = "GCE Credentials"
+
+    def as_dict(self):
+        return json.loads(self.credentials)
 
 class AzureCredentials(Credentials):
     subscription_id = models.CharField(max_length=50, blank=False, null=False)
