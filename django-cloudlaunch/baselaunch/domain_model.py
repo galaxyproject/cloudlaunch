@@ -57,10 +57,7 @@ def get_cloud_provider(cloud, cred_dict):
                                                       config)
     elif isinstance(cloud, models.GCE):
         config = {
-            'gce_client_email': cred_dict['client_email'],
-            'gce_project_name': cred_dict['project_id'],
             'gce_service_creds_dict': cred_dict,
-            # https://cloud.google.com/compute/docs/regions-zones/regions-zones?hl=en_US&_ga=1.43944933.1544130305.1496417875
             'gce_default_zone': cloud.zone_name,
             'gce_region_name': cloud.region_name
         }
