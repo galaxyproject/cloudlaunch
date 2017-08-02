@@ -1,6 +1,7 @@
 from baselaunch import domain_model
 from baselaunch import models
 
+import json
 
 def get_cloud_provider(view, cloud_id = None):
     """
@@ -84,6 +85,13 @@ def get_credentials_from_request(cloud, request):
                     'azure_secret': azure_secret,
                     'azure_tenant': azure_tenant
                     }
+        else:
+            return {}
+    elif isinstance(cloud, models.GCE):
+        gce_credentials_json = request.META.get('HTTP_CL_GCE_CREDENTIALS_JSON')
+
+        if gce_credentials_json:
+            return json.loads(gce_credentials_json)
         else:
             return {}
     else:

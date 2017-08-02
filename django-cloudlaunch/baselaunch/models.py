@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
 from fernet_fields import EncryptedCharField
+from fernet_fields import EncryptedTextField
 from model_utils.managers import InheritanceManager
 from smart_selects.db_fields import ChainedForeignKey
 
@@ -101,6 +102,13 @@ class OpenStack(Cloud):
         verbose_name = "OpenStack"
         verbose_name_plural = "OpenStack"
 
+class GCE(Cloud):
+    region_name = models.CharField(max_length=100, blank=False, null=False)
+    zone_name = models.CharField(max_length=100, blank=False, null=False)
+
+    class Meta:
+        verbose_name = "GCE"
+        verbose_name_plural = "GCE"
 
 class Azure(Cloud):
     resource_group = models.CharField(max_length=100, blank=True, null=False)
@@ -313,6 +321,24 @@ class OpenStackCredentials(Credentials):
             d['os_user_domain_name'] = self.user_domain_name
         return d
 
+class GCECredentials(Credentials):
+    credentials = EncryptedTextField(blank=False, null=False)
+
+    def save(self, *args, **kwargs):
+        if self.credentials:
+            try:
+                json.loads(self.credentials)
+            except Exception as e:
+                raise Exception("Invalid JSON syntax. GCE Credentials must be in JSON format. Cause: {0}".format(e))
+
+        super(GCECredentials, self).save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "GCE Credentials"
+        verbose_name_plural = "GCE Credentials"
+
+    def as_dict(self):
+        return json.loads(self.credentials)
 
 class AzureCredentials(Credentials):
     subscription_id = models.CharField(max_length=50, blank=False, null=False)

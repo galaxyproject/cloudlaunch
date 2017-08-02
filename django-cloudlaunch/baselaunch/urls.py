@@ -116,6 +116,8 @@ profile_router.register(r'credentials/openstack',
                         views.OpenstackCredentialsViewSet)
 profile_router.register(r'credentials/azure',
                         views.AzureCredentialsViewSet)
+profile_router.register(r'credentials/gce',
+                        views.GCECredentialsViewSet)
 
 infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'

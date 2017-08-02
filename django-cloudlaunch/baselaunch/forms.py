@@ -36,6 +36,16 @@ class OpenStackCredentialsForm(ModelForm):
         model = models.OpenStackCredentials
         fields = '__all__'
 
+class GCECredentialsForm(ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(GCECredentialsForm, self).__init__(*args, **kwargs)
+        # restrict choices to GCE clouds only
+        self.fields['cloud'].queryset = models.GCE.objects.all()
+
+    class Meta:
+        model = models.GCECredentials
+        fields = '__all__'
 
 class AzureCredentialsForm(ModelForm):
 
