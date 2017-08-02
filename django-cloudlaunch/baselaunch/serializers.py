@@ -8,6 +8,7 @@ import yaml
 
 
 from bioblend.cloudman.launch import CloudManLauncher
+from cloudbridge.cloud.factory import ProviderList
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -468,7 +469,7 @@ class CloudManSerializer(serializers.Serializer):
         was the only place this feature was actively used.
         """
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
-        if provider.cloud_type != 'aws':
+        if provider.PROVIDER_ID != ProviderList.AWS:
             return []
         # Since we're only working with the AWS, there's no need to specify
         # the cloud argument as it defaults to AWS in BioBlend.
