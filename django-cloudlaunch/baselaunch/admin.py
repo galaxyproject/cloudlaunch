@@ -83,18 +83,26 @@ class AppDeploymentsAdmin(admin.ModelAdmin):
 class UsageAdmin(admin.ModelAdmin):
     models = models.Usage
     # Enable column-based display&filtering of entries
-    list_display = ('added', 'target_cloud', 'instance_type', 'app_deployment',
+    list_display = ('added', 'target_cloud', 'instance_type', 'application',
                     'user')
     # Enable filtering of displayed entries
-    list_filter = ('added', 'app_deployment__target_cloud', 'user')
+    list_filter = ('added', 'app_deployment__target_cloud', 'user',
+                   'app_deployment__application_version__application__name')
     # Enable hierarchical navigation by date
     date_hierarchy = 'added'
     ordering = ('-added',)
     # Add search
     search_fields = ['user']
 
+    def application(self, obj):
+        if obj.app_deployment:
+            return obj.app_deployment.application_version.application.name
+        return None
+
     def target_cloud(self, obj):
-        return obj.app_deployment.target_cloud.name
+        if obj.app_deployment:
+            return obj.app_deployment.target_cloud.name
+        return None
     target_cloud.short_description = 'Target cloud'
 
     def instance_type(self, obj):
