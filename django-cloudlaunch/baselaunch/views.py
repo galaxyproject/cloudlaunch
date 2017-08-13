@@ -531,7 +531,7 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     """
     List compute related urls.
     """
-    queryset = models.ApplicationDeployment.objects.all()
+    # queryset = models.ApplicationDeployment.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
     filter_backends = (filters.OrderingFilter,)
@@ -539,11 +539,28 @@ class DeploymentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        This view should return a list of all the purchases
+        This view should return a list of all the deployments
         for the currently authenticated user.
         """
         user = self.request.user
         return models.ApplicationDeployment.objects.filter(owner=user)
+
+
+class DeploymentTaskViewSet(viewsets.ModelViewSet):
+    """List tasks associated with a deployment."""
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.DeploymentTaskSerializer
+    filter_backends = (filters.OrderingFilter,)
+    ordering = ('-updated',)
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the tasks
+        for the currently associated task.
+        """
+        deployment = self.kwargs.get('deployment_pk')
+        return models.ApplicationDeploymentTask.objects.filter(
+            deployment=deployment)
 
 
 ### Public Services ###

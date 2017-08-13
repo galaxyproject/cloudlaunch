@@ -252,14 +252,34 @@ class ApplicationDeployment(DateNameAwareModel):
     application_config = models.TextField(
         max_length=1024 * 16, help_text="Application configuration data used "
         "for this launch.", blank=True, null=True)
-    celery_task_id = models.TextField(
+
+
+class ApplicationDeploymentTask(models.Model):
+    """Details about a task performing an action for an app deployment."""
+
+    LAUNCH = 'LAUNCH'
+    UPDATE = 'UPDATE'
+    DELETE = 'DELETE'
+    ACTION_CHOICES = (
+        (LAUNCH, 'Launch'),
+        (UPDATE, 'Update'),
+        (DELETE, 'Delete')
+    )
+
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    deployment = models.ForeignKey(ApplicationDeployment, null=False,
+                                   related_name="tasks")
+    celery_id = models.TextField(
         max_length=64, help_text="Celery task id for any background jobs "
         "running on this deployment", blank=True, null=True, unique=True)
-    task_result = models.TextField(
+    action = models.CharField(max_length=255, blank=True, null=True,
+                              choices=ACTION_CHOICES)
+    result = models.TextField(
         max_length=1024 * 16, help_text="Result of Celery task", blank=True,
         null=True)
-    task_status = models.CharField(max_length=64, blank=True, null=True)
-    task_traceback = models.TextField(
+    status = models.CharField(max_length=64, blank=True, null=True)
+    traceback = models.TextField(
         max_length=1024 * 16, help_text="Celery task traceback, if any",
         blank=True, null=True)
 
