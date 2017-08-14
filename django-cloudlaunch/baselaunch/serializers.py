@@ -670,6 +670,44 @@ class DeploymentAppVersionSerializer(serializers.ModelSerializer):
         fields = ('version', 'frontend_component_path', 'frontend_component_name', 'application')
 
 
+class DeploymentTaskSerializer(serializers.ModelSerializer):
+    celery_id = serializers.CharField(read_only=True)
+    result = serializers.CharField(read_only=True)
+    status = serializers.SerializerMethodField()
+    traceback = serializers.CharField(read_only=True)
+    deployment = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='deployment_task-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['deployment_pk',
+                                                            'deployment_task_pk'])
+
+    class Meta:
+        model = models.ApplicationDeploymentTask
+        exclude = ('deployment',)
+
+    def get_status(self, obj):
+        """
+        Get the current status of this task.
+
+        :type obj: ``baselaunch.models.ApplicationDeployment``
+        :param obj: Application deployment object whose status to check on.
+
+        :rtype: ``dict``
+        :return: A dictionary with at least ``status`` and ``result`` keys
+                 capturing the current deployment status.
+        """
+        try:
+            if obj.celery_id:
+                task = AsyncResult(obj.celery_id)
+                return task.backend.get_task_meta(task.id)
+            else:
+                return {'status': obj.status,
+                        'result': json.loads(obj.result)}
+        except Exception as exc:
+            return {'status': 'UNKNOWN: %s' % exc, 'result': None}
+
+
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
@@ -678,6 +716,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
     application = serializers.CharField(write_only=True, required=True)
     config_app = serializers.JSONField(write_only=True, required=False)
     app_version_details = DeploymentAppVersionSerializer(source="application_version", read_only=True)
+    latest_task = serializers.SerializerMethodField()
     tasks = CustomHyperlinkedIdentityField(view_name='deployment_task-list',
                                            lookup_field='id',
                                            lookup_url_kwarg='deployment_pk')
@@ -686,7 +725,18 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'app_version_details',
-                  'tasks')
+                  'tasks', 'latest_task')
+
+    def get_latest_task(self, obj):
+        """Provide task info about the most recenly updated deployment task."""
+        try:
+            task = models.ApplicationDeploymentTask.objects.filter(
+                deployment=obj.id).latest('updated')
+            return DeploymentTaskSerializer(
+                task, context={'request': self.context['request'],
+                               'deployment_pk': obj.id}).data
+        except models.ApplicationDeploymentTask.DoesNotExist:
+            return None
 
     def to_internal_value(self, data):
         application = data.get('application')
@@ -741,41 +791,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
                          app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
         u.save()
 
-
-class DeploymentTaskSerializer(serializers.ModelSerializer):
-    celery_id = serializers.CharField(read_only=True)
-    result = serializers.CharField(read_only=True)
-    status = serializers.SerializerMethodField()
-    traceback = serializers.CharField(read_only=True)
-    url = CustomHyperlinkedIdentityField(view_name='deployment_task-detail',
-                                         lookup_field='id',
-                                         lookup_url_kwarg='pk',
-                                         parent_url_kwargs=['deployment_pk',
-                                                            'deployment_task_pk'])
-
-    class Meta:
-        model = models.ApplicationDeploymentTask
-
-    def get_status(self, obj):
-        """
-        Get the current status of this task.
-
-        :type obj: ``baselaunch.models.ApplicationDeployment``
-        :param obj: Application deployment object whose status to check on.
-
-        :rtype: ``dict``
-        :return: A dictionary with at least ``status`` and ``result`` keys
-                 capturing the current deployment status.
-        """
-        try:
-            if obj.celery_id:
-                task = AsyncResult(obj.celery_id)
-                return task.backend.get_task_meta(task.id)
-            else:
-                return {'status': obj.status,
-                        'result': json.loads(obj.result)}
-        except Exception as exc:
-            return {'status': 'UNKNOWN: %s' % exc, 'result': None}
 
 
 class CredentialsSerializer(serializers.Serializer):
