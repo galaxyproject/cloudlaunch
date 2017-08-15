@@ -258,11 +258,11 @@ class ApplicationDeploymentTask(models.Model):
     """Details about a task performing an action for an app deployment."""
 
     LAUNCH = 'LAUNCH'
-    UPDATE = 'UPDATE'
+    CHECK_STATUS = 'CHECK_STATUS'
     DELETE = 'DELETE'
     ACTION_CHOICES = (
         (LAUNCH, 'Launch'),
-        (UPDATE, 'Update'),
+        (CHECK_STATUS, 'Check status'),
         (DELETE, 'Delete')
     )
 
