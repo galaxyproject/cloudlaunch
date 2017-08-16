@@ -42,12 +42,7 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
     launch_result = handler.launch_app(launch_appliance, name,
                                        cloud_version_config, credentials,
                                        app_config, user_data)
+    # Schedule a task to migrate result one hour from now
     migrate_task_result.apply_async([launch_appliance.request.id],
                                     countdown=3600)
     return launch_result
-    # print("Running launch app task")
-    # sleep(30)
-    # # Schedule a task to migrate result one hour from now
-    # migrate_task_result.apply_async([launch_appliance.request.id],
-    #                                 countdown=60)
-    # return {'cl': 'dummy'}
