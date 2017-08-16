@@ -29,7 +29,7 @@ router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
 router.register(r'infrastructure', views.InfrastructureView,
                 base_name='infrastructure')
-router.register(r'deployments', views.DeploymentViewSet, base_name='deployements')
+router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
 router.register(r'auth', views.AuthView, base_name='auth')
 router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
 
