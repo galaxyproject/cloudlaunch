@@ -531,7 +531,6 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     """
     List compute related urls.
     """
-    # queryset = models.ApplicationDeployment.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
     filter_backends = (filters.OrderingFilter,)
