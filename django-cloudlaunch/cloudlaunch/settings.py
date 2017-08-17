@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ['*']
 
 ACCOUNT_AUTHENTICATION_METHOD = "username_email"
 ACCOUNT_EMAIL_REQUIRED = False
-LOGIN_REDIRECT_URL="/marketplace"
+LOGIN_REDIRECT_URL = "/catalog"
 
 # Begin: django-cors-headers settings
 CORS_ORIGIN_ALLOW_ALL = True
