@@ -672,8 +672,6 @@ class DeploymentAppVersionSerializer(serializers.ModelSerializer):
 
 class DeploymentTaskSerializer(serializers.ModelSerializer):
     celery_id = serializers.CharField(read_only=True)
-    result = serializers.CharField(read_only=True)
-    status = serializers.SerializerMethodField()
     traceback = serializers.CharField(read_only=True)
     deployment = serializers.CharField(read_only=True)
     url = CustomHyperlinkedIdentityField(view_name='deployment_task-detail',
@@ -686,26 +684,47 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         model = models.ApplicationDeploymentTask
         exclude = ('deployment',)
 
-    def get_status(self, obj):
+    def _update_task_info(self, obj):
         """
-        Get the current status of this task.
+        Get an update on task status and result.
+
+        Do this in a single method to avoid concurrency issues.
 
         :type obj: ``baselaunch.models.ApplicationDeployment``
         :param obj: Application deployment object whose status to check on.
 
         :rtype: ``dict``
         :return: A dictionary with at least ``status`` and ``result`` keys
-                 capturing the current deployment status.
+                 containing current task info.
         """
         try:
             if obj.celery_id:
                 task = AsyncResult(obj.celery_id)
                 return task.backend.get_task_meta(task.id)
-            else:
+            else:  # This is an older task whose task ID has been removed so return DB values
                 return {'status': obj.status,
                         'result': json.loads(obj.result)}
         except Exception as exc:
-            return {'status': 'UNKNOWN: %s' % exc, 'result': None}
+            return {'status': 'UNKNOWN - %s' % exc, 'result': None}
+
+    def to_representation(self,obj):
+        """
+        Override this method to provide constsent task info.
+
+        Multiple task info fields need to be updated at once so query for task info
+        only once and update the fields.
+
+        :type obj: ``baselaunch.models.ApplicationDeployment``
+        :param obj: Application deployment object whose status to check on.
+
+        :rtype: ``dict``
+        :return: Data respresentation of the model fields.
+        """
+        data = super().to_representation(obj)
+        task_info = self._update_task_info(obj)
+        data['status'] = task_info['status']
+        data['result'] = task_info['result']
+        return data
 
 
 class DeploymentSerializer(serializers.ModelSerializer):

@@ -26,7 +26,7 @@ def migrate_task_result(task_id):
     adt.celery_id = None
     sanitized_result = copy.deepcopy(task_meta['result'])
     if sanitized_result.get('cloudLaunch', {}).get('keyPair', {}).get(
-       'material'):
+            'material'):
         sanitized_result['cloudLaunch']['keyPair']['material'] = None
     adt.result = json.dumps(sanitized_result)
     adt.save()
