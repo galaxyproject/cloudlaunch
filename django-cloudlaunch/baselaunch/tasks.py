@@ -3,6 +3,8 @@ import copy
 import json
 
 from celery.app import shared_task
+from celery.exceptions import Ignore
+from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
 
 from baselaunch import models
@@ -37,12 +39,18 @@ def migrate_task_result(task_id):
 def launch_appliance(name, cloud_version_config, credentials, app_config,
                      user_data, task_id=None):
     """Call the appropriate app handler and initiate the app launch process."""
-    handler = util.import_class(
-        cloud_version_config.application_version.backend_component_name)()
-    launch_result = handler.launch_app(launch_appliance, name,
-                                       cloud_version_config, credentials,
-                                       app_config, user_data)
-    # Schedule a task to migrate result one hour from now
-    migrate_task_result.apply_async([launch_appliance.request.id],
-                                    countdown=3600)
-    return launch_result
+    try:
+        handler = util.import_class(
+            cloud_version_config.application_version.backend_component_name)()
+        launch_result = handler.launch_app(launch_appliance, name,
+                                           cloud_version_config, credentials,
+                                           app_config, user_data)
+        # Schedule a task to migrate result one hour from now
+        migrate_task_result.apply_async([launch_appliance.request.id],
+                                        countdown=3600)
+        return launch_result
+    except SoftTimeLimitExceeded:
+        launch_appliance.update_state(
+            state="FAILURE", meta={"exc_message": "Task time limit exceeded; "
+                                                  "stopping the task."})
+        raise Ignore  # This keeps the custom state set above
