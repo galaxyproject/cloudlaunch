@@ -6,9 +6,12 @@ from celery.app import shared_task
 from celery.exceptions import Ignore
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
+from celery.utils.log import get_task_logger
 
 from baselaunch import models
 from baselaunch import util
+
+LOG = get_task_logger(__name__)
 
 
 @shared_task
@@ -40,6 +43,7 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
                      user_data, task_id=None):
     """Call the appropriate app handler and initiate the app launch process."""
     try:
+        LOG.debug("Launching appliance %s", name)
         handler = util.import_class(
             cloud_version_config.application_version.backend_component_name)()
         launch_result = handler.launch_app(launch_appliance, name,
