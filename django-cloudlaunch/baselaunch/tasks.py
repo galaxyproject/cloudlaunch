@@ -18,18 +18,18 @@ def migrate_task_result(task_id):
     task is intended to be called some time after the initial task has run to
     migrate the info we do want to keep to a model table.
     """
-    ad = models.ApplicationDeployment.objects.get(celery_task_id=task_id)
+    adt = models.ApplicationDeploymentTask.objects.get(celery_id=task_id)
     task = AsyncResult(task_id)
     task_meta = task.backend.get_task_meta(task.id)
-    ad.task_status = task_meta.get('status')
-    ad.task_traceback = task_meta.get('traceback')
-    ad.celery_task_id = None
+    adt.status = task_meta.get('status')
+    adt.traceback = task_meta.get('traceback')
+    adt.celery_id = None
     sanitized_result = copy.deepcopy(task_meta['result'])
     if sanitized_result.get('cloudLaunch', {}).get('keyPair', {}).get(
-       'material'):
+            'material'):
         sanitized_result['cloudLaunch']['keyPair']['material'] = None
-    ad.task_result = json.dumps(sanitized_result)
-    ad.save()
+    adt.result = json.dumps(sanitized_result)
+    adt.save()
     task.forget()
 
 

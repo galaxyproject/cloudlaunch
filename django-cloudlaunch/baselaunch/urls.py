@@ -29,9 +29,15 @@ router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
 router.register(r'infrastructure', views.InfrastructureView,
                 base_name='infrastructure')
-router.register(r'deployments', views.DeploymentViewSet)
+router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
 router.register(r'auth', views.AuthView, base_name='auth')
 router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
+
+deployments_router = HybridNestedRouter(router, r'deployments',
+                                        lookup='deployment')
+deployments_router.register(r'tasks', views.DeploymentTaskViewSet,
+                            base_name='deployment_task')
+
 
 ### Public services ###
 router.register(r'public_services', views.PublicServiceViewSet)
@@ -124,6 +130,7 @@ auth_regex_pattern = r'api/v1/auth/'
 public_services_regex_pattern = r'api/v1/public_services/'
 urlpatterns = [
     url(r'api/v1/', include(router.urls)),
+    url(r'api/v1/', include(deployments_router.urls)),
     url(infrastructure_regex_pattern, include(infra_router.urls)),
     url(infrastructure_regex_pattern, include(cloud_router.urls)),
     url(infrastructure_regex_pattern, include(region_router.urls)),

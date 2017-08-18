@@ -670,6 +670,63 @@ class DeploymentAppVersionSerializer(serializers.ModelSerializer):
         fields = ('version', 'frontend_component_path', 'frontend_component_name', 'application')
 
 
+class DeploymentTaskSerializer(serializers.ModelSerializer):
+    celery_id = serializers.CharField(read_only=True)
+    traceback = serializers.CharField(read_only=True)
+    deployment = serializers.CharField(read_only=True)
+    url = CustomHyperlinkedIdentityField(view_name='deployment_task-detail',
+                                         lookup_field='id',
+                                         lookup_url_kwarg='pk',
+                                         parent_url_kwargs=['deployment_pk',
+                                                            'deployment_task_pk'])
+
+    class Meta:
+        model = models.ApplicationDeploymentTask
+        exclude = ('deployment',)
+
+    def _update_task_info(self, obj):
+        """
+        Get an update on task status and result.
+
+        Do this in a single method to avoid concurrency issues.
+
+        :type obj: ``baselaunch.models.ApplicationDeployment``
+        :param obj: Application deployment object whose status to check on.
+
+        :rtype: ``dict``
+        :return: A dictionary with at least ``status`` and ``result`` keys
+                 containing current task info.
+        """
+        try:
+            if obj.celery_id:
+                task = AsyncResult(obj.celery_id)
+                return task.backend.get_task_meta(task.id)
+            else:  # This is an older task whose task ID has been removed so return DB values
+                return {'status': obj.status,
+                        'result': json.loads(obj.result)}
+        except Exception as exc:
+            return {'status': 'UNKNOWN - %s' % exc, 'result': None}
+
+    def to_representation(self,obj):
+        """
+        Override this method to provide constsent task info.
+
+        Multiple task info fields need to be updated at once so query for task info
+        only once and update the fields.
+
+        :type obj: ``baselaunch.models.ApplicationDeployment``
+        :param obj: Application deployment object whose status to check on.
+
+        :rtype: ``dict``
+        :return: Data respresentation of the model fields.
+        """
+        data = super().to_representation(obj)
+        task_info = self._update_task_info(obj)
+        data['status'] = task_info['status']
+        data['result'] = task_info['result']
+        return data
+
+
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
@@ -677,15 +734,28 @@ class DeploymentSerializer(serializers.ModelSerializer):
     application_config = StoredJSONField(read_only=True)
     application = serializers.CharField(write_only=True, required=True)
     config_app = serializers.JSONField(write_only=True, required=False)
-    task_status = serializers.SerializerMethodField()
-    task_result = StoredJSONField(read_only=True)
     app_version_details = DeploymentAppVersionSerializer(source="application_version", read_only=True)
+    latest_task = serializers.SerializerMethodField()
+    tasks = CustomHyperlinkedIdentityField(view_name='deployment_task-list',
+                                           lookup_field='id',
+                                           lookup_url_kwarg='deployment_pk')
 
     class Meta:
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
-                  'application_config', 'added', 'updated', 'owner', 'config_app', 'celery_task_id',
-                  'task_status', 'task_result', 'app_version_details')
+                  'application_config', 'added', 'updated', 'owner', 'config_app', 'app_version_details',
+                  'tasks', 'latest_task')
+
+    def get_latest_task(self, obj):
+        """Provide task info about the most recenly updated deployment task."""
+        try:
+            task = models.ApplicationDeploymentTask.objects.filter(
+                deployment=obj.id).latest('updated')
+            return DeploymentTaskSerializer(
+                task, context={'request': self.context['request'],
+                               'deployment_pk': obj.id}).data
+        except models.ApplicationDeploymentTask.DoesNotExist:
+            return None
 
     def to_internal_value(self, data):
         application = data.get('application')
@@ -694,26 +764,6 @@ class DeploymentSerializer(serializers.ModelSerializer):
             version = models.ApplicationVersion.objects.get(application=application, version=version)
             data['application_version'] = version.id
         return super(DeploymentSerializer, self).to_internal_value(data)
-
-    def get_task_status(self, obj):
-        """
-        Get the status info from the task that performed the deployment.
-
-        :type obj: ``baselaunch.models.ApplicationDeployment``
-        :param obj: Application deployment object whose status to check on.
-
-        :rtype: ``dict``
-        :return: A dictionary with the status of the given deployment.
-        """
-        try:
-            if obj.celery_task_id:
-                task = AsyncResult(obj.celery_task_id)
-                return task.backend.get_task_meta(task.id)
-            else:
-                return {'status': obj.task_status,
-                        'result': json.loads(obj.task_result)}
-        except Exception as exc:
-            return {'state': 'UNKNOWN: %s' % exc}
 
     def create(self, validated_data):
         """
@@ -744,9 +794,11 @@ class DeploymentSerializer(serializers.ModelSerializer):
             del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
             validated_data['application_config'] = json.dumps(merged_config)
-            validated_data['celery_task_id'] = async_result.task_id
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
             self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)
+            models.ApplicationDeploymentTask.objects.create(
+                action=models.ApplicationDeploymentTask.LAUNCH,
+                deployment=app_deployment, celery_id=async_result.task_id)
             return app_deployment
         except serializers.ValidationError as ve:
             raise ve
@@ -757,6 +809,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         u = models.Usage(app_version_cloud_config=app_version_cloud_config,
                          app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
         u.save()
+
 
 
 class CredentialsSerializer(serializers.Serializer):
