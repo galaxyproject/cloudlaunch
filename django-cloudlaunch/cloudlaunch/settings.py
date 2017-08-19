@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE_ID = 1
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'apsm2@#*opag-b7ae=&!w8r_q7077y%$wd@@0zfz1empu)r*!p'
+SECRET_KEY = 'CHANGEthisONinstall'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
