@@ -66,12 +66,9 @@ class AzureCredentialsForm(ModelForm):
 class DefaultRequiredInlineFormSet(BaseInlineFormSet):
 
     def clean(self):
-        """Check that at least one default credentials has been set."""
         super(DefaultRequiredInlineFormSet, self).clean()
         if any(self.errors):
             return
-        if not any(cleaned_data.get('default') for cleaned_data in self.cleaned_data):
-            raise forms.ValidationError('At least one default credentials are required.')
 
 
 class ApplicationForm(ModelForm):
