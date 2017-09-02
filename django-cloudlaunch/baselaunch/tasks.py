@@ -58,3 +58,41 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
             state="FAILURE", meta={"exc_message": "Task time limit exceeded; "
                                                   "stopping the task."})
         raise Ignore  # This keeps the custom state set above
+
+
+def _get_app_handler(deployment):
+    """
+    Retrieve app-specific handler for a deployment.
+
+    :rtype: :class:`.AppPlugin`
+    :return: An instance of the handler class corresponding to the
+             deployment app.
+    """
+    cloud = deployment.target_cloud
+    cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
+        application_version=deployment.application_version.id, cloud=cloud.slug)
+    return util.import_class(
+        cloud_version_config.application_version.backend_component_name)()
+
+
+@shared_task
+def check_status(deployment, credentials):
+    """
+    Check the status of the supplied deployment.
+
+    Conceptually, the status check can be as elaborate as the deployed
+    appliance supports via a custom implementation. At the minimum, and
+    by default, the status reflects the status of the cloud instance by
+    querying the cloud provider.
+    """
+    LOG.debug("Checking status of deployment %s", deployment.name)
+    handler = _get_app_handler(deployment)
+    return handler.check_status(deployment, credentials)
+
+
+@shared_task
+def delete_appliance(deployment, credentials):
+    """Delete this app. This is an un-recoverable action."""
+    LOG.debug("Deleting deployment %s", deployment.name)
+    handler = _get_app_handler(deployment)
+    return handler.delete(deployment, credentials)

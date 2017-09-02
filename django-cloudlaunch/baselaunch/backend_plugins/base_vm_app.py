@@ -1,6 +1,7 @@
 """Base VM plugin implementations."""
 import copy
 import time
+import yaml
 
 import requests
 import requests.exceptions
@@ -286,3 +287,42 @@ class BaseVMAppPlugin(AppPlugin):
             else:
                 results['applicationURL'] = 'N/A'
         return {'cloudLaunch': results}
+
+    def _get_deployment_iid(self, deployment):
+        """
+        Extract instance ID for the supplied deployment.
+
+        @type  deployment: ``ApplicationDeployment``
+        @param deployment: An instance of the app deployment.
+
+        :rtype: ``str``
+        :return: Provider-specific instance ID for the deployment.
+        """
+        launch_task = deployment.tasks.filter(action='LAUNCH').first()
+        return yaml.load(launch_task.result).get('cloudLaunch', {}).get(
+            'instance', {}).get('id')
+
+    def check_status(self, deployment, credentials):
+        """Check the status of this app."""
+        iid = self._get_deployment_iid(deployment)
+        log.debug("Checking the status of instance %s", iid)
+        provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                                   credentials)
+        inst = provider.compute.instances.get(iid)
+        if inst:
+            return {'instance_status': inst.state}
+        else:
+            return {'instance_status': 'deleted'}
+
+    def delete(self, deployment, credentials):
+        """
+        Delete resource(s) associated with the supplied deployment.
+
+        *Note* that this method will delete resource(s) associated with
+        the deployment - this is un-recoverable action.
+        """
+        iid = self._get_deployment_iid(deployment)
+        log.debug("Deleting deployment instance %s", iid)
+        provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                                   credentials)
+        return provider.compute.instances.delete(iid)

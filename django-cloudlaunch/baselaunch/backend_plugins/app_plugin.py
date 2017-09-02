@@ -92,3 +92,47 @@ class AppPlugin():
         :return: a ``dict` containing the results of the launch.
         """
         pass
+
+    @abc.abstractmethod
+    def check_status(self, deployment, credentials):
+        """
+        Check the status of this app.
+
+        At a minimum, this will check the status of the VM on which the
+        deployment is running. Applications can implement more elaborate
+        status checks.
+
+        @type  deployment: ``ApplicationDeployment``
+        @param deployment: An instance of the app deployment on which status
+                           to check.
+
+        @type  credentials: ``dict``
+        @param credentials: Cloud provider credentials to use when checking
+                            the status.
+
+        :rtype: ``dict``
+        :return: A dictionary with possibly app-specific fields capturing
+                 app status. At a minimum, ``instance_status`` field will be
+                 available.
+        """
+        pass
+
+    @abc.abstractmethod
+    def delete(self, deployment, credentials):
+        """
+        Delete resource(s) associated with the supplied deployment.
+
+        *Note* that this method will delete resource(s) associated with
+        the deployment - this is un-recoverable action.
+
+        @type  deployment: ``ApplicationDeployment``
+        @param deployment: An instance of the app deployment to delete.
+
+        @type  credentials: ``dict``
+        @param credentials: Cloud provider credentials to use when deleting
+                            the deployment.
+
+        :rtype: ``bool``
+        :return: The result of delete invocation.
+        """
+        pass

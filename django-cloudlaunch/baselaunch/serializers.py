@@ -683,6 +683,7 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ApplicationDeploymentTask
         exclude = ('deployment',)
+        read_only_fields = ('status', 'result')
 
     def _update_task_info(self, obj):
         """
@@ -709,10 +710,10 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
 
     def to_representation(self,obj):
         """
-        Override this method to provide constsent task info.
+        Override this method to provide consistent task info.
 
-        Multiple task info fields need to be updated at once so query for task info
-        only once and update the fields.
+        Because multiple fields need to be updated at once, query for task
+        info only once and update all the fields as a single method call.
 
         :type obj: ``baselaunch.models.ApplicationDeployment``
         :param obj: Application deployment object whose status to check on.
@@ -725,6 +726,35 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         data['status'] = task_info['status']
         data['result'] = task_info['result']
         return data
+
+    def create(self, validated_data):
+        """
+        Fire off a new task for the supplied action.
+
+        Called automatically by the DRF following a POST request.
+
+        :type validated_data: ``dict``
+        :param validated_data: Dict containing action the task should perform.
+                               Valid actions are `CHECK_STATUS`, `DELETE`.
+        """
+        print("deployment task data: %s" % validated_data)
+        action = getattr(models.ApplicationDeploymentTask,
+                         validated_data.get('action', 'CHECK_STATUS').upper())
+        request = self.context.get('view').request
+        dpk = self.context['view'].kwargs.get('deployment_pk')
+        dpl = models.ApplicationDeployment.objects.get(id=dpk)
+        credentials = view_helpers.get_credentials(dpl.target_cloud, request)
+        try:
+            if action == models.ApplicationDeploymentTask.CHECK_STATUS:
+                async_result = tasks.check_status.delay(dpl, credentials)
+            elif action == models.ApplicationDeploymentTask.DELETE:
+                async_result = tasks.delete_appliance.delay(dpl, credentials)
+            return models.ApplicationDeploymentTask.objects.create(
+                action=action, deployment=dpl, celery_id=async_result.task_id)
+        except serializers.ValidationError as ve:
+            raise ve
+        except Exception as e:
+            raise serializers.ValidationError({"error": str(e)})
 
 
 class DeploymentSerializer(serializers.ModelSerializer):

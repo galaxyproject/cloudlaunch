@@ -1,3 +1,4 @@
+"""Models exposed via Django Admin."""
 import ast
 from django.contrib import admin
 import nested_admin
@@ -58,6 +59,7 @@ class OSCredsInline(admin.StackedInline):
     form = forms.OpenStackCredentialsForm
     formset = forms.DefaultRequiredInlineFormSet
     extra = 1
+
 
 class GCECredsInline(admin.StackedInline):
     model = models.GCECredentials
