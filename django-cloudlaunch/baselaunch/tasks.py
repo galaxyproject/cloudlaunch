@@ -76,18 +76,18 @@ def _get_app_handler(deployment):
 
 
 @shared_task
-def check_status(deployment, credentials):
+def health_check(deployment, credentials):
     """
-    Check the status of the supplied deployment.
+    Check the health of the supplied deployment.
 
-    Conceptually, the status check can be as elaborate as the deployed
+    Conceptually, the health check can be as elaborate as the deployed
     appliance supports via a custom implementation. At the minimum, and
-    by default, the status reflects the status of the cloud instance by
+    by default, the health reflects the status of the cloud instance by
     querying the cloud provider.
     """
-    LOG.debug("Checking status of deployment %s", deployment.name)
+    LOG.debug("Checking health of deployment %s", deployment.name)
     handler = _get_app_handler(deployment)
-    return handler.check_status(deployment, credentials)
+    return handler.health_check(deployment, credentials)
 
 
 @shared_task

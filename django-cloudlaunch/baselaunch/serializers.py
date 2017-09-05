@@ -735,18 +735,18 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
 
         :type validated_data: ``dict``
         :param validated_data: Dict containing action the task should perform.
-                               Valid actions are `CHECK_STATUS`, `DELETE`.
+                               Valid actions are `HEALTH_CHECK`, `DELETE`.
         """
         print("deployment task data: %s" % validated_data)
         action = getattr(models.ApplicationDeploymentTask,
-                         validated_data.get('action', 'CHECK_STATUS').upper())
+                         validated_data.get('action', 'HEALTH_CHECK').upper())
         request = self.context.get('view').request
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
         credentials = view_helpers.get_credentials(dpl.target_cloud, request)
         try:
-            if action == models.ApplicationDeploymentTask.CHECK_STATUS:
-                async_result = tasks.check_status.delay(dpl, credentials)
+            if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
+                async_result = tasks.health_check.delay(dpl, credentials)
             elif action == models.ApplicationDeploymentTask.DELETE:
                 async_result = tasks.delete_appliance.delay(dpl, credentials)
             return models.ApplicationDeploymentTask.objects.create(

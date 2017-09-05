@@ -302,8 +302,8 @@ class BaseVMAppPlugin(AppPlugin):
         return yaml.load(launch_task.result).get('cloudLaunch', {}).get(
             'instance', {}).get('id')
 
-    def check_status(self, deployment, credentials):
-        """Check the status of this app."""
+    def health_check(self, deployment, credentials):
+        """Check the health of this app."""
         iid = self._get_deployment_iid(deployment)
         log.debug("Checking the status of instance %s", iid)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
@@ -312,7 +312,7 @@ class BaseVMAppPlugin(AppPlugin):
         if inst:
             return {'instance_status': inst.state}
         else:
-            return {'instance_status': 'deleted'}
+            return {'instance_status': 'terminated'}
 
     def delete(self, deployment, credentials):
         """
@@ -322,7 +322,11 @@ class BaseVMAppPlugin(AppPlugin):
         the deployment - this is un-recoverable action.
         """
         iid = self._get_deployment_iid(deployment)
-        log.debug("Deleting deployment instance %s", iid)
+        log.debug("Deleting deployment %s instance %s", (deployment.name, iid))
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
-        return provider.compute.instances.delete(iid)
+        inst = provider.compute.instances.get(iid)
+        if inst:
+            return inst.terminate()
+        # Instance does not exist so default to True
+        return True

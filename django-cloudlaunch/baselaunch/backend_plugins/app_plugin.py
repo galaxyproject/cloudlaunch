@@ -94,26 +94,28 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def check_status(self, deployment, credentials):
+    def health_check(self, deployment, credentials):
         """
-        Check the status of this app.
+        Check the health of this app.
 
         At a minimum, this will check the status of the VM on which the
         deployment is running. Applications can implement more elaborate
-        status checks.
+        health checks.
 
         @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment on which status
+        @param deployment: An instance of the app deployment on which health
                            to check.
 
         @type  credentials: ``dict``
         @param credentials: Cloud provider credentials to use when checking
-                            the status.
+                            the resource status.
 
         :rtype: ``dict``
         :return: A dictionary with possibly app-specific fields capturing
-                 app status. At a minimum, ``instance_status`` field will be
-                 available.
+                 app health. At a minimum, ``instance_status`` field will be
+                 available. If the deployment instance is not found by the
+                 provider, the default return value is ``terminated`` for the
+                 ``instance_status`` key.
         """
         pass
 
