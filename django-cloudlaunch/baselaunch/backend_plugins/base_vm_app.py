@@ -55,7 +55,7 @@ class BaseVMAppPlugin(AppPlugin):
         #     for sg2 in sgs:
         #         if sg1 == sg2:
         #             return sg1
-        subnet = provider.network.subnets.get(subnet_id)
+        subnet = provider.networking.subnets.get(subnet_id)
         return provider.security.security_groups.create(
             name=sg_name, description=description,
             network_id=subnet.network_id)
@@ -101,7 +101,7 @@ class BaseVMAppPlugin(AppPlugin):
         """
         if not inst.public_ips:
             fip = None
-            fips = provider.network.floating_ips()
+            fips = provider.networking.networks.floating_ips
             for ip in fips:
                 if not ip.in_use():
                     fip = ip
@@ -110,7 +110,7 @@ class BaseVMAppPlugin(AppPlugin):
                           fip.public_ip)
                 inst.add_floating_ip(fip.public_ip)
             else:
-                fip = provider.network.create_floating_ip()
+                fip = provider.networking.networks.create_floating_ip()
                 log.debug("Attaching a just-created floating IP %s" %
                           fip.public_ip)
                 inst.add_floating_ip(fip.public_ip)
@@ -191,7 +191,7 @@ class BaseVMAppPlugin(AppPlugin):
         Any combination of the optional parameters is accepted.
         """
         if net_id:
-            net = provider.network.get(net_id)
+            net = provider.networking.networks.get(net_id)
             for sn in net.subnets():
                 # No placement necessary; pick a (random) subnet
                 if not placement:
@@ -199,7 +199,7 @@ class BaseVMAppPlugin(AppPlugin):
                 # Placement match is necessary
                 elif sn.zone == placement:
                     return sn
-        sn = provider.network.subnets.get_or_create_default(placement)
+        sn = provider.networking.subnets.get_or_create_default(placement)
         return sn.id if sn else None
 
     def resolve_launch_properties(self, provider, cloudlaunch_config):

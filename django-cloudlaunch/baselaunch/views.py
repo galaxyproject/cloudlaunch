@@ -239,11 +239,11 @@ class NetworkViewSet(drf_helpers.CustomModelViewSet):
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.network.list()
+        return provider.networking.networks.list()
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        obj = provider.network.get(self.kwargs["pk"])
+        obj = provider.networking.networks.get(self.kwargs["pk"])
         return obj
 
 
@@ -255,11 +255,11 @@ class SubnetViewSet(drf_helpers.CustomModelViewSet):
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.network.subnets.list(network=self.kwargs["network_pk"])
+        return provider.networking.subnets.list(network=self.kwargs["network_pk"])
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.network.subnets.get(self.kwargs["pk"])
+        return provider.networking.subnets.get(self.kwargs["pk"])
 
     def get_serializer_class(self):
         if self.request.method == 'PUT':
@@ -277,7 +277,7 @@ class StaticIPViewSet(drf_helpers.CustomModelViewSet):
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         ips = []
-        for ip in provider.network.floating_ips():
+        for ip in provider.networking.networks.floating_ips:
             if not ip.in_use():
                 ips.append({'ip': ip.public_ip})
         return ips
