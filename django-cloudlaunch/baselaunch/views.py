@@ -1,21 +1,23 @@
+from django.http import HttpResponse
 from django.http.response import FileResponse
 from django.http.response import Http404
-from django.http import HttpResponse
+from rest_framework import filters
+from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework import renderers
+from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from rest_framework import filters
-from rest_framework import status
-from rest_framework import mixins
+import requests
+
 from baselaunch import drf_helpers
 from baselaunch import models
 from baselaunch import serializers
 from baselaunch import view_helpers
-import requests
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):
@@ -283,18 +285,26 @@ class StaticIPViewSet(drf_helpers.CustomModelViewSet):
         return ips
 
 
+class LargeResultsSetPagination(PageNumberPagination):
+    """Modify aspects of the pagination style, primarily page size."""
+
+    page_size = 500
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+
 class InstanceTypeViewSet(drf_helpers.CustomReadOnlyModelViewSet):
-    """
-    List compute instance types in a given cloud.
-    """
+    """List compute instance types in a given cloud."""
+    
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
     serializer_class = serializers.InstanceTypeSerializer
+    pagination_class = LargeResultsSetPagination
     lookup_value_regex = '[^/]+'
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.compute.instance_types.list()
+        return provider.compute.instance_types.list(limit=500)
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
