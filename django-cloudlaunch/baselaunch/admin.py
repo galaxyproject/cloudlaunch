@@ -25,6 +25,10 @@ class AppAdmin(nested_admin.NestedModelAdmin):
     form = forms.ApplicationForm
 
 
+class AppCategoryAdmin(admin.ModelAdmin):
+    model = models.AppCategory
+
+
 class CloudImageInline(admin.StackedInline):
     model = models.CloudImage
     extra = 1
@@ -127,6 +131,7 @@ class PublicServicesAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.Application, AppAdmin)
+admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
 admin.site.register(models.AWS, CloudAdmin)
 admin.site.register(models.EC2, EC2Admin)

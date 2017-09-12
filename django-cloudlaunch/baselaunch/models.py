@@ -142,8 +142,44 @@ class CloudImage(Image):
         return "{0} (on {1})".format(self.name, self.cloud.name)
 
 
+class AppCategory(models.Model):
+    """Categories an app can be associated with."""
+
+    FEATURED = 'FEATURED'
+    GALAXY = 'GALAXY'
+    SCALABLE = 'SCALABLE'
+    VM = 'VM'
+    CATEGORY_CHOICES = (
+        (FEATURED, 'Featured'),
+        (GALAXY, 'Galaxy'),
+        (SCALABLE, 'Scalable'),
+        (VM, 'Virtual machine')
+    )
+    name = models.CharField(max_length=100, blank=True, null=True,
+                            choices=CATEGORY_CHOICES, unique=True)
+
+    def __str__(self):
+        return "{0}".format(self.get_name_display())
+
+    class Meta:
+        verbose_name_plural = "App categories"
+
+
 class Application(DateNameAwareModel):
+
+    DEV = 'DEV'
+    CERTIFICATION = 'CERTIFICATION'
+    LIVE = 'LIVE'
+    STATUS_CHOICES = (
+        (DEV, 'Development'),
+        (CERTIFICATION, 'Certification'),
+        (LIVE, 'Live')
+    )
+
     slug = models.SlugField(max_length=100, primary_key=True)
+    status = models.CharField(max_length=50, blank=True, null=True,
+                              choices=STATUS_CHOICES, default=DEV)
+    category = models.ManyToManyField(AppCategory, blank=True, null=True)
     # summary is the size of a tweet. description can be of arbitrary length
     summary = models.CharField(max_length=140, blank=True, null=True)
     maintainer = models.CharField(max_length=255, blank=True, null=True)
@@ -158,7 +194,7 @@ class Application(DateNameAwareModel):
                                         blank=True, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return "{0}".format(self.name)
+        return "{0} [{1}]".format(self.name, self.get_status_display())
 
     def save(self, *args, **kwargs):
         if not self.slug:

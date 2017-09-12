@@ -24,7 +24,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows applications to be viewed or edited.
     """
-    queryset = models.Application.objects.all()
+    queryset = models.Application.objects.filter(status=models.Application.LIVE)
     serializer_class = serializers.ApplicationSerializer
 
 

@@ -653,7 +653,7 @@ class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Application
-        exclude = ('default_launch_config',)
+        exclude = ('default_launch_config', 'category')
 
 
 class DeploymentAppSerializer(serializers.ModelSerializer):
