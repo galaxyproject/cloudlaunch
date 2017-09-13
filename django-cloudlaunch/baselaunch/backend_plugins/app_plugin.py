@@ -120,6 +120,26 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
+    def restart(self, deployment, credentials):
+        """
+        Restart the appliance associated with the supplied deployment.
+
+        This can simply restart the virtual machine on which the deployment
+        is running or issue an app-specific call to perform the restart.
+
+        @type  deployment: ``ApplicationDeployment``
+        @param deployment: An instance of the app deployment to delete.
+
+        @type  credentials: ``dict``
+        @param credentials: Cloud provider credentials to use when deleting
+                            the deployment.
+
+        :rtype: ``bool``
+        :return: The result of restart invocation.
+        """
+        pass
+
+    @abc.abstractmethod
     def delete(self, deployment, credentials):
         """
         Delete resource(s) associated with the supplied deployment.

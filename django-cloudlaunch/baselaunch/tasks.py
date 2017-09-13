@@ -91,6 +91,14 @@ def health_check(deployment, credentials):
 
 
 @shared_task
+def restart_appliance(deployment, credentials):
+    """Restart this app."""
+    LOG.debug("Restarting deployment %s", deployment.name)
+    handler = _get_app_handler(deployment)
+    return handler.restart(deployment, credentials)
+
+
+@shared_task
 def delete_appliance(deployment, credentials):
     """Delete this app. This is an un-recoverable action."""
     LOG.debug("Deleting deployment %s", deployment.name)

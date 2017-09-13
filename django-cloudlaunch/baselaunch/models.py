@@ -295,10 +295,12 @@ class ApplicationDeploymentTask(models.Model):
 
     LAUNCH = 'LAUNCH'
     HEALTH_CHECK = 'HEALTH_CHECK'
+    RESTART = 'RESTART'
     DELETE = 'DELETE'
     ACTION_CHOICES = (
         (LAUNCH, 'Launch'),
         (HEALTH_CHECK, 'Health check'),
+        (RESTART, 'Restart'),
         (DELETE, 'Delete')
     )
 

@@ -749,6 +749,8 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
                 async_result = tasks.health_check.delay(dpl, credentials)
+            elif action == models.ApplicationDeploymentTask.RESTART:
+                async_result = tasks.restart_appliance.delay(dpl, credentials)
             elif action == models.ApplicationDeploymentTask.DELETE:
                 async_result = tasks.delete_appliance.delay(dpl, credentials)
             return models.ApplicationDeploymentTask.objects.create(
