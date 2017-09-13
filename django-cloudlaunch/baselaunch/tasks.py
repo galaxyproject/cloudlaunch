@@ -15,7 +15,7 @@ LOG = get_task_logger(__name__)
 
 
 @shared_task
-def migrate_task_result(task_id):
+def migrate_launch_task(task_id):
     """
     Migrate task result to a persistent model table.
 
@@ -50,7 +50,7 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
                                            cloud_version_config, credentials,
                                            app_config, user_data)
         # Schedule a task to migrate result one hour from now
-        migrate_task_result.apply_async([launch_appliance.request.id],
+        migrate_launch_task.apply_async([launch_appliance.request.id],
                                         countdown=3600)
         return launch_result
     except SoftTimeLimitExceeded:
@@ -76,7 +76,21 @@ def _get_app_handler(deployment):
 
 
 @shared_task
-def health_check(deployment, credentials):
+def migrate_health_task(task_id):
+    LOG.debug("Migrating health task %s info" % task_id)
+    adt = models.ApplicationDeploymentTask.objects.get(celery_id=task_id)
+    task = AsyncResult(task_id)
+    task_meta = task.backend.get_task_meta(task.id)
+    adt.celery_id = None
+    adt.status = task_meta.get('status')
+    adt.result = task_meta.get('result')
+    adt.traceback = task_meta.get('traceback')
+    adt.save()
+    task.forget()
+
+
+@shared_task(bind=True)
+def health_check(self, deployment, credentials):
     """
     Check the health of the supplied deployment.
 
@@ -87,7 +101,13 @@ def health_check(deployment, credentials):
     """
     LOG.debug("Checking health of deployment %s", deployment.name)
     handler = _get_app_handler(deployment)
-    return handler.health_check(deployment, credentials)
+    result = handler.health_check(deployment, credentials)
+    # Schedule a task to migrate results right after task completion
+    # Do this as a separate task because until this task completes, we
+    # cannot obtain final status or traceback.
+    migrate_health_task.apply_async([self.request.id],
+                                    countdown=1)
+    return result
 
 
 @shared_task

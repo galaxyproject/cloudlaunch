@@ -333,18 +333,38 @@ class ApplicationDeploymentTask(models.Model):
         end of the period, the Celery task is deleted and the data is migrated
         to this table. By wrapping this field as a property, we ensure proper
         data is returned.
+
+        In the process, we have data types to deal with. Some task results
+        return a ``dict`` while others a ``bool``. In addition, result
+        returned from the task broker is returned as a native ``dict`` while,
+        after migration, the result for the same task is stored in the database
+        as a ``str``. This method tries to standardize on the value returned
+        for a given task. Celery task results are returned in native format as
+        returned from the broker. For the result stored in the database, an
+        attempt it made to de-serialize the value from JSON. If that does not
+        work, raw value is returned. It is hence desirable to serialize
+        the result value before saving it here.
         """
         try:
             if self.celery_id:
                 task = AsyncResult(self.celery_id)
                 return task.backend.get_task_meta(task.id).get('result')
             else:  # This is an older task whose task ID has been removed so return DB value
-                return self._result
+                try:
+                    r = json.loads(self._result)
+                    return r
+                except ValueError as exc:
+                    return self._result
         except Exception as exc:
             return {'exception': exc}
 
     @result.setter
     def result(self, value):
+        """
+        Save the result value.
+
+        .. seealso:: result property getter
+        """
         self._result = value
 
     @property

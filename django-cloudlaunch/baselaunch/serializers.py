@@ -682,7 +682,7 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         choices=models.ApplicationDeploymentTask.ACTION_CHOICES,
         initial=models.ApplicationDeploymentTask.HEALTH_CHECK)
     status = serializers.CharField(read_only=True)
-    result = serializers.DictField(read_only=True)
+    result = serializers.CharField(read_only=True)
     traceback = serializers.CharField(read_only=True)
 
     class Meta:

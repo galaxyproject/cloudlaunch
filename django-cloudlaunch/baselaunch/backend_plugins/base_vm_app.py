@@ -286,7 +286,7 @@ class BaseVMAppPlugin(AppPlugin):
                 self.wait_for_http(results['applicationURL'])
             else:
                 results['applicationURL'] = 'N/A'
-        return {'cloudLaunch': results}
+        return {"cloudLaunch": results}
 
     def _get_deployment_iid(self, deployment):
         """
@@ -315,15 +315,15 @@ class BaseVMAppPlugin(AppPlugin):
         """Check the health of this app."""
         iid = self._get_deployment_iid(deployment)
         if not iid:
-            return {'instance_status': 'unknown'}
+            return {"instance_status": "unknown"}
         log.debug("Checking the status of instance %s", iid)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
         inst = provider.compute.instances.get(iid)
         if inst:
-            return {'instance_status': inst.state}
+            return {"instance_status": inst.state}
         else:
-            return {'instance_status': 'terminated'}
+            return {"instance_status": "terminated"}
 
     def restart(self, deployment, credentials):
         """Restart the app associated with the supplied deployment."""
