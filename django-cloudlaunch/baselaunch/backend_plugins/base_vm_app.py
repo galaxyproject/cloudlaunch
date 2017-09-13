@@ -292,19 +292,30 @@ class BaseVMAppPlugin(AppPlugin):
         """
         Extract instance ID for the supplied deployment.
 
+        We extract instance ID only for deployments that have a
+        a LAUNCH task in SUCCESS state.
+
         @type  deployment: ``ApplicationDeployment``
         @param deployment: An instance of the app deployment.
 
         :rtype: ``str``
-        :return: Provider-specific instance ID for the deployment.
+        :return: Provider-specific instance ID for the deployment or
+                 ``None`` if instance ID not found in the database.
         """
-        launch_task = deployment.tasks.filter(action='LAUNCH').first()
-        return yaml.load(launch_task.result).get('cloudLaunch', {}).get(
-            'instance', {}).get('id')
+        launch_task = deployment.tasks.filter(
+            action=domain_model.models.ApplicationDeploymentTask.LAUNCH)\
+            .first()
+        if launch_task.status == 'SUCCESS':
+            return launch_task.result.get('cloudLaunch', {}).get(
+                'instance', {}).get('id')
+        else:
+            return None
 
     def health_check(self, deployment, credentials):
         """Check the health of this app."""
         iid = self._get_deployment_iid(deployment)
+        if not iid:
+            return {'instance_status': 'unknown'}
         log.debug("Checking the status of instance %s", iid)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
@@ -317,6 +328,8 @@ class BaseVMAppPlugin(AppPlugin):
     def restart(self, deployment, credentials):
         """Restart the app associated with the supplied deployment."""
         iid = self._get_deployment_iid(deployment)
+        if not iid:
+            return False
         log.debug("Restarting deployment %s instance %s",
                   (deployment.name, iid))
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
@@ -335,6 +348,8 @@ class BaseVMAppPlugin(AppPlugin):
         the deployment - this is un-recoverable action.
         """
         iid = self._get_deployment_iid(deployment)
+        if not iid:
+            return False
         log.debug("Deleting deployment %s instance %s", (deployment.name, iid))
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)

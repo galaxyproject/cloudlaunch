@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -313,14 +314,62 @@ class ApplicationDeploymentTask(models.Model):
         "running on this deployment", blank=True, null=True, unique=True)
     action = models.CharField(max_length=255, blank=True, null=True,
                               choices=ACTION_CHOICES)
-    result = models.TextField(
+    _result = models.TextField(
         max_length=1024 * 16, help_text="Result of Celery task", blank=True,
-        null=True)
-    status = models.CharField(max_length=64, blank=True, null=True)
+        null=True, db_column='result')
+    _status = models.CharField(max_length=64, blank=True, null=True,
+                               db_column='status')
     traceback = models.TextField(
         max_length=1024 * 16, help_text="Celery task traceback, if any",
         blank=True, null=True)
 
+    @property
+    def result(self):
+        """
+        Result can come from a Celery task or the database so check both.
+
+        While a task is active or up to (by default) one hour after a task
+        was initiated, ``result`` field is available from the task. At the
+        end of the period, the Celery task is deleted and the data is migrated
+        to this table. By wrapping this field as a property, we ensure proper
+        data is returned.
+        """
+        try:
+            if self.celery_id:
+                task = AsyncResult(self.celery_id)
+                return task.backend.get_task_meta(task.id).get('result')
+            else:  # This is an older task whose task ID has been removed so return DB value
+                return self._result
+        except Exception as exc:
+            return {'exception': exc}
+
+    @result.setter
+    def result(self, value):
+        self._result = value
+
+    @property
+    def status(self):
+        """
+        Status can come from a Celery task or the database so check both.
+
+        While a task is active or up to (by default) one hour after a task
+        was initiated, ``result`` field is available from the task. At the
+        end of the period, the Celery task is deleted and the data is migrated
+        to this table. By wrapping this field as a property, we ensure proper
+        data is returned.
+        """
+        try:
+            if self.celery_id:
+                task = AsyncResult(self.celery_id)
+                return task.backend.get_task_meta(task.id).get('status')
+            else:  # This is an older task whose task ID has been removed so return DB value
+                return self._status
+        except Exception as exc:
+            return 'UNKNOWN - %s' % exc
+
+    @status.setter
+    def status(self, value):
+        self._status = value
 
 class Credentials(DateNameAwareModel):
     default = models.BooleanField(
