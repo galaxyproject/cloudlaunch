@@ -353,7 +353,7 @@ class ApplicationDeploymentTask(models.Model):
                 try:
                     r = json.loads(self._result)
                     return r
-                except ValueError as exc:
+                except (ValueError, TypeError) as exc:
                     return self._result
         except Exception as exc:
             return {'exception': exc}

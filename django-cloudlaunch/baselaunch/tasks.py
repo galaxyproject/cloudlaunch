@@ -76,8 +76,9 @@ def _get_app_handler(deployment):
 
 
 @shared_task
-def migrate_health_task(task_id):
-    LOG.debug("Migrating health task %s info" % task_id)
+def migrate_task_result(task_id):
+    """Migrate task results to the database from the broker table."""
+    LOG.debug("Migrating task %s result to the DB" % task_id)
     adt = models.ApplicationDeploymentTask.objects.get(celery_id=task_id)
     task = AsyncResult(task_id)
     task_meta = task.backend.get_task_meta(task.id)
@@ -105,22 +106,34 @@ def health_check(self, deployment, credentials):
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
-    migrate_health_task.apply_async([self.request.id],
+    migrate_task_result.apply_async([self.request.id],
                                     countdown=1)
     return result
 
 
-@shared_task
-def restart_appliance(deployment, credentials):
+@shared_task(bind=True)
+def restart_appliance(self, deployment, credentials):
     """Restart this app."""
     LOG.debug("Restarting deployment %s", deployment.name)
     handler = _get_app_handler(deployment)
-    return handler.restart(deployment, credentials)
+    result = handler.restart(deployment, credentials)
+    # Schedule a task to migrate results right after task completion
+    # Do this as a separate task because until this task completes, we
+    # cannot obtain final status or traceback.
+    migrate_task_result.apply_async([self.request.id],
+                                    countdown=1)
+    return result
 
 
-@shared_task
-def delete_appliance(deployment, credentials):
+@shared_task(bind=True)
+def delete_appliance(self, deployment, credentials):
     """Delete this app. This is an un-recoverable action."""
     LOG.debug("Deleting deployment %s", deployment.name)
     handler = _get_app_handler(deployment)
-    return handler.delete(deployment, credentials)
+    result = handler.delete(deployment, credentials)
+    # Schedule a task to migrate results right after task completion
+    # Do this as a separate task because until this task completes, we
+    # cannot obtain final status or traceback.
+    migrate_task_result.apply_async([self.request.id],
+                                    countdown=1)
+    return result
