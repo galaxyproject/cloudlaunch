@@ -739,7 +739,9 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         """
         print("deployment task data: %s" % validated_data)
         action = getattr(models.ApplicationDeploymentTask,
-                         validated_data.get('action', 'HEALTH_CHECK').upper())
+                         validated_data.get(
+                            'action',
+                            models.ApplicationDeploymentTask.HEALTH_CHECK))
         request = self.context.get('view').request
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
@@ -756,6 +758,17 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         except Exception as e:
             raise serializers.ValidationError({"error": str(e)})
 
+    def validate_action(self, value):
+        """Make sure only one LAUNCH task exists per deployment."""
+        if value == models.ApplicationDeploymentTask.LAUNCH:
+            dpk = self.context['view'].kwargs.get('deployment_pk')
+            dpl = models.ApplicationDeployment.objects.get(id=dpk)
+            if models.ApplicationDeploymentTask.objects.filter(
+                    deployment=dpl,
+                    action=models.ApplicationDeploymentTask.LAUNCH):
+                raise serializers.ValidationError(
+                    "Duplicate LAUNCH action for deployment %s" % dpl.name)
+        return value.upper()
 
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
