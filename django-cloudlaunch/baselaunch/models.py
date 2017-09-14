@@ -323,6 +323,9 @@ class ApplicationDeploymentTask(models.Model):
         max_length=1024 * 16, help_text="Celery task traceback, if any",
         blank=True, null=True)
 
+    def __str__(self):
+        return "{0}".format(self.id)
+
     @property
     def result(self):
         """
