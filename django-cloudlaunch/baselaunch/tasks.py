@@ -84,7 +84,7 @@ def migrate_task_result(task_id):
     task_meta = task.backend.get_task_meta(task.id)
     adt.celery_id = None
     adt.status = task_meta.get('status')
-    adt.result = task_meta.get('result')
+    adt.result = json.dumps(task_meta.get('result'))
     adt.traceback = task_meta.get('traceback')
     adt.save()
     task.forget()
