@@ -48,9 +48,11 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
         LOG.debug("Launching appliance %s", name)
         handler = util.import_class(
             cloud_version_config.application_version.backend_component_name)()
-        launch_result = handler.launch_app(launch_appliance, name,
-                                           cloud_version_config, credentials,
-                                           app_config, user_data)
+        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
+                                                   credentials)
+        launch_result = handler.launch_app(provider, launch_appliance, name,
+                                           cloud_version_config, app_config,
+                                           user_data)
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([launch_appliance.request.id],
                                         countdown=3600)

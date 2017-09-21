@@ -7,11 +7,12 @@ from .base_vm_app import BaseVMAppPlugin
 class GVLAppPlugin(BaseVMAppPlugin):
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials, app_config):
+    def process_app_config(provider, name, cloud_version_config, app_config):
         gvl_config = app_config.get("config_gvl")
         if not gvl_config:
             raise ValidationError("GVL configuration data must be provided.")
-        user_data = CloudManAppPlugin().process_app_config(name, cloud_version_config, credentials, gvl_config)
+        user_data = CloudManAppPlugin().process_app_config(
+            provider, name, cloud_version_config, gvl_config)
         install_list = []
         install_cmdline = gvl_config.get('gvl_cmdline_utilities', False)
         if install_cmdline:
@@ -19,7 +20,7 @@ class GVLAppPlugin(BaseVMAppPlugin):
         install_smrtportal = gvl_config.get('smrt_portal', False)
         if install_smrtportal:
             install_list.append('smrt_portal')
-        user_data['gvl_config'] = { 'install' : install_list }
+        user_data['gvl_config'] = {'install': install_list}
         return user_data
 
     @staticmethod
@@ -29,8 +30,10 @@ class GVLAppPlugin(BaseVMAppPlugin):
         sanitised_config['config_gvl'] = CloudManAppPlugin().sanitise_app_config(gvl_config)
         return sanitised_config
 
-    def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
+    def launch_app(self, provider, task, name, cloud_version_config,
+                   app_config, user_data):
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
-        result = super(GVLAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
+        result = super(GVLAppPlugin, self).launch_app(
+            provider, task, name, cloud_version_config, app_config, ud)
         result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
         return result

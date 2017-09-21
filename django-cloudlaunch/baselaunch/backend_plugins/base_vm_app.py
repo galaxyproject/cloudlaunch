@@ -26,8 +26,7 @@ class BaseVMAppPlugin(AppPlugin):
         self.base_app = True
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials,
-                           app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         """Extract any extra user data from the app config and return it."""
         return app_config.get("config_cloudlaunch", {}).get(
             "instance_user_data", {})
@@ -220,15 +219,13 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, subnet_id, cloudlaunch_config.get('firewall', []))
         return subnet_id, placement, sgs
 
-    def launch_app(self, task, name, cloud_version_config, credentials,
+    def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
         """Initiate the app launch process."""
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
-        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
-                                                   credentials)
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
-            custom_image_id or cloud_version_config.image.image_id)
+            custom_image_id or cloud_config.image.image_id)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Retrieving or creating a key pair"})
         kp = self._get_or_create_kp(provider,
@@ -241,7 +238,7 @@ class BaseVMAppPlugin(AppPlugin):
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
         inst_type = cloudlaunch_config.get(
-            'instanceType', cloud_version_config.default_instance_type)
+            'instanceType', cloud_config.default_instance_type)
 
         log.debug("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
         log.info("Launching base_vm with UD:\n%s" % user_data)

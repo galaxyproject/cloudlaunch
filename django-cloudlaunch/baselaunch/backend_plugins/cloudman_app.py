@@ -21,7 +21,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         self.base_app = False
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials, app_config):
+    def process_app_config(provider, name, cloud_version_config, app_config):
         cloudman_config = get_required_val(
             app_config, "config_cloudman", "CloudMan configuration data must be provided.")
         user_data = {}
@@ -72,11 +72,12 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             user_data['s3_host'] = cloud.aws.object_store.s3_host
             user_data['s3_port'] = cloud.aws.object_store.s3_port
             user_data['s3_conn_path'] = cloud.aws.object_store.s3_conn_path
-            user_data['access_key'] = credentials.get('aws_access_key')
-            user_data['secret_key'] = credentials.get('aws_secret_key')
+            user_data['access_key'] = provider.session_cfg.get(
+                'aws_access_key_id')
+            user_data['secret_key'] = provider.session_cfg.get(
+                'aws_secret_access_key')
         elif hasattr(cloud, 'openstack'):
             user_data['cloud_type'] = 'openstack'
-            provider = domain_model.get_cloud_provider(cloud_version_config.cloud, credentials)
             ec2_endpoints = provider.security.get_ec2_endpoints()
             if not ec2_endpoints.get('ec2_endpoint'):
                 raise ValidationError({ "error":
@@ -113,14 +114,16 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         app_config['config_cloudman']['clusterPassword'] = '********'
         return app_config
 
-    def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
+    def launch_app(self, provider, task, name, cloud_version_config,
+                   app_config, user_data):
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         # Make sure the placement and image ID (eg from a saved cluster) propagate
         if user_data.get('placement'):
             app_config.get('config_cloudlaunch')['placementZone'] = user_data['placement']
         if user_data.get('machine_image_id'):
             app_config.get('config_cloudlaunch')['customImageID'] = user_data['machine_image_id']
-        result = super(CloudManAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, ud)
+        result = super(CloudManAppPlugin, self).launch_app(
+            provider, task, name, cloud_version_config, app_config, ud)
         result['cloudLaunch']['applicationURL'] = 'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
         task.update_state(
             state='PROGRESSING',
