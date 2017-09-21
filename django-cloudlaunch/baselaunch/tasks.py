@@ -127,7 +127,7 @@ def health_check(self, deployment, credentials):
     dpl = _serialize_deployment(deployment)
     provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                credentials)
-    result = handler.health_check(dpl, provider)
+    result = handler.health_check(provider, dpl)
     # We only keep the two most recent health check task results so delete
     # any older ones
     signals.health_check.send(sender=None, deployment=deployment)
@@ -139,25 +139,26 @@ def health_check(self, deployment, credentials):
 
 
 @shared_task(bind=True)
-def restart_appliance(self, deployment, credentials):
-    """Restart this app."""
-    LOG.debug("Restarting deployment %s", deployment.name)
-    handler = _get_app_handler(deployment)
-    result = handler.restart(deployment, credentials)
-    # Schedule a task to migrate results right after task completion
-    # Do this as a separate task because until this task completes, we
-    # cannot obtain final status or traceback.
-    migrate_task_result.apply_async([self.request.id],
-                                    countdown=1)
-    return result
+def manage_appliance(self, action, deployment, credentials):
+    """
+    Perform supplied action on this app.
 
-
-@shared_task(bind=True)
-def delete_appliance(self, deployment, credentials):
-    """Delete this app. This is an un-recoverable action."""
-    LOG.debug("Deleting deployment %s", deployment.name)
+    @type action: ``str``
+    @param action: Accepted values are ``restart`` or ``delete``.
+    """
+    LOG.debug("Performing %s on deployment %s", action, deployment.name)
     handler = _get_app_handler(deployment)
-    result = handler.delete(deployment, credentials)
+    dpl = _serialize_deployment(deployment)
+    provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                               credentials)
+    if action.lower() == 'restart':
+        result = handler.restart(provider, dpl)
+    elif action.lower() == 'delete':
+        result = handler.delete(provider, dpl)
+    else:
+        LOG.error("Unrecognized action: %s. Acceptable values are 'delete' "
+                  "or 'restart'", action)
+        return None
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.

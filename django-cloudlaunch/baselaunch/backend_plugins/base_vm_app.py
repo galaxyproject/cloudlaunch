@@ -296,7 +296,8 @@ class BaseVMAppPlugin(AppPlugin):
 
         @type  deployment: ``dict``
         @param deployment: A dictionary describing an instance of the
-                           app deployment.
+                           app deployment, requiring at least the following
+                           keys: ``launch_status``, ``launch_result``.
 
         :rtype: ``str``
         :return: Provider-specific instance ID for the deployment or
@@ -308,7 +309,7 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             return None
 
-    def health_check(self, deployment, provider):
+    def health_check(self, provider, deployment):
         """Check the health of this app."""
         log.debug("Health check for deployment %s", deployment)
         iid = self._get_deployment_iid(deployment)
@@ -321,34 +322,29 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             return {"instance_status": "terminated"}
 
-    def restart(self, deployment, credentials):
+    def restart(self, provider, deployment):
         """Restart the app associated with the supplied deployment."""
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return False
-        log.debug("Restarting deployment %s instance %s",
-                  (deployment.name, iid))
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
+        log.debug("Restarting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
             return inst.reboot()
         # Instance does not exist so default to False
         return False
 
-    def delete(self, deployment, credentials):
+    def delete(self, provider, deployment):
         """
         Delete resource(s) associated with the supplied deployment.
 
         *Note* that this method will delete resource(s) associated with
-        the deployment - this is un-recoverable action.
+        the deployment - this is an un-recoverable action.
         """
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return False
-        log.debug("Deleting deployment %s instance %s", (deployment.name, iid))
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
+        log.debug("Deleting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
             return inst.terminate()
