@@ -292,33 +292,29 @@ class BaseVMAppPlugin(AppPlugin):
         """
         Extract instance ID for the supplied deployment.
 
-        We extract instance ID only for deployments that have a
-        a LAUNCH task in SUCCESS state.
+        We extract instance ID only for deployments in the SUCCESS state.
 
-        @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment.
+        @type  deployment: ``dict``
+        @param deployment: A dictionary describing an instance of the
+                           app deployment.
 
         :rtype: ``str``
         :return: Provider-specific instance ID for the deployment or
-                 ``None`` if instance ID not found in the database.
+                 ``None`` if instance ID not available.
         """
-        launch_task = deployment.tasks.filter(
-            action=domain_model.models.ApplicationDeploymentTask.LAUNCH)\
-            .first()
-        if launch_task.status == 'SUCCESS':
-            return launch_task.result.get('cloudLaunch', {}).get(
-                'instance', {}).get('id')
+        if deployment.get('launch_status') == 'SUCCESS':
+            return deployment.get('launch_result', {}).get(
+                'cloudLaunch', {}).get('instance', {}).get('id')
         else:
             return None
 
-    def health_check(self, deployment, credentials):
+    def health_check(self, deployment, provider):
         """Check the health of this app."""
+        log.debug("Health check for deployment %s", deployment)
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return {"instance_status": "unknown"}
         log.debug("Checking the status of instance %s", iid)
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
         inst = provider.compute.instances.get(iid)
         if inst:
             return {"instance_status": inst.state}

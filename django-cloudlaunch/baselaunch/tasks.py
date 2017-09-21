@@ -8,6 +8,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 
+from baselaunch import domain_model
 from baselaunch import models
 from baselaunch import signals
 from baselaunch import util
@@ -91,6 +92,26 @@ def migrate_task_result(task_id):
     task.forget()
 
 
+def _serialize_deployment(deployment):
+    """
+    Extract appliance info for the supplied deployment and serialize it.
+
+    @type  deployment: ``ApplicationDeployment``
+    @param deployment: An instance of the app deployment.
+
+    :rtype: ``str``
+    :return: Serialized info about the appliance deployment, which corresponds
+             to the result of the LAUNCH task.
+    """
+    launch_task = deployment.tasks.filter(
+        action=models.ApplicationDeploymentTask.LAUNCH).first()
+    if launch_task:
+        return {'launch_status': launch_task.status,
+                'launch_result': launch_task.result}
+    else:
+        return {'launch_status': None, 'launch_result': {}}
+
+
 @shared_task(bind=True)
 def health_check(self, deployment, credentials):
     """
@@ -103,7 +124,10 @@ def health_check(self, deployment, credentials):
     """
     LOG.debug("Checking health of deployment %s", deployment.name)
     handler = _get_app_handler(deployment)
-    result = handler.health_check(deployment, credentials)
+    dpl = _serialize_deployment(deployment)
+    provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                               credentials)
+    result = handler.health_check(dpl, provider)
     # We only keep the two most recent health check task results so delete
     # any older ones
     signals.health_check.send(sender=None, deployment=deployment)

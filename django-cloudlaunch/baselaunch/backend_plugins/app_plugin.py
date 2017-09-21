@@ -94,7 +94,7 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def health_check(self, deployment, credentials):
+    def health_check(self, deployment, provider):
         """
         Check the health of this app.
 
@@ -102,13 +102,14 @@ class AppPlugin():
         deployment is running. Applications can implement more elaborate
         health checks.
 
-        @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment on which health
-                           to check.
+        @type  deployment: ``dict``
+        @param deployment: A dictionary describing an instance of the
+                           app deployment. The dict must have at least
+                           `launch_result` and `launch_status` keys.
 
-        @type  credentials: ``dict``
-        @param credentials: Cloud provider credentials to use when checking
-                            the resource status.
+        @type  provider: :class:`CloudBridge.CloudProvider`
+        @param provider: Cloud provider where the supplied deployment was
+                         created.
 
         :rtype: ``dict``
         :return: A dictionary with possibly app-specific fields capturing
