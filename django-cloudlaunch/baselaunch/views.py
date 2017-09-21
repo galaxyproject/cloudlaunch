@@ -568,8 +568,9 @@ class DeploymentTaskViewSet(viewsets.ModelViewSet):
         for the currently associated task.
         """
         deployment = self.kwargs.get('deployment_pk')
+        user = self.request.user
         return models.ApplicationDeploymentTask.objects.filter(
-            deployment=deployment)
+            deployment=deployment, deployment__owner=user)
 
 
 ### Public Services ###
