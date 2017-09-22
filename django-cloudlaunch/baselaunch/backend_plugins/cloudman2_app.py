@@ -161,7 +161,7 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
             shutil.rmtree(repo_path)
         return (p_status, out)
 
-    def launch_app(self, provider, task, name, cloud_version_config,
+    def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
         """
         Handle the app launch process.
@@ -179,7 +179,7 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         app_config['config_cloudlaunch']['keyPair'] = kp_name
         # Launch an instance and check ssh connectivity
         result = super(CloudMan2AppPlugin, self).launch_app(
-            provider, task, name, cloud_version_config, app_config,
+            provider, task, name, cloud_config, app_config,
             user_data=None)
         inst = provider.compute.instances.get(
             result.get('cloudLaunch', {}).get('instance', {}).get('id'))

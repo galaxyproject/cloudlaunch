@@ -52,9 +52,9 @@ class DockerAppPlugin(BaseVMAppPlugin):
         user_data += " {0}".format(docker_config.get('repo_name'))
         return user_data
 
-    def launch_app(self, provider, task, name, cloud_version_config,
+    def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
         result = super(DockerAppPlugin, self).launch_app(
-            provider, task, name, cloud_version_config, app_config, user_data)
+            provider, task, name, cloud_config, app_config, user_data)
         result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
         return result

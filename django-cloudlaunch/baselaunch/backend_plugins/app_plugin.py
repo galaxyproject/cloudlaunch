@@ -79,8 +79,8 @@ class AppPlugin():
         @type  name: ``str``
         @param name: Name of this deployment.
 
-        @type  cloud_config: :class:`.cloudlaunch.models.ApplicationVersionCloudConfig`
-        @param cloud_config: A Django model containing infrastructure specific
+        @type  cloud_config: ``dict``
+        @param cloud_config: A dict containing cloud infrastructure specific
                              configuration for this app.
 
         @type  app_config: ``dict``

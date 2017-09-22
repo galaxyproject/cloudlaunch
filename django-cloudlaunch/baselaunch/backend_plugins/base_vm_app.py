@@ -225,7 +225,7 @@ class BaseVMAppPlugin(AppPlugin):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
-            custom_image_id or cloud_config.image.image_id)
+            custom_image_id or cloud_config.get('image_id'))
         task.update_state(state='PROGRESSING',
                           meta={'action': "Retrieving or creating a key pair"})
         kp = self._get_or_create_kp(provider,
@@ -238,7 +238,7 @@ class BaseVMAppPlugin(AppPlugin):
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
         inst_type = cloudlaunch_config.get(
-            'instanceType', cloud_config.default_instance_type)
+            'instanceType', cloud_config.get('default_instance_type'))
 
         log.debug("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
         log.info("Launching base_vm with UD:\n%s" % user_data)
