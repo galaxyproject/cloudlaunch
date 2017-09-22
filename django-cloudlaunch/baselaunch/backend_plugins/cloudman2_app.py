@@ -49,11 +49,11 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         self.base_app = False
 
     @staticmethod
-    def process_app_config(provider, name, cloud_version_config, app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         """Format any app-specific configurations."""
         return super(CloudMan2AppPlugin,
                      CloudMan2AppPlugin).process_app_config(
-            provider, name, cloud_version_config, app_config)
+                         provider, name, cloud_config, app_config)
 
     @staticmethod
     def sanitise_app_config(app_config):

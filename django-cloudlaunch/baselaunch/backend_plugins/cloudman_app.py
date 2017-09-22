@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 def get_required_val(data, name, message):
     val = data.get(name)
     if not val:
-        raise ValidationError({ "error" : message })
+        raise ValidationError({"error": message})
     return val
 
 
@@ -21,7 +21,7 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         self.base_app = False
 
     @staticmethod
-    def process_app_config(provider, name, cloud_version_config, app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         cloudman_config = get_required_val(
             app_config, "config_cloudman", "CloudMan configuration data must be provided.")
         user_data = {}
@@ -61,31 +61,34 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             for key, value in yaml.load(extra_user_data).items():
                 user_data[key] = value
 
-        cloud = cloud_version_config.cloud
-        if hasattr(cloud, 'aws'):
+        if provider.PROVIDER_ID == 'aws':
             user_data['cloud_type'] = 'ec2'
-            user_data['region_name'] = cloud.aws.compute.ec2_region_name
-            user_data['region_endpoint'] = cloud.aws.compute.ec2_region_endpoint
-            user_data['ec2_port'] = cloud.aws.compute.ec2_port
-            user_data['ec2_conn_path'] = cloud.aws.compute.ec2_conn_path
-            user_data['is_secure'] = cloud.aws.compute.ec2_is_secure
-            user_data['s3_host'] = cloud.aws.object_store.s3_host
-            user_data['s3_port'] = cloud.aws.object_store.s3_port
-            user_data['s3_conn_path'] = cloud.aws.object_store.s3_conn_path
+            user_data['region_name'] = provider.region_name
+            user_data['region_endpoint'] = provider.ec2_cfg.get(
+                'endpoint_url') or 'ec2.amazonaws.com'
+            user_data['ec2_port'] = None
+            user_data['ec2_conn_path'] = '/'
+            user_data['is_secure'] = provider.ec2_cfg.get('use_ssl')
+            user_data['s3_host'] = provider.s3_cfg.get(
+                'endpoint_url') or 's3.amazonaws.com'
+            user_data['s3_port'] = None
+            user_data['s3_conn_path'] = '/'
             user_data['access_key'] = provider.session_cfg.get(
                 'aws_access_key_id')
             user_data['secret_key'] = provider.session_cfg.get(
                 'aws_secret_access_key')
-        elif hasattr(cloud, 'openstack'):
+        elif provider.PROVIDER_ID == 'openstack':
             user_data['cloud_type'] = 'openstack'
             ec2_endpoints = provider.security.get_ec2_endpoints()
             if not ec2_endpoints.get('ec2_endpoint'):
-                raise ValidationError({ "error":
-                "This version of CloudMan supports only EC2-compatible clouds. This OpenStack"
-                " cloud provider does not appear to have an ec2 endpoint"})
+                raise ValidationError(
+                    {"error": "This version of CloudMan supports only "
+                              "EC2-compatible clouds. This OpenStack cloud "
+                              "provider does not appear to have an ec2 "
+                              "endpoint."})
             uri_comp = urlparse(ec2_endpoints.get('ec2_endpoint'))
 
-            user_data['region_name'] = cloud.openstack.region_name
+            user_data['region_name'] = provider.region_name
             user_data['region_endpoint'] = uri_comp.hostname
             user_data['ec2_port'] = uri_comp.port
             user_data['ec2_conn_path'] = uri_comp.path
@@ -103,8 +106,9 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             user_data['access_key'] = ec2_creds.access
             user_data['secret_key'] = ec2_creds.secret
         else:
-            raise ValidationError({ "error":
-                "This version of CloudMan supports only EC2-compatible clouds."})
+            raise ValidationError({
+                "error": "This version of CloudMan supports only "
+                         "EC2-compatible clouds."})
 
         return user_data
 
@@ -124,10 +128,11 @@ class CloudManAppPlugin(BaseVMAppPlugin):
             app_config.get('config_cloudlaunch')['customImageID'] = user_data['machine_image_id']
         result = super(CloudManAppPlugin, self).launch_app(
             provider, task, name, cloud_config, app_config, ud)
-        result['cloudLaunch']['applicationURL'] = 'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
+        result['cloudLaunch']['applicationURL'] = \
+            'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"
-                  % result['cloudLaunch']['applicationURL']})
+                            % result['cloudLaunch']['applicationURL']})
         self.wait_for_http(result['cloudLaunch']['applicationURL'])
         return result

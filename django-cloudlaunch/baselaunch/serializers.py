@@ -795,8 +795,9 @@ class DeploymentSerializer(serializers.ModelSerializer):
             app_config = validated_data.get("config_app", {})
 
             merged_config = jsonmerge.merge(default_combined_config, app_config)
+            cloud_config = util.serialize_cloud_config(cloud_version_config)
             final_ud_config = handler.process_app_config(
-                provider, name, cloud_version_config, merged_config)
+                provider, name, cloud_config, merged_config)
             sanitised_app_config = handler.sanitise_app_config(merged_config)
             async_result = tasks.launch_appliance.delay(
                 name, cloud_version_config, credentials, merged_config,

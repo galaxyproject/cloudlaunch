@@ -7,7 +7,7 @@ from .base_vm_app import BaseVMAppPlugin
 class DockerAppPlugin(BaseVMAppPlugin):
 
     @staticmethod
-    def process_app_config(provider, name, cloud_version_config, app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         docker_config = app_config.get('config_docker')
         if not docker_config:
             raise ValidationError("Docker configuration data must be provided.")

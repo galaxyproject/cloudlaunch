@@ -40,25 +40,6 @@ def migrate_launch_task(task_id):
     task.forget()
 
 
-def _serialize_cloud_config(cloud_config):
-    """
-    Serialize the supplied model to a dict.
-
-    A subset of the the model fields is returned as used by current
-    plugins but more fields can be serialized as needed.
-
-    @type  cloud_config: :class:`.models.ApplicationVersionCloudConfig`
-    @param cloud_config: A Django model containing infrastructure
-                         specific configuration to be serialized.
-
-    @rtype: ``dict``
-    @return: A serialized version of the supplied model.
-    """
-    return {'default_instance_type': cloud_config.default_instance_type,
-            'default_launch_config': cloud_config.default_launch_config,
-            'image_id': cloud_config.image.image_id}
-
-
 @shared_task
 def launch_appliance(name, cloud_version_config, credentials, app_config,
                      user_data, task_id=None):
@@ -69,7 +50,7 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
             cloud_version_config.application_version.backend_component_name)()
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
-        cloud_config = _serialize_cloud_config(cloud_version_config)
+        cloud_config = util.serialize_cloud_config(cloud_version_config)
         launch_result = handler.launch_app(provider, launch_appliance, name,
                                            cloud_config, app_config,
                                            user_data)
