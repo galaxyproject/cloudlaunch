@@ -51,8 +51,8 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
         cloud_config = util.serialize_cloud_config(cloud_version_config)
-        launch_result = handler.launch_app(provider, launch_appliance, name,
-                                           cloud_config, app_config,
+        launch_result = handler.launch_app(provider, Task(launch_appliance),
+                                           name, cloud_config, app_config,
                                            user_data)
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([launch_appliance.request.id],
@@ -168,3 +168,31 @@ def manage_appliance(self, action, deployment, credentials):
     migrate_task_result.apply_async([self.request.id],
                                     countdown=1)
     return result
+
+
+class Task(object):
+    """
+    An abstraction class for handling task actions.
+
+    Plugins can implement the interface defined here and handle task actions
+    independent CloudLaunch and its task broker.
+    """
+
+    def __init__(self, broker_task):
+        self.task = broker_task
+
+    def update_state(self, task_id=None, state=None, meta=None):
+        """
+        Update task state.
+
+        @type  task_id: ``str``
+        @param task_id: Id of the task to update. Defaults to the id of the
+                        current task.
+
+        @type  state: ``str
+        @param state: New state.
+
+        @type  meta: ``dict``
+        @param meta: State meta-data.
+        """
+        self.task.update_state(state=state, meta=meta)

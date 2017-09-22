@@ -73,8 +73,10 @@ class AppPlugin():
         @param provider: Cloud provider where the supplied deployment is to be
                          created.
 
-        @type  task: :class:`.celery.app.task`
-        @param task: Celery Task object, which can be used to report progress.
+        @type  task: :class:`Task`
+        @param task: A Task object, which can be used to report progress. See
+                     ``tasks.Task`` for the interface details and sample
+                     implementation.
 
         @type  name: ``str``
         @param name: Name of this deployment.
