@@ -712,9 +712,11 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
                 async_result = tasks.health_check.delay(dpl, credentials)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.restart_appliance.delay(dpl, credentials)
+                async_result = tasks.manage_appliance.delay('restart', dpl,
+                                                            credentials)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.delete_appliance.delay(dpl, credentials)
+                async_result = tasks.manage_appliance.delay('delete', dpl,
+                                                            credentials)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
         except serializers.ValidationError as ve:
@@ -785,17 +787,21 @@ class DeploymentSerializer(serializers.ModelSerializer):
             application_version=version.id, cloud=cloud.slug)
         default_combined_config = cloud_version_config.compute_merged_config()
         request = self.context.get('view').request
+        provider = view_helpers.get_cloud_provider(
+            self.context.get('view'), cloud_id=cloud.slug)
         credentials = view_helpers.get_credentials(cloud, request)
         try:
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
 
             merged_config = jsonmerge.merge(default_combined_config, app_config)
-            final_ud_config = handler.process_app_config(name, cloud_version_config,
-                                                         credentials, merged_config)
+            cloud_config = util.serialize_cloud_config(cloud_version_config)
+            final_ud_config = handler.process_app_config(
+                provider, name, cloud_config, merged_config)
             sanitised_app_config = handler.sanitise_app_config(merged_config)
-            async_result = tasks.launch_appliance.delay(name, cloud_version_config,
-                                                        credentials, merged_config, final_ud_config)
+            async_result = tasks.launch_appliance.delay(
+                name, cloud_version_config, credentials, merged_config,
+                final_ud_config)
 
             del validated_data['application']
             del validated_data['config_app']

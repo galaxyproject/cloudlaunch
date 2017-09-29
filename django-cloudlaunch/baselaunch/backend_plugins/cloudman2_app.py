@@ -49,12 +49,11 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         self.base_app = False
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials,
-                           app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         """Format any app-specific configurations."""
         return super(CloudMan2AppPlugin,
                      CloudMan2AppPlugin).process_app_config(
-            name, cloud_version_config, credentials, app_config)
+                         provider, name, cloud_config, app_config)
 
     @staticmethod
     def sanitise_app_config(app_config):
@@ -162,7 +161,7 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
             shutil.rmtree(repo_path)
         return (p_status, out)
 
-    def launch_app(self, task, name, cloud_version_config, credentials,
+    def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
         """
         Handle the app launch process.
@@ -180,10 +179,8 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         app_config['config_cloudlaunch']['keyPair'] = kp_name
         # Launch an instance and check ssh connectivity
         result = super(CloudMan2AppPlugin, self).launch_app(
-            task, name, cloud_version_config, credentials, app_config,
+            provider, task, name, cloud_config, app_config,
             user_data=None)
-        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
-                                                   credentials)
         inst = provider.compute.instances.get(
             result.get('cloudLaunch', {}).get('instance', {}).get('id'))
         pk = result.get('cloudLaunch', {}).get('keyPair', {}).get('material')

@@ -7,7 +7,7 @@ from .base_vm_app import BaseVMAppPlugin
 class DockerAppPlugin(BaseVMAppPlugin):
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials, app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         docker_config = app_config.get('config_docker')
         if not docker_config:
             raise ValidationError("Docker configuration data must be provided.")
@@ -19,7 +19,7 @@ class DockerAppPlugin(BaseVMAppPlugin):
             security_rules = security_group.get('rules', [])
         else:
             security_rules = []
-            security_group = { securityGroup: 'cloudlaunch_docker',
+            security_group = {securityGroup: 'cloudlaunch_docker',
                               description: 'Security group for docker containers',
                               rules: security_rules }
             firewall_config.append(security_group)
@@ -52,7 +52,9 @@ class DockerAppPlugin(BaseVMAppPlugin):
         user_data += " {0}".format(docker_config.get('repo_name'))
         return user_data
 
-    def launch_app(self, task, name, cloud_version_config, credentials, app_config, user_data):
-        result = super(DockerAppPlugin, self).launch_app(task, name, cloud_version_config, credentials, app_config, user_data)
+    def launch_app(self, provider, task, name, cloud_config,
+                   app_config, user_data):
+        result = super(DockerAppPlugin, self).launch_app(
+            provider, task, name, cloud_config, app_config, user_data)
         result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(result['cloudLaunch']['publicIP'])
         return result

@@ -8,8 +8,7 @@ class AppPlugin():
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractstaticmethod
-    def process_app_config(name, cloud_version_config, credentials,
-                           app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         """
         Validate and build an internal app config.
 
@@ -20,81 +19,90 @@ class AppPlugin():
         running operations, and is designed to provide quick feedback on
         configuration errors to the client.
 
+        @type  provider: :class:`CloudBridge.CloudProvider`
+        @param provider: Cloud provider where the supplied app is to be
+                         created.
+
         @type  name: ``str``
-        @param name: Name of this deployment
-        
-        @type  version_config: :class:`.cloudlaunch.models.ApplicationVersionCloudConfig`
-        @param version_config: A django model containing infrastructure specific
-               configuration for this app.
-        
-        @type  credentials: ``dict``
-        @param credentials: A dict containing provider specific credentials.
-                
+        @param name: Name for this deployment.
+
+        @type  cloud_config: ``dict``
+        @param cloud_config: A dict containing cloud infrastructure specific
+                             configuration for this app.
+
         @type  app_config: ``dict``
         @param app_config: A dict containing the original, unprocessed version
-               of the app config. The app config is a merged dict of database
-               stored settings and user-entered settings.
+                           of the app config. The app config is a merged dict
+                           of database stored settings and user-entered
+                           settings.
 
         :rtype: ``dict``
-        :return: a ``dict` containing the launch configuration
+        :return: A ``dict` containing the launch configuration.
         """
         pass
 
     @abc.abstractstaticmethod
     def sanitise_app_config(app_config):
         """
-        Sanitises values in the app_config and returns it.
+        Sanitise values in the app_config.
 
         The returned representation should have all sensitive data such
         as passwords and keys removed, so that it can be safely logged.
 
         @type  app_config: ``dict``
         @param app_config: A dict containing the original, unprocessed version
-               of the app config. The app config is a merged dict of database
-               stored settings and user-entered settings.
+                           of the app config. The app config is a merged dict
+                           of database stored settings and user-entered
+                           settings.
 
         :rtype: ``dict``
-        :return: a ``dict` containing the launch configuration
+        :return: A ``dict` containing the launch configuration.
         """
         pass
 
     @abc.abstractmethod
-    def launch_app(self, task, name, version_config, credentials, app_config,
+    def launch_app(self, provider, task, name, cloud_config, app_config,
                    user_data):
         """
-        Launch a given application on the target infrastructure. This operation
-        is designed to be a celery task, and thus, can contain long-running
-        operations.
-        
-        @type  task: :class:`.celery.app.task`
-        @param task: celery Task object, which can be used to report progress
-        
+        Launch a given application on the target infrastructure.
+
+        This operation is designed to be a Celery task, and thus, can contain
+        long-running operations.
+
+        @type  provider: :class:`CloudBridge.CloudProvider`
+        @param provider: Cloud provider where the supplied deployment is to be
+                         created.
+
+        @type  task: :class:`Task`
+        @param task: A Task object, which can be used to report progress. See
+                     ``tasks.Task`` for the interface details and sample
+                     implementation.
+
         @type  name: ``str``
-        @param name: Name of this deployment
-        
-        @type  version_config: :class:`.cloudlaunch.models.ApplicationVersionCloudConfig`
-        @param version_config: A django model containing infrastructure specific
-               configuration for this app.
-        
-        @type  credentials: ``dict``
-        @param credentials: A dict containing provider specific credentials.
-                
+        @param name: Name of this deployment.
+
+        @type  cloud_config: ``dict``
+        @param cloud_config: A dict containing cloud infrastructure specific
+                             configuration for this app.
+
         @type  app_config: ``dict``
         @param app_config: A dict containing the original, unprocessed version
-               of the app config. The app config is a merged dict of database
-               stored settings and user-entered settings.
-                           
+                           of the app config. The app config is a merged dict
+                           of database stored settings and user-entered
+                           settings.
+
         @type  user_data: ``object``
-        @param user_data: An object returned by the process_app_config() method which
-               contains a validated and processed version of the app_config.
+        @param user_data: An object returned by the ``process_app_config()``
+                          method which contains a validated and processed
+                          version of the ``app_config``.
 
         :rtype: ``dict``
-        :return: a ``dict` containing the results of the launch.
+        :return: Results of the launch process.
         """
         pass
 
     @abc.abstractmethod
-    def health_check(self, deployment, credentials):
+    def health_check(self, provider, deployment):
         """
         Check the health of this app.
 
@@ -102,13 +110,14 @@ class AppPlugin():
         deployment is running. Applications can implement more elaborate
         health checks.
 
-        @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment on which health
-                           to check.
+        @type  provider: :class:`CloudBridge.CloudProvider`
+        @param provider: Cloud provider where the supplied deployment was
+                         created.
 
-        @type  credentials: ``dict``
-        @param credentials: Cloud provider credentials to use when checking
-                            the resource status.
+        @type  deployment: ``dict``
+        @param deployment: A dictionary describing an instance of the
+                           app deployment. The dict must have at least
+                           `launch_result` and `launch_status` keys.
 
         :rtype: ``dict``
         :return: A dictionary with possibly app-specific fields capturing
@@ -120,19 +129,21 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def restart(self, deployment, credentials):
+    def restart(self, provider, deployment):
         """
         Restart the appliance associated with the supplied deployment.
 
         This can simply restart the virtual machine on which the deployment
         is running or issue an app-specific call to perform the restart.
 
-        @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment to delete.
+        @type  provider: :class:`CloudBridge.CloudProvider`
+        @param provider: Cloud provider where the supplied deployment was
+                         created.
 
-        @type  credentials: ``dict``
-        @param credentials: Cloud provider credentials to use when deleting
-                            the deployment.
+        @type  deployment: ``dict``
+        @param deployment: A dictionary describing an instance of the
+                           app deployment to be restarted. The dict must have
+                           at least `launch_result` and `launch_status` keys.
 
         :rtype: ``bool``
         :return: The result of restart invocation.
@@ -140,19 +151,21 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def delete(self, deployment, credentials):
+    def delete(self, provider, deployment):
         """
         Delete resource(s) associated with the supplied deployment.
 
         *Note* that this method will delete resource(s) associated with
-        the deployment - this is un-recoverable action.
+        the deployment - this is an un-recoverable action.
 
-        @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment to delete.
+        @type  provider: :class:`CloudBridge.CloudProvider`
+        @param provider: Cloud provider where the supplied deployment was
+                         created.
 
-        @type  credentials: ``dict``
-        @param credentials: Cloud provider credentials to use when deleting
-                            the deployment.
+        @type  deployment: ``dict``
+        @param deployment: A dictionary describing an instance of the
+                           app deployment to be deleted. The dict must have at
+                           least `launch_result` and `launch_status` keys.
 
         :rtype: ``bool``
         :return: The result of delete invocation.

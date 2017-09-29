@@ -26,8 +26,7 @@ class BaseVMAppPlugin(AppPlugin):
         self.base_app = True
 
     @staticmethod
-    def process_app_config(name, cloud_version_config, credentials,
-                           app_config):
+    def process_app_config(provider, name, cloud_config, app_config):
         """Extract any extra user data from the app config and return it."""
         return app_config.get("config_cloudlaunch", {}).get(
             "instance_user_data", {})
@@ -220,15 +219,13 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, subnet_id, cloudlaunch_config.get('firewall', []))
         return subnet_id, placement, sgs
 
-    def launch_app(self, task, name, cloud_version_config, credentials,
+    def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
         """Initiate the app launch process."""
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
-        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
-                                                   credentials)
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
-            custom_image_id or cloud_version_config.image.image_id)
+            custom_image_id or cloud_config.get('image_id'))
         task.update_state(state='PROGRESSING',
                           meta={'action': "Retrieving or creating a key pair"})
         kp = self._get_or_create_kp(provider,
@@ -241,7 +238,7 @@ class BaseVMAppPlugin(AppPlugin):
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
         inst_type = cloudlaunch_config.get(
-            'instanceType', cloud_version_config.default_instance_type)
+            'instanceType', cloud_config.get('default_instance_type'))
 
         log.debug("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
         log.info("Launching base_vm with UD:\n%s" % user_data)
@@ -292,67 +289,59 @@ class BaseVMAppPlugin(AppPlugin):
         """
         Extract instance ID for the supplied deployment.
 
-        We extract instance ID only for deployments that have a
-        a LAUNCH task in SUCCESS state.
+        We extract instance ID only for deployments in the SUCCESS state.
 
-        @type  deployment: ``ApplicationDeployment``
-        @param deployment: An instance of the app deployment.
+        @type  deployment: ``dict``
+        @param deployment: A dictionary describing an instance of the
+                           app deployment, requiring at least the following
+                           keys: ``launch_status``, ``launch_result``.
 
         :rtype: ``str``
         :return: Provider-specific instance ID for the deployment or
-                 ``None`` if instance ID not found in the database.
+                 ``None`` if instance ID not available.
         """
-        launch_task = deployment.tasks.filter(
-            action=domain_model.models.ApplicationDeploymentTask.LAUNCH)\
-            .first()
-        if launch_task.status == 'SUCCESS':
-            return launch_task.result.get('cloudLaunch', {}).get(
-                'instance', {}).get('id')
+        if deployment.get('launch_status') == 'SUCCESS':
+            return deployment.get('launch_result', {}).get(
+                'cloudLaunch', {}).get('instance', {}).get('id')
         else:
             return None
 
-    def health_check(self, deployment, credentials):
+    def health_check(self, provider, deployment):
         """Check the health of this app."""
+        log.debug("Health check for deployment %s", deployment)
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return {"instance_status": "unknown"}
         log.debug("Checking the status of instance %s", iid)
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
         inst = provider.compute.instances.get(iid)
         if inst:
             return {"instance_status": inst.state}
         else:
             return {"instance_status": "terminated"}
 
-    def restart(self, deployment, credentials):
+    def restart(self, provider, deployment):
         """Restart the app associated with the supplied deployment."""
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return False
-        log.debug("Restarting deployment %s instance %s",
-                  (deployment.name, iid))
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
+        log.debug("Restarting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
             return inst.reboot()
         # Instance does not exist so default to False
         return False
 
-    def delete(self, deployment, credentials):
+    def delete(self, provider, deployment):
         """
         Delete resource(s) associated with the supplied deployment.
 
         *Note* that this method will delete resource(s) associated with
-        the deployment - this is un-recoverable action.
+        the deployment - this is an un-recoverable action.
         """
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return False
-        log.debug("Deleting deployment %s instance %s", (deployment.name, iid))
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
+        log.debug("Deleting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
             return inst.terminate()
