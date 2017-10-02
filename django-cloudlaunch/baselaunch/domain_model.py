@@ -24,11 +24,10 @@ def get_cloud_provider(cloud, cred_dict):
     # subclass.
     if type(cloud) is models.Cloud:
         cloud = models.Cloud.objects.get_subclass(slug=cloud.slug)
-    
+
     if isinstance(cloud, models.OpenStack):
         config = {'os_auth_url': cloud.auth_url,
-                  'os_region_name': cloud.region_name
-                  }
+                  'os_region_name': cloud.region_name}
         config.update(cred_dict)
         return CloudProviderFactory().create_provider(ProviderList.OPENSTACK,
                                                       config)
@@ -40,27 +39,22 @@ def get_cloud_provider(cloud, cred_dict):
                   'ec2_conn_path': cloud.compute.ec2_conn_path,
                   's3_host': cloud.object_store.s3_host,
                   's3_port': cloud.object_store.s3_port,
-                  's3_conn_path': cloud.object_store.s3_conn_path,
-                  }
+                  's3_conn_path': cloud.object_store.s3_conn_path}
         config.update(cred_dict)
         return CloudProviderFactory().create_provider(ProviderList.AWS,
                                                       config)
     elif isinstance(cloud, models.Azure):
-        config = {
-                      'azure_region_name': cloud.region_name,
-                      'azure_resource_group': cloud.resource_group,
-                      'azure_storage_account':cloud.storage_account,
-                      'azure_vm_default_user_name': cloud.vm_default_user_name
-                 }
+        config = {'azure_region_name': cloud.region_name,
+                  'azure_resource_group': cloud.resource_group,
+                  'azure_storage_account': cloud.storage_account,
+                  'azure_vm_default_user_name': cloud.vm_default_user_name}
         config.update(cred_dict)
         return CloudProviderFactory().create_provider(ProviderList.AZURE,
                                                       config)
     elif isinstance(cloud, models.GCE):
-        config = {
-            'gce_service_creds_dict': cred_dict,
-            'gce_default_zone': cloud.zone_name,
-            'gce_region_name': cloud.region_name
-        }
+        config = {'gce_service_creds_dict': cred_dict,
+                  'gce_default_zone': cloud.zone_name,
+                  'gce_region_name': cloud.region_name}
         return CloudProviderFactory().create_provider(ProviderList.GCE,
                                                       config)
     else:

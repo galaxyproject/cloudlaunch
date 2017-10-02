@@ -164,14 +164,14 @@ class ProviderFieldMixin(object):
                         lookup_field='id',
                         lookup_url_kwarg='pk',
                         parent_url_kwargs=['cloud_pk'],
-                        queryset='block_store.snapshots',
+                        queryset='storage.snapshots',
                         display_fields=[
                             'name', 'id', 'size'],
                         display_format="{0} (ID: {1}, Size: {2} GB)",
                         write_only=True)
 
     In the example above, the queryset points to the provider property
-    block_store.snapshots().
+    storage.snapshots().
     This will result in the list of values to display in the drop down being
     obtained as follows:
         provider.<queryset>.list()
@@ -247,7 +247,7 @@ class ProviderHyperlinkRelatedField(
                     lookup_field='id',
                     lookup_url_kwarg='pk',
                     parent_url_kwargs=['cloud_pk'],
-                    queryset='block_store.snapshots',
+                    queryset='storage.snapshots',
                     display_fields=[
                         'name', 'id', 'size'],
                     display_format="{0} (ID: {1}, Size: {2} GB)",
@@ -276,7 +276,7 @@ class ProviderPKRelatedField(
     that it works for provider objects instead of querysets.
     Usage example:
     snapshot_id = ProviderPKRelatedField(label="Snapshot ID",
-                                         queryset='block_store.snapshots',
+                                         queryset='storage.snapshots',
                                          display_fields=[
                                              'name', 'id', 'size'],
                                          display_format="{0} (ID: {1},"

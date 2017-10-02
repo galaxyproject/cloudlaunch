@@ -235,7 +235,7 @@ class VolumeSerializer(serializers.Serializer):
                                           required=True)
     state = serializers.CharField(read_only=True)
     snapshot_id = ProviderPKRelatedField(label="Snapshot ID",
-                                         queryset='block_store.snapshots',
+                                         queryset='storage.snapshots',
                                          display_fields=[
                                              'name', 'id', 'size'],
                                          display_format="{0} (ID: {1},"
@@ -249,7 +249,7 @@ class VolumeSerializer(serializers.Serializer):
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         try:
-            return provider.block_store.volumes.create(
+            return provider.storage.volumes.create(
                 validated_data.get('name'),
                 validated_data.get('size'),
                 validated_data.get('zone_id'),
@@ -279,7 +279,7 @@ class SnapshotSerializer(serializers.Serializer):
     description = serializers.CharField()
     state = serializers.CharField(read_only=True)
     volume_id = ProviderPKRelatedField(label="Volume ID",
-                                       queryset='block_store.volumes',
+                                       queryset='storage.volumes',
                                        display_fields=[
                                              'name', 'id', 'size'],
                                        display_format="{0} (ID: {1},"
@@ -291,7 +291,7 @@ class SnapshotSerializer(serializers.Serializer):
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         try:
-            return provider.block_store.snapshots.create(
+            return provider.storage.snapshots.create(
                 validated_data.get('name'),
                 validated_data.get('volume_id'),
                 description=validated_data.get('description'))
@@ -399,7 +399,7 @@ class BucketSerializer(serializers.Serializer):
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         try:
-            return provider.object_store.create(validated_data.get('name'))
+            return provider.storage.buckets.create(validated_data.get('name'))
         except Exception as e:
             raise serializers.ValidationError("{0}".format(e))
 
@@ -428,14 +428,14 @@ class BucketObjectSerializer(serializers.Serializer):
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         bucket_id = self.context.get('view').kwargs.get('bucket_pk')
-        bucket = provider.object_store.get(bucket_id)
+        bucket = provider.storage.buckets.get(bucket_id)
         try:
             name = validated_data.get('name')
             content = validated_data.get('upload_content')
             if name:
-                object = bucket.create_object(name)
+                object = bucket.objects.create(name)
             else:
-                object = bucket.create_object(content.name)
+                object = bucket.objects.create(content.name)
             if content:
                 object.upload(content.file.getvalue())
             return object
@@ -485,12 +485,9 @@ class CloudSerializer(serializers.ModelSerializer):
     security = CustomHyperlinkedIdentityField(view_name='security-list',
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
-    block_store = CustomHyperlinkedIdentityField(view_name='block_store-list',
+    storage = CustomHyperlinkedIdentityField(view_name='storage-list',
                                                  lookup_field='slug',
                                                  lookup_url_kwarg='cloud_pk')
-    object_store = CustomHyperlinkedIdentityField(view_name='object_store-list',
-                                                  lookup_field='slug',
-                                                  lookup_url_kwarg='cloud_pk')
     networks = CustomHyperlinkedIdentityField(view_name='network-list',
                                               lookup_field='slug',
                                               lookup_url_kwarg='cloud_pk')
@@ -594,14 +591,11 @@ class SecuritySerializer(serializers.Serializer):
                                                      parent_url_kwargs=['cloud_pk'])
 
 
-class BlockStoreSerializer(serializers.Serializer):
+class StorageSerializer(serializers.Serializer):
     volumes = CustomHyperlinkedIdentityField(view_name='volume-list',
                                              parent_url_kwargs=['cloud_pk'])
     snapshots = CustomHyperlinkedIdentityField(view_name='snapshot-list',
                                                parent_url_kwargs=['cloud_pk'])
-
-
-class ObjectStoreSerializer(serializers.Serializer):
     buckets = CustomHyperlinkedIdentityField(view_name='bucket-list',
                                              parent_url_kwargs=['cloud_pk'])
 

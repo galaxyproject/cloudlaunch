@@ -332,12 +332,12 @@ class InstanceViewSet(drf_helpers.CustomModelViewSet):
         instance.terminate()
 
 
-class BlockStoreViewSet(drf_helpers.CustomReadOnlySingleViewSet):
+class StorageViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     """
-    List blockstore urls.
+    List storage urls.
     """
     permission_classes = (IsAuthenticated,)
-    serializer_class = serializers.BlockStoreSerializer
+    serializer_class = serializers.StorageSerializer
 
 
 class VolumeViewSet(drf_helpers.CustomModelViewSet):
@@ -350,11 +350,11 @@ class VolumeViewSet(drf_helpers.CustomModelViewSet):
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.block_store.volumes.list()
+        return provider.storage.volumes.list()
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        obj = provider.block_store.volumes.get(self.kwargs["pk"])
+        obj = provider.storage.volumes.get(self.kwargs["pk"])
         return obj
 
 
@@ -367,11 +367,11 @@ class SnapshotViewSet(drf_helpers.CustomModelViewSet):
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.block_store.snapshots.list()
+        return provider.storage.snapshots.list()
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        obj = provider.block_store.snapshots.get(self.kwargs["pk"])
+        obj = provider.storage.snapshots.get(self.kwargs["pk"])
         return obj
 
 
@@ -380,7 +380,7 @@ class ObjectStoreViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     List compute related urls.
     """
     permission_classes = (IsAuthenticated,)
-    serializer_class = serializers.ObjectStoreSerializer
+    serializer_class = serializers.StorageSerializer
 
 
 class BucketViewSet(drf_helpers.CustomModelViewSet):
@@ -392,11 +392,11 @@ class BucketViewSet(drf_helpers.CustomModelViewSet):
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.object_store.list()
+        return provider.storage.buckets.list()
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        obj = provider.object_store.get(self.kwargs["pk"])
+        obj = provider.storage.buckets.get(self.kwargs["pk"])
         return obj
 
 
@@ -425,9 +425,9 @@ class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         bucket_pk = self.kwargs.get("bucket_pk")
-        bucket = provider.object_store.get(bucket_pk)
+        bucket = provider.storage.buckets.get(bucket_pk)
         if bucket:
-            return bucket.list()
+            return bucket.objects.list()
         else:
             raise Http404
 
@@ -449,9 +449,9 @@ class BucketObjectViewSet(drf_helpers.CustomModelViewSet):
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
         bucket_pk = self.kwargs.get("bucket_pk")
-        bucket = provider.object_store.get(bucket_pk)
+        bucket = provider.storage.buckets.get(bucket_pk)
         if bucket:
-            return bucket.get(self.kwargs["pk"])
+            return bucket.objects.get(self.kwargs["pk"])
         else:
             raise Http404
 

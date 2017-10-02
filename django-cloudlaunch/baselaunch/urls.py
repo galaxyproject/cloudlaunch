@@ -70,15 +70,13 @@ cloud_router.register(r'security/keypairs', views.KeyPairViewSet,
 cloud_router.register(r'security/security_groups', views.SecurityGroupViewSet,
                       base_name='security_group')
 
-cloud_router.register(r'block_store', views.BlockStoreViewSet,
-                      base_name='block_store')
-cloud_router.register(r'block_store/volumes', views.VolumeViewSet,
+cloud_router.register(r'storage', views.StorageViewSet,
+                      base_name='storage')
+cloud_router.register(r'storage/volumes', views.VolumeViewSet,
                       base_name='volume')
-cloud_router.register(r'block_store/snapshots', views.SnapshotViewSet,
+cloud_router.register(r'storage/snapshots', views.SnapshotViewSet,
                       base_name='snapshot')
-cloud_router.register(r'object_store', views.ObjectStoreViewSet,
-                      base_name='object_store')
-cloud_router.register(r'object_store/buckets', views.BucketViewSet,
+cloud_router.register(r'storage/buckets', views.BucketViewSet,
                       base_name='bucket')
 
 cloud_router.register(r'networks', views.NetworkViewSet, base_name='network')
@@ -109,7 +107,7 @@ security_group_router.register(r'rules', views.SecurityGroupRuleViewSet,
 network_router = HybridNestedRouter(cloud_router, r'networks', lookup='network')
 network_router.register(r'subnets', views.SubnetViewSet, base_name='subnet')
 
-bucket_router = HybridNestedRouter(cloud_router, r'object_store/buckets',
+bucket_router = HybridNestedRouter(cloud_router, r'storage/buckets',
                                    lookup='bucket')
 bucket_router.register(r'objects', views.BucketObjectViewSet,
                        base_name='bucketobject')
