@@ -661,6 +661,7 @@ class DeploymentAppSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Application
+        fields = '__all__'
 
 class DeploymentAppVersionSerializer(serializers.ModelSerializer):
     application = DeploymentAppSerializer(read_only=True)
@@ -979,11 +980,13 @@ class LocationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.Location
+        fields = '__all__'
 
 
 class SponsorSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = models.Sponsor
+        fields = '__all__'
 
 
 class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
@@ -991,3 +994,4 @@ class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = models.PublicService
+        fields = '__all__'
