@@ -327,7 +327,8 @@ class BaseVMAppPlugin(AppPlugin):
         log.debug("Restarting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
-            return inst.reboot()
+            inst.reboot()
+            return True
         # Instance does not exist so default to False
         return False
 
@@ -344,6 +345,7 @@ class BaseVMAppPlugin(AppPlugin):
         log.debug("Deleting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
-            return inst.terminate()
+            inst.terminate()
+            return True
         # Instance does not exist so default to True
         return True

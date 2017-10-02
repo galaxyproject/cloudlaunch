@@ -329,7 +329,7 @@ class ApplicationDeploymentTask(models.Model):
     @property
     def result(self):
         """
-        Result can come from a Celery task or the database so check both.
+        Result can come from a Celery task or the database so we check both.
 
         While a task is active or up to (by default) one hour after a task
         was initiated, ``result`` field is available from the task. At the
@@ -342,24 +342,30 @@ class ApplicationDeploymentTask(models.Model):
         returned from the task broker is returned as a native ``dict`` while,
         after migration, the result for the same task is stored in the database
         as a ``str``. This method tries to standardize on the value returned
-        for a given task. Celery task results are returned in native format as
+        for a given task and, at the very least, always returns a ``dict``.
+        More specifically, Celery task results are returned in native format as
         returned from the broker. For the result stored in the database, an
         attempt it made to de-serialize the value from JSON. If that does not
         work, raw value is returned. It is hence desirable to serialize
         the result value before saving it here.
         """
+        r = None
         try:
             if self.celery_id:
                 task = AsyncResult(self.celery_id)
-                return task.backend.get_task_meta(task.id).get('result')
+                r = task.backend.get_task_meta(task.id).get('result')
             else:  # This is an older task whose task ID has been removed so return DB value
                 try:
                     r = json.loads(self._result)
-                    return r
-                except (ValueError, TypeError) as exc:
-                    return self._result
+                except (ValueError, TypeError):
+                    r = self._result
         except Exception as exc:
             return {'exception': exc}
+        # Always return a dict
+        if not isinstance(r, dict):
+            return {'result': r}
+        else:
+            return r
 
     @result.setter
     def result(self, value):
