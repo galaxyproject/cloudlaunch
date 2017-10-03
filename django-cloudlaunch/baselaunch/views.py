@@ -183,49 +183,49 @@ class KeyPairViewSet(drf_helpers.CustomModelViewSet):
         return obj
 
 
-class SecurityGroupViewSet(drf_helpers.CustomModelViewSet):
+class VMFirewallViewSet(drf_helpers.CustomModelViewSet):
     """
-    List security groups in a given cloud.
+    List VM firewalls in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
-    serializer_class = serializers.SecurityGroupSerializer
+    serializer_class = serializers.VMFirewallSerializer
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.security.security_groups.list()
+        return provider.security.vm_firewalls.list()
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        obj = provider.security.security_groups.get(self.kwargs["pk"])
+        obj = provider.security.vm_firewalls.get(self.kwargs["pk"])
         return obj
 
 
-class SecurityGroupRuleViewSet(drf_helpers.CustomModelViewSet):
+class VMFirewallRuleViewSet(drf_helpers.CustomModelViewSet):
     """
-    List security group rules in a given cloud.
+    List VM firewall rules in a given cloud.
     """
     permission_classes = (IsAuthenticated,)
-    serializer_class = serializers.SecurityGroupRuleSerializer
+    serializer_class = serializers.VMFirewallRuleSerializer
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        sg_pk = self.kwargs.get("security_group_pk")
-        sg = provider.security.security_groups.get(sg_pk)
-        if sg:
-            return sg.rules
+        vmf_pk = self.kwargs.get("vm_firewall_pk")
+        vmf = provider.security.vm_firewalls.get(vmf_pk)
+        if vmf:
+            return vmf.rules.list()
         else:
             raise Http404
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        sg_pk = self.kwargs.get("security_group_pk")
-        sg = provider.security.security_groups.get(sg_pk)
-        if not sg:
+        vmf_pk = self.kwargs.get("vm_firewall_pk")
+        vmf = provider.security.vm_firewalls.get(vmf_pk)
+        if not vmf:
             raise Http404
         else:
             pk = self.kwargs.get("pk")
-            for rule in sg.rules:
+            for rule in vmf.rules.list():
                 if rule.id == pk:
                     return rule
             raise Http404

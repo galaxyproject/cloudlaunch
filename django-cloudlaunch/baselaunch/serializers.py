@@ -9,6 +9,7 @@ import yaml
 
 from bioblend.cloudman.launch import CloudManLauncher
 from cloudbridge.cloud.factory import ProviderList
+from cloudbridge.cloud.interfaces.resources import TrafficDirection
 from rest_auth.serializers import UserDetailsSerializer
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -68,59 +69,86 @@ class KeyPairSerializer(serializers.Serializer):
         return provider.security.key_pairs.create(validated_data.get('name'))
 
 
-class SecurityGroupRuleSerializer(serializers.Serializer):
-    ip_protocol = serializers.CharField(label="IP protocol", allow_blank=True)
+class VMFirewallRuleSerializer(serializers.Serializer):
+    protocol = serializers.CharField(allow_blank=True)
     from_port = serializers.CharField(allow_blank=True)
     to_port = serializers.CharField(allow_blank=True)
-    cidr_ip = serializers.CharField(label="CIDR IP", allow_blank=True)
-    group = ProviderPKRelatedField(label="Source group",
-                                   queryset='security.security_groups',
-                                   display_fields=['name', 'id'],
-                                   display_format="{0} (ID: {1})",
-                                   required=False,
-                                   allow_null=True)
-    url = CustomHyperlinkedIdentityField(view_name='security_group_rule-detail',
+    cidr = serializers.CharField(label="CIDR", allow_blank=True)
+    firewall = ProviderPKRelatedField(label="VM Firewall",
+                                      queryset='security.vm_firewalls',
+                                      display_fields=['name', 'id'],
+                                      display_format="{0} (ID: {1})",
+                                      required=False,
+                                      allow_null=True)
+    url = CustomHyperlinkedIdentityField(view_name='vm_firewall_rule-detail',
                                          lookup_field='id',
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk',
-                                                            'security_group_pk'])
+                                                            'vm_firewall_pk'])
+
+    def validate(self, data):
+        """Cursory data check."""
+        if data.get('protocol').lower() not in ['tcp', 'udp', 'icmp']:
+            raise serializers.ValidationError(
+                'Protocol must be one of: tcp, udp, icmp.')
+        try:
+            if not (1 < int(data['from_port']) <= 65535):
+                raise serializers.ValidationError(
+                    'From port must be an integer between 1 and 65535.')
+            elif not (1 < int(data['to_port']) <= 65535):
+                raise serializers.ValidationError(
+                    'To port must be an integer between 1 and 65535.')
+        except ValueError:
+            raise serializers.ValidationError(
+                'To/from ports must be integers.')
+        return data
 
     def create(self, validated_data):
         view = self.context.get('view')
         provider = view_helpers.get_cloud_provider(view)
-        sg_pk = view.kwargs.get('security_group_pk')
-        if sg_pk:
-            sg = provider.security.security_groups.get(sg_pk)
-            if sg and validated_data.get('group'):
-                return sg.add_rule(src_group=validated_data.get('group'))
-            elif sg:
-                return sg.add_rule(validated_data.get('ip_protocol'),
-                                   validated_data.get('from_port'),
-                                   validated_data.get('to_port'),
-                                   validated_data.get('cidr_ip'))
+        vmf_pk = view.kwargs.get('vm_firewall_pk')
+        if vmf_pk:
+            vmf = provider.security.vm_firewalls.get(vmf_pk)
+            if vmf and validated_data.get('firewall'):
+                return vmf.rules.create(
+                    TrafficDirection.INBOUND,
+                    validated_data.get('protocol'),
+                    int(validated_data.get('from_port')),
+                    int(validated_data.get('to_port')),
+                    src_dest_fw=validated_data.get('firewall'))
+            elif vmf:
+                return vmf.rules.create(TrafficDirection.INBOUND,
+                                        validated_data.get('protocol'),
+                                        int(validated_data.get('from_port')),
+                                        int(validated_data.get('to_port')),
+                                        validated_data.get('cidr'))
         return None
 
 
-class SecurityGroupSerializer(serializers.Serializer):
+class VMFirewallSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-    url = CustomHyperlinkedIdentityField(view_name='security_group-detail',
+    url = CustomHyperlinkedIdentityField(view_name='vm_firewall-detail',
                                          lookup_field='id',
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
     # Technically, the description is required but when wanting to reuse an
-    # existing security group with a different resource (eg, creating an
+    # existing VM firewall with a different resource (eg, creating an
     # instance), we need to be able to call this serializer w/o it.
     description = serializers.CharField(required=False)
-    rules = CustomHyperlinkedIdentityField(view_name='security_group_rule-list',
+    network_id = ProviderPKRelatedField(queryset='networking.networks',
+                                        display_fields=['id', 'name'],
+                                        display_format="{1} ({0})")
+    rules = CustomHyperlinkedIdentityField(view_name='vm_firewall_rule-list',
                                            lookup_field='id',
-                                           lookup_url_kwarg='security_group_pk',
+                                           lookup_url_kwarg='vm_firewall_pk',
                                            parent_url_kwargs=['cloud_pk'])
 
     def create(self, validated_data):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
-        return provider.security.security_groups.create(
-            validated_data.get('name'), validated_data.get('description'))
+        return provider.security.vm_firewalls.create(
+            validated_data.get('name'), validated_data.get('description'),
+            validated_data.get('network_id').id)
 
 
 class NetworkSerializer(serializers.Serializer):
@@ -350,12 +378,11 @@ class InstanceSerializer(serializers.Serializer):
                                               'id'],
                                           display_format="{0}",
                                           required=True)
-    security_group_ids = ProviderPKRelatedField(label="Security Groups",
-                                                queryset='security.security_groups',
-                                                display_fields=[
-                                                    'name'],
-                                                display_format="{0}",
-                                                many=True)
+    vm_firewall_ids = ProviderPKRelatedField(label="VM Firewalls",
+                                             queryset='security.vm_firewalls',
+                                             display_fields=['name'],
+                                             display_format="{0}",
+                                             many=True)
     user_data = serializers.CharField(write_only=True,
                                       style={'base_template': 'textarea.html'})
 
@@ -366,12 +393,12 @@ class InstanceSerializer(serializers.Serializer):
         instance_type = validated_data.get('instance_type_id')
         kp_name = validated_data.get('key_pair_name')
         zone_id = validated_data.get('zone_id')
-        security_group_ids = validated_data.get('security_group_ids')
+        vm_firewall_ids = validated_data.get('vm_firewall_ids')
         user_data = validated_data.get('user_data')
         try:
             return provider.compute.instances.create(
                 name, image_id, instance_type, zone=zone_id, key_pair=kp_name,
-                security_groups=security_group_ids, user_data=user_data)
+                vm_firewalls=vm_firewall_ids, user_data=user_data)
         except Exception as e:
             raise serializers.ValidationError("{0}".format(e))
 
@@ -587,8 +614,8 @@ class ComputeSerializer(serializers.Serializer):
 class SecuritySerializer(serializers.Serializer):
     keypairs = CustomHyperlinkedIdentityField(view_name='keypair-list',
                                               parent_url_kwargs=['cloud_pk'])
-    security_groups = CustomHyperlinkedIdentityField(view_name='security_group-list',
-                                                     parent_url_kwargs=['cloud_pk'])
+    vm_firewalls = CustomHyperlinkedIdentityField(view_name='vm_firewall-list',
+                                                  parent_url_kwargs=['cloud_pk'])
 
 
 class StorageSerializer(serializers.Serializer):

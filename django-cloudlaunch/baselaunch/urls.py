@@ -67,8 +67,8 @@ cloud_router.register(r'security', views.SecurityViewSet,
                       base_name='security')
 cloud_router.register(r'security/keypairs', views.KeyPairViewSet,
                       base_name='keypair')
-cloud_router.register(r'security/security_groups', views.SecurityGroupViewSet,
-                      base_name='security_group')
+cloud_router.register(r'security/vm_firewalls', views.VMFirewallViewSet,
+                      base_name='vm_firewall')
 
 cloud_router.register(r'storage', views.StorageViewSet,
                       base_name='storage')
@@ -98,11 +98,11 @@ region_router = HybridNestedRouter(cloud_router, r'compute/regions',
 region_router.register(r'zones', views.ZoneViewSet,
                        base_name='zone')
 
-security_group_router = HybridNestedRouter(cloud_router,
-                                           r'security/security_groups',
-                                           lookup='security_group')
-security_group_router.register(r'rules', views.SecurityGroupRuleViewSet,
-                               base_name='security_group_rule')
+vm_firewall_router = HybridNestedRouter(cloud_router,
+                                        r'security/vm_firewalls',
+                                        lookup='vm_firewall')
+vm_firewall_router.register(r'rules', views.VMFirewallRuleViewSet,
+                            base_name='vm_firewall_rule')
 
 network_router = HybridNestedRouter(cloud_router, r'networks', lookup='network')
 network_router.register(r'subnets', views.SubnetViewSet, base_name='subnet')
@@ -132,7 +132,7 @@ urlpatterns = [
     url(infrastructure_regex_pattern, include(infra_router.urls)),
     url(infrastructure_regex_pattern, include(cloud_router.urls)),
     url(infrastructure_regex_pattern, include(region_router.urls)),
-    url(infrastructure_regex_pattern, include(security_group_router.urls)),
+    url(infrastructure_regex_pattern, include(vm_firewall_router.urls)),
     url(infrastructure_regex_pattern, include(network_router.urls)),
     url(infrastructure_regex_pattern, include(bucket_router.urls)),
     url(auth_regex_pattern, include('rest_auth.urls', namespace='rest_auth')),
