@@ -173,14 +173,14 @@ class BaseVMAppPlugin(AppPlugin):
                     if rule.get('src_group'):
                         vmf.rules.create(TrafficDirection.INBOUND,
                                          rule.get('protocol'),
-                                         rule.get('from_port'),
-                                         rule.get('to_port'),
+                                         int(rule.get('from_port')),
+                                         int(rule.get('to_port')),
                                          src_dest_fw=vmf)
                     else:
                         vmf.rules.create(TrafficDirection.INBOUND,
                                          protocol=rule.get('protocol'),
-                                         from_port=rule.get('from'),
-                                         to_port=rule.get('to'),
+                                         from_port=int(rule.get('from')),
+                                         to_port=int(rule.get('to')),
                                          cidr=rule.get('cidr'))
                 except Exception as e:
                     log.error("Exception applying firewall rules: %s" % e)
