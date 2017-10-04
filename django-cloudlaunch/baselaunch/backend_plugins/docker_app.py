@@ -19,9 +19,9 @@ class DockerAppPlugin(BaseVMAppPlugin):
             security_rules = security_group.get('rules', [])
         else:
             security_rules = []
-            security_group = {securityGroup: 'cloudlaunch_docker',
-                              description: 'Security group for docker containers',
-                              rules: security_rules }
+            security_group = {'securityGroup': 'cloudlaunch_docker',
+                              'description': 'Security group for docker containers',
+                              'rules': security_rules}
             firewall_config.append(security_group)
         user_data = "#!/bin/bash\ndocker run -d"
         for mapping in docker_file_config.get('port_mappings', {}):

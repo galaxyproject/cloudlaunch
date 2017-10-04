@@ -279,8 +279,8 @@ class StaticIPViewSet(drf_helpers.CustomModelViewSet):
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
         ips = []
-        for ip in provider.networking.networks.floating_ips:
-            if not ip.in_use():
+        for ip in provider.networking.floating_ips.list():
+            if not ip.in_use:
                 ips.append({'ip': ip.public_ip})
         return ips
 

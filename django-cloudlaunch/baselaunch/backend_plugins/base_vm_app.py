@@ -3,6 +3,7 @@ import copy
 import time
 import yaml
 
+from cloudbridge.cloud.interfaces.resources import TrafficDirection
 import requests
 import requests.exceptions
 
@@ -45,18 +46,14 @@ class BaseVMAppPlugin(AppPlugin):
             log.debug("Creating key pair {0}".format(kp_name))
             return provider.security.key_pairs.create(name=kp_name)
 
-    def _get_or_create_sg(self, provider, subnet_id, sg_name, description):
-        """Fetch an existing security group named ``sg_name`` or create one."""
-        sgs = provider.security.security_groups.find(name=sg_name)
-        if len(sgs) > 0:
-            return sgs[0]
-        # for sg1 in sgs:
-        #     for sg2 in sgs:
-        #         if sg1 == sg2:
-        #             return sg1
+    def _get_or_create_vmf(self, provider, subnet_id, vmf_name, description):
+        """Fetch an existing VM firewall named ``vmf_name`` or create one."""
+        vmf = provider.security.vm_firewalls.find(name=vmf_name)
+        if len(vmf) > 0:
+            return vmf[0]
         subnet = provider.networking.subnets.get(subnet_id)
-        return provider.security.security_groups.create(
-            name=sg_name, description=description,
+        return provider.security.vm_firewalls.create(
+            name=vmf_name, description=description,
             network_id=subnet.network_id)
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
@@ -100,28 +97,28 @@ class BaseVMAppPlugin(AppPlugin):
         """
         if not inst.public_ips:
             fip = None
-            fips = provider.networking.networks.floating_ips
-            for ip in fips:
-                if not ip.in_use():
+            for ip in provider.networking.floating_ips:
+                if not ip.in_use:
                     fip = ip
+                    break
             if fip:
                 log.debug("Attaching an existing floating IP %s" %
                           fip.public_ip)
-                inst.add_floating_ip(fip.public_ip)
+                inst.add_floating_ip(fip)
             else:
-                fip = provider.networking.networks.create_floating_ip()
+                fip = provider.networking.floating_ips.create()
                 log.debug("Attaching a just-created floating IP %s" %
                           fip.public_ip)
-                inst.add_floating_ip(fip.public_ip)
+                inst.add_floating_ip(fip)
             return fip.public_ip
         elif len(inst.public_ips) > 0:
             return inst.public_ips[0]
         else:
             return None
 
-    def configure_security_groups(self, provider, subnet_id, firewall):
+    def configure_vm_firewalls(self, provider, subnet_id, firewall):
         """
-        Ensure any supplied firewall rules are represented in a Security Group.
+        Ensure any supplied firewall rules are represented in a VM Firewall.
 
         The following format is expected:
 
@@ -162,26 +159,32 @@ class BaseVMAppPlugin(AppPlugin):
         :rtype: List of CloudBridge SecurityGroup
         :return: Security groups satisfying the constraints.
         """
-        sgs = []
+        vmfl = []
         for group in firewall:
             # Get a handle on the SG
-            sg_name = group.get('securityGroup') or 'CloudLaunchDefault'
-            sg_desc = group.get('description') or 'Created by CloudLaunch'
-            sg = self._get_or_create_sg(provider, subnet_id, sg_name, sg_desc)
-            sgs.append(sg)
+            vmf_name = group.get('securityGroup') or 'CloudLaunchDefault'
+            vmf_desc = group.get('description') or 'Created by CloudLaunch'
+            vmf = self._get_or_create_vmf(
+                provider, subnet_id, vmf_name, vmf_desc)
+            vmfl.append(vmf)
             # Apply firewall rules
             for rule in group.get('rules', []):
                 try:
                     if rule.get('src_group'):
-                        sg.add_rule(src_group=sg)
+                        vmf.rules.create(TrafficDirection.INBOUND,
+                                         rule.get('protocol'),
+                                         rule.get('from_port'),
+                                         rule.get('to_port'),
+                                         src_dest_fw=vmf)
                     else:
-                        sg.add_rule(ip_protocol=rule.get('protocol'),
-                                    from_port=rule.get('from'),
-                                    to_port=rule.get('to'),
-                                    cidr_ip=rule.get('cidr'))
+                        vmf.rules.create(TrafficDirection.INBOUND,
+                                         protocol=rule.get('protocol'),
+                                         from_port=rule.get('from'),
+                                         to_port=rule.get('to'),
+                                         cidr=rule.get('cidr'))
                 except Exception as e:
                     log.error("Exception applying firewall rules: %s" % e)
-            return sgs
+            return vmfl
 
     def get_or_create_subnet(self, provider, net_id=None, placement=None):
         """
@@ -205,7 +208,7 @@ class BaseVMAppPlugin(AppPlugin):
         """
         Resolve inter-dependent launch properties.
 
-        Subnet, Placement, and Security Groups have launch dependencies among
+        Subnet, Placement, and VM Firewalls have launch dependencies among
         themselves so deduce what does are.
         """
         net_id = cloudlaunch_config.get('network', None)
@@ -213,11 +216,11 @@ class BaseVMAppPlugin(AppPlugin):
         placement = cloudlaunch_config.get('placementZone', None)
         if not subnet_id:
             subnet_id = self.get_or_create_subnet(provider, net_id, placement)
-        sgs = None
+        vmf = None
         if cloudlaunch_config.get('firewall', []):
-            sgs = self.configure_security_groups(
+            vmf = self.configure_vm_firewalls(
                 provider, subnet_id, cloudlaunch_config.get('firewall', []))
-        return subnet_id, placement, sgs
+        return subnet_id, placement, vmf
 
     def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
@@ -233,22 +236,23 @@ class BaseVMAppPlugin(AppPlugin):
                                     'cloudlaunch_key_pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
-        subnet_id, placement_zone, sgs = self.resolve_launch_properties(
+        subnet_id, placement_zone, vmfl = self.resolve_launch_properties(
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
-        inst_type = cloudlaunch_config.get(
+        vm_type = cloudlaunch_config.get(
             'instanceType', cloud_config.get('default_instance_type'))
 
-        log.debug("Launching with subnet %s and SGs %s" % (subnet_id, sgs))
+        log.debug("Launching with subnet %s and VM firewalls %s" %
+                  (subnet_id, vmfl))
         log.info("Launching base_vm with UD:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
                                 "with keypair %s in zone %s" %
-                                (inst_type, kp.name, placement_zone)})
+                                (vm_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
-            name=name, image=img, instance_type=inst_type, subnet=subnet_id,
-            key_pair=kp, security_groups=sgs, zone=placement_zone,
+            name=name, image=img, vm_type=vm_type, subnet=subnet_id,
+            key_pair=kp, vm_firewalls=vmfl, zone=placement_zone,
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Waiting for instance %s" % inst.id})
@@ -264,8 +268,8 @@ class BaseVMAppPlugin(AppPlugin):
         results = {}
         results['keyPair'] = {'id': kp.id, 'name': kp.name,
                               'material': kp.material}
-        # FIXME: this does not account for multiple SGs and expects one
-        results['securityGroup'] = {'id': sgs[0].id, 'name': sgs[0].name}
+        # FIXME: this does not account for multiple VM fw and expects one
+        results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
         results['instance'] = {'id': inst.id}
         results['publicIP'] = self.attach_public_ip(provider, inst)
         task.update_state(
@@ -317,7 +321,7 @@ class BaseVMAppPlugin(AppPlugin):
         if inst:
             return {"instance_status": inst.state}
         else:
-            return {"instance_status": "terminated"}
+            return {"instance_status": "deleted"}
 
     def restart(self, provider, deployment):
         """Restart the app associated with the supplied deployment."""
@@ -345,7 +349,7 @@ class BaseVMAppPlugin(AppPlugin):
         log.debug("Deleting deployment instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
-            inst.terminate()
+            inst.delete()
             return True
         # Instance does not exist so default to True
         return True

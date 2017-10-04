@@ -123,7 +123,7 @@ class AppPlugin():
         :return: A dictionary with possibly app-specific fields capturing
                  app health. At a minimum, ``instance_status`` field will be
                  available. If the deployment instance is not found by the
-                 provider, the default return value is ``terminated`` for the
+                 provider, the default return value is ``deleted`` for the
                  ``instance_status`` key.
         """
         pass
