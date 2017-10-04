@@ -213,9 +213,9 @@ class StaticIPSerializer(serializers.Serializer):
     ip = serializers.CharField(read_only=True)
 
 
-class InstanceTypeSerializer(serializers.Serializer):
+class VMTypeSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
-    url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
+    url = CustomHyperlinkedIdentityField(view_name='vm_type-detail',
                                          lookup_field='pk',
                                          parent_url_kwargs=['cloud_pk'])
     name = serializers.CharField()
@@ -346,16 +346,16 @@ class InstanceSerializer(serializers.Serializer):
     name = serializers.CharField()
     public_ips = serializers.ListField(serializers.IPAddressField())
     private_ips = serializers.ListField(serializers.IPAddressField())
-    instance_type_id = ProviderPKRelatedField(label="Instance Type",
-                                              queryset='compute.instance_types',
-                                              display_fields=[
-                                                  'name'],
-                                              display_format="{0}",
-                                              required=True)
-    instance_type_url = CustomHyperlinkedIdentityField(view_name='instance_type-detail',
-                                                       lookup_field='instance_type_id',
-                                                       lookup_url_kwarg='pk',
-                                                       parent_url_kwargs=['cloud_pk'])
+    vm_type_id = ProviderPKRelatedField(label="Instance Type",
+                                        queryset='compute.vm_types',
+                                        display_fields=[
+                                            'name'],
+                                        display_format="{0}",
+                                        required=True)
+    vm_type_url = CustomHyperlinkedIdentityField(view_name='vm_type-detail',
+                                                 lookup_field='vm_type_id',
+                                                 lookup_url_kwarg='pk',
+                                                 parent_url_kwargs=['cloud_pk'])
     image_id = ProviderPKRelatedField(label="Image",
                                       queryset='compute.images',
                                       display_fields=[
@@ -390,15 +390,16 @@ class InstanceSerializer(serializers.Serializer):
         provider = view_helpers.get_cloud_provider(self.context.get('view'))
         name = validated_data.get('name')
         image_id = validated_data.get('image_id')
-        instance_type = validated_data.get('instance_type_id')
+        vm_type = validated_data.get('vm_type_id')
         kp_name = validated_data.get('key_pair_name')
         zone_id = validated_data.get('zone_id')
         vm_firewall_ids = validated_data.get('vm_firewall_ids')
         user_data = validated_data.get('user_data')
         try:
             return provider.compute.instances.create(
-                name, image_id, instance_type, zone=zone_id, key_pair=kp_name,
-                vm_firewalls=vm_firewall_ids, user_data=user_data)
+                name, image_id, vm_type, zone=zone_id,
+                key_pair=kp_name, vm_firewalls=vm_firewall_ids,
+                user_data=user_data)
         except Exception as e:
             raise serializers.ValidationError("{0}".format(e))
 
@@ -601,14 +602,14 @@ class CloudSerializer(serializers.ModelSerializer):
 
 
 class ComputeSerializer(serializers.Serializer):
-    machine_images = CustomHyperlinkedIdentityField(view_name='machine_image-list',
-                                                    parent_url_kwargs=['cloud_pk'])
-    instance_types = CustomHyperlinkedIdentityField(view_name='instance_type-list',
-                                                    parent_url_kwargs=['cloud_pk'])
     instances = CustomHyperlinkedIdentityField(view_name='instance-list',
                                                parent_url_kwargs=['cloud_pk'])
+    machine_images = CustomHyperlinkedIdentityField(view_name='machine_image-list',
+                                                    parent_url_kwargs=['cloud_pk'])
     regions = CustomHyperlinkedIdentityField(view_name='region-list',
                                              parent_url_kwargs=['cloud_pk'])
+    vm_types = CustomHyperlinkedIdentityField(view_name='vm_type-list',
+                                                    parent_url_kwargs=['cloud_pk'])
 
 
 class SecuritySerializer(serializers.Serializer):

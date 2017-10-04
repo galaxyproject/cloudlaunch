@@ -293,22 +293,22 @@ class LargeResultsSetPagination(PageNumberPagination):
     max_page_size = 1000
 
 
-class InstanceTypeViewSet(drf_helpers.CustomReadOnlyModelViewSet):
-    """List compute instance types in a given cloud."""
+class VMTypeViewSet(drf_helpers.CustomReadOnlyModelViewSet):
+    """List compute VM types in a given cloud."""
     
     permission_classes = (IsAuthenticated,)
     # Required for the Browsable API renderer to have a nice form.
-    serializer_class = serializers.InstanceTypeSerializer
+    serializer_class = serializers.VMTypeSerializer
     pagination_class = LargeResultsSetPagination
     lookup_value_regex = '[^/]+'
 
     def list_objects(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.compute.instance_types.list(limit=500)
+        return provider.compute.vm_types.list(limit=500)
 
     def get_object(self):
         provider = view_helpers.get_cloud_provider(self)
-        return provider.compute.instance_types.get(self.kwargs.get('pk'))
+        return provider.compute.vm_types.get(self.kwargs.get('pk'))
 
 
 class InstanceViewSet(drf_helpers.CustomModelViewSet):
@@ -329,7 +329,7 @@ class InstanceViewSet(drf_helpers.CustomModelViewSet):
         return obj
 
     def perform_destroy(self, instance):
-        instance.terminate()
+        instance.delete()
 
 
 class StorageViewSet(drf_helpers.CustomReadOnlySingleViewSet):

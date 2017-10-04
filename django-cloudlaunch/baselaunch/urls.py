@@ -56,8 +56,8 @@ cloud_router.register(r'compute', views.ComputeViewSet,
                       base_name='compute')
 cloud_router.register(r'compute/machine_images', views.MachineImageViewSet,
                       base_name='machine_image')
-cloud_router.register(r'compute/instance_types', views.InstanceTypeViewSet,
-                      base_name='instance_type')
+cloud_router.register(r'compute/vm_types', views.VMTypeViewSet,
+                      base_name='vm_type')
 cloud_router.register(r'compute/instances', views.InstanceViewSet,
                       base_name='instance')
 cloud_router.register(r'compute/regions', views.RegionViewSet,
