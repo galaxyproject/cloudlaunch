@@ -18,3 +18,5 @@ django-cloudlaunch/baselaunch/backend_plugins/rancher_ansible*
 docs/_build/
 
 *.DS_Store
+/venv/
+/.tox/

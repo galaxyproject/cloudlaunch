@@ -2,7 +2,7 @@ import yaml
 from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
 from .base_vm_app import BaseVMAppPlugin
-from baselaunch import domain_model
+from djcloudbridge import domain_model
 
 import logging
 log = logging.getLogger(__name__)

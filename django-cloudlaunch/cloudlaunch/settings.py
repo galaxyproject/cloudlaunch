@@ -94,12 +94,13 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.twitter',
+    'djcloudbridge',
     'baselaunch',
     # rest framework must come after baselaunch so templates can be overridden
     'rest_framework',
     'kombu.transport.django', # must be last so all celery tasks are discovered
     'djcelery',
-    'django_countries',
+    'django_countries'
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -209,6 +210,7 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'PAGE_SIZE': 50,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'DEFAULT_AUTHENTICATION_CLASSES': (
 #         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
@@ -217,7 +219,7 @@ REST_FRAMEWORK = {
 }
 
 REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'baselaunch.serializers.UserSerializer'
+    'USER_DETAILS_SERIALIZER': 'djcloudbridge.serializers.UserSerializer'
 }
 REST_SESSION_LOGIN = True
 
@@ -255,6 +257,10 @@ LOGGING = {
         'baselaunch': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
+        },
+        'django.db.backends': {
+            'level': 'INFO',
+            'handlers': ['console'],
         },
     },
 }
