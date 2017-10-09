@@ -1,11 +1,3 @@
-.. image:: https://coveralls.io/repos/github/galaxyproject/cloudlaunch/badge.svg?branch=dev
-   :target: https://coveralls.io/github/galaxyproject/cloudlaunch?branch=dev
-   :alt: Test Coverage Report
-
-.. image:: https://travis-ci.org/galaxyproject/cloudlaunch.svg?branch=dev
-   :target: https://travis-ci.org/galaxyproject/cloudlaunch
-   :alt: Travis Build Status
-
 ===========
 CloudLaunch
 ===========

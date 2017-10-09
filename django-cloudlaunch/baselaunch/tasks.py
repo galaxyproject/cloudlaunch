@@ -8,7 +8,7 @@ from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 
-from baselaunch import domain_model
+from djcloudbridge import domain_model
 from baselaunch import models
 from baselaunch import signals
 from baselaunch import util

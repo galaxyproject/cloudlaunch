@@ -7,7 +7,7 @@ from cloudbridge.cloud.interfaces.resources import TrafficDirection
 import requests
 import requests.exceptions
 
-from baselaunch import domain_model
+from djcloudbridge import domain_model
 from .app_plugin import AppPlugin
 
 import logging
