@@ -19,6 +19,8 @@ from django.conf.urls import url
 
 from baselaunch import views
 
+from public_appliances import urls as pub_urls
+
 from djcloudbridge.drf_routers import HybridDefaultRouter, HybridNestedRouter, HybridSimpleRouter
 
 
@@ -32,20 +34,15 @@ router.register(r'applications', views.ApplicationViewSet)
 router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
 router.register(r'auth', views.AuthView, base_name='auth')
 router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
-
 deployments_router = HybridNestedRouter(router, r'deployments',
                                         lookup='deployment')
 deployments_router.register(r'tasks', views.DeploymentTaskViewSet,
                             base_name='deployment_task')
 
+# router.registry.extend(pub_urls.router.registry)
+
 ### Temp endpoints ###
 #cloud_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
-
-### Public services ###
-router.register(r'public_services', views.PublicServiceViewSet)
-public_services_router = HybridSimpleRouter()
-public_services_router.register(r'sponsors', views.SponsorViewSet)
-public_services_router.register(r'locations', views.LocationViewSet)
 
 infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'
@@ -64,5 +61,5 @@ urlpatterns = [
     # reverse urls need to be resolved.
     url(r'accounts/', include('allauth.urls')),
     # Public services
-    url(public_services_regex_pattern, include(public_services_router.urls)),
+    url(public_services_regex_pattern, include('public_appliances.urls')),
 ]

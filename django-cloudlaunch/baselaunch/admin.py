@@ -67,26 +67,7 @@ class UsageAdmin(admin.ModelAdmin):
         return app_config.get('config_cloudlaunch', {}).get('instanceType')
 
 
-### Public Services ###
-class SponsorsAdmin(admin.ModelAdmin):
-    models = models.Sponsor
-
-
-class LocationAdmin(admin.ModelAdmin):
-    models = models.Location
-
-
-class PublicServicesAdmin(admin.ModelAdmin):
-    prepopulated_fields = {"slug": ("name",)}
-    models = models.PublicService
-
-
 admin.site.register(models.Application, AppAdmin)
 admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
 admin.site.register(models.Usage, UsageAdmin)
-
-### Public Services Admin Registration ###
-admin.site.register(models.PublicService, PublicServicesAdmin)
-admin.site.register(models.Sponsor, SponsorsAdmin)
-admin.site.register(models.Location, LocationAdmin)

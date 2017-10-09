@@ -12,7 +12,6 @@ from djcloudbridge import serializers as cb_serializers
 from djcloudbridge import view_helpers
 from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
 from baselaunch import util
-from django_countries.serializer_fields import CountryField
 
 
 class CloudManSerializer(serializers.Serializer):
@@ -261,26 +260,3 @@ class DeploymentSerializer(serializers.ModelSerializer):
         u = models.Usage(app_version_cloud_config=app_version_cloud_config,
                          app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
         u.save()
-
-
-### Public Services Serializers ###
-class LocationSerializer(serializers.HyperlinkedModelSerializer):
-    country = CountryField(country_dict=True)
-
-    class Meta:
-        model = models.Location
-        fields = '__all__'
-
-
-class SponsorSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = models.Sponsor
-        fields = '__all__'
-
-
-class PublicServiceSerializer(serializers.HyperlinkedModelSerializer):
-    location = LocationSerializer(read_only=True)
-
-    class Meta:
-        model = models.PublicService
-        fields = '__all__'

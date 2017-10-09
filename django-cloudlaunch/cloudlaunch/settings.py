@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.twitter',
     'djcloudbridge',
+    'public_appliances',
     'baselaunch',
     # rest framework must come after baselaunch so templates can be overridden
     'rest_framework',
