@@ -30,7 +30,7 @@ class BaseVMAppPlugin(AppPlugin):
     def process_app_config(provider, name, cloud_config, app_config):
         """Extract any extra user data from the app config and return it."""
         return app_config.get("config_cloudlaunch", {}).get(
-            "instance_user_data", {})
+            "instance_user_data")
 
     @staticmethod
     def sanitise_app_config(app_config):
