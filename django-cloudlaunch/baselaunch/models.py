@@ -169,6 +169,7 @@ class ApplicationDeployment(cb_models.DateNameAwareModel):
     """Application deployment details."""
 
     owner = models.ForeignKey(User, null=False)
+    archived = models.BooleanField(blank=True, default=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
     target_cloud = models.ForeignKey('djcloudbridge.Cloud', null=False)
     provider_settings = models.TextField(
