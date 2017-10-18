@@ -81,8 +81,9 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
-    filter_backends = (filters.OrderingFilter,)
+    filter_backends = (filters.OrderingFilter,filters.DjangoFilterBackend)
     ordering = ('-added',)
+    filter_fields = ('archived',)
 
     def get_queryset(self):
         """

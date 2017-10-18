@@ -179,7 +179,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
     name = serializers.CharField(required=True)
     provider_settings = serializers.CharField(read_only=True)
     application_config = StoredJSONField(read_only=True)
-    application = serializers.CharField(write_only=True, required=True)
+    # 'application' id is only used when creating a deployment
+    application = serializers.CharField(write_only=True, required=False)
     config_app = serializers.JSONField(write_only=True, required=False)
     app_version_details = DeploymentAppVersionSerializer(source="application_version", read_only=True)
     latest_task = serializers.SerializerMethodField()
@@ -191,7 +192,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'app_version_details',
-                  'tasks', 'latest_task')
+                  'tasks', 'latest_task', 'archived')
 
     def get_latest_task(self, obj):
         """Provide task info about the most recenly updated deployment task."""
@@ -207,7 +208,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         application = data.get('application')
         version = data.get('application_version')
-        if version:
+        if application and version:
             version = models.ApplicationVersion.objects.get(application=application, version=version)
             data['application_version'] = version.id
         return super(DeploymentSerializer, self).to_internal_value(data)
@@ -255,6 +256,11 @@ class DeploymentSerializer(serializers.ModelSerializer):
             raise ve
         except Exception as e:
             raise serializers.ValidationError({ "error" : str(e) })
+
+    def update(self, instance, validated_data):
+        instance.archived = validated_data.get('archived', instance.archived)
+        instance.save()
+        return instance
 
     def log_usage(self, app_version_cloud_config, app_deployment, sanitised_app_config, user):
         u = models.Usage(app_version_cloud_config=app_version_cloud_config,
