@@ -5,13 +5,13 @@ from bioblend.cloudman.launch import CloudManLauncher
 from cloudbridge.cloud.factory import ProviderList
 from rest_framework import serializers
 
-from baselaunch import models
-from baselaunch import tasks
+from . import models
+from . import tasks
+from . import util
 
 from djcloudbridge import serializers as cb_serializers
 from djcloudbridge import view_helpers
 from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
-from baselaunch import util
 
 
 class CloudManSerializer(serializers.Serializer):

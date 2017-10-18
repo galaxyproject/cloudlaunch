@@ -11,7 +11,7 @@ import logging
 log = logging.getLogger(__name__)
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cloudlaunch.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cloudlaunchserver.settings')
 
 app = Celery('proj')
 
@@ -21,7 +21,7 @@ app = Celery('proj')
 # Changed to use dedicated celery config as detailed in:
 # http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html
 # app.config_from_object('django.conf:settings')
-app.config_from_object('cloudlaunch.celeryconfig')
+app.config_from_object('cloudlaunchserver.celeryconfig')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 

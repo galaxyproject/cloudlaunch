@@ -3,8 +3,8 @@ import ast
 from django.contrib import admin
 import nested_admin
 
-from baselaunch import forms
-from baselaunch import models
+from . import forms
+from . import models
 
 
 class AppVersionCloudConfigInline(nested_admin.NestedTabularInline):

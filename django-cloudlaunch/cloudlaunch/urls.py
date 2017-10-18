@@ -16,12 +16,50 @@ Including another URLconf
 """
 from django.conf.urls import include
 from django.conf.urls import url
-from django.contrib import admin
+
+from . import views
+
+from public_appliances import urls as pub_urls
+
+from djcloudbridge.drf_routers import HybridDefaultRouter, HybridNestedRouter, HybridSimpleRouter
 
 
+# from django.contrib import admin
+# from rest_framework import viewsets
+router = HybridDefaultRouter()
+router.register(r'infrastructure', views.InfrastructureView,
+                base_name='infrastructure')
+router.register(r'applications', views.ApplicationViewSet)
+# router.register(r'images', views.ImageViewSet)
+router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
+router.register(r'auth', views.AuthView, base_name='auth')
+router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
+deployments_router = HybridNestedRouter(router, r'deployments',
+                                        lookup='deployment')
+deployments_router.register(r'tasks', views.DeploymentTaskViewSet,
+                            base_name='deployment_task')
+
+# router.registry.extend(pub_urls.router.registry)
+
+### Temp endpoints ###
+#cloud_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
+
+infrastructure_regex_pattern = r'api/v1/infrastructure/'
+auth_regex_pattern = r'api/v1/auth/'
+public_services_regex_pattern = r'api/v1/public_services/'
 urlpatterns = [
-    url(r'admin/', admin.site.urls),
-    url(r'nested_admin/', include('nested_admin.urls')),
-    url(r'chaining/', include('smart_selects.urls')),
-    url(r'', include('baselaunch.urls'))
+    url(r'api/v1/', include(router.urls)),
+    url(r'api/v1/', include(deployments_router.urls)),
+    url(infrastructure_regex_pattern, include('djcloudbridge.urls')),
+    url(auth_regex_pattern, include('rest_auth.urls', namespace='rest_auth')),
+    url(r'api/v1/auth/registration', include('rest_auth.registration.urls',
+                                              namespace='rest_auth_reg')),
+    url(auth_regex_pattern, include('rest_framework.urls',
+                                  namespace='rest_framework')),
+    url(r'api/v1/auth/', include('djcloudbridge.profile.urls')),
+    # The following is required because rest_auth calls allauth internally and
+    # reverse urls need to be resolved.
+    url(r'accounts/', include('allauth.urls')),
+    # Public services
+    url(public_services_regex_pattern, include('public_appliances.urls')),
 ]

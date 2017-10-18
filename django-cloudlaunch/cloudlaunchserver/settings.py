@@ -96,8 +96,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.twitter',
     'djcloudbridge',
     'public_appliances',
-    'baselaunch',
-    # rest framework must come after baselaunch so templates can be overridden
+    'cloudlaunch',
+    # rest framework must come after cloudlaunch so templates can be overridden
     'rest_framework',
     'kombu.transport.django', # must be last so all celery tasks are discovered
     'djcelery',
@@ -116,7 +116,7 @@ MIDDLEWARE_CLASSES = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'cloudlaunch.urls'
+ROOT_URLCONF = 'cloudlaunchserver.urls'
 
 TEMPLATES = [
     {
@@ -134,7 +134,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'cloudlaunch.wsgi.application'
+WSGI_APPLICATION = 'cloudlaunchserver.wsgi.application'
 
 
 # Database
@@ -255,7 +255,7 @@ LOGGING = {
             'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
         },
-        'baselaunch': {
+        'cloudlaunch': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
         },
@@ -268,7 +268,7 @@ LOGGING = {
 
 # Allow settings to be overridden in a cloudlaunch/settings_local.py
 try:
-    from cloudlaunch.settings_local import *  # noqa
+    from cloudlaunchserver.settings_local import *  # noqa
 except ImportError:
     pass
 
