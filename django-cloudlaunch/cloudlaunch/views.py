@@ -15,9 +15,9 @@ from rest_framework.views import APIView
 import requests
 
 from djcloudbridge import drf_helpers
-from baselaunch import models
-from baselaunch import serializers
-from baselaunch import view_helpers
+from . import models
+from . import serializers
+from . import view_helpers
 
 
 class ApplicationViewSet(viewsets.ModelViewSet):

@@ -1,6 +1,6 @@
 from djcloudbridge import view_helpers as cb_view_helpers
 from djcloudbridge import domain_model
-from baselaunch import models
+from . import models
 
 import json
 

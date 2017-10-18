@@ -30,8 +30,8 @@ versions, 3.5 is the only supported version. Use of virtualenv is also highly ad
     $ python manage.py runserver
     $ python manage.py createsuperuser
 
-2. Copy ``cloudlaunch/settings_local.py.sample`` to
-   ``cloudlaunch/settings_local.py`` and make any desired configuration
+2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
+   ``cloudlaunchserver/settings_local.py`` and make any desired configuration
    changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
    because it is used to encrypt sensitive database fields.
 
@@ -41,7 +41,7 @@ versions, 3.5 is the only supported version. Use of virtualenv is also highly ad
 .. code-block:: bash
 
     $ python manage.py runserver
-    $ celery -A cloudlaunch worker -l info
+    $ celery -A cloudlaunchserver worker -l info
 
 4. Visit http://127.0.0.1:8000/admin/ to define your application and
    infrastructure properties.

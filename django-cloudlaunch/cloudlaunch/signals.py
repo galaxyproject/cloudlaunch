@@ -4,7 +4,7 @@ from celery.utils.log import get_task_logger
 from django.dispatch import receiver
 from django.dispatch import Signal
 
-from baselaunch import models
+from . import models
 
 LOG = get_task_logger(__name__)
 

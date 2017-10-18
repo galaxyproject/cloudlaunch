@@ -133,7 +133,7 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         :param user: Target host system username with which to login.
         """
         # Clone the repo in its own dir if multiple tasks run simultaneously
-        repo_path = './baselaunch/backend_plugins/rancher_ansible_%s' % host
+        repo_path = './cloudlaunch/backend_plugins/rancher_ansible_%s' % host
         inventory_path = os.path.join(repo_path, 'inventory')
         # Ensure the playbook is available
         log.info("Cloning Ansible playbook {0} to {1}".format(

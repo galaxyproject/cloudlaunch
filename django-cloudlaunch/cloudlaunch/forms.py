@@ -1,6 +1,6 @@
 from django.forms import ModelForm
 
-from baselaunch import models
+from . import models
 from djcloudbridge import models as cb_models
 
 

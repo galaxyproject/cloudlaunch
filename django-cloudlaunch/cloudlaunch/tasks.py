@@ -9,9 +9,9 @@ from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 
 from djcloudbridge import domain_model
-from baselaunch import models
-from baselaunch import signals
-from baselaunch import util
+from . import models
+from . import signals
+from . import util
 
 LOG = get_task_logger(__name__)
 
