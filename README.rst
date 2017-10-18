@@ -70,7 +70,8 @@ Integration with GitHub
    *Client ID* and *Client Secret* at the top of that page as we'll need that back
    in CloudLaunch.
 
-.. image:: https://s3.amazonaws.com/cloudlaunchapp/github-oauth-app.png
+.. image:: https://s3.amazonaws.com/cloudlaunchapp/github-ouath-app-sm.png
+    :target: https://s3.amazonaws.com/cloudlaunchapp/github-oauth-app.png
 
 2. Back on the local server, login to Django admin and change the domain of
    example.com in Sites to ``http://127.0.0.1:8080``. To login to Admin, you'll
@@ -81,7 +82,8 @@ Integration with GitHub
    desired application name, and enter the *Client ID* and *Client Secret* we got
    from GitHub. Also choose the site we updated in Step 2.
 
-.. image:: https://s3.amazonaws.com/cloudlaunchapp/add-social-app.png
+.. image:: https://s3.amazonaws.com/cloudlaunchapp/add-social-app-sm.png
+    :target: https://s3.amazonaws.com/cloudlaunchapp/add-social-app.png
 
 Save the model and integration with GitHub is complete! You can now log in to
 the CloudLaunch UI using Github.
@@ -96,7 +98,8 @@ Intergation with Twitter
    Access Tokens* tab and take a note of *Consumer Key (API Key)* and *Consumer
    Secret (API Secret)*.
 
-.. image:: https://s3.amazonaws.com/cloudlaunchapp/twitter-oauth-app.png
+.. image:: https://s3.amazonaws.com/cloudlaunchapp/twitter-oauth-app-sm.png
+    :target: https://s3.amazonaws.com/cloudlaunchapp/twitter-oauth-app.png
 
 2. Proceed with the same steps as in the docs about about GitHub integration,
    supplying the *Consumer Key (API Key)* and *Consumer Secret (API Secret)* as the
