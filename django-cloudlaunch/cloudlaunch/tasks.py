@@ -147,7 +147,9 @@ def manage_appliance(self, action, deployment, credentials):
     Perform supplied action on this app.
 
     @type action: ``str``
-    @param action: Accepted values are ``restart`` or ``delete``.
+    @param action: Accepted values are ``restart`` or ``delete``. Invoking
+                   the ``delete`` action, if successful, will also mark the
+                   supplied ``deployment`` as ``archived`` in the database.
     """
     LOG.debug("Performing %s on deployment %s", action, deployment.name)
     handler = _get_app_handler(deployment)
@@ -158,6 +160,9 @@ def manage_appliance(self, action, deployment, credentials):
         result = handler.restart(provider, dpl)
     elif action.lower() == 'delete':
         result = handler.delete(provider, dpl)
+        if result is True:
+            deployment.archived = True
+            deployment.save()
     else:
         LOG.error("Unrecognized action: %s. Acceptable values are 'delete' "
                   "or 'restart'", action)

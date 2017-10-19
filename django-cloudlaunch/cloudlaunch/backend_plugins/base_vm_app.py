@@ -3,6 +3,7 @@ import copy
 import time
 import yaml
 
+from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
 import requests
 import requests.exceptions
@@ -340,6 +341,9 @@ class BaseVMAppPlugin(AppPlugin):
         """
         Delete resource(s) associated with the supplied deployment.
 
+        This is a blocking call that will wait until the instance is marked
+        as deleted or dissapears from the provider.
+
         *Note* that this method will delete resource(s) associated with
         the deployment - this is an un-recoverable action.
         """
@@ -350,6 +354,8 @@ class BaseVMAppPlugin(AppPlugin):
         inst = provider.compute.instances.get(iid)
         if inst:
             inst.delete()
+            inst.wait_for([InstanceState.TERMINATED, InstanceState.UNKNOWN],
+                          terminal_states=[InstanceState.ERROR])
             return True
         # Instance does not exist so default to True
         return True
