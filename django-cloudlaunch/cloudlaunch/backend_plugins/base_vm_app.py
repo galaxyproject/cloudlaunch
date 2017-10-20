@@ -354,7 +354,7 @@ class BaseVMAppPlugin(AppPlugin):
         inst = provider.compute.instances.get(iid)
         if inst:
             inst.delete()
-            inst.wait_for([InstanceState.TERMINATED, InstanceState.UNKNOWN],
+            inst.wait_for([InstanceState.DELETED, InstanceState.UNKNOWN],
                           terminal_states=[InstanceState.ERROR])
             return True
         # Instance does not exist so default to True
