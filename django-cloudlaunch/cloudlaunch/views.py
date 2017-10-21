@@ -20,12 +20,18 @@ from . import serializers
 from . import view_helpers
 
 
+class CustomApplicationPagination(PageNumberPagination):
+    page_size_query_param = 'page_size'
+
 class ApplicationViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows applications to be viewed or edited.
     """
     queryset = models.Application.objects.filter(status=models.Application.LIVE)
     serializer_class = serializers.ApplicationSerializer
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('slug',)
+    pagination_class = CustomApplicationPagination
 
 
 class InfrastructureView(APIView):
