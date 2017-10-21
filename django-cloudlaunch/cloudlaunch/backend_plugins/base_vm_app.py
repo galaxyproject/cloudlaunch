@@ -69,22 +69,6 @@ class BaseVMAppPlugin(AppPlugin):
                                  is_root=True)
         return lc
 
-    def wait_for_http(self, url, max_retries=200, poll_interval=5):
-        """Wait till app is responding at http URL."""
-        count = 0
-        while count < max_retries:
-            time.sleep(poll_interval)
-            try:
-                r = requests.head(url)
-                r.raise_for_status()
-                return
-            except requests.exceptions.HTTPError as e:
-                if e.response.status_code in (401, 403):
-                    return
-            except requests.exceptions.ConnectionError:
-                pass
-            count += 1
-
     def attach_public_ip(self, provider, inst):
         """
         If instance has no public IP, try to attach one.
@@ -276,18 +260,8 @@ class BaseVMAppPlugin(AppPlugin):
         task.update_state(
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
-                  "Public IP: %s" % results['publicIP'] if results['publicIP']
-                  else ""})
-        if self.base_app:
-            if results['publicIP']:
-                results['applicationURL'] = 'http://%s/' % results['publicIP']
-                task.update_state(
-                    state='PROGRESSING',
-                    meta={'action': "Waiting for application to become ready "
-                          "at %s" % results['applicationURL']})
-                self.wait_for_http(results['applicationURL'])
-            else:
-                results['applicationURL'] = 'N/A'
+                            "Public IP: %s" % results['publicIP'] if
+                            results['publicIP'] else ""})
         return {"cloudLaunch": results}
 
     def _get_deployment_iid(self, deployment):
