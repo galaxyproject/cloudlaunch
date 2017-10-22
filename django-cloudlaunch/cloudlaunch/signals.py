@@ -6,7 +6,7 @@ from django.dispatch import Signal
 
 from . import models
 
-LOG = get_task_logger(__name__)
+log = get_task_logger(__name__)
 
 health_check = Signal(providing_args=["deployment"])
 
@@ -25,6 +25,6 @@ def delete_old_tasks(sender, deployment, **kwargs):
             _status="SUCCESS",
             action=models.ApplicationDeploymentTask.HEALTH_CHECK).order_by(
                 '-updated')[2:]:
-        LOG.debug('Deleting old health task %s from deployment %s',
+        log.debug('Deleting old health task %s from deployment %s',
                   old_task.id, deployment.name)
         old_task.delete()

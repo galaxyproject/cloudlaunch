@@ -99,8 +99,8 @@ INSTALLED_APPS = [
     'cloudlaunch',
     # rest framework must come after cloudlaunch so templates can be overridden
     'rest_framework',
-    'kombu.transport.django', # must be last so all celery tasks are discovered
-    'djcelery',
+    'django_celery_results',
+    'django_celery_beat',
     'django_countries',
     'django_filters'
 ]
@@ -272,8 +272,3 @@ try:
     from cloudlaunchserver.settings_local import *  # noqa
 except ImportError:
     pass
-
-# django-celery configuration
-
-import djcelery
-djcelery.setup_loader()

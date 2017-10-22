@@ -22,6 +22,7 @@ def serialize_cloud_config(cloud_config):
     @rtype: ``dict``
     @return: A serialized version of the supplied model.
     """
-    return {'default_instance_type': cloud_config.default_instance_type,
+    return {'id': cloud_config.id,
+            'default_instance_type': cloud_config.default_instance_type,
             'default_launch_config': cloud_config.default_launch_config,
             'image_id': cloud_config.image.image_id}

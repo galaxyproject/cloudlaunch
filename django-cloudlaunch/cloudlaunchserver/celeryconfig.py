@@ -1,7 +1,7 @@
-BROKER_URL = 'django://'
-#BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERYBEAT_SCHEDULER = "djcelery.schedulers.DatabaseScheduler"
-#CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-#CELERY_ACCEPT_CONTENT = ['json', 'yaml']
+broker_url = 'redis://localhost:6379/0'
+result_backend = 'django-db'
+beat_scheduler = "django_celery_beat.schedulers:DatabaseScheduler"
+result_serializer = 'json'
+task_serializer = 'pickle'
+accept_content = ['json', 'pickle']
+#accept_content = ['json', 'yaml']
