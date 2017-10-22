@@ -243,6 +243,8 @@ class ApplicationDeploymentTask(models.Model):
             if self.celery_id:
                 task = AsyncResult(self.celery_id)
                 r = task.backend.get_task_meta(task.id).get('result')
+                if not isinstance(r, dict):
+                    r = str(r)
             else:  # This is an older task whose task ID has been removed so return DB value
                 try:
                     r = json.loads(self._result)
