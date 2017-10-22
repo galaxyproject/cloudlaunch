@@ -29,9 +29,12 @@ class AppCategoryAdmin(admin.ModelAdmin):
     model = models.AppCategory
 
 
-class CloudImageInline(admin.StackedInline):
+class CloudImageAdmin(admin.ModelAdmin):
     model = models.CloudImage
-    extra = 1
+    list_display = ('name', 'cloud')
+    list_filter = ('name', 'cloud')
+    ordering = ('name',)
+
 
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
@@ -70,4 +73,5 @@ class UsageAdmin(admin.ModelAdmin):
 admin.site.register(models.Application, AppAdmin)
 admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
+admin.site.register(models.CloudImage, CloudImageAdmin)
 admin.site.register(models.Usage, UsageAdmin)
