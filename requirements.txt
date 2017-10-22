@@ -20,3 +20,4 @@ gunicorn
 psycopg2
 bioblend # For the CloudMan launcher
 sqlparse # for migrations
+redis
