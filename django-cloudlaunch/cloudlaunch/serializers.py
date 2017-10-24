@@ -36,7 +36,9 @@ class CloudManSerializer(serializers.Serializer):
             return []
         # Since we're only working with the AWS, there's no need to specify
         # the cloud argument as it defaults to AWS in BioBlend.
-        cml = CloudManLauncher(provider.a_key, provider.s_key, None)
+        cml = CloudManLauncher(provider.session_cfg.get('aws_access_key_id'),
+                               provider.session_cfg.get('aws_secret_access_key'),
+                               None)
         return cml.get_clusters_pd().get('clusters', [])
 
 

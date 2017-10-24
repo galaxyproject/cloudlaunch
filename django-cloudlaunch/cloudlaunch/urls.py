@@ -22,10 +22,10 @@ from . import views
 from public_appliances import urls as pub_urls
 
 from djcloudbridge.drf_routers import HybridDefaultRouter, HybridNestedRouter, HybridSimpleRouter
+from djcloudbridge.urls import cloud_router
 
 
 # from django.contrib import admin
-# from rest_framework import viewsets
 router = HybridDefaultRouter()
 router.register(r'infrastructure', views.InfrastructureView,
                 base_name='infrastructure')
@@ -39,10 +39,8 @@ deployments_router = HybridNestedRouter(router, r'deployments',
 deployments_router.register(r'tasks', views.DeploymentTaskViewSet,
                             base_name='deployment_task')
 
-# router.registry.extend(pub_urls.router.registry)
-
-### Temp endpoints ###
-#cloud_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
+# Extend djcloudbridge endpoints
+cloud_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
 
 infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'
@@ -50,6 +48,9 @@ public_services_regex_pattern = r'api/v1/public_services/'
 urlpatterns = [
     url(r'api/v1/', include(router.urls)),
     url(r'api/v1/', include(deployments_router.urls)),
+    # This generates a duplicate url set with the cloudman url included
+    # get_urls() must be called or a cached set of urls will be returned.
+    url(infrastructure_regex_pattern, include(cloud_router.get_urls())),
     url(infrastructure_regex_pattern, include('djcloudbridge.urls')),
     url(auth_regex_pattern, include('rest_auth.urls', namespace='rest_auth')),
     url(r'api/v1/auth/registration', include('rest_auth.registration.urls',
