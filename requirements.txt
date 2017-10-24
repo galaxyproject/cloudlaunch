@@ -1,22 +1,35 @@
 Django==1.11.5
+
+# Celery
 celery>=4.1
-django-celery-results>=1.0.1
-django-celery-beat>=1.0.1
+django-celery-results>=1.0.1 # celery results backend which uses the django DB
+django-celery-beat>=1.0.1 # celery background task monitor which uses the django DB
+
+# DRF
 djangorestframework==3.6.4
-django-rest-auth==0.9.1
-django-allauth>=0.24.1
-drf-nested-routers>=0.11.1
+django-rest-auth==0.9.1 # login support for DRF through restful endpoints
+django-allauth>=0.24.1 # pluggable social auth for django login
+drf-nested-routers>=0.11.1 # Provides nested routing for DRF
+
+# Cloudbridge
 git+git://github.com/gvlproject/cloudbridge
 git+git://github.com/CloudVE/djcloudbridge
-django-model-utils>=2.4
+
+# Django
+django-model-utils>=2.4 # Provides better inheritance support for django models
 django-fernet-fields==0.5 # for encryption of user credentials
-django-cors-headers>=1.3.1
+django-cors-headers>=1.3.1 # Middleware for automatically adding CORS headers to responses
 django-nested-admin>=3.0.8 # for nested object editing in django admin
 django-smart-selects>=1.2.2 # For dependencies between key fields in django admin
-django-countries>=3.4.1
-django-filter==1.0.4
-jsonmerge>=1.2.0 # For merging userdata/config dictionaries
+django-filter==1.0.4 # Automatic filter/search support for DRF views
+psycopg2 # postgres database driver
+
+# Production Django
 gunicorn
-psycopg2
+
+# Public appliances
+django-countries>=3.4.1 # Used by public_appliances for retrieving country data
+
+# Misc
 bioblend # For the CloudMan launcher
-sqlparse # for migrations
+jsonmerge>=1.2.0 # For merging userdata/config dictionaries
