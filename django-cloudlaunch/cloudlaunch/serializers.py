@@ -98,7 +98,7 @@ class DeploymentAppSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Application
-        fields = '__all__'
+        fields = ('slug', 'name')
 
 class DeploymentAppVersionSerializer(serializers.ModelSerializer):
     application = DeploymentAppSerializer(read_only=True)
