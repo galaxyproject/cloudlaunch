@@ -4,6 +4,7 @@ Django==1.11.5
 celery>=4.1
 django-celery-results>=1.0.1 # celery results backend which uses the django DB
 django-celery-beat>=1.0.1 # celery background task monitor which uses the django DB
+redis # As celery message broker during development
 
 # DRF
 djangorestframework==3.6.4

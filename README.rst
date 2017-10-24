@@ -35,13 +35,13 @@ versions, 3.5 is the only supported version. Use of virtualenv is also highly ad
    changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
    because it is used to encrypt sensitive database fields.
 
-3. Start the development server and celery task queue, each process
-   in its own tab.
+3. Start the development server and celery task queue (along with a Redis
+   server as the message broker), each process in its own tab.
 
 .. code-block:: bash
 
     $ python manage.py runserver
-    $ celery -A cloudlaunchserver worker -l info
+    $ redis-server & celery -A cloudlaunchserver worker -l info --beat
 
 4. Visit http://127.0.0.1:8000/admin/ to define your application and
    infrastructure properties.
