@@ -1,7 +1,7 @@
 import yaml
 from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
-from .base_vm_app import BaseVMAppPlugin
+from .simple_web_app import SimpleWebAppPlugin
 from djcloudbridge import domain_model
 
 import logging
@@ -15,7 +15,7 @@ def get_required_val(data, name, message):
     return val
 
 
-class CloudManAppPlugin(BaseVMAppPlugin):
+class CloudManAppPlugin(SimpleWebAppPlugin):
 
     def __init__(self):
         self.base_app = False
@@ -127,12 +127,13 @@ class CloudManAppPlugin(BaseVMAppPlugin):
         if user_data.get('machine_image_id'):
             app_config.get('config_cloudlaunch')['customImageID'] = user_data['machine_image_id']
         result = super(CloudManAppPlugin, self).launch_app(
-            provider, task, name, cloud_config, app_config, ud)
+            provider, task, name, cloud_config, app_config, ud, check_http=False)
         result['cloudLaunch']['applicationURL'] = \
             'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"
                             % result['cloudLaunch']['applicationURL']})
+        log.info("CloudMan app going to wait for http")
         self.wait_for_http(result['cloudLaunch']['applicationURL'])
         return result
