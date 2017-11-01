@@ -27,6 +27,7 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
         user_data = {}
         user_data['bucket_default'] = get_required_val(
             cloudman_config, "defaultBucket", "default bucket is required.")
+        user_data['cm_remote_filename'] = cloudman_config.get('cm_remote_filename', 'cm.tar.gz')
         user_data['cluster_name'] = name
         if cloudman_config.get('restartCluster') and cloudman_config['restartCluster'].get('cluster_name'):
             user_data['cluster_name'] = cloudman_config['restartCluster']['cluster_name']
