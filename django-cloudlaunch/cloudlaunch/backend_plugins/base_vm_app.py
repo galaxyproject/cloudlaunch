@@ -156,13 +156,13 @@ class BaseVMAppPlugin(AppPlugin):
             for rule in group.get('rules', []):
                 try:
                     if rule.get('src_group'):
-                        vmf.rules.create(TrafficDirection.INBOUND,
-                                         rule.get('protocol'),
-                                         int(rule.get('from_port')),
-                                         int(rule.get('to_port')),
+                        vmf.rules.create(direction=TrafficDirection.INBOUND,
+                                         protocol=rule.get('protocol'),
+                                         from_port=int(rule.get('from')),
+                                         to_port=int(rule.get('to')),
                                          src_dest_fw=vmf)
                     else:
-                        vmf.rules.create(TrafficDirection.INBOUND,
+                        vmf.rules.create(direction=TrafficDirection.INBOUND,
                                          protocol=rule.get('protocol'),
                                          from_port=int(rule.get('from')),
                                          to_port=int(rule.get('to')),
