@@ -239,19 +239,21 @@ class ApplicationDeploymentTask(models.Model):
         the result value before saving it here.
         """
         r = None
-        try:
-            if self.celery_id:
+        if self.celery_id:
+            try:
                 task = AsyncResult(self.celery_id)
-                r = task.backend.get_task_meta(task.id).get('result')
+                r = task.result
+                if task.state == 'FAILURE':
+                    return {'exc_message': str(r)}
                 if not isinstance(r, dict):
                     r = str(r)
-            else:  # This is an older task whose task ID has been removed so return DB value
-                try:
-                    r = json.loads(self._result)
-                except (ValueError, TypeError):
-                    r = self._result
-        except Exception as exc:
-            return {'exception': exc}
+            except Exception as exc:
+                return {'exc_message': str(exc)}
+        else:  # This is an older task whose task ID has been removed so return DB value
+            try:
+                r = json.loads(self._result)
+            except (ValueError, TypeError):
+                r = self._result
         # Always return a dict
         if not isinstance(r, dict):
             return {'result': r}

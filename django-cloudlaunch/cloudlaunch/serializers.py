@@ -150,12 +150,12 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         credentials = view_helpers.get_credentials(dpl.target_cloud, request)
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
-                async_result = tasks.health_check.delay(dpl, credentials)
+                async_result = tasks.health_check.delay(dpl.pk, credentials)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.manage_appliance.delay('restart', dpl,
+                async_result = tasks.manage_appliance.delay('restart', dpl.pk,
                                                             credentials)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.manage_appliance.delay('delete', dpl,
+                async_result = tasks.manage_appliance.delay('delete', dpl.pk,
                                                             credentials)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
@@ -241,7 +241,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 provider, name, cloud_config, merged_config)
             sanitised_app_config = handler.sanitise_app_config(merged_config)
             async_result = tasks.launch_appliance.delay(
-                name, cloud_version_config, credentials, merged_config,
+                name, cloud_version_config.pk, credentials, merged_config,
                 final_ud_config)
 
             del validated_data['application']

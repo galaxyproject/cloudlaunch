@@ -1,6 +1,7 @@
 """Tasks to be executed asynchronously (via Celery)."""
 import copy
 import json
+import traceback
 
 from celery.app import shared_task
 from celery.exceptions import Ignore
@@ -41,11 +42,14 @@ def migrate_launch_task(task_id):
 
 
 @shared_task
-def launch_appliance(name, cloud_version_config, credentials, app_config,
+def launch_appliance(name, cloud_version_config_id, credentials, app_config,
                      user_data, task_id=None):
     """Call the appropriate app handler and initiate the app launch process."""
+    launch_result = {}
     try:
         LOG.debug("Launching appliance %s", name)
+        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
+            pk=cloud_version_config_id)
         handler = util.import_class(
             cloud_version_config.application_version.backend_component_name)()
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
@@ -59,11 +63,9 @@ def launch_appliance(name, cloud_version_config, credentials, app_config,
                                         countdown=3600)
         return launch_result
     except SoftTimeLimitExceeded:
-        launch_appliance.update_state(
-            state="FAILURE", meta={"exc_message": "Task time limit exceeded; "
-                                                  "stopping the task."})
-        raise Ignore  # This keeps the custom state set above
-
+        raise Exception("Task time limit exceeded; stopping the task.")
+    except Exception as e:
+        raise Exception("Task failed: %s" % str(e)) from e
 
 def _get_app_handler(deployment):
     """
@@ -116,7 +118,7 @@ def _serialize_deployment(deployment):
 
 
 @shared_task(bind=True)
-def health_check(self, deployment, credentials):
+def health_check(self, deployment_id, credentials):
     """
     Check the health of the supplied deployment.
 
@@ -125,6 +127,7 @@ def health_check(self, deployment, credentials):
     by default, the health reflects the status of the cloud instance by
     querying the cloud provider.
     """
+    deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
     LOG.debug("Checking health of deployment %s", deployment.name)
     handler = _get_app_handler(deployment)
     dpl = _serialize_deployment(deployment)
@@ -142,7 +145,7 @@ def health_check(self, deployment, credentials):
 
 
 @shared_task(bind=True)
-def manage_appliance(self, action, deployment, credentials):
+def manage_appliance(self, action, deployment_id, credentials):
     """
     Perform supplied action on this app.
 
@@ -151,6 +154,7 @@ def manage_appliance(self, action, deployment, credentials):
                    the ``delete`` action, if successful, will also mark the
                    supplied ``deployment`` as ``archived`` in the database.
     """
+    deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
     LOG.debug("Performing %s on deployment %s", action, deployment.name)
     handler = _get_app_handler(deployment)
     dpl = _serialize_deployment(deployment)
