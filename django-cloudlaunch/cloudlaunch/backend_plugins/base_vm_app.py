@@ -53,9 +53,11 @@ class BaseVMAppPlugin(AppPlugin):
         if len(vmf) > 0:
             return vmf[0]
         subnet = provider.networking.subnets.get(subnet_id)
+        # Check for None in case of NeCTAR
+        network_id = subnet.network_id if subnet else None
         return provider.security.vm_firewalls.create(
             name=vmf_name, description=description,
-            network_id=subnet.network_id)
+            network_id=network_id)
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
         """Compose a CloudBridge launch config object."""
