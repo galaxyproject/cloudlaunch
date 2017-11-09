@@ -149,7 +149,7 @@ class BaseVMAppPlugin(AppPlugin):
         vmfl = []
         for group in firewall:
             # Get a handle on the SG
-            vmf_name = group.get('securityGroup') or 'CloudLaunchDefault'
+            vmf_name = group.get('securityGroup') or 'cloudlaunch'
             vmf_desc = group.get('description') or 'Created by CloudLaunch'
             vmf = self._get_or_create_vmf(
                 provider, subnet_id, vmf_name, vmf_desc)
