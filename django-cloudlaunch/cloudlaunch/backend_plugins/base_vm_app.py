@@ -8,7 +8,6 @@ from cloudbridge.cloud.interfaces.resources import TrafficDirection
 import requests
 import requests.exceptions
 
-from djcloudbridge import domain_model
 from .app_plugin import AppPlugin
 
 import logging
@@ -47,12 +46,11 @@ class BaseVMAppPlugin(AppPlugin):
             log.debug("Creating key pair {0}".format(kp_name))
             return provider.security.key_pairs.create(name=kp_name)
 
-    def _get_or_create_vmf(self, provider, subnet_id, vmf_name, description):
+    def _get_or_create_vmf(self, provider, subnet, vmf_name, description):
         """Fetch an existing VM firewall named ``vmf_name`` or create one."""
         vmf = provider.security.vm_firewalls.find(name=vmf_name)
         if len(vmf) > 0:
             return vmf[0]
-        subnet = provider.networking.subnets.get(subnet_id)
         # Check for None in case of NeCTAR
         network_id = subnet.network_id if subnet else None
         return provider.security.vm_firewalls.create(
@@ -82,7 +80,9 @@ class BaseVMAppPlugin(AppPlugin):
         :return: The attached IP address. This can be one that's already
                  available on the instance or one that has been attached.
         """
-        if not inst.public_ips:
+        if len(inst.public_ips) > 0 and inst.public_ips[0]:
+            return inst.public_ips[0]
+        else:
             fip = None
             for ip in provider.networking.floating_ips:
                 if not ip.in_use:
@@ -98,12 +98,8 @@ class BaseVMAppPlugin(AppPlugin):
                           fip.public_ip)
                 inst.add_floating_ip(fip)
             return fip.public_ip
-        elif len(inst.public_ips) > 0:
-            return inst.public_ips[0]
-        else:
-            return None
 
-    def configure_vm_firewalls(self, provider, subnet_id, firewall):
+    def configure_vm_firewalls(self, provider, subnet, firewall):
         """
         Ensure any supplied firewall rules are represented in a VM Firewall.
 
@@ -152,7 +148,7 @@ class BaseVMAppPlugin(AppPlugin):
             vmf_name = group.get('securityGroup') or 'cloudlaunch'
             vmf_desc = group.get('description') or 'Created by CloudLaunch'
             vmf = self._get_or_create_vmf(
-                provider, subnet_id, vmf_name, vmf_desc)
+                provider, subnet, vmf_name, vmf_desc)
             vmfl.append(vmf)
             # Apply firewall rules
             for rule in group.get('rules', []):
@@ -173,7 +169,7 @@ class BaseVMAppPlugin(AppPlugin):
                     log.error("Exception applying firewall rules: %s" % e)
             return vmfl
 
-    def get_or_create_subnet(self, provider, net_id=None, placement=None):
+    def get_or_create_default_subnet(self, provider, net_id=None, placement=None):
         """
         Figure out a subnet matching the supplied constraints.
 
@@ -189,7 +185,33 @@ class BaseVMAppPlugin(AppPlugin):
                 elif sn.zone == placement:
                     return sn
         sn = provider.networking.subnets.get_or_create_default(placement)
-        return sn.id if sn else None
+        return sn
+
+    def setup_networking(self, provider, net_id, subnet_id, placement):
+        if subnet_id:
+            subnet = provider.networking.subnets.get(subnet_id)
+        else:
+            subnet = self.get_or_create_default_subnet(
+                provider, net_id, placement)
+        if subnet:
+            # Creating a router/gateway may not work with classic networking
+            # so ignore errors if they occur
+            try:
+                router_name = 'cl_router_%s' % subnet.network_id
+                found_routers = provider.networking.routers.find(
+                    name=router_name)
+                if found_routers:
+                    router = found_routers[0]
+                else:
+                    router = provider.networking.routers.create(
+                        network=subnet.network_id, name=router_name)
+                router.attach_subnet(subnet)
+                gw = provider.networking.gateways.get_or_create_inet_gateway(
+                    'cloudlaunch_default')
+                router.attach_gateway(gw)
+            except Exception as e:
+                log.debug("Couldn't create router or gateway: %s. Ignoring...", e)
+        return subnet
 
     def resolve_launch_properties(self, provider, cloudlaunch_config):
         """
@@ -201,13 +223,12 @@ class BaseVMAppPlugin(AppPlugin):
         net_id = cloudlaunch_config.get('network', None)
         subnet_id = cloudlaunch_config.get('subnet', None)
         placement = cloudlaunch_config.get('placementZone', None)
-        if not subnet_id:
-            subnet_id = self.get_or_create_subnet(provider, net_id, placement)
+        subnet = self.setup_networking(provider, net_id, subnet_id, placement)
         vmf = None
         if cloudlaunch_config.get('firewall', []):
             vmf = self.configure_vm_firewalls(
-                provider, subnet_id, cloudlaunch_config.get('firewall', []))
-        return subnet_id, placement, vmf
+                provider, subnet, cloudlaunch_config.get('firewall', []))
+        return subnet, placement, vmf
 
     def launch_app(self, provider, task, name, cloud_config,
                    app_config, user_data):
@@ -223,7 +244,7 @@ class BaseVMAppPlugin(AppPlugin):
                                     'cloudlaunch_key_pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
-        subnet_id, placement_zone, vmfl = self.resolve_launch_properties(
+        subnet, placement_zone, vmfl = self.resolve_launch_properties(
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
@@ -231,14 +252,14 @@ class BaseVMAppPlugin(AppPlugin):
             'instanceType', cloud_config.get('default_instance_type'))
 
         log.debug("Launching with subnet %s and VM firewalls %s" %
-                  (subnet_id, vmfl))
+                  (subnet, vmfl))
         log.info("Launching base_vm with UD:\n%s" % user_data)
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
                                 "with keypair %s in zone %s" %
                                 (vm_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
-            name=name, image=img, vm_type=vm_type, subnet=subnet_id,
+            name=name, image=img, vm_type=vm_type, subnet=subnet,
             key_pair=kp, vm_firewalls=vmfl, zone=placement_zone,
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state='PROGRESSING',

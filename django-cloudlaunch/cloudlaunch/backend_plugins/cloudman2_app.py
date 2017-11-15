@@ -15,7 +15,6 @@ from django.conf import settings
 from git import Repo
 
 from .base_vm_app import BaseVMAppPlugin
-from djcloudbridge import domain_model
 
 from celery.utils.log import get_task_logger
 log = get_task_logger(__name__)

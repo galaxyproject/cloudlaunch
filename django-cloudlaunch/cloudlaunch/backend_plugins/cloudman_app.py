@@ -2,7 +2,6 @@ import yaml
 from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
 from .simple_web_app import SimpleWebAppPlugin
-from djcloudbridge import domain_model
 
 import logging
 log = logging.getLogger(__name__)
