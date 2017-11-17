@@ -186,6 +186,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
     config_app = serializers.JSONField(write_only=True, required=False)
     app_version_details = DeploymentAppVersionSerializer(source="application_version", read_only=True)
     latest_task = serializers.SerializerMethodField()
+    launch_task = serializers.SerializerMethodField()
     tasks = CustomHyperlinkedIdentityField(view_name='deployment_task-list',
                                            lookup_field='id',
                                            lookup_url_kwarg='deployment_pk')
@@ -194,13 +195,22 @@ class DeploymentSerializer(serializers.ModelSerializer):
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'app_version_details',
-                  'tasks', 'latest_task', 'archived')
+                  'tasks', 'latest_task', 'launch_task', 'archived')
 
     def get_latest_task(self, obj):
         """Provide task info about the most recenly updated deployment task."""
         try:
-            task = models.ApplicationDeploymentTask.objects.filter(
-                deployment=obj.id).latest('updated')
+            task = obj.tasks.latest('updated')
+            return DeploymentTaskSerializer(
+                task, context={'request': self.context['request'],
+                               'deployment_pk': obj.id}).data
+        except models.ApplicationDeploymentTask.DoesNotExist:
+            return None
+
+    def get_launch_task(self, obj):
+        """Provide task info about the most recenly updated deployment task."""
+        try:
+            task = obj.tasks.filter(action='LAUNCH').first()
             return DeploymentTaskSerializer(
                 task, context={'request': self.context['request'],
                                'deployment_pk': obj.id}).data
