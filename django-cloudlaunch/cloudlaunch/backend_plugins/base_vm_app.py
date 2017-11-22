@@ -207,10 +207,10 @@ class BaseVMAppPlugin(AppPlugin):
                         network=subnet.network_id, name=router_name)
                 router.attach_subnet(subnet)
                 gw = provider.networking.gateways.get_or_create_inet_gateway(
-                    'cloudlaunch_default')
+                    subnet.network_id, 'cloudlaunch_default')
                 router.attach_gateway(gw)
             except Exception as e:
-                log.debug("Couldn't create router or gateway: %s. Ignoring...", e)
+                log.debug("Couldn't create router or gateway; ignoring: %s", e)
         return subnet
 
     def resolve_launch_properties(self, provider, cloudlaunch_config):
