@@ -11,6 +11,7 @@ djangorestframework==3.6.4
 django-rest-auth==0.9.1 # login support for DRF through restful endpoints
 django-allauth>=0.24.1 # pluggable social auth for django login
 drf-nested-routers>=0.11.1 # Provides nested routing for DRF
+coreapi==2.2.3 # Provides REST API schema
 
 # Cloudbridge
 git+git://github.com/gvlproject/cloudbridge

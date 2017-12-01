@@ -66,6 +66,8 @@ class CorsProxyView(APIView):
     """
     API endpoint that allows applications to be viewed or edited.
     """
+    exclude_from_schema = True
+
     def get(self, request, format=None):
         url = self.request.query_params.get('url')
         response = requests.get(url)
