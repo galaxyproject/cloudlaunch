@@ -21,6 +21,7 @@ class GVLAppPlugin(SimpleWebAppPlugin):
         if install_smrtportal:
             install_list.append('smrt_portal')
         user_data['gvl_config'] = {'install': install_list}
+        user_data['gvl_package_registry_url'] = gvl_config.get('gvl_package_registry_url')
         return user_data
 
     @staticmethod
