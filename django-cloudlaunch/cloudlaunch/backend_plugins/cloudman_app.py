@@ -48,10 +48,14 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
             user_data['share_string'] = cloudman_config.get("clusterSharedString")
         user_data['cluster_templates'] = cloudman_config.get(
             "cluster_templates", [])
-        # File system template default value for file system size overwrites
-        # the user-provided storage_size value so remove it if both exits
+        # Adjust filesystem templates according to user selections
         for ct in user_data['cluster_templates']:
             for ft in ct.get('filesystem_templates', []):
+                if 'galaxyData' in ft.get('roles', ''):
+                    ft['type'] = user_data['cluster_storage_type']
+                # File system template default value for file system size
+                # overwrites the user-provided storage_size value so remove it
+                # if both exits
                 if ft.get('size') and user_data['storage_size']:
                     del ft['size']
         extra_user_data = cloudman_config.get("extraUserData")
