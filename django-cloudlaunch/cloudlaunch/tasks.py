@@ -41,7 +41,7 @@ def migrate_launch_task(task_id):
     task.forget()
 
 
-@shared_task
+@shared_task(expires=6)
 def launch_appliance(name, cloud_version_config_id, credentials, app_config,
                      user_data, task_id=None):
     """Call the appropriate app handler and initiate the app launch process."""
@@ -60,7 +60,7 @@ def launch_appliance(name, cloud_version_config_id, credentials, app_config,
                                            user_data)
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([launch_appliance.request.id],
-                                        countdown=3600)
+                                        countdown=3600, expires=3900)
         return launch_result
     except SoftTimeLimitExceeded:
         raise Exception("Task time limit exceeded; stopping the task.")
@@ -140,7 +140,8 @@ def health_check(self, deployment_id, credentials):
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
-    migrate_task_result.apply_async([self.request.id], countdown=1)
+    migrate_task_result.apply_async([self.request.id], countdown=1,
+                                    expires=300)
     return result
 
 
@@ -175,7 +176,7 @@ def manage_appliance(self, action, deployment_id, credentials):
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
     migrate_task_result.apply_async([self.request.id],
-                                    countdown=1)
+                                    countdown=1, expires=300)
     return result
 
 
