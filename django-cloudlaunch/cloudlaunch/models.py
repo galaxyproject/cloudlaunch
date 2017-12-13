@@ -81,6 +81,7 @@ class Application(cb_models.DateNameAwareModel):
                                    blank=True, null=True)
     default_version = models.ForeignKey('ApplicationVersion', related_name='+',
                                         blank=True, null=True, on_delete=models.SET_NULL)
+    display_order = models.IntegerField(blank=False, null=False, default="10000")
 
     def __str__(self):
         return "{0} [{1}]".format(self.name, self.get_status_display())

@@ -29,8 +29,9 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     """
     queryset = models.Application.objects.filter(status=models.Application.LIVE)
     serializer_class = serializers.ApplicationSerializer
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (filters.OrderingFilter,filters.SearchFilter)
     search_fields = ('slug',)
+    ordering = ('display_order',)
     pagination_class = CustomApplicationPagination
 
 

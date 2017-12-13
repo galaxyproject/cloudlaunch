@@ -23,6 +23,7 @@ class AppAdmin(nested_admin.NestedModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     inlines = [AppVersionInline]
     form = forms.ApplicationForm
+    ordering = ('display_order',)
 
 
 class AppCategoryAdmin(admin.ModelAdmin):
