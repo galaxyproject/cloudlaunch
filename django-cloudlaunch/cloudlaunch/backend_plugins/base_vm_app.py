@@ -177,7 +177,7 @@ class BaseVMAppPlugin(AppPlugin):
         """
         if net_id:
             net = provider.networking.networks.get(net_id)
-            for sn in net.subnets():
+            for sn in net.subnets:
                 # No placement necessary; pick a (random) subnet
                 if not placement:
                     return sn
