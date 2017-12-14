@@ -25,7 +25,7 @@ class Image(cb_models.DateNameAwareModel):
 
 
 class CloudImage(Image):
-    cloud = models.ForeignKey('djcloudbridge.Cloud', blank=True, null=True)
+    cloud = models.ForeignKey(cb_models.Cloud, blank=True, null=True)
 
     def __str__(self):
         return "{0} (on {1})".format(self.name, self.cloud.name)
@@ -68,7 +68,7 @@ class Application(cb_models.DateNameAwareModel):
     slug = models.SlugField(max_length=100, primary_key=True)
     status = models.CharField(max_length=50, blank=True, null=True,
                               choices=STATUS_CHOICES, default=DEV)
-    category = models.ManyToManyField(AppCategory, blank=True, null=True)
+    category = models.ManyToManyField(AppCategory, blank=True)
     # summary is the size of a tweet. description can be of arbitrary length
     summary = models.CharField(max_length=140, blank=True, null=True)
     maintainer = models.CharField(max_length=255, blank=True, null=True)
@@ -101,9 +101,6 @@ class Application(cb_models.DateNameAwareModel):
 
         super(Application, self).save(*args, **kwargs)
 
-    class Meta:
-        ordering = ['name']
-
 
 class ApplicationVersion(models.Model):
     application = models.ForeignKey(Application, related_name="versions")
@@ -115,7 +112,7 @@ class ApplicationVersion(models.Model):
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Version "
                                    "specific configuration data to parameterize the launch with.",
                                    blank=True, null=True)
-    default_cloud = models.ForeignKey('djcloudbridge.Cloud', related_name='+', blank=True, null=True,
+    default_cloud = models.ForeignKey(cb_models.Cloud, related_name='+', blank=True, null=True,
                                       on_delete=models.SET_NULL)
 
     def save(self, *args, **kwargs):
@@ -139,7 +136,7 @@ class ApplicationVersion(models.Model):
 
 class ApplicationVersionCloudConfig(models.Model):
     application_version = models.ForeignKey(ApplicationVersion, related_name="app_version_config")
-    cloud = models.ForeignKey('djcloudbridge.Cloud', related_name="app_version_config")
+    cloud = models.ForeignKey(cb_models.Cloud, related_name="app_version_config")
     image = ChainedForeignKey(CloudImage, chained_field="cloud", chained_model_field="cloud")
     default_instance_type = models.CharField(max_length=256, blank=True, null=True)
     # Userdata max length is 16KB
@@ -172,13 +169,14 @@ class ApplicationDeployment(cb_models.DateNameAwareModel):
     owner = models.ForeignKey(User, null=False)
     archived = models.BooleanField(blank=True, default=False)
     application_version = models.ForeignKey(ApplicationVersion, null=False)
-    target_cloud = models.ForeignKey('djcloudbridge.Cloud', null=False)
+    target_cloud = models.ForeignKey(cb_models.Cloud, null=False)
     provider_settings = models.TextField(
         max_length=1024 * 16, help_text="Cloud provider specific settings "
         "used for this launch.", blank=True, null=True)
     application_config = models.TextField(
         max_length=1024 * 16, help_text="Application configuration data used "
         "for this launch.", blank=True, null=True)
+    credentials = models.ForeignKey(cb_models.Credentials, related_name="deployment_creds", null=True)
 
 
 class ApplicationDeploymentTask(models.Model):

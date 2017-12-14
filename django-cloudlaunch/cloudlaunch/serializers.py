@@ -9,6 +9,7 @@ from . import models
 from . import tasks
 from . import util
 
+from djcloudbridge import models as cb_models
 from djcloudbridge import serializers as cb_serializers
 from djcloudbridge import view_helpers
 from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
@@ -147,16 +148,19 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         request = self.context.get('view').request
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
-        credentials = view_helpers.get_credentials(dpl.target_cloud, request)
+        creds = (cb_models.Credentials.objects.get_subclass(
+                    id=dpl.credentials.id).as_dict()
+                 if dpl.credentials
+                 else view_helpers.get_credentials(dpl.target_cloud, request))
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
-                async_result = tasks.health_check.delay(dpl.pk, credentials)
+                async_result = tasks.health_check.delay(dpl.pk, creds)
             elif action == models.ApplicationDeploymentTask.RESTART:
                 async_result = tasks.manage_appliance.delay('restart', dpl.pk,
-                                                            credentials)
+                                                            creds)
             elif action == models.ApplicationDeploymentTask.DELETE:
                 async_result = tasks.manage_appliance.delay('delete', dpl.pk,
-                                                            credentials)
+                                                            creds)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
         except serializers.ValidationError as ve:
@@ -190,12 +194,13 @@ class DeploymentSerializer(serializers.ModelSerializer):
     tasks = CustomHyperlinkedIdentityField(view_name='deployment_task-list',
                                            lookup_field='id',
                                            lookup_url_kwarg='deployment_pk')
+    credentials = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = models.ApplicationDeployment
         fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
                   'application_config', 'added', 'updated', 'owner', 'config_app', 'app_version_details',
-                  'tasks', 'latest_task', 'launch_task', 'archived')
+                  'tasks', 'latest_task', 'launch_task', 'archived', 'credentials')
 
     def get_latest_task(self, obj):
         """Provide task info about the most recenly updated deployment task."""
@@ -258,6 +263,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
             validated_data['application_config'] = json.dumps(merged_config)
+            validated_data['credentials_id'] = credentials.get('id') or None
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
             self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)
             models.ApplicationDeploymentTask.objects.create(
