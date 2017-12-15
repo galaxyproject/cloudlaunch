@@ -313,13 +313,13 @@ class BaseVMAppPlugin(AppPlugin):
         log.debug("Health check for deployment %s", deployment)
         iid = self._get_deployment_iid(deployment)
         if not iid:
-            return {"instance_status": "unknown"}
+            return {"instance_status": "deployment_not_found"}
         log.debug("Checking the status of instance %s", iid)
         inst = provider.compute.instances.get(iid)
         if inst:
             return {"instance_status": inst.state}
         else:
-            return {"instance_status": "deleted"}
+            return {"instance_status": "not_found"}
 
     def restart(self, provider, deployment):
         """Restart the app associated with the supplied deployment."""
