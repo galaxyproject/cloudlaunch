@@ -1,3 +1,7 @@
+.. image:: https://readthedocs.org/projects/cloudlaunch/badge/?version=latest
+   :target: http://cloudlaunch.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 ===========
 CloudLaunch
 ===========
@@ -24,15 +28,15 @@ BioCloudCentral launcher. Code for that version is available in the
 Install
 -------
 
-CloudLaunch is based on Python 3.5 and although it may work on older Python
-versions, 3.5 is the only supported version. Use of virtualenv is also highly advised.
+CloudLaunch is based on Python 3.6 and although it may work on older Python
+versions, 3.6 is the only supported version. Use of virtualenv is also highly advised.
 
 1. Checkout cloudlaunch and create environment
 
 .. code-block:: bash
 
     $ mkdir launcher && cd launcher
-    $ virtualenv -p python3.5 venv --prompt "(cloudlaunch)" && source venv/bin/activate
+    $ virtualenv venv -p python3.6 --prompt "(cloudlaunch)" && source venv/bin/activate
     $ git clone -b dev https://github.com/galaxyproject/cloudlaunch.git
     $ cd cloudlaunch
     $ pip install -r requirements.txt
