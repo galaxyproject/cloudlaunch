@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.http.response import FileResponse
 from django.http.response import Http404
+from django_filters import rest_framework as dj_filters
 from rest_framework import filters
 from rest_framework import mixins
 from rest_framework import permissions
@@ -88,7 +89,7 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
-    filter_backends = (filters.OrderingFilter,filters.DjangoFilterBackend)
+    filter_backends = (filters.OrderingFilter,dj_filters.DjangoFilterBackend)
     ordering = ('-added',)
     filter_fields = ('archived',)
 

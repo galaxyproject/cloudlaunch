@@ -57,7 +57,7 @@ class PublicService(cb_models.DateNameAwareModel):
     """
     slug = models.SlugField(max_length=100, primary_key=True)
     links = models.URLField()
-    location = models.ForeignKey(Location, blank=True, null=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, blank=True, null=True)
     purpose = models.TextField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
     email_user_support = models.EmailField(blank=True, null=True)
@@ -66,7 +66,7 @@ class PublicService(cb_models.DateNameAwareModel):
     # Featured links means a more important link to show "first"
     featured = models.BooleanField(default=False)
     # The referenced application, if existing
-    # application = models.ForeignKey(Application, blank=True, null=True)
+    # application = models.ForeignKey(Application, on_delete=models.CASCADE, blank=True, null=True)
     # The url link to the logo of the Service
     logo = models.URLField(blank=True, null=True)
     tags = models.ManyToManyField(Tag, blank=True)

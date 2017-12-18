@@ -52,11 +52,11 @@ urlpatterns = [
     # get_urls() must be called or a cached set of urls will be returned.
     url(infrastructure_regex_pattern, include(cloud_router.get_urls())),
     url(infrastructure_regex_pattern, include('djcloudbridge.urls')),
-    url(auth_regex_pattern, include('rest_auth.urls', namespace='rest_auth')),
-    url(r'api/v1/auth/registration', include('rest_auth.registration.urls',
-                                              namespace='rest_auth_reg')),
-    url(auth_regex_pattern, include('rest_framework.urls',
-                                  namespace='rest_framework')),
+    url(auth_regex_pattern, include(('rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
+    url(r'api/v1/auth/registration', include(('rest_auth.registration.urls', 'rest_auth_reg'),
+                                             namespace='rest_auth_reg')),
+    url(auth_regex_pattern, include(('rest_framework.urls', 'rest_framework'),
+                                     namespace='rest_framework')),
     url(r'api/v1/auth/', include('djcloudbridge.profile.urls')),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.

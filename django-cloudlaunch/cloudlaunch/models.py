@@ -25,7 +25,7 @@ class Image(cb_models.DateNameAwareModel):
 
 
 class CloudImage(Image):
-    cloud = models.ForeignKey(cb_models.Cloud, blank=True, null=True)
+    cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return "{0} (on {1})".format(self.name, self.cloud.name)
@@ -79,8 +79,8 @@ class Application(cb_models.DateNameAwareModel):
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Application-wide "
                                    "initial configuration data to parameterize the launch with.",
                                    blank=True, null=True)
-    default_version = models.ForeignKey('ApplicationVersion', related_name='+',
-                                        blank=True, null=True, on_delete=models.SET_NULL)
+    default_version = models.ForeignKey('ApplicationVersion', on_delete=models.SET_NULL,
+                                        related_name='+', blank=True, null=True)
     display_order = models.IntegerField(blank=False, null=False, default="10000")
 
     def __str__(self):
@@ -103,7 +103,7 @@ class Application(cb_models.DateNameAwareModel):
 
 
 class ApplicationVersion(models.Model):
-    application = models.ForeignKey(Application, related_name="versions")
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="versions")
     version = models.CharField(max_length=30)
     frontend_component_path = models.CharField(max_length=255, blank=True, null=True)
     frontend_component_name = models.CharField(max_length=255, blank=True, null=True)
@@ -112,8 +112,8 @@ class ApplicationVersion(models.Model):
     default_launch_config = models.TextField(max_length=1024 * 16, help_text="Version "
                                    "specific configuration data to parameterize the launch with.",
                                    blank=True, null=True)
-    default_cloud = models.ForeignKey(cb_models.Cloud, related_name='+', blank=True, null=True,
-                                      on_delete=models.SET_NULL)
+    default_cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.SET_NULL, related_name='+',
+                                      blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # validate user data
@@ -135,8 +135,8 @@ class ApplicationVersion(models.Model):
 
 
 class ApplicationVersionCloudConfig(models.Model):
-    application_version = models.ForeignKey(ApplicationVersion, related_name="app_version_config")
-    cloud = models.ForeignKey(cb_models.Cloud, related_name="app_version_config")
+    application_version = models.ForeignKey(ApplicationVersion, on_delete=models.CASCADE, related_name="app_version_config")
+    cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, related_name="app_version_config")
     image = ChainedForeignKey(CloudImage, chained_field="cloud", chained_model_field="cloud")
     default_instance_type = models.CharField(max_length=256, blank=True, null=True)
     # Userdata max length is 16KB
@@ -166,17 +166,17 @@ class ApplicationVersionCloudConfig(models.Model):
 class ApplicationDeployment(cb_models.DateNameAwareModel):
     """Application deployment details."""
 
-    owner = models.ForeignKey(User, null=False)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
     archived = models.BooleanField(blank=True, default=False)
-    application_version = models.ForeignKey(ApplicationVersion, null=False)
-    target_cloud = models.ForeignKey(cb_models.Cloud, null=False)
+    application_version = models.ForeignKey(ApplicationVersion, on_delete=models.CASCADE, null=False)
+    target_cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, null=False)
     provider_settings = models.TextField(
         max_length=1024 * 16, help_text="Cloud provider specific settings "
         "used for this launch.", blank=True, null=True)
     application_config = models.TextField(
         max_length=1024 * 16, help_text="Application configuration data used "
         "for this launch.", blank=True, null=True)
-    credentials = models.ForeignKey(cb_models.Credentials, related_name="deployment_creds", null=True)
+    credentials = models.ForeignKey(cb_models.Credentials, on_delete=models.CASCADE, related_name="deployment_creds", null=True)
 
 
 class ApplicationDeploymentTask(models.Model):
@@ -195,8 +195,8 @@ class ApplicationDeploymentTask(models.Model):
 
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    deployment = models.ForeignKey(ApplicationDeployment, null=False,
-                                   related_name="tasks")
+    deployment = models.ForeignKey(ApplicationDeployment, on_delete=models.CASCADE,
+                                   null=False, related_name="tasks")
     celery_id = models.TextField(
         max_length=64, help_text="Celery task id for any background jobs "
         "running on this deployment", blank=True, null=True, unique=True)
@@ -299,12 +299,13 @@ class Usage(models.Model):
     """
     #automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
-    app_version_cloud_config = models.ForeignKey(ApplicationVersionCloudConfig,
+    app_version_cloud_config = models.ForeignKey(ApplicationVersionCloudConfig, on_delete=models.CASCADE,
                                                  related_name="app_version_cloud_config", null=False)
-    app_deployment = models.ForeignKey(ApplicationDeployment, related_name="app_version_cloud_config",
-                                       null=True, on_delete=models.SET_NULL)
+    app_deployment = models.ForeignKey(ApplicationDeployment, on_delete=models.SET_NULL,
+                                       related_name="app_version_cloud_config",
+                                       null=True)
     app_config =  models.TextField(max_length=1024 * 16, blank=True, null=True)
-    user = models.ForeignKey(User, null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
 
     class Meta:
         ordering = ['added']
