@@ -155,14 +155,14 @@ def restart_appliance(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Performing %s on deployment %s", action, deployment.name)
+        LOG.debug("Performing restart on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
         result = plugin.restart(provider, dpl)
     except Exception as e:
-        raise Exception("Health check failed: %s" % str(e)) from e
+        raise Exception("Restart task failed: %s" % str(e)) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
@@ -179,7 +179,7 @@ def delete_appliance(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Performing %s on deployment %s", action, deployment.name)
+        LOG.debug("Performing delete on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
@@ -189,7 +189,7 @@ def delete_appliance(self, deployment_id, credentials):
             deployment.archived = True
             deployment.save()
     except Exception as e:
-        raise Exception("Health check failed: %s" % str(e)) from e
+        raise Exception("Delete task failed: %s" % str(e)) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
