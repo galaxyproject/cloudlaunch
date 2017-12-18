@@ -260,7 +260,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 final_ud_config)
 
             del validated_data['application']
-            del validated_data['config_app']
+            if 'config_app' in validated_data:
+                del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
             validated_data['application_config'] = json.dumps(merged_config)
             validated_data['credentials_id'] = credentials.get('id') or None

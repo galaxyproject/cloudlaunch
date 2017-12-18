@@ -12,6 +12,7 @@ django-rest-auth>=0.9.1 # login support for DRF through restful endpoints
 django-allauth>=0.34.0 # pluggable social auth for django login
 drf-nested-routers>=0.90.0 # Provides nested routing for DRF
 django-filter>=1.1.0 # For DRF filtering by querystring
+coreapi==2.2.3 # Provides REST API schema
 
 # Cloudbridge
 git+git://github.com/gvlproject/cloudbridge

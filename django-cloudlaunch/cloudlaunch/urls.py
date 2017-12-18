@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.conf.urls import include
 from django.conf.urls import url
+from rest_framework.schemas import get_schema_view
 
 from . import views
 
@@ -45,6 +46,9 @@ cloud_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
 infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'
 public_services_regex_pattern = r'api/v1/public_services/'
+
+schema_view = get_schema_view(title='CloudLaunch API')
+
 urlpatterns = [
     url(r'api/v1/', include(router.urls)),
     url(r'api/v1/', include(deployments_router.urls)),
@@ -63,4 +67,5 @@ urlpatterns = [
     url(r'accounts/', include('allauth.urls')),
     # Public services
     url(public_services_regex_pattern, include('public_appliances.urls')),
+    url(r'api/v1/schema/$', schema_view),
 ]
