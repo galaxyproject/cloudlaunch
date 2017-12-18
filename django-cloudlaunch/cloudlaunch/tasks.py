@@ -17,7 +17,7 @@ from . import util
 LOG = get_task_logger(__name__)
 
 
-@shared_task
+@shared_task(time_limit=120)
 def migrate_launch_task(task_id):
     """
     Migrate task result to a persistent model table.
@@ -41,38 +41,38 @@ def migrate_launch_task(task_id):
     task.forget()
 
 
-@shared_task(expires=6)
+@shared_task(expires=120)
 def launch_appliance(name, cloud_version_config_id, credentials, app_config,
                      user_data, task_id=None):
-    """Call the appropriate app handler and initiate the app launch process."""
+    """Call the appropriate app plugin and initiate the app launch process."""
     launch_result = {}
     try:
         LOG.debug("Launching appliance %s", name)
         cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
             pk=cloud_version_config_id)
-        handler = util.import_class(
+        plugin = util.import_class(
             cloud_version_config.application_version.backend_component_name)()
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
         cloud_config = util.serialize_cloud_config(cloud_version_config)
-        launch_result = handler.launch_app(provider, Task(launch_appliance),
-                                           name, cloud_config, app_config,
-                                           user_data)
+        launch_result = plugin.launch_app(provider, Task(launch_appliance),
+                                          name, cloud_config, app_config,
+                                          user_data)
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([launch_appliance.request.id],
-                                        countdown=3600, expires=3900)
+                                        countdown=3600)
         return launch_result
     except SoftTimeLimitExceeded:
-        raise Exception("Task time limit exceeded; stopping the task.")
+        raise Exception("Launch task time limit exceeded; stopping the task.")
     except Exception as e:
-        raise Exception("Task failed: %s" % str(e)) from e
+        raise Exception("Launch task failed: %s" % str(e)) from e
 
-def _get_app_handler(deployment):
+def _get_app_plugin(deployment):
     """
-    Retrieve app-specific handler for a deployment.
+    Retrieve appliance plugin for a deployment.
 
     :rtype: :class:`.AppPlugin`
-    :return: An instance of the handler class corresponding to the
+    :return: An instance of the plugin class corresponding to the
              deployment app.
     """
     cloud = deployment.target_cloud
@@ -82,7 +82,7 @@ def _get_app_handler(deployment):
         cloud_version_config.application_version.backend_component_name)()
 
 
-@shared_task
+@shared_task(time_limit=120)
 def migrate_task_result(task_id):
     """Migrate task results to the database from the broker table."""
     LOG.debug("Migrating task %s result to the DB" % task_id)
@@ -117,7 +117,7 @@ def _serialize_deployment(deployment):
         return {'launch_status': None, 'launch_result': {}}
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, time_limit=60, expires=300)
 def health_check(self, deployment_id, credentials):
     """
     Check the health of the supplied deployment.
@@ -127,56 +127,73 @@ def health_check(self, deployment_id, credentials):
     by default, the health reflects the status of the cloud instance by
     querying the cloud provider.
     """
-    deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-    LOG.debug("Checking health of deployment %s", deployment.name)
-    handler = _get_app_handler(deployment)
-    dpl = _serialize_deployment(deployment)
-    provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                               credentials)
-    result = handler.health_check(provider, dpl)
-    # We only keep the two most recent health check task results so delete
-    # any older ones
-    signals.health_check.send(sender=None, deployment=deployment)
+    try:
+        deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
+        LOG.debug("Checking health of deployment %s", deployment.name)
+        plugin = _get_app_plugin(deployment)
+        dpl = _serialize_deployment(deployment)
+        provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                                   credentials)
+        result = plugin.health_check(provider, dpl)
+    except Exception as e:
+        raise Exception("Health check failed: %s" % str(e)) from e
+    finally:
+        # We only keep the two most recent health check task results so delete
+        # any older ones
+        signals.health_check.send(sender=None, deployment=deployment)
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
-    migrate_task_result.apply_async([self.request.id], countdown=1,
-                                    expires=300)
+    migrate_task_result.apply_async([self.request.id], countdown=1)
     return result
 
 
-@shared_task(bind=True)
-def manage_appliance(self, action, deployment_id, credentials):
+@shared_task(bind=True, time_limit=300, expires=120)
+def restart_appliance(self, deployment_id, credentials):
     """
-    Perform supplied action on this app.
-
-    @type action: ``str``
-    @param action: Accepted values are ``restart`` or ``delete``. Invoking
-                   the ``delete`` action, if successful, will also mark the
-                   supplied ``deployment`` as ``archived`` in the database.
+    Restarts this appliances
     """
-    deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-    LOG.debug("Performing %s on deployment %s", action, deployment.name)
-    handler = _get_app_handler(deployment)
-    dpl = _serialize_deployment(deployment)
-    provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                               credentials)
-    if action.lower() == 'restart':
-        result = handler.restart(provider, dpl)
-    elif action.lower() == 'delete':
-        result = handler.delete(provider, dpl)
-        if result is True:
-            deployment.archived = True
-            deployment.save()
-    else:
-        LOG.error("Unrecognized action: %s. Acceptable values are 'delete' "
-                  "or 'restart'", action)
-        return None
+    try:
+        deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
+        LOG.debug("Performing restart on deployment %s", deployment.name)
+        plugin = _get_app_plugin(deployment)
+        dpl = _serialize_deployment(deployment)
+        provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                                   credentials)
+        result = plugin.restart(provider, dpl)
+    except Exception as e:
+        raise Exception("Restart task failed: %s" % str(e)) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
-    migrate_task_result.apply_async([self.request.id],
-                                    countdown=1, expires=300)
+    migrate_task_result.apply_async([self.request.id], countdown=1)
+    return result
+
+
+@shared_task(bind=True, expires=120)
+def delete_appliance(self, deployment_id, credentials):
+    """
+    Deletes this appliances
+    If successful, will also mark the supplied ``deployment`` as
+    ``archived`` in the database.
+    """
+    try:
+        deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
+        LOG.debug("Performing delete on deployment %s", deployment.name)
+        plugin = _get_app_plugin(deployment)
+        dpl = _serialize_deployment(deployment)
+        provider = domain_model.get_cloud_provider(deployment.target_cloud,
+                                                   credentials)
+        result = plugin.delete(provider, dpl)
+        if result is True:
+            deployment.archived = True
+            deployment.save()
+    except Exception as e:
+        raise Exception("Delete task failed: %s" % str(e)) from e
+    # Schedule a task to migrate results right after task completion
+    # Do this as a separate task because until this task completes, we
+    # cannot obtain final status or traceback.
+    migrate_task_result.apply_async([self.request.id], countdown=1)
     return result
 
 
@@ -185,7 +202,7 @@ class Task(object):
     An abstraction class for handling task actions.
 
     Plugins can implement the interface defined here and handle task actions
-    independent CloudLaunch and its task broker.
+    independent of CloudLaunch and its task broker.
     """
 
     def __init__(self, broker_task):

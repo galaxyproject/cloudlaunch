@@ -156,10 +156,10 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
                 async_result = tasks.health_check.delay(dpl.pk, creds)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.manage_appliance.delay('restart', dpl.pk,
+                async_result = tasks.restart_appliance.delay(dpl.pk,
                                                             creds)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.manage_appliance.delay('delete', dpl.pk,
+                async_result = tasks.delete_appliance.delay(dpl.pk,
                                                             creds)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
