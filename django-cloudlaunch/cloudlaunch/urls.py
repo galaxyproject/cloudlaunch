@@ -62,6 +62,7 @@ urlpatterns = [
     url(auth_regex_pattern, include(('rest_framework.urls', 'rest_framework'),
                                      namespace='rest_framework')),
     url(r'api/v1/auth/', include('djcloudbridge.profile.urls')),
+    url(r'api/v1/auth/get_auth_token/', views.AuthTokenView.as_view()),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
     url(r'accounts/', include('allauth.urls')),
