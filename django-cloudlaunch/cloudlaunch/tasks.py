@@ -55,6 +55,8 @@ def launch_appliance(name, cloud_version_config_id, credentials, app_config,
         provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
                                                    credentials)
         cloud_config = util.serialize_cloud_config(cloud_version_config)
+        LOG.info("Launching app %s with the follwing app config: %s \n and "
+                 "cloud config: %s", name, app_config, cloud_config)
         launch_result = plugin.launch_app(provider, Task(launch_appliance),
                                           name, cloud_config, app_config,
                                           user_data)

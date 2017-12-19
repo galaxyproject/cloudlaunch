@@ -274,7 +274,9 @@ class DeploymentSerializer(serializers.ModelSerializer):
         except serializers.ValidationError as ve:
             raise ve
         except Exception as e:
-            raise serializers.ValidationError({ "error" : str(e) })
+            raise serializers.ValidationError(
+                {"error": "An exception creating a deployment of %s: %s)" %
+                 (version.backend_component_name, e)})
 
     def update(self, instance, validated_data):
         instance.archived = validated_data.get('archived', instance.archived)
