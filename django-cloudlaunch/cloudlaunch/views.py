@@ -2,12 +2,14 @@ from django.http import HttpResponse
 from django.http.response import FileResponse
 from django.http.response import Http404
 from django_filters import rest_framework as dj_filters
+from rest_framework import authentication
 from rest_framework import filters
 from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework import renderers
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -62,6 +64,20 @@ class AuthView(APIView):
                 'password/reset/change': request.build_absolute_uri(reverse('rest_auth:rest_password_change')),
                 }
         return Response(data)
+
+
+class AuthTokenView(APIView):
+    """
+    Return an auth token for a user that is already logged in.
+    """
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    renderer_classes = (renderers.JSONRenderer,)
+
+
+    def get(self, request, format=None):
+        token, created = Token.objects.get_or_create(user=request.user)
+        return Response({'token': token.key})
 
 
 class CorsProxyView(APIView):
