@@ -69,7 +69,7 @@ class BaseVMAppPlugin(AppPlugin):
                                  is_root=True)
         return lc
 
-    def attach_public_ip(self, provider, inst):
+    def attach_public_ip(self, provider, inst, network_id):
         """
         If instance has no public IP, try to attach one.
 
@@ -84,7 +84,9 @@ class BaseVMAppPlugin(AppPlugin):
             return inst.public_ips[0]
         else:
             fip = None
-            for ip in provider.networking.floating_ips:
+            net = provider.networking.networks.get(network_id)
+            gateway = net.gateways.get_or_create_inet_gateway()
+            for ip in gateway.floating_ips:
                 if not ip.in_use:
                     fip = ip
                     break
@@ -93,7 +95,7 @@ class BaseVMAppPlugin(AppPlugin):
                           fip.public_ip)
                 inst.add_floating_ip(fip)
             else:
-                fip = provider.networking.floating_ips.create()
+                fip = gateway.floating_ips.create()
                 log.debug("Attaching a just-created floating IP %s" %
                           fip.public_ip)
                 inst.add_floating_ip(fip)
@@ -280,7 +282,8 @@ class BaseVMAppPlugin(AppPlugin):
         # FIXME: this does not account for multiple VM fw and expects one
         results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
         results['instance'] = {'id': inst.id}
-        results['publicIP'] = self.attach_public_ip(provider, inst)
+        results['publicIP'] = self.attach_public_ip(provider, inst,
+                                                    subnet.network_id)
         task.update_state(
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
