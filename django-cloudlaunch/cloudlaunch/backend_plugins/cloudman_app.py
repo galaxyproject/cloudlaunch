@@ -33,7 +33,7 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
             user_data['machine_image_id'] = cloudman_config['restartCluster'].get('persistent_data', {}).get('machine_image_id')
             user_data['placement'] = cloudman_config['restartCluster']['placement']['placement']
         user_data['password'] = get_required_val(
-            cloudman_config, "clusterPassword", "cluster name is required.")
+            cloudman_config, "clusterPassword", "cluster password is required.")
         user_data['initial_cluster_type'] = get_required_val(
             cloudman_config, "clusterType", "cluster type is required.")
         user_data['cluster_storage_type'] = get_required_val(
