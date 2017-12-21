@@ -47,10 +47,15 @@ class BaseVMAppPlugin(AppPlugin):
             return provider.security.key_pairs.create(name=kp_name)
 
     def _get_or_create_vmf(self, provider, subnet, vmf_name, description):
-        """Fetch an existing VM firewall named ``vmf_name`` or create one."""
-        vmf = provider.security.vm_firewalls.find(name=vmf_name)
-        if len(vmf) > 0:
-            return vmf[0]
+        """
+        Fetch an existing VM firewall named ``vmf_name`` or create one.
+
+        The firewall must exist on the same network that the supplied subnet
+        belongs to.
+        """
+        for vmf in provider.security.vm_firewalls.find(name=vmf_name):
+            if vmf.network_id == subnet.network_id:
+                return vmf
         # Check for None in case of NeCTAR
         network_id = subnet.network_id if subnet else None
         return provider.security.vm_firewalls.create(
@@ -228,9 +233,9 @@ class BaseVMAppPlugin(AppPlugin):
         placement = cloudlaunch_config.get('placementZone', None)
         subnet = self.setup_networking(provider, net_id, subnet_id, placement)
         vmf = None
-        if cloudlaunch_config.get('firewall', []):
+        if cloudlaunch_config.get('firewall'):
             vmf = self.configure_vm_firewalls(
-                provider, subnet, cloudlaunch_config.get('firewall', []))
+                provider, subnet, cloudlaunch_config['firewall'])
         return subnet, placement, vmf
 
     def launch_app(self, provider, task, name, cloud_config,
