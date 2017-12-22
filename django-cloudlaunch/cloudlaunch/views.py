@@ -76,7 +76,7 @@ class AuthTokenView(APIView):
 
 
     def get(self, request, format=None):
-        token, created = Token.objects.get_or_create(user=request.user)
+        token = Token.objects.get(user=request.user)
         return Response({'token': token.key})
 
 
