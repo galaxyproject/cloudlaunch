@@ -7,12 +7,12 @@ django-celery-beat>=1.1.0 # celery background task monitor which uses the django
 redis # As celery message broker during development
 
 # DRF
-djangorestframework==3.7.3
+djangorestframework>=3.7.3
 django-rest-auth>=0.9.1 # login support for DRF through restful endpoints
 django-allauth>=0.34.0 # pluggable social auth for django login
 drf-nested-routers>=0.90.0 # Provides nested routing for DRF
 django-filter>=1.1.0 # For DRF filtering by querystring
-coreapi==2.2.3 # Provides REST API schema
+coreapi>=2.2.3 # Provides REST API schema
 
 # Cloudbridge
 git+git://github.com/gvlproject/cloudbridge#egg=cloudbridge
@@ -21,11 +21,10 @@ git+git://github.com/CloudVE/djcloudbridge#egg=djcloudbridge
 # Django
 # django-model-utils>=3.1.1 # Provides better inheritance support for django models
 git+git://github.com/jazzband/django-model-utils@3.1.1#egg=django-model-utils # https://github.com/jazzband/django-model-utils/issues/304
-django-fernet-fields==0.5 # for encryption of user credentials
+django-fernet-fields>=0.5 # for encryption of user credentials
 django-cors-headers>=2.1.0 # Middleware for automatically adding CORS headers to responses
 django-nested-admin>=3.0.21 # for nested object editing in django admin
-# django-smart-selects>=1.5.2 # For dependencies between key fields in django admin
-git+git://github.com/CloudVE/django-smart-selects@django_2_upgrade#egg=django-smart-selects # Use fork till Django 2 support is merged
+django-smart-selects>=1.5.3 # For dependencies between key fields in django admin
 psycopg2 # postgres database driver
 
 # Production Django
