@@ -128,7 +128,7 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.ApplicationDeploymentTask
-        exclude = ('deployment', '_result', '_status')
+        exclude = ('_result', '_status')
 
     def create(self, validated_data):
         """
