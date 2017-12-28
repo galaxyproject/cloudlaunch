@@ -213,7 +213,7 @@ class BaseVMAppPlugin(AppPlugin):
                     router = provider.networking.routers.create(
                         network=subnet.network_id, name=router_name)
                 router.attach_subnet(subnet)
-                net = provider.networking.network.get(net_id)
+                net = provider.networking.networks.get(subnet.network_id)
                 gw = net.gateways.get_or_create_inet_gateway(
                     'cloudlaunch-default-gateway')
                 router.attach_gateway(gw)
