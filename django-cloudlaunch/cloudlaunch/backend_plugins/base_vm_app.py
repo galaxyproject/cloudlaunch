@@ -263,11 +263,12 @@ class BaseVMAppPlugin(AppPlugin):
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
         vm_type = cloudlaunch_config.get(
-            'instanceType', cloud_config.get('default_instance_type'))
+            'vmType', cloud_config.get('default_instance_type'))
 
         log.debug("Launching with subnet %s and VM firewalls %s" %
                   (subnet, vmfl))
-        log.info("Launching base_vm with UD:\n%s" % user_data)
+        log.info("Launching base_vm of type %s with UD:\n%s" % (vm_type,
+                                                                user_data))
         task.update_state(state='PROGRESSING',
                           meta={'action': "Launching an instance of type %s "
                                 "with keypair %s in zone %s" %
