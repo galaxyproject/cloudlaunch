@@ -2,6 +2,7 @@
 import copy
 import time
 import yaml
+import ipaddress
 
 from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
@@ -53,11 +54,12 @@ class BaseVMAppPlugin(AppPlugin):
         The firewall must exist on the same network that the supplied subnet
         belongs to.
         """
-        for vmf in provider.security.vm_firewalls.find(name=vmf_name):
-            if vmf.network_id == subnet.network_id:
-                return vmf
         # Check for None in case of NeCTAR
         network_id = subnet.network_id if subnet else None
+        for vmf in provider.security.vm_firewalls.find(name=vmf_name):
+            # For NeCTAR, just return the first matching firewall
+            if vmf.network_id == network_id or network_id is None:
+                return vmf
         return provider.security.vm_firewalls.create(
             name=vmf_name, description=description,
             network_id=network_id)
@@ -87,6 +89,9 @@ class BaseVMAppPlugin(AppPlugin):
         """
         if len(inst.public_ips) > 0 and inst.public_ips[0]:
             return inst.public_ips[0]
+        # Legacy NeCTAR support
+        elif ipaddress.ip_address(inst.private_ips[0]).is_global:
+            return inst.private_ips[0]
         else:
             fip = None
             net = provider.networking.networks.get(network_id)
@@ -287,13 +292,13 @@ class BaseVMAppPlugin(AppPlugin):
         # FIXME: this does not account for multiple VM fw and expects one
         results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
         results['instance'] = {'id': inst.id}
-        results['publicIP'] = self.attach_public_ip(provider, inst,
-                                                    subnet.network_id)
+        # Support for legacy NeCTAR
+        results['publicIP'] = self.attach_public_ip(
+            provider, inst, subnet.network_id if subnet else None)
         task.update_state(
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
-                            "Public IP: %s" % results['publicIP'] if
-                            results['publicIP'] else ""})
+                            "Public IP: %s" % results.get('publicIP') or ""})
         return {"cloudLaunch": results}
 
     def _get_deployment_iid(self, deployment):
