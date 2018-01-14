@@ -57,8 +57,9 @@ class BaseVMAppPlugin(AppPlugin):
         # Check for None in case of NeCTAR
         network_id = subnet.network_id if subnet else None
         for vmf in provider.security.vm_firewalls.find(name=vmf_name):
-            # For NeCTAR, just return the first matching firewall
-            if vmf.network_id == network_id or network_id is None:
+            # OpenStack doesn't have a network_id associated with the firewall, so
+            # just return the first match
+            if vmf.network_id is None or vmf.network_id == network_id:
                 return vmf
         return provider.security.vm_firewalls.create(
             name=vmf_name, description=description,
