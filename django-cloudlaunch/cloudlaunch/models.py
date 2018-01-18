@@ -289,6 +289,10 @@ class ApplicationDeploymentTask(models.Model):
         end of the period, the Celery task is deleted and the data is migrated
         to this table. By wrapping this field as a property, we ensure proper
         data is returned.
+
+        Available status values include: PENDING, STARTED, RETRY, FAILURE,
+        SUCCESS, and "UNKNOWN - `Exception value`".
+        See http://docs.celeryproject.org/en/latest/reference/celery.result.html#celery.result.AsyncResult.status
         """
         try:
             if self.celery_id:
