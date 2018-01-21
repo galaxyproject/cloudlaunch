@@ -218,7 +218,10 @@ class BaseVMAppPlugin(AppPlugin):
                 else:
                     router = provider.networking.routers.create(
                         network=subnet.network_id, name=router_name)
-                router.attach_subnet(subnet)
+                try:
+                    router.attach_subnet(subnet)
+                except Exception as e:
+                    log.debug("Couldn't attach subnet; ignoring: %s", e)
                 net = provider.networking.networks.get(subnet.network_id)
                 gw = net.gateways.get_or_create_inet_gateway(
                     'cloudlaunch-default-gateway')
@@ -258,6 +261,8 @@ class BaseVMAppPlugin(AppPlugin):
                                     'cloudlaunch_key_pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
+        import pydevd
+        pydevd.settrace('localhost', port=5678)
         subnet, placement_zone, vmfl = self.resolve_launch_properties(
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
