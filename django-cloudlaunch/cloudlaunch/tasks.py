@@ -42,32 +42,38 @@ def migrate_launch_task(task_id):
 
 
 @shared_task(expires=120)
-def launch_appliance(name, cloud_version_config_id, credentials, app_config,
+def create_appliance(name, cloud_version_config_id, credentials, app_config,
                      user_data, task_id=None):
     """Call the appropriate app plugin and initiate the app launch process."""
-    launch_result = {}
+    provision_result = {}
+    configure_result = {}
     try:
-        LOG.debug("Launching appliance %s", name)
-        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
+        LOG.debug("Creating appliance %s", name)
+        cloud_version_conf = models.ApplicationVersionCloudConfig.objects.get(
             pk=cloud_version_config_id)
         plugin = util.import_class(
-            cloud_version_config.application_version.backend_component_name)()
-        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
+            cloud_version_conf.application_version.backend_component_name)()
+        provider = domain_model.get_cloud_provider(cloud_version_conf.cloud,
                                                    credentials)
-        cloud_config = util.serialize_cloud_config(cloud_version_config)
-        LOG.info("Launching app %s with the follwing app config: %s \n and "
+        cloud_config = util.serialize_cloud_config(cloud_version_conf)
+        LOG.info("Creating app %s with the follwing app config: %s \n and "
                  "cloud config: %s", name, app_config, cloud_config)
-        launch_result = plugin.launch_app(provider, Task(launch_appliance),
-                                          name, cloud_config, app_config,
-                                          user_data)
+        provision_result = plugin.provision_host(
+            provider, Task(create_appliance), name, cloud_config, app_config,
+            user_data)
+        configure_result = plugin.configure_host(
+            provision_result.get('host'), provision_result.get('pk'),
+            provision_result.get('user'), app_config)
         # Schedule a task to migrate result one hour from now
-        migrate_launch_task.apply_async([launch_appliance.request.id],
+        migrate_launch_task.apply_async([create_appliance.request.id],
                                         countdown=3600)
-        return launch_result
+        # Merge result dicts; right-most dict keys take precedence
+        return {**provision_result, **configure_result}
     except SoftTimeLimitExceeded:
         raise Exception("Launch task time limit exceeded; stopping the task.")
     except Exception as e:
         raise Exception("Launch task failed: %s" % str(e)) from e
+
 
 def _get_app_plugin(deployment):
     """

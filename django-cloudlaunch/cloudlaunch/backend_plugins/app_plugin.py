@@ -61,10 +61,10 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def launch_app(self, provider, task, name, cloud_config, app_config,
-                   user_data):
+    def provision_host(self, provider, task, name, cloud_config, app_config,
+                       user_data):
         """
-        Launch a given application on the target infrastructure.
+        Provision a host machine on the target infrastructure.
 
         This operation is designed to be a Celery task, and thus, can contain
         long-running operations.
@@ -97,7 +97,37 @@ class AppPlugin():
                           version of the ``app_config``.
 
         :rtype: ``dict``
-        :return: Results of the launch process.
+        :return: Results of the provisioning process. This dict must contain at
+                 least the following keys:
+                    * ``host``: Host IP address or domain name
+                    * ``pk``: Private portion of an SSH key for accessing the
+                              host
+                    * ``user``: Username with which to access the host
+        """
+        pass
+
+    @abc.abstractmethod
+    def configure_host(self, host, pk, user, app_config):
+        """
+        Configure the host for use by the appliance.
+
+        @type  host: ``str``
+        @param host: Hostname or IP address of the host to configure.
+
+        @type  pk: ``str``
+        @param pk: Private portion of an SSH key for accessing the host.
+
+        @type  user: ``str``
+        @param user: Username with which to access the host.
+
+        @type  app_config: ``dict``
+        @param app_config: A dict containing the original, unprocessed version
+                            of the app config. The app config is a merged dict
+                            of database stored settings and user-entered
+                            settings.
+
+        :rtype: ``dict``
+        :return: Results of the configuring process.
         """
         pass
 

@@ -244,9 +244,8 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, subnet, cloudlaunch_config['firewall'])
         return subnet, placement, vmf
 
-    def launch_app(self, provider, task, name, cloud_config,
-                   app_config, user_data):
-        """Initiate the app launch process."""
+    def provision_host(self, provider, task, name, cloud_config,
+                       app_config, user_data):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
@@ -301,7 +300,12 @@ class BaseVMAppPlugin(AppPlugin):
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
                             "Public IP: %s" % results.get('publicIP') or ""})
-        return {"cloudLaunch": results}
+        return {"cloudLaunch": results, "host": results["publicIP"],
+                "pk": "", "user": ""}
+
+    def configure_host(self, host, pk, user, app_config):
+        log.info("Configuring host %s", host)
+        return {}
 
     def _get_deployment_iid(self, deployment):
         """

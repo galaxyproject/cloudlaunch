@@ -255,7 +255,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             final_ud_config = handler.process_app_config(
                 provider, name, cloud_config, merged_config)
             sanitised_app_config = handler.sanitise_app_config(merged_config)
-            async_result = tasks.launch_appliance.delay(
+            async_result = tasks.create_appliance.delay(
                 name, cloud_version_config.pk, credentials, merged_config,
                 final_ud_config)
 
