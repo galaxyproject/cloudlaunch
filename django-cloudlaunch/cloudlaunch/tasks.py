@@ -66,7 +66,8 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
                 provider, Task(create_appliance), name, cloud_config,
                 app_config, user_data)
             host_config = provision_result.get('host')
-        configure_result = plugin.configure_host(host_config, app_config)
+        configure_result = plugin.configure_host(
+            Task(create_appliance), host_config, app_config)
         # Don't return the private key used for host config
         if provision_result:
             del provision_result['host']['pk']

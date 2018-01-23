@@ -1,10 +1,12 @@
 import yaml
+
+from celery.utils.log import get_task_logger
 from urllib.parse import urlparse
 from rest_framework.serializers import ValidationError
+
 from .simple_web_app import SimpleWebAppPlugin
 
-import logging
-log = logging.getLogger(__name__)
+log = get_task_logger('cloudlaunch')
 
 
 def get_required_val(data, name, message):
@@ -122,15 +124,15 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
         app_config['config_cloudman']['clusterPassword'] = '********'
         return app_config
 
-    def launch_app(self, provider, task, name, cloud_config,
-                   app_config, user_data):
+    def provision_host(self, provider, task, name, cloud_config,
+                       app_config, user_data):
         ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
         # Make sure the placement and image ID (eg from a saved cluster) propagate
         if user_data.get('placement'):
             app_config.get('config_cloudlaunch')['placementZone'] = user_data['placement']
         if user_data.get('machine_image_id'):
             app_config.get('config_cloudlaunch')['customImageID'] = user_data['machine_image_id']
-        result = super(CloudManAppPlugin, self).launch_app(
+        result = super(CloudManAppPlugin, self).provision_host(
             provider, task, name, cloud_config, app_config, ud, check_http=False)
         result['cloudLaunch']['applicationURL'] = \
             'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])

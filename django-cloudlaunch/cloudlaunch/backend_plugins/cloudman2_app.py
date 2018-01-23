@@ -14,7 +14,7 @@ from string import Template
 from django.conf import settings
 from git import Repo
 
-from .base_vm_app import BaseVMAppPlugin
+from .simple_web_app import SimpleWebAppPlugin
 
 from celery.utils.log import get_task_logger
 log = get_task_logger(__name__)
@@ -40,7 +40,7 @@ ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
 """)
 
 
-class CloudMan2AppPlugin(BaseVMAppPlugin):
+class CloudMan2AppPlugin(SimpleWebAppPlugin):
     """CloudLaunch appliance implementation for CloudMan 2.0."""
 
     def __init__(self):
@@ -99,6 +99,9 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         pkey = None
         if pk:
+            if 'RSA' not in pk:
+                # AWS at least does not specify key type yet paramiko requires
+                pk = pk.replace(' PRIVATE', ' RSA PRIVATE')
             key_file_object = StringIO(pk)
             pkey = paramiko.RSAKey.from_private_key(key_file_object)
             key_file_object.close()
@@ -155,13 +158,13 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         (out, err) = p.communicate()
         p_status = p.wait()
         log.info("Playbook stdout: %s\nstatus: %s" % (out, p_status))
-        log.info("Deleting pk file {0} needed by Ansible".format(pkf))
         if not settings.DEBUG:
+            log.info("Deleting ansible playbook {0}".format(repo_path))
             shutil.rmtree(repo_path)
         return (p_status, out)
 
-    def launch_app(self, provider, task, name, cloud_config,
-                   app_config, user_data):
+    def provision_host(self, provider, task, name, cloud_config,
+                       app_config, user_data):
         """
         Handle the app launch process.
 
@@ -173,29 +176,28 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         """
         # Implicitly create a new KP for this instance
         # Note that this relies on the baseVMApp implementation!
-        kp_name = "CL-" + "".join([c for c in name if c.isalpha() or
+        kp_name = "cl-" + "".join([c for c in name if c.isalpha() or
                                   c.isdigit()]).rstrip()
         app_config['config_cloudlaunch']['keyPair'] = kp_name
-        # Launch an instance and check ssh connectivity
-        result = super(CloudMan2AppPlugin, self).launch_app(
+        return super(CloudMan2AppPlugin, self).provision_host(
             provider, task, name, cloud_config, app_config,
-            user_data=None)
-        inst = provider.compute.instances.get(
-            result.get('cloudLaunch', {}).get('instance', {}).get('id'))
-        pk = result.get('cloudLaunch', {}).get('keyPair', {}).get('material')
+            user_data=None, check_http=False)
+
+    def configure_host(self, task, host_config, app_config):
+        host = host_config.get('address')
+        pk = host_config.get('pk')
         timeout = 0
-        while (not self._check_ssh(inst.public_ips[0], pk=pk) or
-               timeout > 200):
-            log.info("Waiting for ssh on {0}...".format(inst.name))
+        while (not self._check_ssh(host, pk=pk) or timeout > 200):
+            log.info("Waiting for ssh on %s...", host)
             time.sleep(5)
             timeout += 5
-        # Configure the instance
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Configuring container cluster manager.'})
-        self._run_playbook(inst.public_ips[0], pk)
-        result['cloudLaunch']['applicationURL'] = \
-            'http://{0}:8080/'.format(result['cloudLaunch']['publicIP'])
+        self._run_playbook(host, pk)
+        result = {}
+        result['cloudLaunch'] = {'applicationURL':
+                                 'http://{0}:8080/'.format(host)}
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"

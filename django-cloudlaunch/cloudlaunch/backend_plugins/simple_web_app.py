@@ -1,11 +1,14 @@
 """Plugin implementation for a simple web application."""
 import logging
 import time
+
+from celery.utils.log import get_task_logger
 import requests
 import requests.exceptions
+
 from .base_vm_app import BaseVMAppPlugin
 
-log = logging.getLogger(__name__)
+log = get_task_logger('cloudlaunch')
 
 
 class SimpleWebAppPlugin(BaseVMAppPlugin):
@@ -45,8 +48,8 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
                 pass
             count += 1
 
-    def launch_app(self, provider, task, name, cloud_config,
-                   app_config, user_data, **kwargs):
+    def provision_host(self, provider, task, name, cloud_config,
+                       app_config, user_data, **kwargs):
         """
         Handle the app launch process and wait for http.
 
@@ -54,7 +57,7 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
         want this method to perform the app http check and prefer to handle
         it in the child class.
         """
-        result = super(SimpleWebAppPlugin, self).launch_app(
+        result = super(SimpleWebAppPlugin, self).provision_host(
             provider, task, name, cloud_config, app_config, user_data)
         check_http = kwargs.get('check_http', True)
         if check_http and result.get('cloudLaunch', {}).get('publicIP'):

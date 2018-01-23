@@ -112,10 +112,15 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def configure_host(self, host_config, app_config):
+    def configure_host(self, task, host_config, app_config):
         """
         Configure the host for use by the appliance.
 
+        @type  task: :class:`Task`
+        @param task: A Task object, which can be used to report progress. See
+                     ``tasks.Task`` for the interface details and sample
+                     implementation.
+                     
         @type  host_config: ``dict``
         @param host_config: A dict containing info about the host being
                             configured. For base implementation, it should have

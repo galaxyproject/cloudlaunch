@@ -301,9 +301,11 @@ class BaseVMAppPlugin(AppPlugin):
             meta={"action": "Instance created successfully. " +
                             "Public IP: %s" % results.get('publicIP') or ""})
         return {"cloudLaunch": results,
-                "host": {"address": results["publicIP"], "pk": "", "user": ""}}
+                "host": {"address": results["publicIP"],
+                         "pk": results['keyPair']['material'],
+                         "user": ""}}
 
-    def configure_host(self, host_config, app_config):
+    def configure_host(self, task, host_config, app_config):
         log.info("Configuring host %s", host_config.get('address'))
         return {}
 
