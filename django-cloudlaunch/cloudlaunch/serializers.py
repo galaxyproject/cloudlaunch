@@ -156,11 +156,9 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
                 async_result = tasks.health_check.delay(dpl.pk, creds)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.restart_appliance.delay(dpl.pk,
-                                                            creds)
+                async_result = tasks.restart_appliance.delay(dpl.pk, creds)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.delete_appliance.delay(dpl.pk,
-                                                            creds)
+                async_result = tasks.delete_appliance.delay(dpl.pk, creds)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
         except serializers.ValidationError as ve:
@@ -257,7 +255,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             sanitised_app_config = handler.sanitise_app_config(merged_config)
             async_result = tasks.create_appliance.delay(
                 name, cloud_version_config.pk, credentials, merged_config,
-                final_ud_config)
+                final_ud_config, host_config=None)
 
             del validated_data['application']
             if 'config_app' in validated_data:

@@ -300,11 +300,11 @@ class BaseVMAppPlugin(AppPlugin):
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
                             "Public IP: %s" % results.get('publicIP') or ""})
-        return {"cloudLaunch": results, "host": results["publicIP"],
-                "pk": "", "user": ""}
+        return {"cloudLaunch": results,
+                "host": {"address": results["publicIP"], "pk": "", "user": ""}}
 
-    def configure_host(self, host, pk, user, app_config):
-        log.info("Configuring host %s", host)
+    def configure_host(self, host_config, app_config):
+        log.info("Configuring host %s", host_config.get('address'))
         return {}
 
     def _get_deployment_iid(self, deployment):

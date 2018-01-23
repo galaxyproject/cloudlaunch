@@ -4,6 +4,7 @@ import json
 import logging
 
 from celery.app import shared_task
+from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 
@@ -45,7 +46,7 @@ def migrate_launch_task(task_id):
 
 @shared_task(expires=120)
 def create_appliance(name, cloud_version_config_id, credentials, app_config,
-                     user_data, task_id=None):
+                     user_data, host_config=None):
     """Call the appropriate app plugin and initiate the app launch process."""
     provision_result = {}
     configure_result = {}
@@ -55,17 +56,20 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
             pk=cloud_version_config_id)
         plugin = util.import_class(
             cloud_version_conf.application_version.backend_component_name)()
-        provider = domain_model.get_cloud_provider(cloud_version_conf.cloud,
-                                                   credentials)
-        cloud_config = util.serialize_cloud_config(cloud_version_conf)
-        LOG.info("Creating app %s with the follwing app config: %s \n and "
-                 "cloud config: %s", name, app_config, cloud_config)
-        provision_result = plugin.provision_host(
-            provider, Task(create_appliance), name, cloud_config, app_config,
-            user_data)
-        configure_result = plugin.configure_host(
-            provision_result.get('host'), provision_result.get('pk'),
-            provision_result.get('user'), app_config)
+        if not host_config:
+            provider = domain_model.get_cloud_provider(
+                cloud_version_conf.cloud, credentials)
+            cloud_config = util.serialize_cloud_config(cloud_version_conf)
+            LOG.info("Creating app %s with the follwing app config: %s \n and "
+                     "cloud config: %s", name, app_config, cloud_config)
+            provision_result = plugin.provision_host(
+                provider, Task(create_appliance), name, cloud_config,
+                app_config, user_data)
+            host_config = provision_result.get('host')
+        configure_result = plugin.configure_host(host_config, app_config)
+        # Don't return the private key used for host config
+        if provision_result:
+            del provision_result['host']['pk']
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([create_appliance.request.id],
                                         countdown=3600)

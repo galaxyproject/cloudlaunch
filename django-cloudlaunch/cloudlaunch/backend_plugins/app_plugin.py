@@ -99,26 +99,32 @@ class AppPlugin():
         :rtype: ``dict``
         :return: Results of the provisioning process. This dict must contain at
                  least the following keys:
-                    * ``host``: Host IP address or domain name
-                    * ``pk``: Private portion of an SSH key for accessing the
-                              host
-                    * ``user``: Username with which to access the host
+                    * ``cloudLaunch``: Results of the CloudLaunch provisioning
+                                       process
+                    * ``host``: A dictionary with info about the provisioned
+                                host. This dict must have at least the
+                                following keys:
+                        * ``address``: Host IP address or hostname
+                        * ``pk``: Private portion of an SSH key for accessing
+                                  the host
+                        * ``user``: Username with which to access the host
         """
         pass
 
     @abc.abstractmethod
-    def configure_host(self, host, pk, user, app_config):
+    def configure_host(self, host_config, app_config):
         """
         Configure the host for use by the appliance.
 
-        @type  host: ``str``
-        @param host: Hostname or IP address of the host to configure.
-
-        @type  pk: ``str``
-        @param pk: Private portion of an SSH key for accessing the host.
-
-        @type  user: ``str``
-        @param user: Username with which to access the host.
+        @type  host_config: ``dict``
+        @param host_config: A dict containing info about the host being
+                            configured. For base implementation, it should have
+                            at leasst the following keys:
+                              * ``address``: Hostname or IP address of the host
+                                             to configure.
+                              * ``pk``: Private portion of an SSH key for
+                                        accessing the host
+                              * ``user``: Username with which to access the host
 
         @type  app_config: ``dict``
         @param app_config: A dict containing the original, unprocessed version
