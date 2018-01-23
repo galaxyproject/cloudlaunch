@@ -1,11 +1,9 @@
 """Tasks to be executed asynchronously (via Celery)."""
 import copy
 import json
-import traceback
+import logging
 
 from celery.app import shared_task
-from celery.exceptions import Ignore
-from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
 
@@ -15,6 +13,10 @@ from . import signals
 from . import util
 
 LOG = get_task_logger(__name__)
+# Limit how much these libraries log
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('cloudbridge').setLevel(logging.INFO)
 
 
 @shared_task(time_limit=120)
