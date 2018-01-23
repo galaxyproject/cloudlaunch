@@ -6,13 +6,14 @@ import logging
 from celery.app import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
+from celery.utils.log import get_task_logger
 
 from djcloudbridge import domain_model
 from . import models
 from . import signals
 from . import util
 
-log = logging.getLogger(__name__)
+log = get_task_logger('cloudlaunch')
 # Limit how much these libraries log
 logging.getLogger('boto3').setLevel(logging.WARNING)
 logging.getLogger('botocore').setLevel(logging.WARNING)
@@ -153,7 +154,9 @@ def health_check(self, deployment_id, credentials):
                                                    credentials)
         result = plugin.health_check(provider, dpl)
     except Exception as e:
-        raise Exception("Health check failed: %s" % str(e)) from e
+        msg = "Health check failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
     finally:
         # We only keep the two most recent health check task results so delete
         # any older ones
@@ -179,7 +182,9 @@ def restart_appliance(self, deployment_id, credentials):
                                                    credentials)
         result = plugin.restart(provider, dpl)
     except Exception as e:
-        raise Exception("Restart task failed: %s" % str(e)) from e
+        msg = "Restart task failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
@@ -206,7 +211,9 @@ def delete_appliance(self, deployment_id, credentials):
             deployment.archived = True
             deployment.save()
     except Exception as e:
-        raise Exception("Delete task failed: %s" % str(e)) from e
+        msg = "Delete task failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.

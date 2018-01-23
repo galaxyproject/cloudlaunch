@@ -4,6 +4,7 @@ import time
 import yaml
 import ipaddress
 
+from celery.utils.log import get_task_logger
 from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
 import requests
@@ -11,8 +12,7 @@ import requests.exceptions
 
 from .app_plugin import AppPlugin
 
-import logging
-log = logging.getLogger(__name__)
+log = get_task_logger('cloudlaunch')
 
 
 class BaseVMAppPlugin(AppPlugin):

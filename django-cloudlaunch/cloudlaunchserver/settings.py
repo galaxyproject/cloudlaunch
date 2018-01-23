@@ -234,7 +234,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[%(asctime)s %(name)s:%(lineno)d %(levelname)s] %(message)s'
+            'format': '%(asctime)s %(levelname)s %(pathname)s:%(lineno)d - %(message)s'
         },
     },
     'filters': {
@@ -276,10 +276,16 @@ LOGGING = {
             'handlers': ['file-django', 'sentry'],
             'level': 'INFO',
         },
+        'django.server': {
+            'handlers': ['console', 'file-django', 'sentry'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
         'cloudlaunch': {
             'handlers': ['console', 'file-cloudlaunch', 'sentry'],
             'level': 'DEBUG',
-        }
+            'propagate': False
+        },
     },
 }
 
