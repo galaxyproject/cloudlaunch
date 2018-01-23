@@ -6,14 +6,13 @@ import logging
 from celery.app import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
-from celery.utils.log import get_task_logger
 
 from djcloudbridge import domain_model
 from . import models
 from . import signals
 from . import util
 
-LOG = get_task_logger(__name__)
+log = logging.getLogger(__name__)
 # Limit how much these libraries log
 logging.getLogger('boto3').setLevel(logging.WARNING)
 logging.getLogger('botocore').setLevel(logging.WARNING)
@@ -51,7 +50,7 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
     provision_result = {}
     configure_result = {}
     try:
-        LOG.debug("Creating appliance %s", name)
+        log.debug("Creating appliance %s", name)
         cloud_version_conf = models.ApplicationVersionCloudConfig.objects.get(
             pk=cloud_version_config_id)
         plugin = util.import_class(
@@ -60,7 +59,7 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
             provider = domain_model.get_cloud_provider(
                 cloud_version_conf.cloud, credentials)
             cloud_config = util.serialize_cloud_config(cloud_version_conf)
-            LOG.info("Creating app %s with the follwing app config: %s \n and "
+            log.info("Creating app %s with the follwing app config: %s \n and "
                      "cloud config: %s", name, app_config, cloud_config)
             provision_result = plugin.provision_host(
                 provider, Task(create_appliance), name, cloud_config,
@@ -76,9 +75,13 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
         # Merge result dicts; right-most dict keys take precedence
         return {**provision_result, **configure_result}
     except SoftTimeLimitExceeded:
-        raise Exception("Launch task time limit exceeded; stopping the task.")
+        msg = "Launch task time limit exceeded; stopping the task."
+        log.warning(msg)
+        raise Exception(msg)
     except Exception as e:
-        raise Exception("Launch task failed: %s" % str(e)) from e
+        msg = "Launch task failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
 
 
 def _get_app_plugin(deployment):
@@ -99,7 +102,7 @@ def _get_app_plugin(deployment):
 @shared_task(time_limit=120)
 def migrate_task_result(task_id):
     """Migrate task results to the database from the broker table."""
-    LOG.debug("Migrating task %s result to the DB" % task_id)
+    log.debug("Migrating task %s result to the DB" % task_id)
     adt = models.ApplicationDeploymentTask.objects.get(celery_id=task_id)
     task = AsyncResult(task_id)
     task_meta = task.backend.get_task_meta(task.id)
@@ -143,7 +146,7 @@ def health_check(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Checking health of deployment %s", deployment.name)
+        log.debug("Checking health of deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
@@ -169,7 +172,7 @@ def restart_appliance(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Performing restart on deployment %s", deployment.name)
+        log.debug("Performing restart on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
@@ -193,7 +196,7 @@ def delete_appliance(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Performing delete on deployment %s", deployment.name)
+        log.debug("Performing delete on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,

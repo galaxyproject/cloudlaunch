@@ -1,5 +1,6 @@
 import json
 import jsonmerge
+import logging
 
 from bioblend.cloudman.launch import CloudManLauncher
 from cloudbridge.cloud.factory import ProviderList
@@ -13,6 +14,8 @@ from djcloudbridge import models as cb_models
 from djcloudbridge import serializers as cb_serializers
 from djcloudbridge import view_helpers
 from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
+
+log = logging.getLogger(__name__)
 
 
 class CloudManSerializer(serializers.Serializer):
@@ -140,16 +143,16 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         :param validated_data: Dict containing action the task should perform.
                                Valid actions are `HEALTH_CHECK`, `DELETE`.
         """
-        print("deployment task data: %s" % validated_data)
+        log.debug("Deployment task data: %s", validated_data)
         action = getattr(models.ApplicationDeploymentTask,
                          validated_data.get(
-                            'action',
-                            models.ApplicationDeploymentTask.HEALTH_CHECK))
+                             'action',
+                             models.ApplicationDeploymentTask.HEALTH_CHECK))
         request = self.context.get('view').request
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
         creds = (cb_models.Credentials.objects.get_subclass(
-                    id=dpl.credentials.id).as_dict()
+            id=dpl.credentials.id).as_dict()
                  if dpl.credentials
                  else view_helpers.get_credentials(dpl.target_cloud, request))
         try:
