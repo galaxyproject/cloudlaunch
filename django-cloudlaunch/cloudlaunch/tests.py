@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -13,7 +13,8 @@ class ApplicationTests(APITestCase):
     APP_DATA = {'name': 'HelloWorldApp',
                 'slug': 'helloworldapp',
                 'description': 'HelloWorldDesc',
-                'info_url': 'http://www.cloudlaunch.org'
+                'info_url': 'http://www.cloudlaunch.org',
+                'status': 'LIVE',
                 }
 
     def _create_application(self, app_data):
