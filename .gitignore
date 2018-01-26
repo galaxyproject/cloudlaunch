@@ -20,3 +20,8 @@ docs/_build/
 *.DS_Store
 /venv/
 /.tox/
+
+codecloud.html
+dump.rdb
+.vscode/
+
