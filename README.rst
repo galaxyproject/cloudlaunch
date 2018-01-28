@@ -25,8 +25,53 @@ This is an all-new version of CloudLaunch that replaces the original
 BioCloudCentral launcher. Code for that version is available in the
 `BioCloudCentral branch <https://github.com/galaxyproject/cloudlaunch/tree/BioCloudCentral>`_.
 
-Install
--------
+Install Production Version
+--------------------------
+
+1. Install the cloudlaunch django server
+
+.. code-block:: bash
+
+    $ pip install cloudlaunch-server
+
+Once installed, You can run django admin commands as follows:
+
+.. code-block:: bash
+
+    $ cloudlaunch-server django
+
+2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
+   ``cloudlaunchserver/settings_local.py`` and make any desired configuration
+   changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
+   because it is used to encrypt sensitive database fields.
+
+3. Prepare the database with:
+
+.. code-block:: bash
+
+    $ cloudlaunch-server django migrate
+    $ cloudlaunch-server django createsuperuser
+    $ cloudlaunch-server django runserver
+
+4. Start the development server and celery task queue (along with a Redis
+   server as the message broker), each process in its own tab.
+
+.. code-block:: bash
+
+    $ python manage.py runserver
+    $ redis-server & celery -A cloudlaunchserver worker -l info --beat
+
+5. Visit http://127.0.0.1:8000/admin/ to define your application and
+   infrastructure properties.
+
+6. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
+
+You will probably also want to install the UI for the server. The default UI
+is available at https://github.com/galaxyproject/cloudlaunch-ui.
+
+
+Install Development Version
+----------------------------
 
 CloudLaunch is based on Python 3.6 and although it may work on older Python
 versions, 3.6 is the only supported version. Use of virtualenv is also highly advised.
@@ -39,30 +84,10 @@ versions, 3.6 is the only supported version. Use of virtualenv is also highly ad
     $ virtualenv venv -p python3.6 --prompt "(cloudlaunch)" && source venv/bin/activate
     $ git clone -b dev https://github.com/galaxyproject/cloudlaunch.git
     $ cd cloudlaunch
-    $ pip install -r requirements.txt
+    $ python setup.py develop
     $ cd django-cloudlaunch
     $ python manage.py migrate
     $ python manage.py runserver
     $ python manage.py createsuperuser
 
-2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
-   ``cloudlaunchserver/settings_local.py`` and make any desired configuration
-   changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
-   because it is used to encrypt sensitive database fields.
-
-3. Start the development server and celery task queue (along with a Redis
-   server as the message broker), each process in its own tab.
-
-.. code-block:: bash
-
-    $ python manage.py runserver
-    $ redis-server & celery -A cloudlaunchserver worker -l info --beat
-
-4. Visit http://127.0.0.1:8000/admin/ to define your application and
-   infrastructure properties.
-
-5. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
-
-You will probably also want to install the UI for the server. The default UI
-is available at https://github.com/galaxyproject/cloudlaunch-ui.
-
+2. Follow step 2 onwards from the production instructions above
