@@ -7,7 +7,7 @@ from .celery import app as celery_app  # noqa
 __all__ = ['celery_app']
 
 # Current version of the library
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 
 def get_version():
@@ -15,6 +15,6 @@ def get_version():
     Return a string with the current version of the library.
 
     :rtype: ``string``
-    :return:  Library version (e.g., "2.0.1").
+    :return:  Library version (e.g., "2.0.2").
     """
     return __version__
