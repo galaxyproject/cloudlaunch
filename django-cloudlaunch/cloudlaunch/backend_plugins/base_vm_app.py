@@ -261,8 +261,6 @@ class BaseVMAppPlugin(AppPlugin):
                                     'cloudlaunch_key_pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
-        import pydevd
-        pydevd.settrace('localhost', port=5678)
         subnet, placement_zone, vmfl = self.resolve_launch_properties(
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
