@@ -84,6 +84,8 @@ REQS_BASE = [
     'bioblend',
     # For merging userdata/config dictionaries
     'jsonmerge>=1.4.0',
+    # For commandline option handling
+    'click'
 ]
 
 REQS_PROD = ([
@@ -107,7 +109,7 @@ REQS_DEV = ([
 )
 
 setup(
-    name='cloudlaunch',
+    name='cloudlaunch-server',
     version=version,
     description=("CloudLaunch is a ReSTful, extensible Django app for"
                  " discovering and launching applications on cloud, container,"
@@ -124,6 +126,10 @@ setup(
         'dev': REQS_DEV,
         'test': REQS_TEST,
         'prod': REQS_PROD
+    },
+    entry_points={
+        'console_scripts': [
+            'cloudlaunch-server = cloudlaunchserver.runner:main']
     },
     license="MIT",
     keywords='cloudlaunch',
