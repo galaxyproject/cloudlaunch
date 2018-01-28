@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-import manage
+from django.conf import settings as django_settings
 import os
 import sys
 
@@ -67,8 +67,7 @@ CORS_ALLOW_HEADERS = default_headers + (
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/var/www/example.com/static/"
-SITE_ROOT = os.path.dirname(os.path.realpath(manage.__file__))
-STATIC_ROOT = os.path.join(SITE_ROOT, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Application definition
 
