@@ -1,10 +1,18 @@
+from unittest.mock import patch
+
+from celery.result import AsyncResult
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.test import TestCase
+from djcloudbridge import models as cb_models
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Application
+from . import tasks
+from .models import (Application,
+                     ApplicationDeployment,
+                     ApplicationVersion,
+                     ApplicationDeploymentTask)
 
 
 # Create your tests here.
@@ -140,3 +148,79 @@ class UserTests(APITestCase):
         """
         # TODO: Ensure that a user's cloud credentials can be created.
         self._register_and_login()
+
+
+class DeploymentTaskTests(APITestCase):
+
+    # TODO: factor out or create user and force login?
+    LOGIN_DATA = {'username': 'TestUser',
+                  'email': 'testuser@cloudlaunch.org',
+                  'password': 'test_user_pass'
+                  }
+
+    REG_DATA = {'username': 'TestUser',
+                'email': 'testuser@cloudlaunch.org',
+                'password1': 'test_user_pass',
+                'password2': 'test_user_pass'
+                }
+
+    def _register_user(self, data):
+        url = reverse('rest_auth_reg:rest_register')
+        return self.client.post(url, data, format='json')
+
+    def _login_user(self, data):
+        url = reverse('rest_auth:rest_login')
+        response = self.client.post(url, data, format='json').json()
+        self.client.credentials(
+            HTTP_AUTHORIZATION='Token ' + response.get('key'))
+
+    def _register_and_login(self):
+        self._register_user(UserTests.REG_DATA)
+        self._login_user(UserTests.LOGIN_DATA)
+
+    @patch("cloudlaunch.tasks.health_check.delay")
+    def test_create_health_check_task(self, health_check_task):
+        """
+        Test creating a HEALTH_CHECK type task.
+        """
+        self._register_and_login()
+        user = User.objects.get()
+        application = Application.objects.create(
+            name="Ubuntu",
+            status=Application.LIVE,
+        )
+        application_version = ApplicationVersion.objects.create(
+            application=application,
+            version="1.0",
+        )
+        target_cloud = cb_models.AWS.objects.create(
+            name='Amazon US East 1 - N. Virginia',
+            kind='cloud',
+        )
+        user_profile = cb_models.UserProfile.objects.create(user=user)
+        credentials = cb_models.AWSCredentials.objects.create(
+            cloud=target_cloud,
+            access_key='access_key',
+            secret_key='secret_key',
+            user_profile=user_profile,
+        )
+        app_deployment = ApplicationDeployment.objects.create(
+            owner=user,
+            application_version=application_version,
+            target_cloud=target_cloud,
+            credentials=credentials
+        )
+        url = reverse('deployment_task-list',
+                      kwargs={'deployment_pk': app_deployment.id})
+        health_check_task.return_value = AsyncResult('foo123')
+        response = self.client.post(url, {'action': 'HEALTH_CHECK'})
+        health_check_task.assert_called_with(app_deployment.id,
+                                             credentials.as_dict())
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['celery_id'], 'foo123')
+        self.assertEqual(response.data['action'], 'HEALTH_CHECK')
+        # check that ApplicationDeploymentTask was created, will throw
+        # DoesNotExist if missing
+        ApplicationDeploymentTask.objects.get(action='HEALTH_CHECK',
+                                              celery_id='foo123',
+                                              deployment=app_deployment)
