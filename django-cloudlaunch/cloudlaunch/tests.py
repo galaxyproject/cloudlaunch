@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import uuid
 
 from celery.result import AsyncResult
 from django.contrib.auth.models import User
@@ -152,39 +153,7 @@ class UserTests(APITestCase):
 
 class DeploymentTaskTests(APITestCase):
 
-    # TODO: factor out or create user and force login?
-    LOGIN_DATA = {'username': 'TestUser',
-                  'email': 'testuser@cloudlaunch.org',
-                  'password': 'test_user_pass'
-                  }
-
-    REG_DATA = {'username': 'TestUser',
-                'email': 'testuser@cloudlaunch.org',
-                'password1': 'test_user_pass',
-                'password2': 'test_user_pass'
-                }
-
-    def _register_user(self, data):
-        url = reverse('rest_auth_reg:rest_register')
-        return self.client.post(url, data, format='json')
-
-    def _login_user(self, data):
-        url = reverse('rest_auth:rest_login')
-        response = self.client.post(url, data, format='json').json()
-        self.client.credentials(
-            HTTP_AUTHORIZATION='Token ' + response.get('key'))
-
-    def _register_and_login(self):
-        self._register_user(UserTests.REG_DATA)
-        self._login_user(UserTests.LOGIN_DATA)
-
-    @patch("cloudlaunch.tasks.health_check.delay")
-    def test_create_health_check_task(self, health_check_task):
-        """
-        Test creating a HEALTH_CHECK type task.
-        """
-        self._register_and_login()
-        user = User.objects.get()
+    def _create_test_deployment(self, user):
         application = Application.objects.create(
             name="Ubuntu",
             status=Application.LIVE,
@@ -210,17 +179,100 @@ class DeploymentTaskTests(APITestCase):
             target_cloud=target_cloud,
             credentials=credentials
         )
+        return app_deployment
+
+    def setUp(self):
+        """Create user and log in."""
+        self.user = User.objects.create(username='test-user')
+        self.client.force_authenticate(user=self.user)
+
+    @patch("cloudlaunch.tasks.health_check.delay")
+    def test_create_health_check_task(self, health_check_task):
+        """Test creating a HEALTH_CHECK type task."""
+        app_deployment = self._create_test_deployment(user=self.user)
         url = reverse('deployment_task-list',
                       kwargs={'deployment_pk': app_deployment.id})
-        health_check_task.return_value = AsyncResult('foo123')
+        celery_id = str(uuid.uuid4())
+        health_check_task.return_value = AsyncResult(celery_id)
         response = self.client.post(url, {'action': 'HEALTH_CHECK'})
-        health_check_task.assert_called_with(app_deployment.id,
-                                             credentials.as_dict())
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data['celery_id'], 'foo123')
+        health_check_task.assert_called_with(
+            app_deployment.id,
+            app_deployment.credentials.as_dict())
+        self.assertEqual(response.data['celery_id'], celery_id)
         self.assertEqual(response.data['action'], 'HEALTH_CHECK')
         # check that ApplicationDeploymentTask was created, will throw
         # DoesNotExist if missing
-        ApplicationDeploymentTask.objects.get(action='HEALTH_CHECK',
-                                              celery_id='foo123',
-                                              deployment=app_deployment)
+        task = ApplicationDeploymentTask.objects.get(action='HEALTH_CHECK',
+                                                     celery_id=celery_id,
+                                                     deployment=app_deployment)
+        self.assertIsNotNone(task)
+
+    @patch("cloudlaunch.tasks.restart_appliance.delay")
+    def test_create_restart_task(self, restart_task):
+        """Test creating a RESTART type task."""
+        app_deployment = self._create_test_deployment(user=self.user)
+        url = reverse('deployment_task-list',
+                      kwargs={'deployment_pk': app_deployment.id})
+        celery_id = str(uuid.uuid4())
+        restart_task.return_value = AsyncResult(celery_id)
+        response = self.client.post(url, {'action': 'RESTART'})
+        self.assertEqual(response.status_code, 201)
+        restart_task.assert_called_with(
+            app_deployment.id,
+            app_deployment.credentials.as_dict())
+        self.assertEqual(response.data['celery_id'], celery_id)
+        self.assertEqual(response.data['action'], 'RESTART')
+        # check that ApplicationDeploymentTask was created, will throw
+        # DoesNotExist if missing
+        task = ApplicationDeploymentTask.objects.get(action='RESTART',
+                                                     celery_id=celery_id,
+                                                     deployment=app_deployment)
+        self.assertIsNotNone(task)
+
+    @patch("cloudlaunch.tasks.delete_appliance.delay")
+    def test_create_delete_task(self, delete_task):
+        """Test creating a DELETE type task."""
+        app_deployment = self._create_test_deployment(user=self.user)
+        url = reverse('deployment_task-list',
+                      kwargs={'deployment_pk': app_deployment.id})
+        celery_id = str(uuid.uuid4())
+        delete_task.return_value = AsyncResult(celery_id)
+        response = self.client.post(url, {'action': 'DELETE'})
+        self.assertEqual(response.status_code, 201)
+        delete_task.assert_called_with(
+            app_deployment.id,
+            app_deployment.credentials.as_dict())
+        self.assertEqual(response.data['celery_id'], celery_id)
+        self.assertEqual(response.data['action'], 'DELETE')
+        # check that ApplicationDeploymentTask was created, will throw
+        # DoesNotExist if missing
+        task = ApplicationDeploymentTask.objects.get(action='DELETE',
+                                                     celery_id=celery_id,
+                                                     deployment=app_deployment)
+        self.assertIsNotNone(task)
+
+    def test_only_one_launch_task(self):
+        """Test LAUNCH task not allowed if one already exists."""
+        app_deployment = self._create_test_deployment(user=self.user)
+        ApplicationDeploymentTask.objects.create(
+            deployment=app_deployment,
+            action=ApplicationDeploymentTask.LAUNCH)
+        self.assertEqual(
+            len(ApplicationDeploymentTask.objects.filter(
+                deployment=app_deployment,
+                action=ApplicationDeploymentTask.LAUNCH)),
+            1,
+            "Only one LAUNCH task should exist.")
+        url = reverse('deployment_task-list',
+                      kwargs={'deployment_pk': app_deployment.id})
+        response = self.client.post(url, {'action': 'LAUNCH'})
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue('action' in response.data)
+        # LAUNCH task count is still 1
+        self.assertEqual(
+            len(ApplicationDeploymentTask.objects.filter(
+                deployment=app_deployment,
+                action=ApplicationDeploymentTask.LAUNCH)),
+            1,
+            "Only one LAUNCH task should exist.")
