@@ -228,6 +228,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
         version = data.get('application_version')
         if application and version:
             version = models.ApplicationVersion.objects.get(application=application, version=version)
+            # data dict is immutable when running tests so copy is needed
+            data = data.copy()
             data['application_version'] = version.id
         return super(DeploymentSerializer, self).to_internal_value(data)
 

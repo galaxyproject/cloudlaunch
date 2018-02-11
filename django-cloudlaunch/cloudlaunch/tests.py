@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 import uuid
 
@@ -6,6 +7,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.test import TestCase
 from djcloudbridge import models as cb_models
+from djcloudbridge import serializers as cb_serializers
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -13,10 +15,21 @@ from . import tasks
 from .models import (Application,
                      ApplicationDeployment,
                      ApplicationVersion,
-                     ApplicationDeploymentTask)
+                     ApplicationVersionCloudConfig,
+                     ApplicationDeploymentTask,
+                     CloudImage)
 
 
 # Create your tests here.
+class BaseAuthenticatedAPITestCase(APITestCase):
+    """Base class for tests that need an authenticated user."""
+
+    def setUp(self):
+        """Create user and log in."""
+        self.user = User.objects.create(username='test-user')
+        self.client.force_authenticate(user=self.user)
+
+
 class ApplicationTests(APITestCase):
 
     APP_DATA = {'name': 'HelloWorldApp',
@@ -151,7 +164,140 @@ class UserTests(APITestCase):
         self._register_and_login()
 
 
-class DeploymentTaskTests(APITestCase):
+class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
+
+    def _create_application_version(self):
+        application = Application.objects.create(
+            name="Ubuntu",
+            status=Application.LIVE,
+        )
+        application_version = ApplicationVersion.objects.create(
+            application=application,
+            version="16.04",
+            frontend_component_path="app/marketplace/plugins/plugins.module"
+                                    "#PluginsModule",
+            frontend_component_name="ubuntu-config",
+            backend_component_name="cloudlaunch.backend_plugins.base_vm_app"
+                                   ".BaseVMAppPlugin",
+        )
+        return application_version
+
+    def _create_cloud(self):
+        return cb_models.AWS.objects.create(
+            name='Amazon US East 1 - N. Virginia',
+            kind='cloud',
+        )
+
+    def _create_credentials(self, target_cloud):
+        user_profile = cb_models.UserProfile.objects.create(user=self.user)
+        return cb_models.AWSCredentials.objects.create(
+            cloud=target_cloud,
+            access_key='access_key',
+            secret_key='secret_key',
+            user_profile=user_profile,
+            default=True,
+        )
+
+    def _create_image(self, target_cloud):
+        return CloudImage.objects.create(
+            image_id='abc123',
+            cloud=target_cloud,
+        )
+
+    @patch("cloudlaunch.tasks.launch_appliance.delay")
+    def test_create_deployment(self, launch_appliance_task):
+        """Create deployment from 'application' and 'application_version'."""
+        application_version = self._create_application_version()
+        target_cloud = self._create_cloud()
+        ubuntu_image = self._create_image(target_cloud)
+        credentials = self._create_credentials(target_cloud)
+        app_version_cloud_config = \
+            ApplicationVersionCloudConfig.objects.create(
+                application_version=application_version,
+                cloud=target_cloud,
+                image=ubuntu_image,
+            )
+        celery_id = str(uuid.uuid4())
+        launch_appliance_task.return_value = AsyncResult(celery_id)
+        url = reverse('deployments-list')
+        response = self.client.post(url, {
+            'name': 'test-deployment',
+            'application': application_version.application.slug,
+            'application_version': '16.04',
+            'target_cloud': target_cloud.slug,
+        })
+        self.assertEqual(response.status_code, 201)
+        launch_appliance_task.assert_called_with(
+            'test-deployment',
+            app_version_cloud_config.id,
+            credentials.as_dict(),
+            {},
+            None
+        )
+        app_deployment = ApplicationDeployment.objects.get()
+        launch_task = ApplicationDeploymentTask.objects.get(
+                action=ApplicationDeploymentTask.LAUNCH,
+                deployment=app_deployment, celery_id=celery_id)
+        self.assertIsNotNone(launch_task)
+
+    @patch("cloudlaunch.tasks.launch_appliance.delay")
+    def test_merging_app_config(self, launch_appliance_task):
+        """Specify app_config and verify it is merged correctly."""
+        application_version = self._create_application_version()
+        target_cloud = self._create_cloud()
+        ubuntu_image = self._create_image(target_cloud)
+        credentials = self._create_credentials(target_cloud)
+        default_launch_config = {
+            'foo': 1,
+            'bar': 2,
+        }
+        app_config = {
+            'bar': 3,
+            'baz': 4,
+            'config_cloudlaunch': {
+                'instance_user_data': "userdata"
+            }
+        }
+        app_version_cloud_config = \
+            ApplicationVersionCloudConfig.objects.create(
+                application_version=application_version,
+                cloud=target_cloud,
+                image=ubuntu_image,
+                default_launch_config=json.dumps(default_launch_config)
+            )
+        celery_id = str(uuid.uuid4())
+        launch_appliance_task.return_value = AsyncResult(celery_id)
+        url = reverse('deployments-list')
+        response = self.client.post(url, {
+            'name': 'test-deployment',
+            'application': application_version.application.slug,
+            'application_version': '16.04',
+            'target_cloud': target_cloud.slug,
+            'config_app': json.dumps(app_config),
+        })
+        self.assertEqual(response.status_code, 201)
+        launch_appliance_task.assert_called_with(
+            'test-deployment',
+            app_version_cloud_config.id,
+            credentials.as_dict(),
+            {
+                'foo': 1,  # default from default_launch_config
+                'bar': 3,  # config_app overrides default_launch_config
+                'baz': 4,  # added by config_app
+                'config_cloudlaunch': {
+                    'instance_user_data': "userdata"
+                }
+            },
+            'userdata'
+        )
+        app_deployment = ApplicationDeployment.objects.get()
+        launch_task = ApplicationDeploymentTask.objects.get(
+                action=ApplicationDeploymentTask.LAUNCH,
+                deployment=app_deployment, celery_id=celery_id)
+        self.assertIsNotNone(launch_task)
+
+
+class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
 
     def _create_test_deployment(self, user):
         application = Application.objects.create(
@@ -180,11 +326,6 @@ class DeploymentTaskTests(APITestCase):
             credentials=credentials
         )
         return app_deployment
-
-    def setUp(self):
-        """Create user and log in."""
-        self.user = User.objects.create(username='test-user')
-        self.client.force_authenticate(user=self.user)
 
     @patch("cloudlaunch.tasks.health_check.delay")
     def test_create_health_check_task(self, health_check_task):
