@@ -71,8 +71,18 @@ class UsageAdmin(admin.ModelAdmin):
         return app_config.get('config_cloudlaunch', {}).get('instanceType')
 
 
+class PublicKeyInline(admin.StackedInline):
+    model = models.PublicKey
+    extra = 1
+
+
+class UserProfileAdmin(admin.ModelAdmin):
+    inlines = [PublicKeyInline]
+
+
 admin.site.register(models.Application, AppAdmin)
 admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
 admin.site.register(models.CloudImage, CloudImageAdmin)
 admin.site.register(models.Usage, UsageAdmin)
+admin.site.register(models.UserProfile, UserProfileAdmin)

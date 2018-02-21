@@ -288,3 +288,18 @@ class DeploymentSerializer(serializers.ModelSerializer):
         u = models.Usage(app_version_cloud_config=app_version_cloud_config,
                          app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
         u.save()
+
+
+class PublicKeySerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='public-key-detail', read_only=True)
+
+    class Meta:
+        model = models.PublicKey
+        exclude = ['user_profile']
+
+    def create(self, validated_data):
+        user_profile, _ = models.UserProfile.objects.get_or_create(
+            user=self.context.get('view').request.user)
+        return models.PublicKey.objects.create(
+            user_profile=user_profile, **validated_data)

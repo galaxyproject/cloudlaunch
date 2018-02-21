@@ -325,3 +325,44 @@ class Usage(models.Model):
     class Meta:
         ordering = ['added']
         verbose_name_plural = 'Usage'
+
+
+class PublicKey(cb_models.DateNameAwareModel):
+    """Allow users to store their ssh public keys."""
+
+    public_key = models.TextField(max_length=16384)
+    default = models.BooleanField(
+        help_text="If set, use as the default public key",
+        blank=True, default=False)
+    # Ideally, we would auto-generate the fingerprint from the public key
+    # instead of prompting the user for it but AWS at least uses two different
+    # methods of generating it, making the autogeneration impractical:
+    # http://bit.ly/2EIs0kR
+    fingerprint = models.CharField(max_length=100, blank=True, null=True)
+    user_profile = models.ForeignKey('UserProfile', models.CASCADE,
+                                     related_name='public_key')
+
+    def save(self, *args, **kwargs):
+        # Ensure only 1 public key is selected as the 'default'
+        # This is not atomic but don't know how to enforce it at the
+        # DB level directly.
+        if self.default is True:
+            previous_default = PublicKey.objects.filter(
+                default=True, user_profile=self.user_profile).first()
+            if previous_default:
+                previous_default.default = False
+                previous_default.save()
+        return super(PublicKey, self).save()
+
+
+class UserProfile(models.Model):
+    """User profile specific to CloudLaunch."""
+
+    # Link UserProfile to a User model instance
+    user = models.OneToOneField(
+        User, models.CASCADE, related_name="cloudlaunch_user_profile")
+
+    def __str__(self):
+        """Set default display for objects."""
+        return "{0} ({1} {2})".format(self.user.username, self.user.first_name,
+                                      self.user.last_name)

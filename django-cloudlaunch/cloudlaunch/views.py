@@ -4,6 +4,7 @@ from django.http.response import Http404
 from django_filters import rest_framework as dj_filters
 from rest_framework import authentication
 from rest_framework import filters
+from rest_framework import generics
 from rest_framework import mixins
 from rest_framework import permissions
 from rest_framework import renderers
@@ -136,3 +137,26 @@ class DeploymentTaskViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return models.ApplicationDeploymentTask.objects.filter(
             deployment=deployment, deployment__owner=user)
+
+
+class PublicKeyList(generics.ListCreateAPIView):
+    """List public ssh keys associated with the user profile."""
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.PublicKeySerializer
+
+    def get_queryset(self):
+        c.incr('user.list.public.keys')
+        return models.PublicKey.objects.filter(
+            user_profile__user=self.request.user)
+
+
+class PublicKeyDetail(generics.RetrieveUpdateDestroyAPIView):
+    """Get a single public ssh keys associated with the user profile."""
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.PublicKeySerializer
+
+    def get_queryset(self):
+        return models.PublicKey.objects.filter(
+            user_profile__user=self.request.user)
