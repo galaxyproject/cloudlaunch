@@ -244,9 +244,13 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, subnet, cloudlaunch_config['firewall'])
         return subnet, placement, vmf
 
-    def provision_host(self, provider, task, name, cloud_config,
-                       app_config, user_data):
+    def deploy(self, name, task, app_config, provider_config):
+        """See the parent class in ``app_plugin.py`` for the docstring."""
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
+        provider = provider_config.get('cloud_provider')
+        cloud_config = provider_config.get('cloud_config')
+        user_data = provider_config.get('cloud_user_data')
+
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
             custom_image_id or cloud_config.get('image_id'))
@@ -264,27 +268,26 @@ class BaseVMAppPlugin(AppPlugin):
         vm_type = cloudlaunch_config.get(
             'vmType', cloud_config.get('default_instance_type'))
 
-        log.debug("Launching with subnet %s and VM firewalls %s" %
-                  (subnet, vmfl))
-        log.info("Launching base_vm of type %s with UD:\n%s" % (vm_type,
-                                                                user_data))
-        task.update_state(state='PROGRESSING',
-                          meta={'action': "Launching an instance of type %s "
-                                "with keypair %s in zone %s" %
-                                (vm_type, kp.name, placement_zone)})
+        log.debug("Launching with subnet %s and VM firewalls %s", subnet, vmfl)
+        log.info("Launching base_vm of type %s with UD:\n%s", vm_type,
+                 user_data)
+        task.update_state(state="PROGRESSING",
+                          meta={"action": "Launching an instance of type %s "
+                                          "with keypair %s in zone %s" %
+                                          (vm_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
             name=name, image=img, vm_type=vm_type, subnet=subnet,
             key_pair=kp, vm_firewalls=vmfl, zone=placement_zone,
             user_data=user_data, launch_config=cb_launch_config)
-        task.update_state(state='PROGRESSING',
-                          meta={'action': "Waiting for instance %s" % inst.id})
+        task.update_state(state="PROGRESSING",
+                          meta={"action": "Waiting for instance %s" % inst.id})
         log.debug("Waiting for instance {0} to be ready...".format(inst.id))
         inst.wait_till_ready()
         static_ip = cloudlaunch_config.get('staticIP')
         if static_ip:
             task.update_state(state='PROGRESSING',
                               meta={'action': "Assigning requested floating "
-                                    "IP: %s" % static_ip})
+                                              "IP: %s" % static_ip})
             inst.add_floating_ip(static_ip)
             inst.refresh()
         results = {}
@@ -300,14 +303,7 @@ class BaseVMAppPlugin(AppPlugin):
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
                             "Public IP: %s" % results.get('publicIP') or ""})
-        return {"cloudLaunch": results,
-                "host": {"address": results["publicIP"],
-                         "pk": results['keyPair']['material'],
-                         "user": ""}}
-
-    def configure_host(self, task, host_config, app_config):
-        log.info("Configuring host %s", host_config.get('address'))
-        return {}
+        return {"cloudLaunch": results}
 
     def _get_deployment_iid(self, deployment):
         """

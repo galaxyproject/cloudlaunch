@@ -251,20 +251,21 @@ class DeploymentSerializer(serializers.ModelSerializer):
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
 
-            merged_config = jsonmerge.merge(default_combined_config, app_config)
+            merged_app_config = jsonmerge.merge(
+                default_combined_config, app_config)
             cloud_config = util.serialize_cloud_config(cloud_version_config)
             final_ud_config = handler.process_app_config(
-                provider, name, cloud_config, merged_config)
-            sanitised_app_config = handler.sanitise_app_config(merged_config)
+                provider, name, cloud_config, merged_app_config)
+            sanitised_app_config = handler.sanitise_app_config(merged_app_config)
             async_result = tasks.create_appliance.delay(
-                name, cloud_version_config.pk, credentials, merged_config,
-                final_ud_config, host_config=None)
+                name, cloud_version_config.pk, credentials, merged_app_config,
+                final_ud_config)
 
             del validated_data['application']
             if 'config_app' in validated_data:
                 del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
-            validated_data['application_config'] = json.dumps(merged_config)
+            validated_data['application_config'] = json.dumps(merged_app_config)
             validated_data['credentials_id'] = credentials.get('id') or None
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
             self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)

@@ -48,8 +48,7 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
                 pass
             count += 1
 
-    def provision_host(self, provider, task, name, cloud_config,
-                       app_config, user_data, **kwargs):
+    def deploy(self, name, task, app_config, provider_config, **kwargs):
         """
         Handle the app launch process and wait for http.
 
@@ -57,8 +56,8 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
         want this method to perform the app http check and prefer to handle
         it in the child class.
         """
-        result = super(SimpleWebAppPlugin, self).provision_host(
-            provider, task, name, cloud_config, app_config, user_data)
+        result = super(SimpleWebAppPlugin, self).deploy(
+            name, task, app_config, provider_config)
         check_http = kwargs.get('check_http', True)
         if check_http and result.get('cloudLaunch', {}).get('publicIP'):
             log.info("Simple web app going to wait for http")

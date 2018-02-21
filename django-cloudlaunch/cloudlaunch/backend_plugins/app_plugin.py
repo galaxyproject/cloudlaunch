@@ -61,84 +61,63 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def provision_host(self, provider, task, name, cloud_config, app_config,
-                       user_data):
+    def deploy(self, name, task, app_config, provider_config):
         """
-        Provision a host machine on the target infrastructure.
+        Deploy this app plugin on the supplied provider.
+
+        Perform all the necessary steps to deploy this appliance. This may
+        involve provisioning cloud resources or configuring existing host(s).
+        See the definition of each method argument as some have required
+        structure.
 
         This operation is designed to be a Celery task, and thus, can contain
         long-running operations.
 
-        @type  provider: :class:`CloudBridge.CloudProvider`
-        @param provider: Cloud provider where the supplied deployment is to be
-                         created.
-
-        @type  task: :class:`Task`
-        @param task: A Task object, which can be used to report progress. See
-                     ``tasks.Task`` for the interface details and sample
-                     implementation.
-
         @type  name: ``str``
         @param name: Name of this deployment.
 
-        @type  cloud_config: ``dict``
-        @param cloud_config: A dict containing cloud infrastructure specific
-                             configuration for this app.
-
-        @type  app_config: ``dict``
-        @param app_config: A dict containing the original, unprocessed version
-                           of the app config. The app config is a merged dict
-                           of database stored settings and user-entered
-                           settings.
-
-        @type  user_data: ``object``
-        @param user_data: An object returned by the ``process_app_config()``
-                          method which contains a validated and processed
-                          version of the ``app_config``.
-
-        :rtype: ``dict``
-        :return: Results of the provisioning process. This dict must contain at
-                 least the following keys:
-                    * ``cloudLaunch``: Results of the CloudLaunch provisioning
-                                       process
-                    * ``host``: A dictionary with info about the provisioned
-                                host. This dict must have at least the
-                                following keys:
-                        * ``address``: Host IP address or hostname
-                        * ``pk``: Private portion of an SSH key for accessing
-                                  the host
-                        * ``user``: Username with which to access the host
-        """
-        pass
-
-    @abc.abstractmethod
-    def configure_host(self, task, host_config, app_config):
-        """
-        Configure the host for use by the appliance.
-
         @type  task: :class:`Task`
         @param task: A Task object, which can be used to report progress. See
                      ``tasks.Task`` for the interface details and sample
                      implementation.
-                     
-        @type  host_config: ``dict``
-        @param host_config: A dict containing info about the host being
-                            configured. For base implementation, it should have
-                            at leasst the following keys:
-                              * ``address``: Hostname or IP address of the host
-                                             to configure.
-                              * ``pk``: Private portion of an SSH key for
-                                        accessing the host
-                              * ``user``: Username with which to access the host
 
         @type  app_config: ``dict``
-        @param app_config: A dict containing the original, unprocessed version
-                            of the app config. The app config is a merged dict
-                            of database stored settings and user-entered
-                            settings.
+        @param app_config: A dict containing the appliance configuration. The
+                           app config is a merged dict of database stored
+                           settings and user-entered settings. In addition to
+                           the static configuration of the app, such as
+                           firewall rules or access password, this should
+                           contain a url to a host configuration playbook, if
+                           such configuration step is desired.
+
+        @type  provider_config: ``dict``
+        @param provider_config: Define the details of of the infrastructure
+                                provider where the appliance should be
+                                deployed. The following keys are supported:
+                                * ``cloud_provider``: CloudBridge object of the
+                                                      cloud provider
+                                * ``cloud_config``: A dict containing cloud
+                                                    infrastructure specific
+                                                    configuration for this app
+                                * ``cloud_user_data``: An object returned by
+                                                       ``process_app_config()``
+                                                       method which contains a
+                                                       validated and formatted
+                                                       version of the
+                                                       ``app_config`` to be
+                                                       supplied as instance
+                                                       user data
+                                * ``host_addresses``: A list of host IP address
+                                                      or hostnames where to
+                                                      deploy this appliance
+                                * ``ssh_public_key``: Public ssh key to be used
+                                                      when running the app
+                                                      configuration step
+                                * ``ssh_user``: User name with which to access
+                                                the host(s)
 
         :rtype: ``dict``
-        :return: Results of the configuring process.
+        :return: Results of the deployment process.
         """
         pass
 

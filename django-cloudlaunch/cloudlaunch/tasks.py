@@ -46,44 +46,38 @@ def migrate_launch_task(task_id):
 
 @shared_task(expires=120)
 def create_appliance(name, cloud_version_config_id, credentials, app_config,
-                     user_data, host_config=None):
+                     user_data):
     """Call the appropriate app plugin and initiate the app launch process."""
-    provision_result = {}
-    configure_result = {}
     try:
         log.debug("Creating appliance %s", name)
         cloud_version_conf = models.ApplicationVersionCloudConfig.objects.get(
             pk=cloud_version_config_id)
         plugin = util.import_class(
             cloud_version_conf.application_version.backend_component_name)()
-        if not host_config:
-            provider = domain_model.get_cloud_provider(
-                cloud_version_conf.cloud, credentials)
-            cloud_config = util.serialize_cloud_config(cloud_version_conf)
-            log.info("Creating app %s with the follwing app config: %s \n and "
-                     "cloud config: %s", name, app_config, cloud_config)
-            provision_result = plugin.provision_host(
-                provider, Task(create_appliance), name, cloud_config,
-                app_config, user_data)
-            host_config = provision_result.get('host')
-        configure_result = plugin.configure_host(
-            Task(create_appliance), host_config, app_config)
-        # Don't return the private key used for host config
-        if provision_result:
-            del provision_result['host']['pk']
+        provider = domain_model.get_cloud_provider(
+            cloud_version_conf.cloud, credentials)
+        cloud_config = util.serialize_cloud_config(cloud_version_conf)
+        # TODO: Add keys (& support) for using existing, user-supplied hosts
+        provider_config = {'cloud_provider': provider,
+                           'cloud_config': cloud_config,
+                           'cloud_user_data': user_data}
+        log.info("Provider_config: %s", provider_config)
+        log.info("Creating app %s with the follwing app config: %s \n and "
+                 "cloud config: %s", name, app_config, provider_config)
+        deploy_result = plugin.deploy(name, Task(create_appliance), app_config,
+                                      provider_config)
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([create_appliance.request.id],
                                         countdown=3600)
-        # Merge result dicts; right-most dict keys take precedence
-        return {**provision_result, **configure_result}
+        return deploy_result
     except SoftTimeLimitExceeded:
-        msg = "Launch task time limit exceeded; stopping the task."
+        msg = "Create appliance task time limit exceeded; stopping the task."
         log.warning(msg)
         raise Exception(msg)
-    except Exception as e:
-        msg = "Launch task failed: %s" % str(e)
+    except Exception as exc:
+        msg = "Create appliance task failed: %s" % str(exc)
         log.error(msg)
-        raise Exception(msg) from e
+        raise Exception(msg) from exc
 
 
 def _get_app_plugin(deployment):

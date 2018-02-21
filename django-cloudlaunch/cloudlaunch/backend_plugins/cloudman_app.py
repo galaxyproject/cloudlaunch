@@ -124,18 +124,24 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
         app_config['config_cloudman']['clusterPassword'] = '********'
         return app_config
 
-    def provision_host(self, provider, task, name, cloud_config,
-                       app_config, user_data):
-        ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
-        # Make sure the placement and image ID (eg from a saved cluster) propagate
+    def deploy(self, name, task, app_config, provider_config):
+        """See the parent class in ``app_plugin.py`` for the docstring."""
+        user_data = provider_config.get('cloud_user_data')
+        ud = yaml.dump(user_data, default_flow_style=False,
+                       allow_unicode=False)
+        provider_config['cloud_user_data'] = ud
+        # Make sure the placement and image ID propagate
+        # (eg from a saved cluster)
         if user_data.get('placement'):
-            app_config.get('config_cloudlaunch')['placementZone'] = user_data['placement']
+            app_config.get('config_cloudlaunch')[
+                'placementZone'] = user_data['placement']
         if user_data.get('machine_image_id'):
-            app_config.get('config_cloudlaunch')['customImageID'] = user_data['machine_image_id']
-        result = super(CloudManAppPlugin, self).provision_host(
-            provider, task, name, cloud_config, app_config, ud, check_http=False)
-        result['cloudLaunch']['applicationURL'] = \
-            'http://{0}/cloud'.format(result['cloudLaunch']['publicIP'])
+            app_config.get('config_cloudlaunch')[
+                'customImageID'] = user_data['machine_image_id']
+        result = super(CloudManAppPlugin, self).deploy(
+            name, task, app_config, provider_config, check_http=False)
+        result['cloudLaunch']['applicationURL'] = 'http://{0}/cloud'.format(
+            result['cloudLaunch']['publicIP'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"
