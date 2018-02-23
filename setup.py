@@ -85,7 +85,9 @@ REQS_BASE = [
     # For merging userdata/config dictionaries
     'jsonmerge>=1.4.0',
     # For commandline option handling
-    'click'
+    'click',
+    # Integration with Sentry
+    'raven'
 ]
 
 REQS_PROD = ([
@@ -105,7 +107,8 @@ REQS_DEV = ([
     # As celery message broker during development
     'redis',
     'sphinx>=1.3.1',
-    'bumpversion>=0.5.3'] + REQS_TEST
+    'bumpversion>=0.5.3',
+    'pylint-django'] + REQS_TEST
 )
 
 setup(

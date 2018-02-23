@@ -1,5 +1,6 @@
 import json
 import jsonmerge
+import logging
 
 from bioblend.cloudman.launch import CloudManLauncher
 from cloudbridge.cloud.factory import ProviderList
@@ -13,6 +14,8 @@ from djcloudbridge import models as cb_models
 from djcloudbridge import serializers as cb_serializers
 from djcloudbridge import view_helpers
 from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
+
+log = logging.getLogger(__name__)
 
 
 class CloudManSerializer(serializers.Serializer):
@@ -140,27 +143,25 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         :param validated_data: Dict containing action the task should perform.
                                Valid actions are `HEALTH_CHECK`, `DELETE`.
         """
-        print("deployment task data: %s" % validated_data)
+        log.debug("Deployment task data: %s", validated_data)
         action = getattr(models.ApplicationDeploymentTask,
                          validated_data.get(
-                            'action',
-                            models.ApplicationDeploymentTask.HEALTH_CHECK))
+                             'action',
+                             models.ApplicationDeploymentTask.HEALTH_CHECK))
         request = self.context.get('view').request
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
         creds = (cb_models.Credentials.objects.get_subclass(
-                    id=dpl.credentials.id).as_dict()
+            id=dpl.credentials.id).as_dict()
                  if dpl.credentials
                  else view_helpers.get_credentials(dpl.target_cloud, request))
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
                 async_result = tasks.health_check.delay(dpl.pk, creds)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.restart_appliance.delay(dpl.pk,
-                                                            creds)
+                async_result = tasks.restart_appliance.delay(dpl.pk, creds)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.delete_appliance.delay(dpl.pk,
-                                                            creds)
+                async_result = tasks.delete_appliance.delay(dpl.pk, creds)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
         except serializers.ValidationError as ve:
@@ -250,20 +251,21 @@ class DeploymentSerializer(serializers.ModelSerializer):
             handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
 
-            merged_config = jsonmerge.merge(default_combined_config, app_config)
+            merged_app_config = jsonmerge.merge(
+                default_combined_config, app_config)
             cloud_config = util.serialize_cloud_config(cloud_version_config)
             final_ud_config = handler.process_app_config(
-                provider, name, cloud_config, merged_config)
-            sanitised_app_config = handler.sanitise_app_config(merged_config)
-            async_result = tasks.launch_appliance.delay(
-                name, cloud_version_config.pk, credentials, merged_config,
+                provider, name, cloud_config, merged_app_config)
+            sanitised_app_config = handler.sanitise_app_config(merged_app_config)
+            async_result = tasks.create_appliance.delay(
+                name, cloud_version_config.pk, credentials, merged_app_config,
                 final_ud_config)
 
             del validated_data['application']
             if 'config_app' in validated_data:
                 del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
-            validated_data['application_config'] = json.dumps(merged_config)
+            validated_data['application_config'] = json.dumps(merged_app_config)
             validated_data['credentials_id'] = credentials.get('id') or None
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
             self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)
@@ -287,3 +289,18 @@ class DeploymentSerializer(serializers.ModelSerializer):
         u = models.Usage(app_version_cloud_config=app_version_cloud_config,
                          app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
         u.save()
+
+
+class PublicKeySerializer(serializers.HyperlinkedModelSerializer):
+    url = serializers.HyperlinkedIdentityField(
+        view_name='public-key-detail', read_only=True)
+
+    class Meta:
+        model = models.PublicKey
+        exclude = ['user_profile']
+
+    def create(self, validated_data):
+        user_profile, _ = models.UserProfile.objects.get_or_create(
+            user=self.context.get('view').request.user)
+        return models.PublicKey.objects.create(
+            user_profile=user_profile, **validated_data)

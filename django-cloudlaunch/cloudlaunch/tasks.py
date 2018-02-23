@@ -1,10 +1,9 @@
 """Tasks to be executed asynchronously (via Celery)."""
 import copy
 import json
-import traceback
+import logging
 
 from celery.app import shared_task
-from celery.exceptions import Ignore
 from celery.exceptions import SoftTimeLimitExceeded
 from celery.result import AsyncResult
 from celery.utils.log import get_task_logger
@@ -14,7 +13,11 @@ from . import models
 from . import signals
 from . import util
 
-LOG = get_task_logger(__name__)
+log = get_task_logger('cloudlaunch')
+# Limit how much these libraries log
+logging.getLogger('boto3').setLevel(logging.WARNING)
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('cloudbridge').setLevel(logging.INFO)
 
 
 @shared_task(time_limit=120)
@@ -42,32 +45,40 @@ def migrate_launch_task(task_id):
 
 
 @shared_task(expires=120)
-def launch_appliance(name, cloud_version_config_id, credentials, app_config,
-                     user_data, task_id=None):
+def create_appliance(name, cloud_version_config_id, credentials, app_config,
+                     user_data):
     """Call the appropriate app plugin and initiate the app launch process."""
-    launch_result = {}
     try:
-        LOG.debug("Launching appliance %s", name)
-        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
+        log.debug("Creating appliance %s", name)
+        cloud_version_conf = models.ApplicationVersionCloudConfig.objects.get(
             pk=cloud_version_config_id)
         plugin = util.import_class(
-            cloud_version_config.application_version.backend_component_name)()
-        provider = domain_model.get_cloud_provider(cloud_version_config.cloud,
-                                                   credentials)
-        cloud_config = util.serialize_cloud_config(cloud_version_config)
-        LOG.info("Launching app %s with the follwing app config: %s \n and "
-                 "cloud config: %s", name, app_config, cloud_config)
-        launch_result = plugin.launch_app(provider, Task(launch_appliance),
-                                          name, cloud_config, app_config,
-                                          user_data)
+            cloud_version_conf.application_version.backend_component_name)()
+        provider = domain_model.get_cloud_provider(
+            cloud_version_conf.cloud, credentials)
+        cloud_config = util.serialize_cloud_config(cloud_version_conf)
+        # TODO: Add keys (& support) for using existing, user-supplied hosts
+        provider_config = {'cloud_provider': provider,
+                           'cloud_config': cloud_config,
+                           'cloud_user_data': user_data}
+        log.info("Provider_config: %s", provider_config)
+        log.info("Creating app %s with the follwing app config: %s \n and "
+                 "cloud config: %s", name, app_config, provider_config)
+        deploy_result = plugin.deploy(name, Task(create_appliance), app_config,
+                                      provider_config)
         # Schedule a task to migrate result one hour from now
-        migrate_launch_task.apply_async([launch_appliance.request.id],
+        migrate_launch_task.apply_async([create_appliance.request.id],
                                         countdown=3600)
-        return launch_result
+        return deploy_result
     except SoftTimeLimitExceeded:
-        raise Exception("Launch task time limit exceeded; stopping the task.")
-    except Exception as e:
-        raise Exception("Launch task failed: %s" % str(e)) from e
+        msg = "Create appliance task time limit exceeded; stopping the task."
+        log.warning(msg)
+        raise Exception(msg)
+    except Exception as exc:
+        msg = "Create appliance task failed: %s" % str(exc)
+        log.error(msg)
+        raise Exception(msg) from exc
+
 
 def _get_app_plugin(deployment):
     """
@@ -87,7 +98,7 @@ def _get_app_plugin(deployment):
 @shared_task(time_limit=120)
 def migrate_task_result(task_id):
     """Migrate task results to the database from the broker table."""
-    LOG.debug("Migrating task %s result to the DB" % task_id)
+    log.debug("Migrating task %s result to the DB" % task_id)
     adt = models.ApplicationDeploymentTask.objects.get(celery_id=task_id)
     task = AsyncResult(task_id)
     task_meta = task.backend.get_task_meta(task.id)
@@ -131,14 +142,16 @@ def health_check(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Checking health of deployment %s", deployment.name)
+        log.debug("Checking health of deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
         result = plugin.health_check(provider, dpl)
     except Exception as e:
-        raise Exception("Health check failed: %s" % str(e)) from e
+        msg = "Health check failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
     finally:
         # We only keep the two most recent health check task results so delete
         # any older ones
@@ -157,14 +170,16 @@ def restart_appliance(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Performing restart on deployment %s", deployment.name)
+        log.debug("Performing restart on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
         result = plugin.restart(provider, dpl)
     except Exception as e:
-        raise Exception("Restart task failed: %s" % str(e)) from e
+        msg = "Restart task failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.
@@ -181,7 +196,7 @@ def delete_appliance(self, deployment_id, credentials):
     """
     try:
         deployment = models.ApplicationDeployment.objects.get(pk=deployment_id)
-        LOG.debug("Performing delete on deployment %s", deployment.name)
+        log.debug("Performing delete on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
@@ -191,7 +206,9 @@ def delete_appliance(self, deployment_id, credentials):
             deployment.archived = True
             deployment.save()
     except Exception as e:
-        raise Exception("Delete task failed: %s" % str(e)) from e
+        msg = "Delete task failed: %s" % str(e)
+        log.error(msg)
+        raise Exception(msg) from e
     # Schedule a task to migrate results right after task completion
     # Do this as a separate task because until this task completes, we
     # cannot obtain final status or traceback.

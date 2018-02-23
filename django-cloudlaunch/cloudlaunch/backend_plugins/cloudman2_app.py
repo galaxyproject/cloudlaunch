@@ -9,38 +9,20 @@ from io import StringIO
 from paramiko.ssh_exception import AuthenticationException
 from paramiko.ssh_exception import BadHostKeyException
 from paramiko.ssh_exception import SSHException
+import requests
+from retrying import retry
 from string import Template
 
 from django.conf import settings
 from git import Repo
 
-from .base_vm_app import BaseVMAppPlugin
+from .simple_web_app import SimpleWebAppPlugin
 
 from celery.utils.log import get_task_logger
 log = get_task_logger(__name__)
 
-# Ansible playbook at this URL will be used to configure a bare-bones VM
-ANSIBLE_PLAYBOOK_REPO = 'https://github.com/afgane/Rancher-Ansible'
 
-INVENTORY_TEMPLATE = Template("""
-[Rancher]
-rancher ansible_ssh_host=${master}
-
-[Agents]
-
-[cluster:children]
-Rancher
-Agents
-
-[cluster:vars]
-ansible_ssh_port=22
-ansible_user='${user}'
-ansible_ssh_private_key_file=pk
-ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
-""")
-
-
-class CloudMan2AppPlugin(BaseVMAppPlugin):
+class CloudMan2AppPlugin(SimpleWebAppPlugin):
     """CloudLaunch appliance implementation for CloudMan 2.0."""
 
     def __init__(self):
@@ -79,6 +61,8 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
             return True
         return False
 
+    @retry(retry_on_result=lambda result: result is False, wait_fixed=5000,
+           stop_max_delay=180000)
     def _check_ssh(self, host, pk=None, user='ubuntu'):
         """
         Check for ssh availability on a host.
@@ -86,11 +70,11 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         :type host: ``str``
         :param host: Hostname or IP address of the host to check.
 
-        :type user: ``str``
-        :param user: Username to use when trying to login.
-
         :type pk: ``str``
         :param pk: Private portion of an ssh key.
+
+        :type user: ``str``
+        :param user: Username to use when trying to login.
 
         :rtype: ``bool``
         :return: True if ssh connection was successful.
@@ -99,6 +83,9 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         pkey = None
         if pk:
+            if 'RSA' not in pk:
+                # AWS at least does not specify key type yet paramiko requires
+                pk = pk.replace(' PRIVATE', ' RSA PRIVATE')
             key_file_object = StringIO(pk)
             pkey = paramiko.RSAKey.from_private_key(key_file_object)
             key_file_object.close()
@@ -113,14 +100,23 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         self._remove_known_host(host)
         return False
 
-    def _run_playbook(self, host, pk, user='ubuntu'):
+    def _run_playbook(self, playbook, inventory, host, pk, user='ubuntu'):
         """
         Run an Ansible playbook to configure a host.
 
-        First clone an playbook repo if not already available, configure the
-        Ansible inventory and run the playbook.
+        First clone a playbook from the supplied repo if not already
+        available, configure the Ansible inventory, and run the playbook.
 
-        The method assumes ``ansible-playbook`` command is available.
+        The method assumes ``ansible-playbook`` system command is available.
+
+        :type playbook: ``str``
+        :param playbook: A URL of a git repository where the playbook resides.
+
+        :type inventory: ``str``
+        :param inventory: A URL pointing to a string ``Template``-like file
+                          that will be used for running the playbook. The
+                          file should have defined variables for ``host`` and
+                          ``user``.
 
         :type host: ``str``
         :param host: Hostname or IP of a machine as the playbook target.
@@ -135,70 +131,51 @@ class CloudMan2AppPlugin(BaseVMAppPlugin):
         repo_path = './cloudlaunch/backend_plugins/rancher_ansible_%s' % host
         inventory_path = os.path.join(repo_path, 'inventory')
         # Ensure the playbook is available
-        log.info("Cloning Ansible playbook {0} to {1}".format(
-                 ANSIBLE_PLAYBOOK_REPO, repo_path))
-        Repo.clone_from(ANSIBLE_PLAYBOOK_REPO, to_path=repo_path)
-        # Create an inventory file
+        log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
+        Repo.clone_from(playbook, to_path=repo_path)
+        # Create a private ssh key file
         pkf = os.path.join(repo_path, 'pk')
         with os.fdopen(os.open(pkf, os.O_WRONLY | os.O_CREAT, 0o600),
                        'w') as f:
             f.writelines(pk)
+        # Create an inventory file
+        r = requests.get(inventory)
+        inv = Template((r.content).decode('utf-8'))
         with open(inventory_path, 'w') as f:
-            log.info("Creating inventory file {0}".format(inventory_path))
-            f.writelines(INVENTORY_TEMPLATE.substitute(
-                {'master': host, 'user': user}))
+            log.info("Creating inventory file %s", inventory_path)
+            f.writelines(inv.substitute({'host': host, 'user': user}))
         # Run the playbook
         cmd = "cd {0} && ansible-playbook -i inventory other.yml".format(
             repo_path)
-        log.info("Running Ansible with command {0}".format(cmd))
+        log.info("Running Ansible with command %s", cmd)
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        (out, err) = p.communicate()
+        (out, _) = p.communicate()
         p_status = p.wait()
-        log.info("Playbook stdout: %s\nstatus: %s" % (out, p_status))
-        log.info("Deleting pk file {0} needed by Ansible".format(pkf))
+        log.info("Playbook stdout: %s\nstatus: %s", out, p_status)
         if not settings.DEBUG:
+            log.info("Deleting ansible playbook %s", repo_path)
             shutil.rmtree(repo_path)
         return (p_status, out)
 
-    def launch_app(self, provider, task, name, cloud_config,
-                   app_config, user_data):
-        """
-        Handle the app launch process.
-
-        This will:
-        - Perform necessary checks and env setup, most notably create a new
-          key pair.
-        - Launch an instance and wait until ssh access can be established
-        - Run an Ansible playbook to configure the instance
-        """
-        # Implicitly create a new KP for this instance
-        # Note that this relies on the baseVMApp implementation!
-        kp_name = "CL-" + "".join([c for c in name if c.isalpha() or
-                                  c.isdigit()]).rstrip()
-        app_config['config_cloudlaunch']['keyPair'] = kp_name
-        # Launch an instance and check ssh connectivity
-        result = super(CloudMan2AppPlugin, self).launch_app(
-            provider, task, name, cloud_config, app_config,
-            user_data=None)
-        inst = provider.compute.instances.get(
-            result.get('cloudLaunch', {}).get('instance', {}).get('id'))
-        pk = result.get('cloudLaunch', {}).get('keyPair', {}).get('material')
-        timeout = 0
-        while (not self._check_ssh(inst.public_ips[0], pk=pk) or
-               timeout > 200):
-            log.info("Waiting for ssh on {0}...".format(inst.name))
-            time.sleep(5)
-            timeout += 5
-        # Configure the instance
+    def _configure_host(self, name, task, app_config, provider_config):
+        log.debug("Running CloudMan2AppPlugin _configure_host for %s", name)
+        host = provider_config.get('host_address')
+        user = provider_config.get('ssh_user')
+        ssh_private_key = provider_config.get('ssh_private_key')
+        self._check_ssh(host, pk=ssh_private_key, user=user)
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Configuring container cluster manager.'})
-        self._run_playbook(inst.public_ips[0], pk)
-        result['cloudLaunch']['applicationURL'] = \
-            'http://{0}:8080/'.format(result['cloudLaunch']['publicIP'])
+        playbook = app_config.get('config_appliance', {}).get('repository')
+        inventory = app_config.get(
+            'config_appliance', {}).get('inventoryTemplate')
+        self._run_playbook(playbook, inventory, host, ssh_private_key, user)
+        result = {}
+        result['cloudLaunch'] = {'applicationURL':
+                                 'http://{0}:8080/'.format(host)}
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"
-                  % result['cloudLaunch']['applicationURL']})
+                            % result['cloudLaunch']['applicationURL']})
         self.wait_for_http(result['cloudLaunch']['applicationURL'])
         return result

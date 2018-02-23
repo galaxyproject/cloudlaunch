@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from django.conf import settings as django_settings
 import os
+import raven
 import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -100,7 +101,8 @@ INSTALLED_APPS = [
     'django_celery_results',
     'django_celery_beat',
     'django_countries',
-    'django_filters'
+    'django_filters',
+    'raven.contrib.django.raven_compat'
 ]
 
 MIDDLEWARE = [
@@ -222,12 +224,16 @@ REST_AUTH_SERIALIZERS = {
 }
 REST_SESSION_LOGIN = True
 
+RAVEN_CONFIG = {
+    'dsn': os.environ.get('SENTRY_DSN', 'your_sentry_dsn')
+}
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[%(asctime)s %(name)s:%(lineno)d %(levelname)s] %(message)s'
+            'format': '%(asctime)s %(levelname)s %(pathname)s:%(lineno)d - %(message)s'
         },
     },
     'filters': {
@@ -242,24 +248,47 @@ LOGGING = {
             'formatter': 'verbose',
             'level': 'DEBUG',
         },
-        'file': {
+        'file-cloudlaunch': {
             'class': 'logging.FileHandler',
-            'filename': 'cloudlaunch.log',
             'formatter': 'verbose',
+            'level': 'INFO',
+            'filename': 'cloudlaunch.log',
         },
+        'file-django': {
+            'class': 'logging.FileHandler',
+            'formatter': 'verbose',
+            'level': 'WARNING',
+            'filename': 'cloudlaunch-django.log',
+        },
+        'sentry': {
+            'formatter': 'verbose',
+            'level': 'WARNING',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler'
+        }
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-        },
-        'cloudlaunch': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
+            'handlers': ['console', 'file-django', 'sentry'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
         },
         'django.db.backends': {
+            'handlers': ['file-django', 'sentry'],
             'level': 'INFO',
-            'handlers': ['console'],
+        },
+        'django.template': {
+            'handlers': ['console', 'file-django', 'sentry'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.server': {
+            'handlers': ['console', 'file-django', 'sentry'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        'cloudlaunch': {
+            'handlers': ['console', 'file-cloudlaunch', 'sentry'],
+            'level': 'DEBUG',
+            'propagate': False
         },
     },
 }

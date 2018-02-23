@@ -3,9 +3,11 @@
 from __future__ import absolute_import
 
 import os
+import raven
 
-from celery import Celery
+import celery
 from django.conf import settings  # noqa
+from raven.contrib.celery import register_signal, register_logger_signal
 
 import logging
 log = logging.getLogger(__name__)
@@ -13,11 +15,20 @@ log = logging.getLogger(__name__)
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cloudlaunchserver.settings')
 
+
+class Celery(celery.Celery):
+
+    def on_configure(self):
+        client = raven.Client(settings.RAVEN_CONFIG.get('dsn'))
+
+        # register a custom filter to filter out duplicate logs
+        register_logger_signal(client)
+
+        # hook into the Celery error handler
+        register_signal(client)
+
+
 app = Celery('proj')
-
-# Using a string here means the worker will not have to
-# pickle the object when using Windows.
-
 # Changed to use dedicated celery config as detailed in:
 # http://docs.celeryproject.org/en/latest/getting-started/first-steps-with-celery.html
 # app.config_from_object('django.conf:settings')

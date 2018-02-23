@@ -61,43 +61,101 @@ class AppPlugin():
         pass
 
     @abc.abstractmethod
-    def launch_app(self, provider, task, name, cloud_config, app_config,
-                   user_data):
+    def deploy(self, name, task, app_config, provider_config):
         """
-        Launch a given application on the target infrastructure.
+        Deploy this app plugin on the supplied provider.
+
+        Perform all the necessary steps to deploy this appliance. This may
+        involve provisioning cloud resources or configuring existing host(s).
+        See the definition of each method argument as some have required
+        structure.
 
         This operation is designed to be a Celery task, and thus, can contain
         long-running operations.
 
-        @type  provider: :class:`CloudBridge.CloudProvider`
-        @param provider: Cloud provider where the supplied deployment is to be
-                         created.
+        @type  name: ``str``
+        @param name: Name of this deployment.
 
         @type  task: :class:`Task`
         @param task: A Task object, which can be used to report progress. See
                      ``tasks.Task`` for the interface details and sample
                      implementation.
 
-        @type  name: ``str``
-        @param name: Name of this deployment.
-
-        @type  cloud_config: ``dict``
-        @param cloud_config: A dict containing cloud infrastructure specific
-                             configuration for this app.
-
         @type  app_config: ``dict``
-        @param app_config: A dict containing the original, unprocessed version
-                           of the app config. The app config is a merged dict
-                           of database stored settings and user-entered
-                           settings.
-
-        @type  user_data: ``object``
-        @param user_data: An object returned by the ``process_app_config()``
-                          method which contains a validated and processed
-                          version of the ``app_config``.
+        @param app_config: A dict containing the appliance configuration. The
+                           app config is a merged dict of database stored
+                           settings and user-entered settings. In addition to
+                           the static configuration of the app, such as
+                           firewall rules or access password, this should
+                           contain a url to a host configuration playbook, if
+                           such configuration step is desired. For example:
+                           ```
+{
+   "config_cloudman": {},
+   "config_appliance": {
+      "sshUser": "ubuntu",
+      "runner": "ansible",
+      "repository": "https://github.com/afgane/Rancher-Ansible",
+      "inventoryTemplate": "https://gist.githubusercontent.com/..."
+   },
+   "config_cloudlaunch": {
+       "vmType": "c3.large",
+       "firewall": [ {
+             "securityGroup": "cloudlaunch-cm2",
+             "rules": [ {
+                   "protocol": "tcp",
+                   "from": "22",
+                   "to": "22",
+                   "cidr": "0.0.0.0/0"
+                } ] } ] } }
+```
+        @type  provider_config: ``dict``
+        @param provider_config: Define the details of of the infrastructure
+                                provider where the appliance should be
+                                deployed. It is expected that this dictionary
+                                is composed within a task calling the plugin so
+                                it reflects the supplied info and derived
+                                properties. See ``tasks.py → create_appliance``
+                                for an example.
+                                The following keys are supported:
+                                * ``cloud_provider``: CloudBridge object of the
+                                                      cloud provider
+                                * ``cloud_config``: A dict containing cloud
+                                                    infrastructure specific
+                                                    configuration for this app
+                                * ``cloud_user_data``: An object returned by
+                                                       ``process_app_config()``
+                                                       method which contains a
+                                                       validated and formatted
+                                                       version of the
+                                                       ``app_config`` to be
+                                                       supplied as instance
+                                                       user data
+                                * ``host_address``: A host IP address or a
+                                                    hostnames where to deploy
+                                                    this appliance
+                                * ``ssh_user``: User name with which to access
+                                                the host(s)
+                                * ``ssh_public_key``: Public RSA ssh key to be
+                                                      used when running the app
+                                                      configuration step. This
+                                                      should be the actual key.
+                                                      CloudLaunch will auto-gen
+                                                      this key for provisioned
+                                                      instances. For hosted
+                                                      instances, the user
+                                                      should retrieve
+                                                      CloudLaunch's public key
+                                                      but this value should not
+                                                      be supplied.
+                                * ``ssh_private_key``: Private portion of an
+                                                       RSA ssh key. This should
+                                                       not be supplied by a
+                                                       user and is intended
+                                                       only for internal use.
 
         :rtype: ``dict``
-        :return: Results of the launch process.
+        :return: Results of the deployment process.
         """
         pass
 

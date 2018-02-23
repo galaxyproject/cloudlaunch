@@ -31,9 +31,11 @@ class GVLAppPlugin(SimpleWebAppPlugin):
         sanitised_config['config_gvl'] = CloudManAppPlugin().sanitise_app_config(gvl_config)
         return sanitised_config
 
-    def launch_app(self, provider, task, name, cloud_config,
-                   app_config, user_data):
-        ud = yaml.dump(user_data, default_flow_style=False, allow_unicode=False)
-        result = super(GVLAppPlugin, self).launch_app(
-            provider, task, name, cloud_config, app_config, ud)
+    def deploy(self, name, task, app_config, provider_config):
+        user_data = provider_config.get('cloud_user_data')
+        ud = yaml.dump(user_data, default_flow_style=False,
+                       allow_unicode=False)
+        provider_config['cloud_user_data'] = ud
+        result = super(GVLAppPlugin, self).deploy(
+            name, task, app_config, provider_config)
         return result

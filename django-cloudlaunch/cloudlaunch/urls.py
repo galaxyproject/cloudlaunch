@@ -50,7 +50,7 @@ public_services_regex_pattern = r'api/v1/public_services/'
 schema_view = get_schema_view(title='CloudLaunch API')
 
 urlpatterns = [
-    url(r'api/v1/auth/api-token-auth/', views.AuthTokenView.as_view()),
+    url(r'%sapi-token-auth/' % auth_regex_pattern, views.AuthTokenView.as_view()),
     url(r'api/v1/', include(router.urls)),
     url(r'api/v1/', include(deployments_router.urls)),
     # This generates a duplicate url set with the cloudman url included
@@ -58,11 +58,16 @@ urlpatterns = [
     url(infrastructure_regex_pattern, include(cloud_router.get_urls())),
     url(infrastructure_regex_pattern, include('djcloudbridge.urls')),
     url(auth_regex_pattern, include(('rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
-    url(r'api/v1/auth/registration', include(('rest_auth.registration.urls', 'rest_auth_reg'),
+    url(r'%sregistration' % auth_regex_pattern, include(('rest_auth.registration.urls', 'rest_auth_reg'),
                                              namespace='rest_auth_reg')),
+    url(r'%suser/public-keys/$' %
+        auth_regex_pattern, views.PublicKeyList.as_view()),
+    url(r'%suser/public-keys/(?P<pk>[0-9]+)/$' %
+        auth_regex_pattern, views.PublicKeyDetail.as_view(),
+        name='public-key-detail'),
     url(auth_regex_pattern, include(('rest_framework.urls', 'rest_framework'),
                                      namespace='rest_framework')),
-    url(r'api/v1/auth/', include('djcloudbridge.profile.urls')),
+    url(auth_regex_pattern, include('djcloudbridge.profile.urls')),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
     url(r'accounts/', include('allauth.urls')),
