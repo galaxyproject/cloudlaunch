@@ -8,11 +8,6 @@ from celery.utils.log import get_task_logger
 from cloudbridge.cloud.base.helpers import generate_key_pair
 from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
-from cryptography.hazmat.primitives import serialization as crypto_serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend as crypto_default_backend
-import requests
-import requests.exceptions
 
 from .app_plugin import AppPlugin
 
@@ -222,7 +217,10 @@ class BaseVMAppPlugin(AppPlugin):
                 else:
                     router = provider.networking.routers.create(
                         network=subnet.network_id, name=router_name)
-                router.attach_subnet(subnet)
+                try:
+                    router.attach_subnet(subnet)
+                except Exception as e:
+                    log.debug("Couldn't attach subnet; ignoring: %s", e)
                 net = provider.networking.networks.get(subnet.network_id)
                 gw = net.gateways.get_or_create_inet_gateway(
                     'cloudlaunch-default-gateway')
