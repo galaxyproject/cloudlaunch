@@ -225,7 +225,7 @@ REST_AUTH_SERIALIZERS = {
 REST_SESSION_LOGIN = True
 
 RAVEN_CONFIG = {
-    'dsn': 'your_sentry_dsn'
+    'dsn': os.environ.get('SENTRY_DSN', 'your_sentry_dsn')
 }
 
 LOGGING = {
