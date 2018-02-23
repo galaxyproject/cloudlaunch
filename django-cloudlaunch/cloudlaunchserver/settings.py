@@ -276,6 +276,11 @@ LOGGING = {
             'handlers': ['file-django', 'sentry'],
             'level': 'INFO',
         },
+        'django.template': {
+            'handlers': ['console', 'file-django', 'sentry'],
+            'level': 'INFO',
+            'propagate': True,
+        },
         'django.server': {
             'handlers': ['console', 'file-django', 'sentry'],
             'level': 'ERROR',

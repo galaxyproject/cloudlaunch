@@ -5,6 +5,7 @@ import yaml
 import ipaddress
 
 from celery.utils.log import get_task_logger
+from cloudbridge.cloud.base.helpers import generate_key_pair
 from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
 from cryptography.hazmat.primitives import serialization as crypto_serialization
@@ -247,45 +248,19 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, subnet, cloudlaunch_config['firewall'])
         return subnet, placement, vmf
 
-    def _create_ssh_key(self):
-        """
-        Create a new RSA ssh key (private & public portions).
-
-        @rtype: ``dict``
-        @return: Return the newly generated ssh key as strings within a
-                 dictionary with ``private_key`` and ``public_key`` keys.
-        """
-        log.debug("Creating a new ssh key.")
-        key = rsa.generate_private_key(
-            backend=crypto_default_backend(),
-            public_exponent=65537,
-            key_size=2048
-        )
-        private_key = key.private_bytes(
-            crypto_serialization.Encoding.PEM,
-            crypto_serialization.PrivateFormat.PKCS8,
-            crypto_serialization.NoEncryption()).decode('utf-8')
-        public_key = key.public_key().public_bytes(
-            crypto_serialization.Encoding.OpenSSH,
-            crypto_serialization.PublicFormat.OpenSSH
-        ).decode('utf-8')
-        return {'private_key': private_key, 'public_key': public_key}
-
     def deploy(self, name, task, app_config, provider_config):
         """See the parent class in ``app_plugin.py`` for the docstring."""
         p_result = {}
         c_result = {}
         if provider_config.get('host_address'):
-            # A host is provided; use CloudLaunch default ssh key
+            # A host is provided; use CloudLaunch's default published ssh key
             pass  # Implement this once we actually support it
         else:
             if app_config.get('config_appliance'):
-                # Config will be done; generate a tmp ssh config key
-                ssh_config_key = self._create_ssh_key()
-                provider_config['ssh_private_key'] = ssh_config_key.get(
-                    'private_key')
-                provider_config['ssh_public_key'] = ssh_config_key.get(
-                    'public_key')
+                # Host config will take place; generate a tmp ssh config key
+                public_key, private_key = generate_key_pair()
+                provider_config['ssh_private_key'] = private_key
+                provider_config['ssh_public_key'] = public_key
                 provider_config['ssh_user'] = app_config.get(
                     'config_appliance', {}).get('sshUser')
             p_result = self._provision_host(name, task, app_config,

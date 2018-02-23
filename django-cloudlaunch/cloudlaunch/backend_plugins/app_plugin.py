@@ -88,12 +88,36 @@ class AppPlugin():
                            the static configuration of the app, such as
                            firewall rules or access password, this should
                            contain a url to a host configuration playbook, if
-                           such configuration step is desired.
-
+                           such configuration step is desired. For example:
+                           ```
+{
+   "config_cloudman": {},
+   "config_appliance": {
+      "sshUser": "ubuntu",
+      "runner": "ansible",
+      "repository": "https://github.com/afgane/Rancher-Ansible",
+      "inventoryTemplate": "https://gist.githubusercontent.com/..."
+   },
+   "config_cloudlaunch": {
+       "vmType": "c3.large",
+       "firewall": [ {
+             "securityGroup": "cloudlaunch-cm2",
+             "rules": [ {
+                   "protocol": "tcp",
+                   "from": "22",
+                   "to": "22",
+                   "cidr": "0.0.0.0/0"
+                } ] } ] } }
+```
         @type  provider_config: ``dict``
         @param provider_config: Define the details of of the infrastructure
                                 provider where the appliance should be
-                                deployed. The following keys are supported:
+                                deployed. It is expected that this dictionary
+                                is composed within a task calling the plugin so
+                                it reflects the supplied info and derived
+                                properties. See ``tasks.py → create_appliance``
+                                for an example.
+                                The following keys are supported:
                                 * ``cloud_provider``: CloudBridge object of the
                                                       cloud provider
                                 * ``cloud_config``: A dict containing cloud
@@ -112,8 +136,8 @@ class AppPlugin():
                                                     this appliance
                                 * ``ssh_user``: User name with which to access
                                                 the host(s)
-                                * ``ssh_public_key``: Public ssh key to be used
-                                                      when running the app
+                                * ``ssh_public_key``: Public RSA ssh key to be
+                                                      used when running the app
                                                       configuration step. This
                                                       should be the actual key.
                                                       CloudLaunch will auto-gen
@@ -124,11 +148,11 @@ class AppPlugin():
                                                       CloudLaunch's public key
                                                       but this value should not
                                                       be supplied.
-                                * ``ssh_private_key``: Public portion of an ssh
-                                                       key. This should not be
-                                                       supplied by a user and
-                                                       is intended only for
-                                                       internal use.
+                                * ``ssh_private_key``: Private portion of an
+                                                       RSA ssh key. This should
+                                                       not be supplied by a
+                                                       user and is intended
+                                                       only for internal use.
 
         :rtype: ``dict``
         :return: Results of the deployment process.

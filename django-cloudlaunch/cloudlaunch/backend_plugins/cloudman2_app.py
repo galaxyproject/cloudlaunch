@@ -9,8 +9,9 @@ from io import StringIO
 from paramiko.ssh_exception import AuthenticationException
 from paramiko.ssh_exception import BadHostKeyException
 from paramiko.ssh_exception import SSHException
+import requests
+from retrying import retry
 from string import Template
-import urllib.request
 
 from django.conf import settings
 from git import Repo
@@ -60,6 +61,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             return True
         return False
 
+    @retry(retry_on_result=lambda result: result is False, wait_fixed=5000,
+           stop_max_delay=180000)
     def _check_ssh(self, host, pk=None, user='ubuntu'):
         """
         Check for ssh availability on a host.
@@ -101,7 +104,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         """
         Run an Ansible playbook to configure a host.
 
-        First clone an playbook from the supplied repo if not already
+        First clone a playbook from the supplied repo if not already
         available, configure the Ansible inventory, and run the playbook.
 
         The method assumes ``ansible-playbook`` system command is available.
@@ -136,9 +139,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
                        'w') as f:
             f.writelines(pk)
         # Create an inventory file
-        i, _ = urllib.request.urlretrieve(inventory)
-        with open(i, 'r') as f:
-            inv = Template(f.read())
+        r = requests.get(inventory)
+        inv = Template((r.content).decode('utf-8'))
         with open(inventory_path, 'w') as f:
             log.info("Creating inventory file %s", inventory_path)
             f.writelines(inv.substitute({'host': host, 'user': user}))
@@ -160,12 +162,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         host = provider_config.get('host_address')
         user = provider_config.get('ssh_user')
         ssh_private_key = provider_config.get('ssh_private_key')
-        timeout = 0
-        while (not self._check_ssh(host, pk=ssh_private_key, user=user) or
-               timeout > 200):
-            log.info("Waiting for ssh on %s...", host)
-            time.sleep(5)
-            timeout += 5
+        self._check_ssh(host, pk=ssh_private_key, user=user)
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Configuring container cluster manager.'})
