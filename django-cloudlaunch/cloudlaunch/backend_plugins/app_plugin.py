@@ -107,14 +107,28 @@ class AppPlugin():
                                                        ``app_config`` to be
                                                        supplied as instance
                                                        user data
-                                * ``host_addresses``: A list of host IP address
-                                                      or hostnames where to
-                                                      deploy this appliance
-                                * ``ssh_public_key``: Public ssh key to be used
-                                                      when running the app
-                                                      configuration step
+                                * ``host_address``: A host IP address or a
+                                                    hostnames where to deploy
+                                                    this appliance
                                 * ``ssh_user``: User name with which to access
                                                 the host(s)
+                                * ``ssh_public_key``: Public ssh key to be used
+                                                      when running the app
+                                                      configuration step. This
+                                                      should be the actual key.
+                                                      CloudLaunch will auto-gen
+                                                      this key for provisioned
+                                                      instances. For hosted
+                                                      instances, the user
+                                                      should retrieve
+                                                      CloudLaunch's public key
+                                                      but this value should not
+                                                      be supplied.
+                                * ``ssh_private_key``: Public portion of an ssh
+                                                       key. This should not be
+                                                       supplied by a user and
+                                                       is intended only for
+                                                       internal use.
 
         :rtype: ``dict``
         :return: Results of the deployment process.

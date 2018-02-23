@@ -7,6 +7,9 @@ import ipaddress
 from celery.utils.log import get_task_logger
 from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
+from cryptography.hazmat.primitives import serialization as crypto_serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend as crypto_default_backend
 import requests
 import requests.exceptions
 
@@ -244,12 +247,64 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, subnet, cloudlaunch_config['firewall'])
         return subnet, placement, vmf
 
+    def _create_ssh_key(self):
+        """
+        Create a new RSA ssh key (private & public portions).
+
+        @rtype: ``dict``
+        @return: Return the newly generated ssh key as strings within a
+                 dictionary with ``private_key`` and ``public_key`` keys.
+        """
+        log.debug("Creating a new ssh key.")
+        key = rsa.generate_private_key(
+            backend=crypto_default_backend(),
+            public_exponent=65537,
+            key_size=2048
+        )
+        private_key = key.private_bytes(
+            crypto_serialization.Encoding.PEM,
+            crypto_serialization.PrivateFormat.PKCS8,
+            crypto_serialization.NoEncryption()).decode('utf-8')
+        public_key = key.public_key().public_bytes(
+            crypto_serialization.Encoding.OpenSSH,
+            crypto_serialization.PublicFormat.OpenSSH
+        ).decode('utf-8')
+        return {'private_key': private_key, 'public_key': public_key}
+
     def deploy(self, name, task, app_config, provider_config):
         """See the parent class in ``app_plugin.py`` for the docstring."""
+        p_result = {}
+        c_result = {}
+        if provider_config.get('host_address'):
+            # A host is provided; use CloudLaunch default ssh key
+            pass  # Implement this once we actually support it
+        else:
+            if app_config.get('config_appliance'):
+                # Config will be done; generate a tmp ssh config key
+                ssh_config_key = self._create_ssh_key()
+                provider_config['ssh_private_key'] = ssh_config_key.get(
+                    'private_key')
+                provider_config['ssh_public_key'] = ssh_config_key.get(
+                    'public_key')
+                provider_config['ssh_user'] = app_config.get(
+                    'config_appliance', {}).get('sshUser')
+            p_result = self._provision_host(name, task, app_config,
+                                            provider_config)
+            provider_config['host_address'] = p_result['cloudLaunch'].get(
+                'publicIP')
+
+        if app_config.get('config_appliance'):
+            c_result = self._configure_host(name, task, app_config,
+                                            provider_config)
+        # Merge result dicts; right-most dict keys take precedence
+        return {**p_result, **c_result}
+
+    def _provision_host(self, name, task, app_config, provider_config):
+        """Provision a host using the provider_config info."""
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = provider_config.get('cloud_provider')
         cloud_config = provider_config.get('cloud_config')
-        user_data = provider_config.get('cloud_user_data')
+        user_data = provider_config.get('cloud_user_data') or ""
 
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
@@ -269,6 +324,15 @@ class BaseVMAppPlugin(AppPlugin):
             'vmType', cloud_config.get('default_instance_type'))
 
         log.debug("Launching with subnet %s and VM firewalls %s", subnet, vmfl)
+
+        if provider_config.get('ssh_public_key'):
+            # cloud-init config to allow login w/ the config ssh key
+            # http://cloudinit.readthedocs.io/en/latest/topics/examples.html
+            log.info("Adding a cloud-init config public ssh key to user data")
+            user_data += """
+#cloud-config
+ssh_authorized_keys:
+    - {0}""".format(provider_config['ssh_public_key'])
         log.info("Launching base_vm of type %s with UD:\n%s", vm_type,
                  user_data)
         task.update_state(state="PROGRESSING",
@@ -304,6 +368,14 @@ class BaseVMAppPlugin(AppPlugin):
             meta={"action": "Instance created successfully. " +
                             "Public IP: %s" % results.get('publicIP') or ""})
         return {"cloudLaunch": results}
+
+    def _configure_host(self, name, task, app_config, provider_config):
+        host = provider_config.get('host_address')
+        task.update_state(
+            state='PROGRESSING',
+            meta={"action": "Configuring host % s" % host})
+        log.info("Configuring host %s", host)
+        return {}
 
     def _get_deployment_iid(self, deployment):
         """
