@@ -1,5 +1,4 @@
 """Plugin implementation for a simple web application."""
-import logging
 import time
 
 from celery.utils.log import get_task_logger
