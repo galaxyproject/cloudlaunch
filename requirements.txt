@@ -37,3 +37,4 @@ django-countries>=5.0 # Used by public_appliances for retrieving country data
 bioblend # For the CloudMan launcher
 jsonmerge>=1.4.0 # For merging userdata/config dictionaries
 raven # Integration with Sentry
+cryptography  # For ssh key generation, used by app config step
