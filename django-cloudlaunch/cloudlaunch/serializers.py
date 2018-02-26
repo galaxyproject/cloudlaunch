@@ -120,7 +120,6 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
                                          lookup_url_kwarg='pk',
                                          parent_url_kwargs=['deployment_pk',
                                                             'deployment_task_pk'])
-    deployment = serializers.CharField(read_only=True)
     celery_id = serializers.CharField(read_only=True)
     action = serializers.ChoiceField(
         choices=models.ApplicationDeploymentTask.ACTION_CHOICES,
@@ -132,6 +131,7 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.ApplicationDeploymentTask
         exclude = ('_result', '_status')
+        read_only_fields = ('deployment',)
 
     def create(self, validated_data):
         """

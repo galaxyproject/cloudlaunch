@@ -21,7 +21,48 @@ from .models import (Application,
 
 
 # Create your tests here.
-class BaseAuthenticatedAPITestCase(APITestCase):
+class MockedCeleryTaskCall:
+    """Mock a call to a celery task."""
+
+    def __init__(self, task, *args, **kwargs):
+        """Specify task, as string, and expected arguments to be passed."""
+        self.task = task
+        self.args = args
+        self.kwargs = kwargs
+
+    def __enter__(self):
+        self.patcher = patch(self.task)
+        self.mocked_task = self.patcher.start()
+        celery_id = str(uuid.uuid4())
+        return_value = AsyncResult(celery_id)
+        self.mocked_task.return_value = return_value
+        return return_value
+
+    def __exit__(self, *exc):
+        self.patcher.stop()
+        self.mocked_task.assert_called_with(
+            *self.args, **self.kwargs)
+        return False
+
+
+class BaseAPITestCase(APITestCase):
+    """Base class for all CloudLaunch API testcases."""
+    def assertResponse(self, response, status=None, data_contains=None):
+        if status:
+            self.assertEqual(response.status_code, status)
+        if data_contains:
+            self.assertDictContains(response.data, data_contains)
+
+    def assertDictContains(self, dict1, dict2):
+        for key in dict2:
+            self.assertTrue(key in dict1)
+            if isinstance(dict2[key], dict):
+                self.assertDictContains(dict1[key], dict2[key])
+            else:
+                self.assertEqual(dict1[key], dict2[key])
+
+
+class BaseAuthenticatedAPITestCase(BaseAPITestCase):
     """Base class for tests that need an authenticated user."""
 
     def setUp(self):
@@ -299,6 +340,8 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
 
 class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
 
+    DEPLOYMENT_NAME = "test-deployment"
+
     def _create_test_deployment(self, user):
         application = Application.objects.create(
             name="Ubuntu",
@@ -321,99 +364,111 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
         )
         app_deployment = ApplicationDeployment.objects.create(
             owner=user,
+            name=self.DEPLOYMENT_NAME,
             application_version=application_version,
             target_cloud=target_cloud,
             credentials=credentials
         )
         return app_deployment
 
-    @patch("cloudlaunch.tasks.health_check.delay")
-    def test_create_health_check_task(self, health_check_task):
+    def setUp(self):
+        super().setUp()
+        self.app_deployment = self._create_test_deployment(user=self.user)
+
+    def test_create_health_check_task(self):
         """Test creating a HEALTH_CHECK type task."""
-        app_deployment = self._create_test_deployment(user=self.user)
-        url = reverse('deployment_task-list',
-                      kwargs={'deployment_pk': app_deployment.id})
-        celery_id = str(uuid.uuid4())
-        health_check_task.return_value = AsyncResult(celery_id)
-        response = self.client.post(url, {'action': 'HEALTH_CHECK'})
-        self.assertEqual(response.status_code, 201)
-        health_check_task.assert_called_with(
-            app_deployment.id,
-            app_deployment.credentials.as_dict())
-        self.assertEqual(response.data['celery_id'], celery_id)
-        self.assertEqual(response.data['action'], 'HEALTH_CHECK')
+        with MockedCeleryTaskCall(
+                "cloudlaunch.tasks.health_check.delay",
+                self.app_deployment.id,
+                self.app_deployment.credentials.as_dict()) as async_result:
+
+            response = self.client.post(
+                reverse('deployment_task-list',
+                        kwargs={'deployment_pk': self.app_deployment.id}),
+                {'action': 'HEALTH_CHECK'})
+            self.assertResponse(response, status=201, data_contains={
+                'celery_id': async_result.id,
+                'action': 'HEALTH_CHECK',
+                'deployment': self.app_deployment.id,
+            })
         # check that ApplicationDeploymentTask was created, will throw
         # DoesNotExist if missing
         task = ApplicationDeploymentTask.objects.get(action='HEALTH_CHECK',
-                                                     celery_id=celery_id,
-                                                     deployment=app_deployment)
+                                                     celery_id=async_result.id,
+                                                     deployment=self.app_deployment)
         self.assertIsNotNone(task)
 
-    @patch("cloudlaunch.tasks.restart_appliance.delay")
-    def test_create_restart_task(self, restart_task):
+    def test_create_restart_task(self):
         """Test creating a RESTART type task."""
-        app_deployment = self._create_test_deployment(user=self.user)
-        url = reverse('deployment_task-list',
-                      kwargs={'deployment_pk': app_deployment.id})
-        celery_id = str(uuid.uuid4())
-        restart_task.return_value = AsyncResult(celery_id)
-        response = self.client.post(url, {'action': 'RESTART'})
-        self.assertEqual(response.status_code, 201)
-        restart_task.assert_called_with(
-            app_deployment.id,
-            app_deployment.credentials.as_dict())
-        self.assertEqual(response.data['celery_id'], celery_id)
-        self.assertEqual(response.data['action'], 'RESTART')
+        with MockedCeleryTaskCall(
+                "cloudlaunch.tasks.restart_appliance.delay",
+                self.app_deployment.id,
+                self.app_deployment.credentials.as_dict()) as async_result:
+
+            response = self.client.post(
+                reverse('deployment_task-list',
+                        kwargs={'deployment_pk': self.app_deployment.id}),
+                {'action': 'RESTART'})
+            self.assertResponse(response, status=201, data_contains={
+                'celery_id': async_result.id,
+                'action': 'RESTART',
+                'deployment': self.app_deployment.id,
+            })
         # check that ApplicationDeploymentTask was created, will throw
         # DoesNotExist if missing
         task = ApplicationDeploymentTask.objects.get(action='RESTART',
-                                                     celery_id=celery_id,
-                                                     deployment=app_deployment)
+                                                     celery_id=async_result.id,
+                                                     deployment=self.app_deployment)
         self.assertIsNotNone(task)
 
-    @patch("cloudlaunch.tasks.delete_appliance.delay")
-    def test_create_delete_task(self, delete_task):
+    def test_create_delete_task(self):
         """Test creating a DELETE type task."""
-        app_deployment = self._create_test_deployment(user=self.user)
-        url = reverse('deployment_task-list',
-                      kwargs={'deployment_pk': app_deployment.id})
-        celery_id = str(uuid.uuid4())
-        delete_task.return_value = AsyncResult(celery_id)
-        response = self.client.post(url, {'action': 'DELETE'})
-        self.assertEqual(response.status_code, 201)
-        delete_task.assert_called_with(
-            app_deployment.id,
-            app_deployment.credentials.as_dict())
-        self.assertEqual(response.data['celery_id'], celery_id)
-        self.assertEqual(response.data['action'], 'DELETE')
+        with MockedCeleryTaskCall(
+                "cloudlaunch.tasks.delete_appliance.delay",
+                self.app_deployment.id,
+                self.app_deployment.credentials.as_dict()) as async_result:
+
+            response = self.client.post(
+                reverse('deployment_task-list',
+                        kwargs={'deployment_pk': self.app_deployment.id}),
+                {'action': 'DELETE'})
+            self.assertResponse(response, status=201, data_contains={
+                'celery_id': async_result.id,
+                'action': 'DELETE',
+                'deployment': self.app_deployment.id,
+            })
         # check that ApplicationDeploymentTask was created, will throw
         # DoesNotExist if missing
         task = ApplicationDeploymentTask.objects.get(action='DELETE',
-                                                     celery_id=celery_id,
-                                                     deployment=app_deployment)
+                                                     celery_id=async_result.id,
+                                                     deployment=self.app_deployment)
         self.assertIsNotNone(task)
 
     def test_only_one_launch_task(self):
         """Test LAUNCH task not allowed if one already exists."""
-        app_deployment = self._create_test_deployment(user=self.user)
+        # Create LAUNCH task for the test deployment
         ApplicationDeploymentTask.objects.create(
-            deployment=app_deployment,
+            deployment=self.app_deployment,
             action=ApplicationDeploymentTask.LAUNCH)
         self.assertEqual(
             len(ApplicationDeploymentTask.objects.filter(
-                deployment=app_deployment,
+                deployment=self.app_deployment,
                 action=ApplicationDeploymentTask.LAUNCH)),
             1,
             "Only one LAUNCH task should exist.")
-        url = reverse('deployment_task-list',
-                      kwargs={'deployment_pk': app_deployment.id})
-        response = self.client.post(url, {'action': 'LAUNCH'})
-        self.assertEqual(response.status_code, 400)
-        self.assertTrue('action' in response.data)
+        # Attempt to create a LAUNCH task
+        response = self.client.post(
+            reverse('deployment_task-list',
+                    kwargs={'deployment_pk': self.app_deployment.id}),
+            {'action': 'LAUNCH'})
+        self.assertResponse(response, status=400, data_contains={
+            'action': ['Duplicate LAUNCH action for deployment {}'
+                       .format(self.DEPLOYMENT_NAME)]
+        })
         # LAUNCH task count is still 1
         self.assertEqual(
             len(ApplicationDeploymentTask.objects.filter(
-                deployment=app_deployment,
+                deployment=self.app_deployment,
                 action=ApplicationDeploymentTask.LAUNCH)),
             1,
             "Only one LAUNCH task should exist.")
