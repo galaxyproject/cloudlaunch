@@ -30,10 +30,10 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         self.base_app = False
 
     @staticmethod
-    def process_app_config(provider, name, cloud_config, app_config):
+    def validate_app_config(provider, name, cloud_config, app_config):
         """Format any app-specific configurations."""
         return super(CloudMan2AppPlugin,
-                     CloudMan2AppPlugin).process_app_config(
+                     CloudMan2AppPlugin).validate_app_config(
                          provider, name, cloud_config, app_config)
 
     @staticmethod

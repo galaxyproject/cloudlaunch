@@ -27,7 +27,7 @@ class BaseVMAppPlugin(AppPlugin):
         self.base_app = True
 
     @staticmethod
-    def process_app_config(provider, name, cloud_config, app_config):
+    def validate_app_config(provider, name, cloud_config, app_config):
         """Extract any extra user data from the app config and return it."""
         return app_config.get("config_cloudlaunch", {}).get(
             "instance_user_data")

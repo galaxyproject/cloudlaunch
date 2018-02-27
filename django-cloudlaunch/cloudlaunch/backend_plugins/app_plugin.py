@@ -8,15 +8,15 @@ class AppPlugin():
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractstaticmethod
-    def process_app_config(provider, name, cloud_config, app_config):
+    def validate_app_config(provider, name, cloud_config, app_config):
         """
         Validate and build an internal app config.
 
         Validate an application config entered by the user and builds a new
-        processed dictionary of values which will be used by the launch_app
-        method. Raises a ValidationError if the application configuration is
-        invalid. This method must execute quickly and should not contain long
-        running operations, and is designed to provide quick feedback on
+        processed dictionary of values which will be used by the ``deploy``
+        method. Raises a ``ValidationError`` if the application configuration
+        is invalid. This method must execute quickly and should not contain
+        long running operations, and is designed to provide quick feedback on
         configuration errors to the client.
 
         @type  provider: :class:`CloudBridge.CloudProvider`
@@ -37,7 +37,7 @@ class AppPlugin():
                            settings.
 
         :rtype: ``dict``
-        :return: A ``dict` containing the launch configuration.
+        :return: A validated ``dict` containing the app launch configuration.
         """
         pass
 
@@ -124,7 +124,7 @@ class AppPlugin():
                                                     infrastructure specific
                                                     configuration for this app
                                 * ``cloud_user_data``: An object returned by
-                                                       ``process_app_config()``
+                                                       ``validate_app_config()``
                                                        method which contains a
                                                        validated and formatted
                                                        version of the

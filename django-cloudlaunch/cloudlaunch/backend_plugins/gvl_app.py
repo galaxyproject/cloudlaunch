@@ -7,11 +7,11 @@ from .simple_web_app import SimpleWebAppPlugin
 class GVLAppPlugin(SimpleWebAppPlugin):
 
     @staticmethod
-    def process_app_config(provider, name, cloud_config, app_config):
+    def validate_app_config(provider, name, cloud_config, app_config):
         gvl_config = app_config.get("config_gvl")
         if not gvl_config:
             raise ValidationError("GVL configuration data must be provided.")
-        user_data = CloudManAppPlugin().process_app_config(
+        user_data = CloudManAppPlugin().validate_app_config(
             provider, name, cloud_config, gvl_config)
         install_list = []
         install_cmdline = gvl_config.get('gvl_cmdline_utilities', False)

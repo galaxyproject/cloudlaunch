@@ -22,7 +22,7 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
         self.base_app = False
 
     @staticmethod
-    def process_app_config(provider, name, cloud_config, app_config):
+    def validate_app_config(provider, name, cloud_config, app_config):
         cloudman_config = get_required_val(
             app_config, "config_cloudman", "CloudMan configuration data must be provided.")
         user_data = {}

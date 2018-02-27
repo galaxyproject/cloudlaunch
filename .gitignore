@@ -10,8 +10,10 @@ local
 django-cloudlaunch/cloudlaunchserver/settings_local.py
 django-cloudlaunch/db.sqlite3*
 django-cloudlaunch/cloudlaunch*.log
+django-cloudlaunch/cloudlaunch-django.log
 django-cloudlaunch/cloudlaunchserver/db.sqlite3
 django-cloudlaunch/baselaunch/backend_plugins/rancher_ansible*
+django-cloudlaunch/.coverage
 
 .idea
 
