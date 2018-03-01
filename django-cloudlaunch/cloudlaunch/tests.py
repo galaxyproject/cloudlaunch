@@ -207,6 +207,18 @@ class UserTests(APITestCase):
 
 class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
 
+    DEFAULT_LAUNCH_CONFIG = {
+        'foo': 1,
+        'bar': 2,
+    }
+    DEFAULT_APP_CONFIG = {
+        'bar': 3,
+        'baz': 4,
+        'config_cloudlaunch': {
+            'instance_user_data': "userdata"
+        }
+    }
+
     def _create_application_version(self):
         application = Application.objects.create(
             name="Ubuntu",
@@ -245,96 +257,122 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
             cloud=target_cloud,
         )
 
-    @patch("cloudlaunch.tasks.launch_appliance.delay")
-    def test_create_deployment(self, launch_appliance_task):
-        """Create deployment from 'application' and 'application_version'."""
-        application_version = self._create_application_version()
-        target_cloud = self._create_cloud()
-        ubuntu_image = self._create_image(target_cloud)
-        credentials = self._create_credentials(target_cloud)
-        app_version_cloud_config = \
-            ApplicationVersionCloudConfig.objects.create(
+    def _create_app_version_cloud_config(self,
+                                         application_version,
+                                         cloud,
+                                         image,
+                                         launch_config=DEFAULT_LAUNCH_CONFIG):
+        return ApplicationVersionCloudConfig.objects.create(
                 application_version=application_version,
-                cloud=target_cloud,
-                image=ubuntu_image,
+                cloud=cloud,
+                image=image,
+                default_launch_config=json.dumps(launch_config),
             )
-        celery_id = str(uuid.uuid4())
-        launch_appliance_task.return_value = AsyncResult(celery_id)
-        url = reverse('deployments-list')
-        response = self.client.post(url, {
-            'name': 'test-deployment',
-            'application': application_version.application.slug,
-            'application_version': '16.04',
-            'target_cloud': target_cloud.slug,
-        })
-        self.assertEqual(response.status_code, 201)
-        launch_appliance_task.assert_called_with(
-            'test-deployment',
-            app_version_cloud_config.id,
-            credentials.as_dict(),
-            {},
-            None
-        )
+
+    def setUp(self):
+        super().setUp()
+        # Create test data
+        self.application_version = self._create_application_version()
+        self.target_cloud = self._create_cloud()
+        self.ubuntu_image = self._create_image(self.target_cloud)
+        self.credentials = self._create_credentials(self.target_cloud)
+        self.app_version_cloud_config = self._create_app_version_cloud_config(
+            self.application_version, self.target_cloud, self.ubuntu_image)
+
+    def test_create_deployment(self):
+        """Create deployment from 'application' and 'application_version'."""
+        with MockedCeleryTaskCall(
+                "cloudlaunch.tasks.launch_appliance.delay",
+                'test-deployment',
+                self.app_version_cloud_config.id,
+                self.credentials.as_dict(),
+                self.DEFAULT_LAUNCH_CONFIG,
+                None) as async_result:
+
+            response = self.client.post(reverse('deployments-list'), {
+                'name': 'test-deployment',
+                'application': self.application_version.application.slug,
+                'application_version': self.application_version.version,
+                'target_cloud': self.target_cloud.slug,
+            })
+            self.assertResponse(response, status=201, data_contains={
+                'name': 'test-deployment',
+                'application_version': self.application_version.id,
+                'target_cloud': self.target_cloud.slug,
+                'application_config': self.DEFAULT_LAUNCH_CONFIG,
+                'app_version_details': {
+                    'version': self.application_version.version,
+                    'application': {
+                        'slug': self.application_version.application.slug,
+                    }
+                },
+                'latest_task': {
+                    'celery_id': async_result.id,
+                    'action': 'LAUNCH'
+                },
+                'launch_task': {
+                    'celery_id': async_result.id,
+                    'action': 'LAUNCH'
+                }
+            })
+        # Check that deployment and its LAUNCH task were created
         app_deployment = ApplicationDeployment.objects.get()
         launch_task = ApplicationDeploymentTask.objects.get(
                 action=ApplicationDeploymentTask.LAUNCH,
-                deployment=app_deployment, celery_id=celery_id)
+                deployment=app_deployment)
         self.assertIsNotNone(launch_task)
 
     @patch("cloudlaunch.tasks.launch_appliance.delay")
     def test_merging_app_config(self, launch_appliance_task):
         """Specify app_config and verify it is merged correctly."""
-        application_version = self._create_application_version()
-        target_cloud = self._create_cloud()
-        ubuntu_image = self._create_image(target_cloud)
-        credentials = self._create_credentials(target_cloud)
-        default_launch_config = {
-            'foo': 1,
-            'bar': 2,
-        }
-        app_config = {
-            'bar': 3,
-            'baz': 4,
-            'config_cloudlaunch': {
-                'instance_user_data': "userdata"
-            }
-        }
-        app_version_cloud_config = \
-            ApplicationVersionCloudConfig.objects.create(
-                application_version=application_version,
-                cloud=target_cloud,
-                image=ubuntu_image,
-                default_launch_config=json.dumps(default_launch_config)
-            )
-        celery_id = str(uuid.uuid4())
-        launch_appliance_task.return_value = AsyncResult(celery_id)
-        url = reverse('deployments-list')
-        response = self.client.post(url, {
-            'name': 'test-deployment',
-            'application': application_version.application.slug,
-            'application_version': '16.04',
-            'target_cloud': target_cloud.slug,
-            'config_app': json.dumps(app_config),
-        })
-        self.assertEqual(response.status_code, 201)
-        launch_appliance_task.assert_called_with(
-            'test-deployment',
-            app_version_cloud_config.id,
-            credentials.as_dict(),
-            {
-                'foo': 1,  # default from default_launch_config
-                'bar': 3,  # config_app overrides default_launch_config
-                'baz': 4,  # added by config_app
-                'config_cloudlaunch': {
-                    'instance_user_data': "userdata"
+        with MockedCeleryTaskCall(
+                "cloudlaunch.tasks.launch_appliance.delay",
+                'test-deployment',
+                self.app_version_cloud_config.id,
+                self.credentials.as_dict(),
+                {'foo': 1, 'bar': 3, 'baz': 4,
+                 'config_cloudlaunch': {'instance_user_data': "userdata"}},
+                'userdata') as async_result:
+
+            response = self.client.post(reverse('deployments-list'), {
+                'name': 'test-deployment',
+                'application': self.application_version.application.slug,
+                'application_version': self.application_version.version,
+                'target_cloud': self.target_cloud.slug,
+                'config_app': json.dumps(self.DEFAULT_APP_CONFIG),
+            })
+            self.assertResponse(response, status=201, data_contains={
+                'name': 'test-deployment',
+                'application_version': self.application_version.id,
+                'target_cloud': self.target_cloud.slug,
+                'application_config': {
+                    'foo': 1,  # default from DEFAULT_LAUNCH_CONFIG
+                    'bar': 3,  # config_app overrides DEFAULT_LAUNCH_CONFIG
+                    'baz': 4,  # added by config_app
+                    'config_cloudlaunch': {
+                        'instance_user_data': "userdata"
+                    }
+                },
+                'app_version_details': {
+                    'version': self.application_version.version,
+                    'application': {
+                        'slug': self.application_version.application.slug,
+                    }
+                },
+                'latest_task': {
+                    'celery_id': async_result.id,
+                    'action': 'LAUNCH'
+                },
+                'launch_task': {
+                    'celery_id': async_result.id,
+                    'action': 'LAUNCH'
                 }
-            },
-            'userdata'
-        )
+            })
+        # Check that deployment and its LAUNCH task were created
         app_deployment = ApplicationDeployment.objects.get()
         launch_task = ApplicationDeploymentTask.objects.get(
                 action=ApplicationDeploymentTask.LAUNCH,
-                deployment=app_deployment, celery_id=celery_id)
+                deployment=app_deployment)
         self.assertIsNotNone(launch_task)
 
 
