@@ -509,3 +509,53 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
                 action=ApplicationDeploymentTask.LAUNCH)),
             1,
             "Only one LAUNCH task should exist.")
+
+
+class ApplicationDeploymentTaskModelTestCase(TestCase):
+
+    def _create_test_deployment(self):
+        user = User.objects.create(username='test-user')
+        application = Application.objects.create(
+            name="Ubuntu",
+            status=Application.LIVE,
+        )
+        application_version = ApplicationVersion.objects.create(
+            application=application,
+            version="1.0",
+        )
+        target_cloud = cb_models.AWS.objects.create(
+            name='Amazon US East 1 - N. Virginia',
+            kind='cloud',
+        )
+        user_profile = cb_models.UserProfile.objects.create(user=user)
+        credentials = cb_models.AWSCredentials.objects.create(
+            cloud=target_cloud,
+            access_key='access_key',
+            secret_key='secret_key',
+            user_profile=user_profile,
+        )
+        app_deployment = ApplicationDeployment.objects.create(
+            owner=user,
+            name='test-deployment',
+            application_version=application_version,
+            target_cloud=target_cloud,
+            credentials=credentials
+        )
+        return app_deployment
+
+    def setUp(self):
+        super().setUp()
+        self.app_deployment = self._create_test_deployment()
+
+    def test_only_one_launch_task_allowed(self):
+        """Test only one LAUNCH task per deployment at model level."""
+        ApplicationDeploymentTask.objects.create(
+            deployment=self.app_deployment,
+            action=ApplicationDeploymentTask.LAUNCH)
+        with self.assertRaises(ValueError, msg="Should have not allowed a "
+                                               "second LAUNCH task.") as cm:
+            ApplicationDeploymentTask.objects.create(
+                deployment=self.app_deployment,
+                action=ApplicationDeploymentTask.LAUNCH)
+        self.assertEqual(str(cm.exception), "Duplicate LAUNCH action for "
+                                            "deployment test-deployment")
