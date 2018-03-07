@@ -282,7 +282,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
     def test_create_deployment(self):
         """Create deployment from 'application' and 'application_version'."""
         with MockedCeleryTaskCall(
-                "cloudlaunch.tasks.launch_appliance.delay",
+                "cloudlaunch.tasks.create_appliance.delay",
                 'test-deployment',
                 self.app_version_cloud_config.id,
                 self.credentials.as_dict(),
@@ -322,11 +322,10 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 deployment=app_deployment)
         self.assertIsNotNone(launch_task)
 
-    @patch("cloudlaunch.tasks.launch_appliance.delay")
-    def test_merging_app_config(self, launch_appliance_task):
+    def test_merging_app_config(self):
         """Specify app_config and verify it is merged correctly."""
         with MockedCeleryTaskCall(
-                "cloudlaunch.tasks.launch_appliance.delay",
+                "cloudlaunch.tasks.create_appliance.delay",
                 'test-deployment',
                 self.app_version_cloud_config.id,
                 self.credentials.as_dict(),
