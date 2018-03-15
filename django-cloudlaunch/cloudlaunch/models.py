@@ -14,6 +14,7 @@ from smart_selects.db_fields import ChainedForeignKey
 
 import json
 import jsonmerge
+import djcloudbridge
 
 
 # Create API auth token when user is created
@@ -349,7 +350,7 @@ class PublicKey(cb_models.DateNameAwareModel):
     # methods of generating it, making the autogeneration impractical:
     # http://bit.ly/2EIs0kR
     fingerprint = models.CharField(max_length=100, blank=True, null=True)
-    user_profile = models.ForeignKey('UserProfile', models.CASCADE,
+    user_profile = models.ForeignKey(djcloudbridge.models.UserProfile, models.CASCADE,
                                      related_name='public_key')
 
     def save(self, *args, **kwargs):

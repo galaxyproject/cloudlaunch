@@ -5,6 +5,7 @@ import nested_admin
 
 from . import forms
 from . import models
+import djcloudbridge
 
 
 class AppVersionCloudConfigInline(nested_admin.NestedTabularInline):
@@ -97,8 +98,8 @@ class PublicKeyInline(admin.StackedInline):
     extra = 1
 
 
-class UserProfileAdmin(admin.ModelAdmin):
-    inlines = [PublicKeyInline]
+class UserProfileAdmin(djcloudbridge.admin.UserProfileAdmin):
+    inlines = djcloudbridge.admin.UserProfileAdmin.inlines + [PublicKeyInline]
 
 
 admin.site.register(models.Application, AppAdmin)
@@ -106,4 +107,7 @@ admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
 admin.site.register(models.CloudImage, CloudImageAdmin)
 admin.site.register(models.Usage, UsageAdmin)
-admin.site.register(models.UserProfile, UserProfileAdmin)
+
+# Add public key to existing UserProfile
+admin.site.unregister(djcloudbridge.models.UserProfile)
+admin.site.register(djcloudbridge.models.UserProfile, UserProfileAdmin)
