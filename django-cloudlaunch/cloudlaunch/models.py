@@ -1,6 +1,7 @@
 from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -225,15 +226,14 @@ class ApplicationDeploymentTask(models.Model):
     def __str__(self):
         return "{0}".format(self.id)
 
-    def save(self, *args, **kwargs):
-        # validate at most one LAUNCH task per deployment
-        if self.action == self.LAUNCH:
+    def clean(self):
+        # Check new records and validate at most one LAUNCH task per deployment
+        if not self.id and self.action == self.LAUNCH:
             if ApplicationDeploymentTask.objects.filter(
                     deployment=self.deployment,
                     action=self.LAUNCH):
-                raise ValueError(
+                raise ValidationError(
                     "Duplicate LAUNCH action for deployment %s" % self.deployment.name)
-        return super(ApplicationDeploymentTask, self).save(*args, **kwargs)
 
     @property
     def result(self):
