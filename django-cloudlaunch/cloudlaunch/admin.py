@@ -37,8 +37,29 @@ class CloudImageAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
+# Utility class for read-only fields
+class ReadOnlyTabularInline(admin.TabularInline):
+    extra = 0
+    can_delete = False
+    editable_fields = []
+    readonly_fields = []
+    exclude = []
+
+    def get_readonly_fields(self, request, obj=None):
+        return list(self.readonly_fields) + \
+               [field.name for field in self.model._meta.fields
+                if field.name not in self.editable_fields and
+                   field.name not in self.exclude]
+
+
+class AppDeployTaskAdmin(ReadOnlyTabularInline):
+    model = models.ApplicationDeploymentTask
+    ordering = ('added',)
+
+
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
+    inlines = [AppDeployTaskAdmin]
 
 
 class UsageAdmin(admin.ModelAdmin):
