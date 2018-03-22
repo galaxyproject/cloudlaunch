@@ -128,7 +128,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         :param user: Target host system username with which to login.
         """
         # Clone the repo in its own dir if multiple tasks run simultaneously
-        repo_path = './cloudlaunch/backend_plugins/rancher_ansible_%s' % host
+        # The path must be to a folder that doesn't already contain a git repo
+        repo_path = '../../plugin_runners/rancher_ansible_%s' % host
         inventory_path = os.path.join(repo_path, 'inventory')
         # Ensure the playbook is available
         log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
@@ -145,7 +146,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             log.info("Creating inventory file %s", inventory_path)
             f.writelines(inv.substitute({'host': host, 'user': user}))
         # Run the playbook
-        cmd = "cd {0} && ansible-playbook -i inventory other.yml".format(
+        cmd = "cd {0} && ansible-playbook -i inventory playbook.yml".format(
             repo_path)
         log.info("Running Ansible with command %s", cmd)
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
@@ -162,6 +163,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         host = provider_config.get('host_address')
         user = provider_config.get('ssh_user')
         ssh_private_key = provider_config.get('ssh_private_key')
+        if settings.DEBUG:
+            log.info("Using config ssh key:\n%s", ssh_private_key)
         self._check_ssh(host, pk=ssh_private_key, user=user)
         task.update_state(
             state='PROGRESSING',

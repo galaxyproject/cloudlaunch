@@ -71,6 +71,6 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
             self.wait_for_http(result['cloudLaunch']['applicationURL'],
                                ok_status_codes=[], max_retries=200,
                                poll_interval=5)
-        else:
+        elif not result.get('cloudLaunch', {}).get('applicationURL'):
             result['cloudLaunch']['applicationURL'] = 'N/A'
         return result
