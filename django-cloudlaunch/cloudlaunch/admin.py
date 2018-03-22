@@ -5,6 +5,7 @@ import nested_admin
 
 from . import forms
 from . import models
+import djcloudbridge
 
 
 class AppVersionCloudConfigInline(nested_admin.NestedTabularInline):
@@ -37,8 +38,29 @@ class CloudImageAdmin(admin.ModelAdmin):
     ordering = ('name',)
 
 
+# Utility class for read-only fields
+class ReadOnlyTabularInline(admin.TabularInline):
+    extra = 0
+    can_delete = False
+    editable_fields = []
+    readonly_fields = []
+    exclude = []
+
+    def get_readonly_fields(self, request, obj=None):
+        return list(self.readonly_fields) + \
+               [field.name for field in self.model._meta.fields
+                if field.name not in self.editable_fields and
+                   field.name not in self.exclude]
+
+
+class AppDeployTaskAdmin(ReadOnlyTabularInline):
+    model = models.ApplicationDeploymentTask
+    ordering = ('added',)
+
+
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
+    inlines = [AppDeployTaskAdmin]
 
 
 class UsageAdmin(admin.ModelAdmin):
@@ -76,8 +98,8 @@ class PublicKeyInline(admin.StackedInline):
     extra = 1
 
 
-class UserProfileAdmin(admin.ModelAdmin):
-    inlines = [PublicKeyInline]
+class UserProfileAdmin(djcloudbridge.admin.UserProfileAdmin):
+    inlines = djcloudbridge.admin.UserProfileAdmin.inlines + [PublicKeyInline]
 
 
 admin.site.register(models.Application, AppAdmin)
@@ -85,4 +107,7 @@ admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
 admin.site.register(models.CloudImage, CloudImageAdmin)
 admin.site.register(models.Usage, UsageAdmin)
-admin.site.register(models.UserProfile, UserProfileAdmin)
+
+# Add public key to existing UserProfile
+admin.site.unregister(djcloudbridge.models.UserProfile)
+admin.site.register(djcloudbridge.models.UserProfile, UserProfileAdmin)

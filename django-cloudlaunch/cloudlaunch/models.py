@@ -1,6 +1,7 @@
 from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -13,6 +14,7 @@ from smart_selects.db_fields import ChainedForeignKey
 
 import json
 import jsonmerge
+import djcloudbridge
 
 
 # Create API auth token when user is created
@@ -225,6 +227,15 @@ class ApplicationDeploymentTask(models.Model):
     def __str__(self):
         return "{0}".format(self.id)
 
+    def clean(self):
+        # Check new records and validate at most one LAUNCH task per deployment
+        if not self.id and self.action == self.LAUNCH:
+            if ApplicationDeploymentTask.objects.filter(
+                    deployment=self.deployment,
+                    action=self.LAUNCH):
+                raise ValidationError(
+                    "Duplicate LAUNCH action for deployment %s" % self.deployment.name)
+
     @property
     def result(self):
         """
@@ -339,7 +350,7 @@ class PublicKey(cb_models.DateNameAwareModel):
     # methods of generating it, making the autogeneration impractical:
     # http://bit.ly/2EIs0kR
     fingerprint = models.CharField(max_length=100, blank=True, null=True)
-    user_profile = models.ForeignKey('UserProfile', models.CASCADE,
+    user_profile = models.ForeignKey(djcloudbridge.models.UserProfile, models.CASCADE,
                                      related_name='public_key')
 
     def save(self, *args, **kwargs):
