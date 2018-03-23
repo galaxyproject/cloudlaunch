@@ -58,7 +58,8 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
         result = super(SimpleWebAppPlugin, self).deploy(
             name, task, app_config, provider_config)
         check_http = kwargs.get('check_http', True)
-        if check_http and result.get('cloudLaunch', {}).get('publicIP'):
+        if check_http and result.get('cloudLaunch', {}).get('publicIP') and \
+           not result.get('cloudLaunch', {}).get('applicationURL'):
             log.info("Simple web app going to wait for http")
             result['cloudLaunch']['applicationURL'] = \
                 'http://%s/' % result['cloudLaunch']['publicIP']

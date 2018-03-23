@@ -270,7 +270,8 @@ class BaseVMAppPlugin(AppPlugin):
             c_result = self._configure_host(name, task, app_config,
                                             provider_config)
         # Merge result dicts; right-most dict keys take precedence
-        return {**p_result, **c_result}
+        return {'cloudLaunch': {**p_result.get('cloudLaunch', {}),
+                                **c_result.get('cloudLaunch', {})}}
 
     def _provision_host(self, name, task, app_config, provider_config):
         """Provision a host using the provider_config info."""
