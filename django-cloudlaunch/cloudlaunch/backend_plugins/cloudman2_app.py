@@ -128,8 +128,9 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         :param user: Target host system username with which to login.
         """
         # Clone the repo in its own dir if multiple tasks run simultaneously
-        # The path must be to a folder that doesn't already contain a git repo
-        repo_path = '../../plugin_runners/rancher_ansible_%s' % host
+        # The path must be to a folder that doesn't already contain a git repo,
+        # including any parent folders
+        repo_path = '/tmp/cloudlaunch_plugin_runners/rancher_ansible_%s' % host
         inventory_path = os.path.join(repo_path, 'inventory')
         # Ensure the playbook is available
         log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
