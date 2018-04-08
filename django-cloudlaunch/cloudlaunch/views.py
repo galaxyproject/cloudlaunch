@@ -1,6 +1,4 @@
 from django.http import HttpResponse
-from django.http.response import FileResponse
-from django.http.response import Http404
 from django_filters import rest_framework as dj_filters
 from rest_framework import authentication
 from rest_framework import filters
@@ -33,7 +31,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     """
     queryset = models.Application.objects.filter(status=models.Application.LIVE)
     serializer_class = serializers.ApplicationSerializer
-    filter_backends = (filters.OrderingFilter,filters.SearchFilter)
+    filter_backends = (filters.OrderingFilter, filters.SearchFilter)
     search_fields = ('slug',)
     ordering = ('display_order',)
     pagination_class = CustomApplicationPagination
@@ -56,14 +54,22 @@ class AuthView(APIView):
     """
 
     def get(self, request, format=None):
-        data = {'login': request.build_absolute_uri(reverse('rest_auth:rest_login')),
-                'logout': request.build_absolute_uri(reverse('rest_auth:rest_logout')),
-                'user': request.build_absolute_uri(reverse('rest_auth:rest_user_details')),
-                'registration': request.build_absolute_uri(reverse('rest_auth_reg:rest_register')),
-                'password/reset': request.build_absolute_uri(reverse('rest_auth:rest_password_reset')),
-                'password/reset/confirm': request.build_absolute_uri(reverse('rest_auth:rest_password_reset_confirm')),
-                'password/reset/change': request.build_absolute_uri(reverse('rest_auth:rest_password_change')),
-                }
+        data = {
+            'login': request.build_absolute_uri(
+                reverse('rest_auth:rest_login')),
+            'logout': request.build_absolute_uri(
+                reverse('rest_auth:rest_logout')),
+            'user': request.build_absolute_uri(
+                reverse('rest_auth:rest_user_details')),
+            'registration': request.build_absolute_uri(
+                reverse('rest_auth_reg:rest_register')),
+            'password/reset': request.build_absolute_uri(
+                reverse('rest_auth:rest_password_reset')),
+            'password/reset/confirm': request.build_absolute_uri(
+                reverse('rest_auth:rest_password_reset_confirm')),
+            'password/reset/change': request.build_absolute_uri(
+                reverse('rest_auth:rest_password_change')),
+        }
         return Response(data)
 
 
@@ -108,7 +114,7 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     """
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.DeploymentSerializer
-    filter_backends = (filters.OrderingFilter,dj_filters.DjangoFilterBackend)
+    filter_backends = (filters.OrderingFilter, dj_filters.DjangoFilterBackend)
     ordering = ('-added',)
     filter_fields = ('archived',)
 
