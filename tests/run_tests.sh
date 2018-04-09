@@ -17,13 +17,10 @@ coverage run --source django-cloudlaunch --branch django-cloudlaunch/manage.py r
 # Clone temp cloudlaunch-cli repo
 git clone https://github.com/CloudVE/cloudlaunch-cli /tmp/cloudlaunch-cli
 
-# Run cloudlaunch-cli test suite
+# Run cloudlaunch-cli test suite against cloudlaunch
 (cd /tmp/cloudlaunch-cli/ && python setup.py test)
 
 # Kill the django process afterwards ($! is the last background process).
 # There's a special SIGINT handler in manage.py that will terminate cloudlaunch
 # gracefully, so coverage has a chance to write out its report
 kill -SIGINT $!
-
-# Delete temp cloudlaunch-cli repo
-sudo rm -r /tmp/cloudlaunch-cli
