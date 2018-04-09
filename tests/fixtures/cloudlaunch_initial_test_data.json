@@ -1,5 +1,31 @@
 [
 {
+  "model": "auth.user",
+  "pk": 3000,
+  "fields": {
+    "password": "pbkdf2_sha256$100000$pfjFR7vOrIo2$DfWdWsXHQ+T4D/bOjjQwge3KsoxDkwCjBrvGe8LrbQM=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "test_user",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2018-04-09T19:05:40.959Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "authtoken.token",
+  "pk": "272f075f152e59fd5ea55ca2d21728d2bfe37077",
+  "fields": {
+    "user": 3000,
+    "created": "2018-04-09T19:05:41.077Z"
+  }
+},
+{
   "model": "djcloudbridge.cloud",
   "pk": "amazon-ap-mumbai",
   "fields": {
