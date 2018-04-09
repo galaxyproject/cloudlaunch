@@ -227,14 +227,15 @@ class ApplicationDeploymentTask(models.Model):
     def __str__(self):
         return "{0}".format(self.id)
 
-    def clean(self):
+    def save(self, *args, **kwargs):
         # Check new records and validate at most one LAUNCH task per deployment
         if not self.id and self.action == self.LAUNCH:
             if ApplicationDeploymentTask.objects.filter(
                     deployment=self.deployment,
                     action=self.LAUNCH):
-                raise ValidationError(
+                raise ValueError(
                     "Duplicate LAUNCH action for deployment %s" % self.deployment.name)
+        return super(ApplicationDeploymentTask, self).save(*args, **kwargs)
 
     @property
     def result(self):
