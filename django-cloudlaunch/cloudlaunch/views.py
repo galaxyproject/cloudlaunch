@@ -79,11 +79,16 @@ class AuthTokenView(APIView):
     """
     permission_classes = (IsAuthenticated,)
     authentication_classes = (authentication.SessionAuthentication,)
-    renderer_classes = (renderers.JSONRenderer,)
-
 
     def get(self, request, format=None):
-        token = Token.objects.get(user=request.user)
+        try:
+            token = Token.objects.get(user=request.user)
+            return Response({'token': token.key})
+        except Token.DoesNotExist:
+            return Response({'token': None})
+
+    def post(self, request, format=None):
+        token = Token.objects.get_or_create(user=request.user)
         return Response({'token': token.key})
 
 

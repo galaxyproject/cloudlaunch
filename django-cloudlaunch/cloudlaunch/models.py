@@ -17,13 +17,6 @@ import jsonmerge
 import djcloudbridge
 
 
-# Create API auth token when user is created
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-
-
 class Image(cb_models.DateNameAwareModel):
     """
     A base Image model used by a virtual appliance.
