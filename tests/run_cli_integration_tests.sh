@@ -21,6 +21,18 @@ python django-cloudlaunch/manage.py loaddata tests/fixtures/initial_test_data.js
 # Run cloudlaunch in background. Use noreload so that it runs in the same process as coverage
 coverage run --source django-cloudlaunch --branch django-cloudlaunch/manage.py runserver --noreload &
 
+# Wait for cloudlaunch to start
+TIMEOUT=100
+echo "Waiting for cloudlaunch to start..."
+while ! nc -z localhost 8000; do
+  if [[ $TIMEOUT -lt 0 ]]; then
+        echo "Timeout waiting for cloudlaunch to start"
+        exit
+  fi
+  sleep 0.1
+  TIMEOUT=$((TIMEOUT-1))
+done
+
 # Clone temp cloudlaunch-cli repo
 git clone https://github.com/CloudVE/cloudlaunch-cli /tmp/cloudlaunch-cli
 

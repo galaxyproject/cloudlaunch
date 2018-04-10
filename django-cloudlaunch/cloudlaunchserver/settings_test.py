@@ -13,6 +13,8 @@ signal.signal(signal.SIGINT, test_signal_handler)
 
 from cloudlaunchserver.settings import *  # noqa
 
+# Turn on Django debugging
+DEBUG = True
 
 DATABASES = {
     'default': {
