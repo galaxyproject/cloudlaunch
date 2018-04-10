@@ -88,7 +88,7 @@ class AuthTokenView(APIView):
             return Response({'token': None})
 
     def post(self, request, format=None):
-        token = Token.objects.get_or_create(user=request.user)
+        token, _ = Token.objects.get_or_create(user=request.user)
         return Response({'token': token.key})
 
 
