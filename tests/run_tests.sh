@@ -1,9 +1,16 @@
 #!/bin/bash
 
-SCRIPT_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
+export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-cloudlaunchserver.settings_test}"
+export CELERY_CONFIG_MODULE="${CELERY_CONFIG_MODULE:-cloudlaunchserver.cloudlaunchserver.celeryconfig_test}"
+export CLOUDLAUNCH_SERVER_URL=http://localhost:8000/api/v1
+export CLOUDLAUNCH_AUTH_TOKEN=272f075f152e59fd5ea55ca2d21728d2bfe37077
 
 # Change working directory so everything is resolved relative to cloudlaunch root folder
+SCRIPT_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd $SCRIPT_DIR/..
+
+# Delete the existing dayabase
+rm -f /tmp/cloudlaunch_testdb.sqlite3
 
 # Initialize database
 python django-cloudlaunch/manage.py migrate
