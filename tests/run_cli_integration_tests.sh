@@ -9,14 +9,14 @@ export CLOUDLAUNCH_AUTH_TOKEN=272f075f152e59fd5ea55ca2d21728d2bfe37077
 SCRIPT_DIR=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 cd $SCRIPT_DIR/..
 
-# Delete the existing dayabase
+# Delete the existing database
 rm -f /tmp/cloudlaunch_testdb.sqlite3
 
 # Initialize database
 python django-cloudlaunch/manage.py migrate
 
 # Load initial test data
-python django-cloudlaunch/manage.py loaddata tests/fixtures/cloudlaunch_initial_test_data.json
+python django-cloudlaunch/manage.py loaddata tests/fixtures/initial_test_data.json
 
 # Run cloudlaunch in background. Use noreload so that it runs in the same process as coverage
 coverage run --source django-cloudlaunch --branch django-cloudlaunch/manage.py runserver --noreload &
