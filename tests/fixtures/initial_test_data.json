@@ -164,6 +164,17 @@
 },
 {
   "model": "cloudlaunch.image",
+  "pk": 15,
+  "fields": {
+    "added": "2017-01-03T20:21:08.039Z",
+    "updated": "2017-01-06T04:39:59.117Z",
+    "name": "Ubuntu 16.04 with Docker",
+    "image_id": "ami-54fd1842",
+    "description": ""
+  }
+},
+{
+  "model": "cloudlaunch.image",
   "pk": 101,
   "fields": {
     "added": "2017-12-04T20:39:06.536Z",
@@ -185,6 +196,13 @@
   "pk": 14,
   "fields": {
     "cloud": "jetstream"
+  }
+},
+{
+  "model": "cloudlaunch.cloudimage",
+  "pk": 15,
+  "fields": {
+    "cloud": "amazon-us-east-n-virginia"
   }
 },
 {
@@ -256,7 +274,7 @@
   "pk": 5,
   "fields": {
     "application": "ubuntu",
-    "version": "16.04 (with Docker)",
+    "version": "16.04",
     "frontend_component_path": "app/marketplace/plugins/plugins.module#PluginsModule",
     "frontend_component_name": "clui-ubuntu-config",
     "backend_component_name": "cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin",
@@ -310,6 +328,17 @@
     "image": 14,
     "default_instance_type": null,
     "default_launch_config": "{\r\n   \"config_cloudlaunch\": {\r\n        \"instanceType\": \"m1.tiny\",\r\n       \"firewall\": [\r\n          {\r\n             \"securityGroup\": \"cloudlaunch-vm\",\r\n             \"rules\": [\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"80\",\r\n                   \"to\": \"80\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"22\",\r\n                   \"to\": \"22\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                }\r\n             ]\r\n          }\r\n       ]\r\n    }\r\n}"
+  }
+},
+{
+  "model": "cloudlaunch.applicationversioncloudconfig",
+  "pk": 7,
+  "fields": {
+    "application_version": 5,
+    "cloud": "amazon-us-east-n-virginia",
+    "image": 15,
+    "default_instance_type": "",
+    "default_launch_config": "{\r\n   \"config_cloudlaunch\": {\r\n       \"instanceType\": \"t2.small\",\r\n       \"firewall\": [\r\n          {\r\n             \"securityGroup\": \"cloudlaunch-vm\",\r\n             \"rules\": [\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"80\",\r\n                   \"to\": \"80\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"22\",\r\n                   \"to\": \"22\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                }\r\n             ]\r\n          }\r\n       ]\r\n    }\r\n}"
   }
 },
 {
