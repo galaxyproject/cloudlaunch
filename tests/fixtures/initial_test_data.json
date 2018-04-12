@@ -252,16 +252,16 @@
 },
 {
   "model": "cloudlaunch.application",
-  "pk": "ubuntu",
+  "pk": "cl_test_app",
   "fields": {
     "added": "2016-06-27T22:10:17.212Z",
     "updated": "2017-12-22T21:38:44.060Z",
-    "name": "Ubuntu",
+    "name": "CloudLaunch integrationt test app",
     "status": "LIVE",
-    "summary": "Ubuntu operating system",
-    "maintainer": "Canonical Inc.",
-    "description": "Ubuntu is a Debian-based Linux operating system and distribution for personal computers, smartphones and network servers. This appliance is a bare-bones version of this operating system.",
-    "info_url": "https://en.wikipedia.org/wiki/Ubuntu_(operating_system)",
+    "summary": "An app that uses mock drivers to simulate a VM launch",
+    "maintainer": "cloudve.org",
+    "description": "An app that uses mock drivers to simulate a VM launch.",
+    "info_url": "",
     "icon_url": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Logo-ubuntu_no%28r%29-black_orange-hex.svg?download",
     "default_launch_config": "",
     "default_version": 5,
@@ -273,11 +273,11 @@
   "model": "cloudlaunch.applicationversion",
   "pk": 5,
   "fields": {
-    "application": "ubuntu",
+    "application": "cl_test_app",
     "version": "16.04",
     "frontend_component_path": "app/marketplace/plugins/plugins.module#PluginsModule",
     "frontend_component_name": "clui-ubuntu-config",
-    "backend_component_name": "cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin",
+    "backend_component_name": "cloudlaunch.backend_plugins.cl_integration_test_app.CloudLaunchIntegrationTestApp",
     "default_launch_config": "",
     "default_cloud": "jetstream"
   }
