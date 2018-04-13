@@ -1,5 +1,6 @@
 import yaml
 from cloudbridge.cloud import CloudProviderFactory
+from cloudbridge.cloud.interfaces import TestMockHelperMixin
 from rest_framework.serializers import ValidationError
 from .cloudman_app import CloudManAppPlugin
 from .base_vm_app import BaseVMAppPlugin
@@ -16,12 +17,14 @@ class CloudLaunchIntegrationTestApp(BaseVMAppPlugin):
         Returns a mock version of a provider if available.
         """
         provider_class = CloudProviderFactory().get_provider_class(
-            provider.provider_id, get_mock=True)
+            provider.PROVIDER_ID, get_mock=True)
         return provider_class(provider.config)
     
     def deploy(self, name, task, app_config, provider_config):
         # Replace provider with mock version if available
-        provider_config['provider'] = self._get_mock_provider(
-            provider_config['provider']) 
+        provider = self._get_mock_provider(provider_config['cloud_provider'])
+        if isinstance(provider, TestMockHelperMixin):
+            provider.setUpMock()
+        provider_config['cloud_provider'] = provider
         return super(CloudLaunchIntegrationTestApp, self).deploy(
             name, task, app_config, provider_config)

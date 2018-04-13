@@ -1,4 +1,5 @@
+moto
 git+git://github.com/CloudVE/cloudlaunch-cli#egg=cloudlaunch-cli
-git+git://github.com/gvlproject/cloudbridge#egg=cloudbridge
+git+git://github.com/gvlproject/cloudbridge#egg=cloudbridge[dev]
 git+git://github.com/CloudVE/djcloudbridge#egg=djcloudbridge
 -e ".[test]"

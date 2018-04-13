@@ -256,7 +256,7 @@
   "fields": {
     "added": "2016-06-27T22:10:17.212Z",
     "updated": "2017-12-22T21:38:44.060Z",
-    "name": "CloudLaunch integrationt test app",
+    "name": "CloudLaunch integration test app",
     "status": "LIVE",
     "summary": "An app that uses mock drivers to simulate a VM launch",
     "maintainer": "cloudve.org",
