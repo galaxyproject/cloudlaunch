@@ -1,9 +1,9 @@
 """
 Celery settings used during cloudlaunch testing
 """
+broker_url = 'memory://'
+broker_transport_options = {'polling_interval': .01}
 broker_backend = 'memory'
-task_always_eager = True
-eager_propagates_exceptions = True
 result_serializer = 'json'
 task_serializer = 'json'
 accept_content = ['json']
