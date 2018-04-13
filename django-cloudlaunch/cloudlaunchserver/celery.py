@@ -4,6 +4,7 @@ from __future__ import absolute_import
 
 import os
 import raven
+import threading
 
 import celery
 from django.conf import settings  # noqa
