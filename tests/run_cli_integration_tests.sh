@@ -37,9 +37,13 @@ done
 git clone https://github.com/CloudVE/cloudlaunch-cli /tmp/cloudlaunch-cli
 
 # Run cloudlaunch-cli test suite against cloudlaunch
-(cd /tmp/cloudlaunch-cli/ && python setup.py test)
+cd /tmp/cloudlaunch-cli/ && python setup.py test
+# Cache return value of tests
+ret_value=$?
 
 # Kill the django process afterwards ($! is the last background process).
 # There's a special SIGINT handler in manage.py that will terminate cloudlaunch
 # gracefully, so coverage has a chance to write out its report
 kill -SIGINT $!
+
+exit $ret_value

@@ -12,7 +12,7 @@ class CloudLaunchIntegrationTestApp(BaseVMAppPlugin):
     and is intended to be used exclusively for testing.
     """
 
-    def _get_mock_provider(provider):
+    def _get_mock_provider(self, provider):
         """
         Returns a mock version of a provider if available.
         """
