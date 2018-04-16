@@ -14,6 +14,7 @@ Including another URLconf
     2. Import the include() function: from django.conf.urls import url, include
     3. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
+from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls import url
 from rest_framework.schemas import get_schema_view
@@ -47,7 +48,7 @@ infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'
 public_services_regex_pattern = r'api/v1/public_services/'
 
-schema_view = get_schema_view(title='CloudLaunch API')
+schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_BASE_URL)
 
 urlpatterns = [
     url(r'%sapi-token-auth/' % auth_regex_pattern, views.AuthTokenView.as_view()),
