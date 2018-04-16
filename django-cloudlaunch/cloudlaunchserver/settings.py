@@ -201,10 +201,12 @@ USE_L10N = True
 USE_TZ = True
 
 
+CLOUDLAUNCH_PATH_PREFIX = os.environ.get('CLOUDLAUNCH_PATH_PREFIX', '')
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = CLOUDLAUNCH_PATH_PREFIX + '/static/'
 
 
 # Installed apps settings
@@ -223,6 +225,8 @@ REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'djcloudbridge.serializers.UserSerializer'
 }
 REST_SESSION_LOGIN = True
+
+REST_SCHEMA_BASE_URL = CLOUDLAUNCH_PATH_PREFIX + '/'
 
 RAVEN_CONFIG = {
     'dsn': os.environ.get('SENTRY_DSN', '')
