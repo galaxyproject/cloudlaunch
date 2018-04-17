@@ -72,13 +72,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Application definition
 
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+REQUIRED_INSTALLED_APPS = [
     'django.contrib.sites',
     'nested_admin',
     'smart_selects',
@@ -102,8 +96,17 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_countries',
     'django_filters',
-    'raven.contrib.django.raven_compat'
 ]
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'raven.contrib.django.raven_compat'
+] + REQUIRED_INSTALLED_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
