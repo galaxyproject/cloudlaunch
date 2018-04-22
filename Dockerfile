@@ -3,32 +3,36 @@ FROM python:3.6-alpine
 ENV PYTHONUNBUFFERED 1
 
 RUN apk update \
-  # psycopg2 dependencies
-  && apk add --virtual build-deps gcc python3-dev musl-dev \
-  && apk add postgresql-dev
+    # psycopg2 dependencies
+    && apk add --virtual build-deps gcc python3-dev musl-dev \
+    && apk add postgresql-dev \
+    # CFFI dependencies
+    && apk add libffi-dev openssl-dev py-cffi \
+    # git for cloning requirements dependencies
+    && apk add git \
+    # For pynacl
+    && apk add make linux-headers
 
-# Requirements are installed here to ensure they will be cached.
-RUN mkdir -p /app
-ADD requirements_dev.txt /app/requirements.txt
+# Create cloudlaunch user environment
+RUN adduser -D -g '' cloudlaunch \
+    && mkdir -p /app
 
 # Set working directory to /app/
 WORKDIR /app/
 
-# Install python dependencies
+# Add files to /app/
+ADD . /app
+
+# Install requirements. Move this above ADD as 'pip install cloudlaunch-server'
+# asap so caching works
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create unprivileged user
-RUN adduser --disabled-password --gecos '' cloudlaunch
+#RUN python django-cloudlaunch/manage.py collectstatic --no-input
 
-# Add files to /app/
-# This should probably be mounted at deployment step
-ADD ./django-cloudlaunch /app
+# Change ownership to cloudlaunch
 RUN chown -R cloudlaunch:cloudlaunch /app
 
 # gunicorn will listen on this port
 EXPOSE 8000
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-CMD gunicorn -b :8000 django-cloudlaunch/cloudlaunchserver.wsgi
+CMD gunicorn -b :8000 cloudlaunchserver.wsgi
