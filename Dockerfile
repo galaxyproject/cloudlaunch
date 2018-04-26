@@ -17,6 +17,9 @@ RUN apk update \
 RUN adduser -D -g '' cloudlaunch \
     && mkdir -p /app
 
+# Switch to new, lower-privilege user
+USER cloudlaunch
+
 # Set working directory to /app/
 WORKDIR /app/
 
@@ -35,4 +38,4 @@ RUN chown -R cloudlaunch:cloudlaunch /app
 # gunicorn will listen on this port
 EXPOSE 8000
 
-CMD gunicorn -b :8000 cloudlaunchserver.wsgi
+CMD gunicorn -b :8000 --access-logfile - --error-logfile - --log-level debug cloudlaunchserver.wsgi
