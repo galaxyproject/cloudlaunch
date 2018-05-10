@@ -48,7 +48,8 @@ infrastructure_regex_pattern = r'api/v1/infrastructure/'
 auth_regex_pattern = r'api/v1/auth/'
 public_services_regex_pattern = r'api/v1/public_services/'
 
-schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_BASE_URL)
+schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_BASE_URL,
+                              urlconf='cloudlaunch.urls')
 
 urlpatterns = [
     url(r'%sapi-token-auth/' % auth_regex_pattern, views.AuthTokenView.as_view()),
