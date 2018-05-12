@@ -24,13 +24,14 @@ os.environ.setdefault('CELERY_CONFIG_MODULE', 'cloudlaunchserver.celeryconfig')
 class Celery(celery.Celery):
 
     def on_configure(self):
-        client = raven.Client(settings.RAVEN_CONFIG.get('dsn'))
-
-        # register a custom filter to filter out duplicate logs
-        register_logger_signal(client)
-
-        # hook into the Celery error handler
-        register_signal(client)
+        pass
+#         client = raven.Client(settings.RAVEN_CONFIG.get('dsn'))
+#
+#         # register a custom filter to filter out duplicate logs
+#         register_logger_signal(client)
+#
+#         # hook into the Celery error handler
+#         register_signal(client)
 
 app = Celery('proj')
 # Changed to use dedicated celery config as detailed in:

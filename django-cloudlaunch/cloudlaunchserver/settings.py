@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 from django.conf import settings as django_settings
 import os
-import raven
 import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
