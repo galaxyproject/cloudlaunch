@@ -97,6 +97,7 @@ REQS_PROD = ([
 )
 
 REQS_TEST = ([
+    'sqlalchemy',  # for celery results backend
     'tox>=2.9.1',
     'coverage>=4.4.1',
     'flake8>=3.4.1',
