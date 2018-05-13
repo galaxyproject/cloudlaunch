@@ -101,7 +101,8 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_countries',
     'django_filters',
-    'raven.contrib.django.raven_compat'
+    'raven.contrib.django.raven_compat',
+    'cloudlaunchserver'
 ]
 
 MIDDLEWARE = [
