@@ -94,6 +94,7 @@ class AppPlugin():
    "config_cloudman": {},
    "config_appliance": {
       "sshUser": "ubuntu",
+      "runCmd": ["docker run -v /var/run/docker.sock:/var/run/docker.sock afgane/cloudman-boot"],
       "runner": "ansible",
       "repository": "https://github.com/afgane/Rancher-Ansible",
       "inventoryTemplate": "https://gist.githubusercontent.com/..."
@@ -110,7 +111,7 @@ class AppPlugin():
                 } ] } ] } }
 ```
         @type  provider_config: ``dict``
-        @param provider_config: Define the details of of the infrastructure
+        @param provider_config: Define the details of the infrastructure
                                 provider where the appliance should be
                                 deployed. It is expected that this dictionary
                                 is composed within a task calling the plugin so
@@ -153,6 +154,8 @@ class AppPlugin():
                                                        not be supplied by a
                                                        user and is intended
                                                        only for internal use.
+                                * ``run_cmd``: A list of strings with commands
+                                               to run upon system boot.
 
         :rtype: ``dict``
         :return: Results of the deployment process.
