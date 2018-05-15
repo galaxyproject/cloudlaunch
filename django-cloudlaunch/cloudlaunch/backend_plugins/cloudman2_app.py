@@ -131,7 +131,11 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         # The path must be to a folder that doesn't already contain a git repo,
         # including any parent folders
         repo_path = '/tmp/cloudlaunch_plugin_runners/rancher_ansible_%s' % host
-        inventory_path = os.path.join(repo_path, 'inventory')
+        try:
+            log.info("Delete plugin runner folder %s if not empty", repo_path)
+            shutil.rmtree(repo_path)
+        except FileNotFoundError:
+            pass
         # Ensure the playbook is available
         log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
         Repo.clone_from(playbook, to_path=repo_path)
@@ -143,6 +147,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         # Create an inventory file
         r = requests.get(inventory)
         inv = Template((r.content).decode('utf-8'))
+        inventory_path = os.path.join(repo_path, 'inventory')
         with open(inventory_path, 'w') as f:
             log.info("Creating inventory file %s", inventory_path)
             f.writelines(inv.substitute({'host': host, 'user': user}))
