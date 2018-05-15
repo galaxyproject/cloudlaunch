@@ -174,14 +174,14 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         self._check_ssh(host, pk=ssh_private_key, user=user)
         task.update_state(
             state='PROGRESSING',
-            meta={'action': 'Configuring container cluster manager.'})
+            meta={'action': 'Booting CloudMan...'})
         playbook = app_config.get('config_appliance', {}).get('repository')
         inventory = app_config.get(
             'config_appliance', {}).get('inventoryTemplate')
         self._run_playbook(playbook, inventory, host, ssh_private_key, user)
         result = {}
         result['cloudLaunch'] = {'applicationURL':
-                                 'http://{0}:8080/'.format(host)}
+                                 'https://{0}:4430/'.format(host)}
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"

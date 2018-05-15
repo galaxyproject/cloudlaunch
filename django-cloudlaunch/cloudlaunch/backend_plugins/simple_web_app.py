@@ -37,7 +37,7 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
         while count < max_retries:
             time.sleep(poll_interval)
             try:
-                r = requests.head(url)
+                r = requests.head(url, verify=False)
                 r.raise_for_status()
                 return
             except requests.exceptions.HTTPError as http_exc:
