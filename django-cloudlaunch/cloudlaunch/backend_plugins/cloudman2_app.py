@@ -1,4 +1,6 @@
 """CloudMan 2.0 application plugin implementation."""
+import json
+import jsonmerge
 import os
 import paramiko
 import shutil
@@ -189,8 +191,13 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         playbook = app_config.get('config_appliance', {}).get('repository')
         inventory = app_config.get(
             'config_appliance', {}).get('inventoryTemplate')
-        playbook_vars = [('rancher_pwd', app_config.get(
-            'config_cloudman2', {}).get('clusterPassword'))]
+        cm_bd = jsonmerge.merge(
+            app_config, provider_config['cloud_provider'].config.copy())
+        playbook_vars = [
+            ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
+                'clusterPassword')),
+            ('cm_bootstrap_data', "'{0}'".format(json.dumps(cm_bd)))
+        ]
         self._run_playbook(playbook, inventory, host, ssh_private_key, user,
                            playbook_vars)
         result = {}
