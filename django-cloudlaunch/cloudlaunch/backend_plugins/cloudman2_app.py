@@ -100,7 +100,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         self._remove_known_host(host)
         return False
 
-    def _run_playbook(self, playbook, inventory, host, pk, user='ubuntu'):
+    def _run_playbook(self, playbook, inventory, host, pk, user='ubuntu',
+                      playbook_vars=None):
         """
         Run an Ansible playbook to configure a host.
 
@@ -117,6 +118,11 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
                           that will be used for running the playbook. The
                           file should have defined variables for ``host`` and
                           ``user``.
+
+        :type playbook_vars: ``list`` of tuples
+        :param playbook_vars: A list of key/value tuples with variables to pass
+                              to the playbook via command line arguments
+                              (i.e., --extra-vars key=value).
 
         :type host: ``str``
         :param host: Hostname or IP of a machine as the playbook target.
@@ -154,6 +160,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         # Run the playbook
         cmd = "cd {0} && ansible-playbook -i inventory playbook.yml".format(
             repo_path)
+        for pev in playbook_vars or []:
+            cmd += " --extra-vars {0}={1}".format(pev[0], pev[1])
         log.info("Running Ansible with command %s", cmd)
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         (out, _) = p.communicate()
@@ -171,20 +179,26 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         ssh_private_key = provider_config.get('ssh_private_key')
         if settings.DEBUG:
             log.info("Using config ssh key:\n%s", ssh_private_key)
+        task.update_state(
+            state='PROGRESSING',
+            meta={'action': 'Waiting for ssh on host {0}...'.format(host)})
         self._check_ssh(host, pk=ssh_private_key, user=user)
         task.update_state(
             state='PROGRESSING',
-            meta={'action': 'Booting CloudMan...'})
+            meta={'action': 'Booting CloudMan on host {0}...'.format(host)})
         playbook = app_config.get('config_appliance', {}).get('repository')
         inventory = app_config.get(
             'config_appliance', {}).get('inventoryTemplate')
-        self._run_playbook(playbook, inventory, host, ssh_private_key, user)
+        playbook_vars = [('rancher_pwd', app_config.get(
+            'config_cloudman2', {}).get('clusterPassword'))]
+        self._run_playbook(playbook, inventory, host, ssh_private_key, user,
+                           playbook_vars)
         result = {}
         result['cloudLaunch'] = {'applicationURL':
                                  'https://{0}:4430/'.format(host)}
         task.update_state(
             state='PROGRESSING',
-            meta={'action': "Waiting for CloudMan to become ready at %s"
+            meta={'action': "Waiting for Rancher to become available at %s"
                             % result['cloudLaunch']['applicationURL']})
         self.wait_for_http(result['cloudLaunch']['applicationURL'])
         return result
