@@ -1,4 +1,6 @@
 """CloudMan 2.0 application plugin implementation."""
+import json
+import jsonmerge
 import os
 import paramiko
 import shutil
@@ -100,7 +102,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         self._remove_known_host(host)
         return False
 
-    def _run_playbook(self, playbook, inventory, host, pk, user='ubuntu'):
+    def _run_playbook(self, playbook, inventory, host, pk, user='ubuntu',
+                      playbook_vars=None):
         """
         Run an Ansible playbook to configure a host.
 
@@ -118,6 +121,11 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
                           file should have defined variables for ``host`` and
                           ``user``.
 
+        :type playbook_vars: ``list`` of tuples
+        :param playbook_vars: A list of key/value tuples with variables to pass
+                              to the playbook via command line arguments
+                              (i.e., --extra-vars key=value).
+
         :type host: ``str``
         :param host: Hostname or IP of a machine as the playbook target.
 
@@ -131,7 +139,11 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         # The path must be to a folder that doesn't already contain a git repo,
         # including any parent folders
         repo_path = '/tmp/cloudlaunch_plugin_runners/rancher_ansible_%s' % host
-        inventory_path = os.path.join(repo_path, 'inventory')
+        try:
+            log.info("Delete plugin runner folder %s if not empty", repo_path)
+            shutil.rmtree(repo_path)
+        except FileNotFoundError:
+            pass
         # Ensure the playbook is available
         log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
         Repo.clone_from(playbook, to_path=repo_path)
@@ -143,12 +155,15 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         # Create an inventory file
         r = requests.get(inventory)
         inv = Template((r.content).decode('utf-8'))
+        inventory_path = os.path.join(repo_path, 'inventory')
         with open(inventory_path, 'w') as f:
             log.info("Creating inventory file %s", inventory_path)
             f.writelines(inv.substitute({'host': host, 'user': user}))
         # Run the playbook
         cmd = "cd {0} && ansible-playbook -i inventory playbook.yml".format(
             repo_path)
+        for pev in playbook_vars or []:
+            cmd += " --extra-vars {0}={1}".format(pev[0], pev[1])
         log.info("Running Ansible with command %s", cmd)
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
         (out, _) = p.communicate()
@@ -166,20 +181,31 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         ssh_private_key = provider_config.get('ssh_private_key')
         if settings.DEBUG:
             log.info("Using config ssh key:\n%s", ssh_private_key)
+        task.update_state(
+            state='PROGRESSING',
+            meta={'action': 'Waiting for ssh on host {0}...'.format(host)})
         self._check_ssh(host, pk=ssh_private_key, user=user)
         task.update_state(
             state='PROGRESSING',
-            meta={'action': 'Configuring container cluster manager.'})
+            meta={'action': 'Booting CloudMan on host {0}...'.format(host)})
         playbook = app_config.get('config_appliance', {}).get('repository')
         inventory = app_config.get(
             'config_appliance', {}).get('inventoryTemplate')
-        self._run_playbook(playbook, inventory, host, ssh_private_key, user)
+        cm_bd = jsonmerge.merge(
+            app_config, provider_config['cloud_provider'].config.copy())
+        playbook_vars = [
+            ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
+                'clusterPassword')),
+            ('cm_bootstrap_data', "'{0}'".format(json.dumps(cm_bd)))
+        ]
+        self._run_playbook(playbook, inventory, host, ssh_private_key, user,
+                           playbook_vars)
         result = {}
         result['cloudLaunch'] = {'applicationURL':
-                                 'http://{0}:8080/'.format(host)}
+                                 'https://{0}:4430/'.format(host)}
         task.update_state(
             state='PROGRESSING',
-            meta={'action': "Waiting for CloudMan to become ready at %s"
+            meta={'action': "Waiting for Rancher to become available at %s"
                             % result['cloudLaunch']['applicationURL']})
         self.wait_for_http(result['cloudLaunch']['applicationURL'])
         return result

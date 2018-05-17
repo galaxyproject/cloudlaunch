@@ -261,6 +261,8 @@ class BaseVMAppPlugin(AppPlugin):
                 provider_config['ssh_public_key'] = public_key
                 provider_config['ssh_user'] = app_config.get(
                     'config_appliance', {}).get('sshUser')
+                provider_config['run_cmd'] = app_config.get(
+                    'config_appliance', {}).get('runCmd')
             p_result = self._provision_host(name, task, app_config,
                                             provider_config)
             provider_config['host_address'] = p_result['cloudLaunch'].get(
@@ -299,14 +301,25 @@ class BaseVMAppPlugin(AppPlugin):
 
         log.debug("Launching with subnet %s and VM firewalls %s", subnet, vmfl)
 
+        if provider_config.get('ssh_public_key') or provider_config.get(
+                'run_cmd'):
+            user_data += """
+#cloud-config
+"""
         if provider_config.get('ssh_public_key'):
             # cloud-init config to allow login w/ the config ssh key
             # http://cloudinit.readthedocs.io/en/latest/topics/examples.html
             log.info("Adding a cloud-init config public ssh key to user data")
             user_data += """
-#cloud-config
 ssh_authorized_keys:
     - {0}""".format(provider_config['ssh_public_key'])
+        if provider_config.get('run_cmd'):
+            user_data += """
+runcmd:"""
+            for rc in provider_config.get('run_cmd'):
+                user_data += """
+ - {0}
+ """.format(rc.split(" "))
         log.info("Launching base_vm of type %s with UD:\n%s", vm_type,
                  user_data)
         task.update_state(state="PROGRESSING",
