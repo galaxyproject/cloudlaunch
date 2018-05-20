@@ -16,6 +16,7 @@ from retrying import retry
 from string import Template
 
 from django.conf import settings
+from djcloudbridge.view_helpers import get_credentials_from_dict
 from git import Repo
 
 from .simple_web_app import SimpleWebAppPlugin
@@ -187,8 +188,9 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         playbook = app_config.get('config_appliance', {}).get('repository')
         inventory = app_config.get(
             'config_appliance', {}).get('inventoryTemplate')
-        cm_bd = jsonmerge.merge(
-            app_config, provider_config['cloud_provider'].config.copy())
+        cloud_info = get_credentials_from_dict(
+            provider_config['cloud_provider'].config.copy())
+        cm_bd = jsonmerge.merge(app_config, cloud_info)
         playbook_vars = [
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
