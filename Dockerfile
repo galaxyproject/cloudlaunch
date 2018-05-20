@@ -17,9 +17,6 @@ RUN apk update \
 RUN adduser -D -g '' cloudlaunch \
     && mkdir -p /app
 
-# Switch to new, lower-privilege user
-USER cloudlaunch
-
 # Set working directory to /app/
 WORKDIR /app/
 
@@ -34,6 +31,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Change ownership to cloudlaunch
 RUN chown -R cloudlaunch:cloudlaunch /app
+
+# Switch to new, lower-privilege user
+USER cloudlaunch
 
 # gunicorn will listen on this port
 EXPOSE 8000
