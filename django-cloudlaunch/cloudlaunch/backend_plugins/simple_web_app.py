@@ -18,10 +18,6 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
     a web frontend.
     """
 
-    def __init__(self):
-        """Init any base app vars."""
-        self.base_app = False
-
     def wait_for_http(self, url, ok_status_codes=None, max_retries=200,
                       poll_interval=5):
         """

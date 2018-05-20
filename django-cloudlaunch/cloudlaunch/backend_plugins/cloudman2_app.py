@@ -27,10 +27,6 @@ log = get_task_logger(__name__)
 class CloudMan2AppPlugin(SimpleWebAppPlugin):
     """CloudLaunch appliance implementation for CloudMan 2.0."""
 
-    def __init__(self):
-        """Initialize CloudMan2AppPlugin object."""
-        self.base_app = False
-
     @staticmethod
     def validate_app_config(provider, name, cloud_config, app_config):
         """Format any app-specific configurations."""

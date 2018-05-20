@@ -22,10 +22,6 @@ class BaseVMAppPlugin(AppPlugin):
     complement methods provided here.
     """
 
-    def __init__(self):
-        """Init any base app vars."""
-        self.base_app = True
-
     @staticmethod
     def validate_app_config(provider, name, cloud_config, app_config):
         """Extract any extra user data from the app config and return it."""

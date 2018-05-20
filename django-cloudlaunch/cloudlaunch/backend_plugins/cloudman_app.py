@@ -18,9 +18,6 @@ def get_required_val(data, name, message):
 
 class CloudManAppPlugin(SimpleWebAppPlugin):
 
-    def __init__(self):
-        self.base_app = False
-
     @staticmethod
     def validate_app_config(provider, name, cloud_config, app_config):
         cloudman_config = get_required_val(
