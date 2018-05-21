@@ -190,7 +190,9 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             'config_appliance', {}).get('inventoryTemplate')
         cloud_info = get_credentials_from_dict(
             provider_config['cloud_provider'].config.copy())
-        cm_bd = jsonmerge.merge(app_config, cloud_info)
+        # Combine bootstrap data to have the following keys: `config_app`,
+        # `credentials`, and `cloud`
+        cm_bd = {'config_app': app_config, **cloud_info}
         playbook_vars = [
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
