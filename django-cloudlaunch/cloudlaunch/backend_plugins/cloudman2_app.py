@@ -1,18 +1,16 @@
 """CloudMan 2.0 application plugin implementation."""
 import json
-import jsonmerge
 import os
 import paramiko
 import shutil
 import socket
 import subprocess
-import time
 from io import StringIO
 from paramiko.ssh_exception import AuthenticationException
 from paramiko.ssh_exception import BadHostKeyException
 from paramiko.ssh_exception import SSHException
 import requests
-from retrying import retry
+from retrying import retry, RetryError
 from string import Template
 
 from django.conf import settings
@@ -181,7 +179,14 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Waiting for ssh on host {0}...'.format(host)})
-        self._check_ssh(host, pk=ssh_private_key, user=user)
+        try:
+            self._check_ssh(host, pk=ssh_private_key, user=user)
+        except RetryError as rte:
+            task.update_state(
+                state='ERROR',
+                meta={'action': "Error ssh to host {0}: {1}".format(host, rte)}
+            )
+            return {'applicationURL': '{0}'.format(host)}
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Booting CloudMan on host {0}...'.format(host)})
