@@ -14,7 +14,7 @@ password = environ.get('DJANGO_ADMIN_PASS')
 email = environ.get('DJANGO_ADMIN_EMAIL', 'admin@galaxyproject.org')
 
 if password and User.objects.filter(username=username).count() == 0:
-    # User.objects.create_superuser(username, email, password)
+    User.objects.create_superuser(username, email, password)
     print('Superuser created.')
 else:
     print('Superuser creation skipped.')
