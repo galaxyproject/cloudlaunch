@@ -7,7 +7,7 @@ RUN apk update \
     && apk add --virtual build-deps gcc python3-dev musl-dev \
     && apk add postgresql-dev \
     # CFFI dependencies
-    && apk add libffi-dev openssl-dev py-cffi \
+    && apk add libffi-dev py-cffi \
     # git for cloning requirements dependencies
     && apk add git \
     # For pynacl
