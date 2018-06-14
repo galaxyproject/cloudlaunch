@@ -199,6 +199,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         # `credentials`, and `cloud`
         cm_bd = {'config_app': app_config, **cloud_info}
         playbook_vars = [
+            ('cm_boot_image', app_config.get('config_cloudman2', {}).get(
+                'cm_boot_image')),
             ('rancher_server', host),
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
