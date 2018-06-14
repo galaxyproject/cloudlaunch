@@ -10,11 +10,11 @@ from os import environ
 from django.contrib.auth.models import User
 
 username = environ.get('DJANGO_ADMIN_USER', 'admin')
-password = environ.get('DJANGO_ADMIN_PASS')
+password = environ.get('DJANGO_ADMIN_PASSWORD')
 email = environ.get('DJANGO_ADMIN_EMAIL', 'admin@galaxyproject.org')
 
 if password and User.objects.filter(username=username).count() == 0:
     User.objects.create_superuser(username, email, password)
-    print('Superuser created.')
+    print('Superuser {0} created.'.format(username))
 else:
-    print('Superuser creation skipped.')
+    print('Superuser {0} creation skipped.'.format(username))
