@@ -87,7 +87,9 @@ REQS_BASE = [
     # For commandline option handling
     'click',
     # Integration with Sentry
-    'raven'
+    'raven',
+    # For CloudMan2 plugin
+    'gitpython'
 ]
 
 REQS_PROD = ([
