@@ -12,6 +12,7 @@ from paramiko.ssh_exception import SSHException
 import requests
 from retrying import retry, RetryError
 from string import Template
+from urllib.parse import urljoin
 
 from django.conf import settings
 from djcloudbridge.view_helpers import get_credentials_from_dict
@@ -210,10 +211,12 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
                            playbook_vars)
         result = {}
         result['cloudLaunch'] = {'applicationURL':
-                                 'https://{0}:4430/'.format(host)}
+                                 'https://{0}/'.format(host)}
         task.update_state(
             state='PROGRESSING',
-            meta={'action': "Waiting for Rancher to become available at %s"
+            meta={'action': "Waiting for CloudMan to become available at %s"
                             % result['cloudLaunch']['applicationURL']})
-        self.wait_for_http(result['cloudLaunch']['applicationURL'])
+        login_url = urljoin(result['cloudLaunch']['applicationURL'],
+                            'cloudman/openid/openid/KeyCloak')
+        self.wait_for_http(login_url, ok_status_codes=[302])
         return result

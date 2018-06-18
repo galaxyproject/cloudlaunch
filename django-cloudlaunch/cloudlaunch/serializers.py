@@ -239,6 +239,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
 
         Called automatically by the DRF following a POST request.
         """
+        log.debug("Creating a new deployment: {0}".format(
+            validated_data.get("name")))
         name = validated_data.get("name")
         cloud = validated_data.get("target_cloud")
         version = validated_data.get("application_version")
