@@ -5,6 +5,7 @@ import paramiko
 import shutil
 import socket
 import subprocess
+import base64
 from io import StringIO
 from paramiko.ssh_exception import AuthenticationException
 from paramiko.ssh_exception import BadHostKeyException
@@ -204,7 +205,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             ('rancher_server', host),
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
-            ('cm_bootstrap_data', "'{0}'".format(json.dumps(cm_bd)))
+            ('cm_bootstrap_data', base64.b64encode(
+                json.dumps(cm_bd).encode('utf-8')))
         ]
         self._run_playbook(playbook, inventory, host, ssh_private_key, user,
                            playbook_vars)
