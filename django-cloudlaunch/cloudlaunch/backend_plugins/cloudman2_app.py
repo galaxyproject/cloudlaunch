@@ -156,12 +156,11 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             log.info("Creating inventory file %s", inventory_path)
             f.writelines(inv.substitute({'host': host, 'user': user}))
         # Run the playbook
-        cmd = "cd {0} && ansible-playbook -i inventory playbook.yml".format(
-            repo_path)
+        cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
         for pev in playbook_vars or []:
-            cmd += " --extra-vars {0}={1}".format(pev[0], pev[1])
+            cmd += ["--extra-vars", "{0}={1}".format(pev[0], pev[1])]
         log.info("Running Ansible with command %s", cmd)
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True, cwd=repo_path)
         (out, _) = p.communicate()
         p_status = p.wait()
         log.info("Playbook stdout: %s\nstatus: %s", out, p_status)
