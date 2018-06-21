@@ -206,7 +206,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
             ('cm_bootstrap_data', base64.b64encode(
-                json.dumps(cm_bd).encode('utf-8')))
+                json.dumps(cm_bd).encode('utf-8')).decode('utf-8'))
         ]
         self._run_playbook(playbook, inventory, host, ssh_private_key, user,
                            playbook_vars)
