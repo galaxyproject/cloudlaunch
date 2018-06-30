@@ -2,8 +2,10 @@
 import json
 import os
 import paramiko
+import random
 import shutil
 import socket
+import string
 import subprocess
 import base64
 from io import StringIO
@@ -196,6 +198,13 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             'config_appliance', {}).get('inventoryTemplate')
         cloud_info = get_credentials_from_dict(
             provider_config['cloud_provider'].config.copy())
+        # Create a random token for Pulsar if it's set to be used
+        token_length = 40  # chars
+        token_contents = (string.ascii_lowercase + string.ascii_uppercase +
+                          string.digits)
+        pulsar_token = ''.join(random.choice(token_contents) for i in range(
+            token_length)) if app_config.get(
+            'config_cloudman2', {}).get('pulsarOnly') else None
         # Combine bootstrap data to have the following keys: `config_app`,
         # `credentials`, and `cloud`
         cm_bd = {'config_app': app_config, **cloud_info}
@@ -205,6 +214,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             ('rancher_server', host),
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
+            ('cm_pulsar_token', pulsar_token),
             ('cm_bootstrap_data', base64.b64encode(
                 json.dumps(cm_bd).encode('utf-8')).decode('utf-8'))
         ]
@@ -212,7 +222,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
                            playbook_vars)
         result = {}
         result['cloudLaunch'] = {'applicationURL':
-                                 'https://{0}/'.format(host)}
+                                 'https://{0}/'.format(host),
+                                 'pulsar_token': pulsar_token}
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become available at %s"
