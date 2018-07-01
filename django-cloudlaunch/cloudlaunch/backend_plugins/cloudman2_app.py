@@ -205,6 +205,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         pulsar_token = ''.join(random.choice(token_contents) for i in range(
             token_length)) if app_config.get(
             'config_cloudman2', {}).get('pulsarOnly') else None
+        if pulsar_token:
+            app_config['config_cloudman2']['pulsar_token'] = pulsar_token
         # Combine bootstrap data to have the following keys: `config_app`,
         # `credentials`, and `cloud`
         cm_bd = {'config_app': app_config, **cloud_info}
@@ -214,7 +216,6 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             ('rancher_server', host),
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
-            ('cm_pulsar_token', pulsar_token),
             ('cm_bootstrap_data', base64.b64encode(
                 json.dumps(cm_bd).encode('utf-8')).decode('utf-8'))
         ]
