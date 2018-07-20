@@ -9,6 +9,8 @@ from cloudbridge.cloud.base.helpers import generate_key_pair
 from cloudbridge.cloud.interfaces import InstanceState
 from cloudbridge.cloud.interfaces.resources import TrafficDirection
 
+from cloudlaunch import configurers
+
 from .app_plugin import AppPlugin
 
 log = get_task_logger('cloudlaunch')
@@ -353,12 +355,49 @@ runcmd:"""
         return {"cloudLaunch": results}
 
     def _configure_host(self, name, task, app_config, provider_config):
-        host = provider_config.get('host_address')
+        try:
+            configurer = self._get_configurer(app_config)
+        except Exception as e:
+            task.update_state(
+                state='ERROR',
+                meta={'action':
+                      "Unable to create app configurer: {}".format(e)}
+            )
+            return {}
         task.update_state(
             state='PROGRESSING',
-            meta={"action": "Configuring host % s" % host})
-        log.info("Configuring host %s", host)
-        return {}
+            meta={'action': 'Validating provider connection info...'}
+        )
+        try:
+            configurer.validate(app_config, provider_config)
+        except Exception as e:
+            task.update_state(
+                state='ERROR',
+                meta={'action': "Validation of provider connection info "
+                                "failed: {}".format(e)}
+            )
+            return {}
+        task.update_state(
+            state='PROGRESSING',
+            meta={'action': 'Configuring application...'}
+        )
+        try:
+            result = configurer.configure(app_config, provider_config)
+            task.update_state(
+                state='PROGRESSING',
+                meta={'action': 'Application configuration completed '
+                                'successfully.'}
+            )
+            return result
+        except Exception as e:
+            task.update_state(
+                state='ERROR',
+                meta={'action': "Configuration failed: {}".format(e)}
+            )
+            return {}
+
+    def _get_configurer(self, app_config):
+        return configurers.create_configurer(app_config)
 
     def _get_deployment_iid(self, deployment):
         """

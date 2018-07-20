@@ -89,7 +89,8 @@ REQS_BASE = [
     # Integration with Sentry
     'raven',
     # For CloudMan2 plugin
-    'gitpython'
+    'gitpython',
+    'ansible'
 ]
 
 REQS_PROD = ([
