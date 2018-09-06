@@ -53,14 +53,13 @@ class BaseVMAppPlugin(AppPlugin):
         """
         # Check for None in case of NeCTAR
         network_id = subnet.network_id if subnet else None
-        for vmf in provider.security.vm_firewalls.find(name=vmf_name):
+        for vmf in provider.security.vm_firewalls.find(label=vmf_name):
             # OpenStack doesn't have a network_id associated with the firewall, so
             # just return the first match
             if vmf.network_id is None or vmf.network_id == network_id:
                 return vmf
         return provider.security.vm_firewalls.create(
-            name=vmf_name, description=description,
-            network_id=network_id)
+            label=vmf_name, network_id=network_id, description=description)
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
         """Compose a CloudBridge launch config object."""
@@ -179,7 +178,7 @@ class BaseVMAppPlugin(AppPlugin):
                     log.error("Exception applying firewall rules: %s" % e)
             return vmfl
 
-    def get_or_create_default_subnet(self, provider, net_id=None, placement=None):
+    def get_or_create_default_subnet(self, provider, net_id=None, placement=''):
         """
         Figure out a subnet matching the supplied constraints.
 
@@ -194,6 +193,8 @@ class BaseVMAppPlugin(AppPlugin):
                 # Placement match is necessary
                 elif sn.zone == placement:
                     return sn
+        if not placement:
+            placement = ''  # placement needs to be a str
         sn = provider.networking.subnets.get_or_create_default(placement)
         return sn
 
@@ -214,7 +215,7 @@ class BaseVMAppPlugin(AppPlugin):
                     router = found_routers[0]
                 else:
                     router = provider.networking.routers.create(
-                        network=subnet.network_id, name=router_name)
+                        label=router_name, network=subnet.network_id)
                 try:
                     router.attach_subnet(subnet)
                 except Exception as e:
@@ -236,7 +237,7 @@ class BaseVMAppPlugin(AppPlugin):
         """
         net_id = cloudlaunch_config.get('network', None)
         subnet_id = cloudlaunch_config.get('subnet', None)
-        placement = cloudlaunch_config.get('placementZone', None)
+        placement = cloudlaunch_config.get('placementZone', '')
         subnet = self.setup_networking(provider, net_id, subnet_id, placement)
         vmf = None
         if cloudlaunch_config.get('firewall'):
@@ -325,7 +326,7 @@ runcmd:"""
                                           "with keypair %s in zone %s" %
                                           (vm_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
-            name=name, image=img, vm_type=vm_type, subnet=subnet,
+            label=name, image=img, vm_type=vm_type, subnet=subnet,
             key_pair=kp, vm_firewalls=vmfl, zone=placement_zone,
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state="PROGRESSING",
