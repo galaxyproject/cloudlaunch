@@ -33,7 +33,7 @@ class AppCategoryAdmin(admin.ModelAdmin):
 
 class CloudImageAdmin(admin.ModelAdmin):
     model = models.CloudImage
-    list_display = ('name', 'cloud')
+    list_display = ('name', 'cloud', 'image_id')
     list_filter = ('name', 'cloud')
     ordering = ('name',)
 
