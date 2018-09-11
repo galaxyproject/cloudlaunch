@@ -60,6 +60,8 @@ class AppDeployTaskAdmin(ReadOnlyTabularInline):
 
 class AppDeploymentsAdmin(admin.ModelAdmin):
     models = models.ApplicationDeployment
+    list_display = ('name', 'archived', 'owner')
+    list_filter = ('archived', 'owner__username')
     inlines = [AppDeployTaskAdmin]
 
 
