@@ -178,14 +178,14 @@ class BaseVMAppPlugin(AppPlugin):
                     log.error("Exception applying firewall rules: %s" % e)
             return vmfl
 
-    def get_or_create_default_subnet(self, provider, net_id=None, placement=''):
+    def get_or_create_default_subnet(self, provider, network_id, placement):
         """
         Figure out a subnet matching the supplied constraints.
 
-        Any combination of the optional parameters is accepted.
+        Note that the supplied arguments may be given as ``None``.
         """
-        if net_id:
-            net = provider.networking.networks.get(net_id)
+        if network_id:
+            net = provider.networking.networks.get(network_id)
             for sn in net.subnets:
                 # No placement necessary; pick a (random) subnet
                 if not placement:
@@ -208,7 +208,7 @@ class BaseVMAppPlugin(AppPlugin):
             # Creating a router/gateway may not work with classic networking
             # so ignore errors if they occur
             try:
-                router_name = 'cl_router_%s' % subnet.network_id
+                router_name = 'cl-router-%s' % subnet.network_id
                 found_routers = provider.networking.routers.find(
                     name=router_name)
                 if found_routers:
