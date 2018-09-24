@@ -296,7 +296,7 @@ class BaseVMAppPlugin(AppPlugin):
                           meta={'action': "Retrieving or creating a key pair"})
         kp = self._get_or_create_kp(provider,
                                     cloudlaunch_config.get('keyPair') or
-                                    'cloudlaunch_key_pair')
+                                    'cloudlaunch-key-pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
         subnet, placement_zone, vmfl = self.resolve_launch_properties(
