@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from rest_framework.authtoken.models import Token
+import rest_framework.authtoken.models as drf_models
 
 from djcloudbridge import models as cb_models
 
@@ -371,3 +371,19 @@ class UserProfile(models.Model):
         """Set default display for objects."""
         return "{0} ({1} {2})".format(self.user.username, self.user.first_name,
                                       self.user.last_name)
+
+
+# Based on: https://consideratecode.com/2016/10/06/multiple-authentication-toke
+# ns-per-user-with-django-rest-framework/
+class AuthToken(drf_models.Token):
+    # key is no longer primary key, but still indexed and unique
+    key = models.CharField("Key", max_length=40, db_index=True, unique=True)
+    # relation to user is a ForeignKey, so each user can have more than one token
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='auth_tokens',
+        on_delete=models.CASCADE, verbose_name="User"
+    )
+    name = models.CharField("Name", max_length=64)
+
+    class Meta:
+        unique_together = (('user', 'name'),)

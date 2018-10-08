@@ -308,3 +308,16 @@ class PublicKeySerializer(serializers.HyperlinkedModelSerializer):
             user=self.context.get('view').request.user)
         return models.PublicKey.objects.create(
             user_profile=user_profile, **validated_data)
+
+
+class AuthTokenSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+    key = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = models.AuthToken
+        fields = ('id', 'name', 'key')
+
+    def create(self, validated_data):
+        user = self.context.get('view').request.user
+        return models.AuthToken.objects.create(user=user, **validated_data)

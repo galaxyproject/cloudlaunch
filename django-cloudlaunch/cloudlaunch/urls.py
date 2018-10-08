@@ -34,7 +34,11 @@ router.register(r'infrastructure', views.InfrastructureView,
 router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
 router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
+
 router.register(r'auth', views.AuthView, base_name='auth')
+router.register(r'auth/tokens', views.AuthTokenViewSet,
+                base_name='auth_token')
+
 router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
 deployments_router = HybridNestedRouter(router, r'deployments',
                                         lookup='deployment')
@@ -52,7 +56,6 @@ schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_
                               urlconf='cloudlaunch.urls')
 
 urlpatterns = [
-    url(r'%sapi-token-auth/' % auth_regex_pattern, views.AuthTokenView.as_view()),
     url(r'api/v1/', include(router.urls)),
     url(r'api/v1/', include(deployments_router.urls)),
     # This generates a duplicate url set with the cloudman url included
