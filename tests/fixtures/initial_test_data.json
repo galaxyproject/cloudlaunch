@@ -18,10 +18,12 @@
   }
 },
 {
-  "model": "authtoken.token",
-  "pk": "272f075f152e59fd5ea55ca2d21728d2bfe37077",
+  "model": "cloudlaunch.token",
+  "pk": "1",
   "fields": {
     "user": 3000,
+    "name": "CLI",
+    "key": "272f075f152e59fd5ea55ca2d21728d2bfe37077",
     "created": "2018-04-09T19:05:41.077Z"
   }
 },
