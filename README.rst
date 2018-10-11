@@ -13,8 +13,8 @@ available at https://launch.usegalaxy.org/.
 CloudLaunch can be extended with your own plug-ins which can provide custom
 launch logic for arbitrary custom applications. Visit the live site to see
 currently available applications in the Catalog. CloudLaunch is also tightly
-integrated with `CloudBridge <github.com/gvlproject/cloudbridge>`_, which makes
-CloudLaunch natively multi-cloud.
+integrated with `CloudBridge <https://github.com/gvlproject/cloudbridge>`_,
+which makes CloudLaunch natively multi-cloud.
 
 CloudLaunch has a web and commandline front-end. The Web UI is maintained in the
 `CloudLaunch-UI <https://github.com/galaxyproject/cloudlaunch-ui>`_ repository.
