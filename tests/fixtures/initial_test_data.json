@@ -18,7 +18,7 @@
   }
 },
 {
-  "model": "cloudlaunch.token",
+  "model": "cloudlaunch.authtoken",
   "pk": "1",
   "fields": {
     "user": 3000,
