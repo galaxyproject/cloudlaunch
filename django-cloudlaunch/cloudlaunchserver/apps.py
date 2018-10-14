@@ -18,12 +18,10 @@ class CloudLaunchServerConfig(AppConfig):
             # https://stackoverflow.com/questions/22233680/in-memory-broker-for-celery-unit-tests
             # Also refer: https://github.com/celery/celerytest
             app.control.purge()
-            celery_worker = app.Worker(app=app, pool='solo', concurrency=1)
-            #connections.close_all()
-            worker_thread = threading.Thread(target=celery_worker.start)
+            worker_thread = threading.Thread(target=app.worker_main)
             worker_thread.daemon = True
             worker_thread.start()
-        
+
             @receiver(django_server_shutdown)
             def on_shutdown(sender, **kwargs):
                 # Do nothing. Calling stop results in celery hanging waiting for keyboard input

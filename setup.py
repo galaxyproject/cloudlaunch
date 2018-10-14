@@ -90,7 +90,9 @@ REQS_BASE = [
     'raven',
     # For CloudMan2 plugin
     'gitpython',
-    'ansible'
+    'ansible',
+    # Utility package for retrying operations
+    'retrying'
 ]
 
 REQS_PROD = ([
