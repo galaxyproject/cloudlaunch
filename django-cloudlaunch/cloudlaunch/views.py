@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django_filters import rest_framework as dj_filters
+from rest_auth.registration.views import RegisterView
 from rest_framework import authentication
 from rest_framework import filters
 from rest_framework import generics
@@ -19,6 +20,7 @@ from djcloudbridge import drf_helpers
 from . import models
 from . import serializers
 from . import view_helpers
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class CustomApplicationPagination(PageNumberPagination):
@@ -172,3 +174,33 @@ class PublicKeyDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return models.PublicKey.objects.filter(
             user_profile__user=self.request.user)
+
+
+# Override registration view so that it supports multiple tokens
+from django.conf import settings
+from allauth.account import app_settings as allauth_settings
+from rest_auth.app_settings import TokenSerializer
+
+class CustomRegisterView(RegisterView):
+
+    def get_default_user_token(self, user):
+        """
+        Returns the default token or None. The default token is
+        created for the user in
+        cloudlaunch/authentication.py:default_create_token
+        """
+        return user.auth_tokens.filter(name="default").first()
+
+    def get_response_data(self, user):
+        if allauth_settings.EMAIL_VERIFICATION == \
+                allauth_settings.EmailVerificationMethod.MANDATORY:
+            return {"detail": _("Verification e-mail sent.")}
+
+        if getattr(settings, 'REST_USE_JWT', False):
+            data = {
+                'user': user,
+                'token': self.token
+            }
+            return JWTSerializer(data).data
+        else:
+            return TokenSerializer(self.get_default_user_token(user)).data
