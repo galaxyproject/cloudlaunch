@@ -217,7 +217,7 @@ class BaseVMAppPlugin(AppPlugin):
                         log.debug("Returning sn %s" % sn.id)
                         return subnet
             else:
-                router_name = 'cl-router-%s' % subnet.network_id
+                router_name = 'cl-router-%s' % subnet._network.name
                 log.debug("Creating CloudLaunch router %s", router_name)
                 router = provider.networking.routers.create(
                     label=router_name, network=subnet.network_id)

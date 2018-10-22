@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django_filters import rest_framework as dj_filters
+from rest_auth.registration.views import RegisterView
 from rest_framework import authentication
 from rest_framework import filters
 from rest_framework import generics
@@ -8,7 +9,6 @@ from rest_framework import permissions
 from rest_framework import renderers
 from rest_framework import status
 from rest_framework import viewsets
-from rest_framework.authtoken.models import Token
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -20,6 +20,7 @@ from djcloudbridge import drf_helpers
 from . import models
 from . import serializers
 from . import view_helpers
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class CustomApplicationPagination(PageNumberPagination):
@@ -63,6 +64,8 @@ class AuthView(APIView):
                 reverse('rest_auth:rest_user_details')),
             'registration': request.build_absolute_uri(
                 reverse('rest_auth_reg:rest_register')),
+            'tokens': request.build_absolute_uri(
+                reverse('auth_token-list')),
             'password/reset': request.build_absolute_uri(
                 reverse('rest_auth:rest_password_reset')),
             'password/reset/confirm': request.build_absolute_uri(
@@ -71,25 +74,6 @@ class AuthView(APIView):
                 reverse('rest_auth:rest_password_change')),
         }
         return Response(data)
-
-
-class AuthTokenView(APIView):
-    """
-    Return an auth token for a user that is already logged in.
-    """
-    permission_classes = (IsAuthenticated,)
-    authentication_classes = (authentication.SessionAuthentication,)
-
-    def get(self, request, format=None):
-        try:
-            token = Token.objects.get(user=request.user)
-            return Response({'token': token.key})
-        except Token.DoesNotExist:
-            return Response({'token': None})
-
-    def post(self, request, format=None):
-        token, _ = Token.objects.get_or_create(user=request.user)
-        return Response({'token': token.key})
 
 
 class CorsProxyView(APIView):
@@ -103,6 +87,25 @@ class CorsProxyView(APIView):
         response = requests.get(url)
         return HttpResponse(response.text, status=response.status_code,
                     content_type=response.headers.get('content-type'))
+
+
+class AuthTokenViewSet(viewsets.ModelViewSet):
+    """
+    Return an auth token for a user that is already logged in.
+    """
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (authentication.SessionAuthentication,)
+    serializer_class = serializers.AuthTokenSerializer
+    filter_backends = (dj_filters.DjangoFilterBackend,)
+    filter_fields = ('name',)
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the tokens
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return models.AuthToken.objects.filter(user=user)
 
 
 class CloudManViewSet(drf_helpers.CustomReadOnlySingleViewSet):
@@ -171,3 +174,33 @@ class PublicKeyDetail(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return models.PublicKey.objects.filter(
             user_profile__user=self.request.user)
+
+
+# Override registration view so that it supports multiple tokens
+from django.conf import settings
+from allauth.account import app_settings as allauth_settings
+from rest_auth.app_settings import TokenSerializer
+
+class CustomRegisterView(RegisterView):
+
+    def get_default_user_token(self, user):
+        """
+        Returns the default token or None. The default token is
+        created for the user in
+        cloudlaunch/authentication.py:default_create_token
+        """
+        return user.auth_tokens.filter(name="default").first()
+
+    def get_response_data(self, user):
+        if allauth_settings.EMAIL_VERIFICATION == \
+                allauth_settings.EmailVerificationMethod.MANDATORY:
+            return {"detail": _("Verification e-mail sent.")}
+
+        if getattr(settings, 'REST_USE_JWT', False):
+            data = {
+                'user': user,
+                'token': self.token
+            }
+            return JWTSerializer(data).data
+        else:
+            return TokenSerializer(self.get_default_user_token(user)).data

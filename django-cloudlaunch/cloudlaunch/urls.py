@@ -34,7 +34,11 @@ router.register(r'infrastructure', views.InfrastructureView,
 router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
 router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
+
 router.register(r'auth', views.AuthView, base_name='auth')
+router.register(r'auth/tokens', views.AuthTokenViewSet,
+                base_name='auth_token')
+
 router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
 deployments_router = HybridNestedRouter(router, r'deployments',
                                         lookup='deployment')
@@ -51,8 +55,13 @@ public_services_regex_pattern = r'api/v1/public_services/'
 schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_BASE_URL,
                               urlconf='cloudlaunch.urls')
 
+registration_urls = [
+    url(r'^$', views.CustomRegisterView.as_view(), name='rest_register'),
+    url(r'', include(('rest_auth.registration.urls', 'rest_auth_reg'),
+                     namespace='rest_auth_reg'))
+]
+
 urlpatterns = [
-    url(r'%sapi-token-auth/' % auth_regex_pattern, views.AuthTokenView.as_view()),
     url(r'api/v1/', include(router.urls)),
     url(r'api/v1/', include(deployments_router.urls)),
     # This generates a duplicate url set with the cloudman url included
@@ -60,8 +69,9 @@ urlpatterns = [
     url(infrastructure_regex_pattern, include(cloud_router.get_urls())),
     url(infrastructure_regex_pattern, include('djcloudbridge.urls')),
     url(auth_regex_pattern, include(('rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
-    url(r'%sregistration' % auth_regex_pattern, include(('rest_auth.registration.urls', 'rest_auth_reg'),
-                                             namespace='rest_auth_reg')),
+
+    # Override default register view
+    url(r'%sregistration' % auth_regex_pattern, include((registration_urls, 'rest_auth_reg'), namespace='rest_auth_reg')),
     url(r'%suser/public-keys/$' %
         auth_regex_pattern, views.PublicKeyList.as_view()),
     url(r'%suser/public-keys/(?P<pk>[0-9]+)/$' %

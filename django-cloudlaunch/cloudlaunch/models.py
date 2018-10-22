@@ -1,12 +1,11 @@
 from celery.result import AsyncResult
 from django.conf import settings
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.defaultfilters import slugify
-from rest_framework.authtoken.models import Token
+import rest_framework.authtoken.models as drf_models
 
 from djcloudbridge import models as cb_models
 
@@ -15,6 +14,7 @@ from smart_selects.db_fields import ChainedForeignKey
 import json
 import jsonmerge
 import djcloudbridge
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class Image(cb_models.DateNameAwareModel):
@@ -172,7 +172,7 @@ class ApplicationVersionCloudConfig(models.Model):
 class ApplicationDeployment(cb_models.DateNameAwareModel):
     """Application deployment details."""
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False)
     archived = models.BooleanField(blank=True, default=False)
     application_version = models.ForeignKey(ApplicationVersion, on_delete=models.CASCADE, null=False)
     target_cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, null=False)
@@ -325,7 +325,7 @@ class Usage(models.Model):
                                        related_name="app_version_cloud_config",
                                        null=True)
     app_config =  models.TextField(max_length=1024 * 16, blank=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False)
 
     class Meta:
         ordering = ['added']
@@ -365,9 +365,27 @@ class UserProfile(models.Model):
 
     # Link UserProfile to a User model instance
     user = models.OneToOneField(
-        User, models.CASCADE, related_name="cloudlaunch_user_profile")
+        settings.AUTH_USER_MODEL, models.CASCADE, related_name="cloudlaunch_user_profile")
 
     def __str__(self):
         """Set default display for objects."""
         return "{0} ({1} {2})".format(self.user.username, self.user.first_name,
                                       self.user.last_name)
+
+
+# Based on: https://consideratecode.com/2016/10/06/multiple-authentication-toke
+# ns-per-user-with-django-rest-framework/
+# TODO: Consider using knox if this PR is merged:
+# https://github.com/Tivix/django-rest-auth/pull/307
+class AuthToken(drf_models.Token):
+    # key is no longer primary key, but still indexed and unique
+    key = models.CharField("Key", max_length=40, db_index=True, unique=True)
+    # relation to user is a ForeignKey, so each user can have more than one token
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='auth_tokens',
+        on_delete=models.CASCADE, verbose_name="User"
+    )
+    name = models.CharField("Name", max_length=64)
+
+    class Meta:
+        unique_together = (('user', 'name'),)

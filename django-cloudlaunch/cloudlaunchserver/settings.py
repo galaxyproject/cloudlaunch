@@ -82,7 +82,6 @@ INSTALLED_APPS = [
     'nested_admin',
     'smart_selects',
     'corsheaders',
-    'rest_framework.authtoken',
     'rest_auth',
     'allauth',
     'allauth.account',
@@ -210,13 +209,16 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
 #         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication'
+        'cloudlaunch.authentication.TokenAuthentication'
     )
 }
 
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'djcloudbridge.serializers.UserSerializer'
 }
+REST_AUTH_TOKEN_MODEL = 'cloudlaunch.models.AuthToken'
+REST_AUTH_TOKEN_CREATOR = 'cloudlaunch.authentication.default_create_token'
+
 REST_SESSION_LOGIN = True
 
 REST_SCHEMA_BASE_URL = CLOUDLAUNCH_PATH_PREFIX + '/'
