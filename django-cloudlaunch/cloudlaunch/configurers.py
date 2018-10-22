@@ -188,7 +188,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
         # validate required app_config values
         playbook = app_config.get('config_appliance', {}).get('repository')
         if not playbook:
-            raise Exception("config_applicance missing required parameter: "
+            raise Exception("config_appliance missing required parameter: "
                             "repository")
 
     def configure(self, app_config, provider_config, playbook_vars=None):
