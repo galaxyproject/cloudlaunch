@@ -7,8 +7,8 @@ class PulsarAppPlugin(BaseVMAppPlugin):
 
     def deploy(self, name, task, app_config, provider_config):
         token = secrets.token_urlsafe()
-        if isinstance(app_config, str):
-            app_config = app_config.replace("${PULSAR_TOKEN}", token)
+        user_data = provider_config.get('cloud_user_data')
+        provider_config['cloud_user_data'] = user_data.replace("${PULSAR_TOKEN}", token)
         result = super(PulsarAppPlugin, self).deploy(
             name, task, app_config, provider_config)
         result['pulsar'] = {
