@@ -116,6 +116,19 @@ class CloudManViewSet(drf_helpers.CustomReadOnlySingleViewSet):
     serializer_class = serializers.CloudManSerializer
 
 
+class DeploymentFilter(dj_filters.FilterSet):
+    application = dj_filters.CharFilter(field_name="application_version__application__slug")
+    version = dj_filters.CharFilter(field_name="application_version__version")
+    status = dj_filters.CharFilter(method='deployment_status_filter')
+
+    def deployment_status_filter(self, queryset, name, value):
+        return queryset.filter(tasks__action='LAUNCH').filter(tasks___status=value)
+
+    class Meta:
+        model = models.ApplicationDeployment
+        fields = ['archived']
+
+
 class DeploymentViewSet(viewsets.ModelViewSet):
     """
     List compute related urls.
@@ -124,7 +137,8 @@ class DeploymentViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DeploymentSerializer
     filter_backends = (filters.OrderingFilter, dj_filters.DjangoFilterBackend)
     ordering = ('-added',)
-    filter_fields = ('archived',)
+    filterset_class = DeploymentFilter
+    #filter_fields = ('archived','application_version__application__slug', 'application_version__version')
 
     def get_queryset(self):
         """
