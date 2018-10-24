@@ -73,7 +73,7 @@ class BaseVMAppPlugin(AppPlugin):
                                  is_root=True)
         return lc
 
-    def attach_public_ip(self, provider, inst, network_id):
+    def _attach_public_ip(self, provider, inst, network_id):
         """
         If instance has no public IP, try to attach one.
 
@@ -108,7 +108,7 @@ class BaseVMAppPlugin(AppPlugin):
                 inst.add_floating_ip(fip)
             return fip.public_ip
 
-    def configure_vm_firewalls(self, provider, subnet, firewall):
+    def _configure_vm_firewalls(self, provider, subnet, firewall):
         """
         Ensure any supplied firewall rules are represented in a VM Firewall.
 
@@ -178,7 +178,7 @@ class BaseVMAppPlugin(AppPlugin):
                     log.error("Exception applying firewall rules: %s" % e)
             return vmfl
 
-    def get_or_create_default_subnet(self, provider, network_id, placement):
+    def _get_or_create_default_subnet(self, provider, network_id, placement):
         """
         Figure out a subnet matching the supplied constraints.
 
@@ -198,13 +198,13 @@ class BaseVMAppPlugin(AppPlugin):
         sn = provider.networking.subnets.get_or_create_default(placement)
         return sn
 
-    def setup_networking(self, provider, net_id, subnet_id, placement):
+    def _setup_networking(self, provider, net_id, subnet_id, placement):
         log.debug("Setting up networking for net %s, sn %s, in zone %s", (
             net_id, subnet_id, placement))
         if subnet_id:
             subnet = provider.networking.subnets.get(subnet_id)
         else:
-            subnet = self.get_or_create_default_subnet(
+            subnet = self._get_or_create_default_subnet(
                 provider, net_id, placement)
         # Make sure the subnet has Internet connectivity
         try:
@@ -236,7 +236,7 @@ class BaseVMAppPlugin(AppPlugin):
             log.debug("Couldn't create router or gateway; ignoring: %s", e)
         return subnet
 
-    def resolve_launch_properties(self, provider, cloudlaunch_config):
+    def _resolve_launch_properties(self, provider, cloudlaunch_config):
         """
         Resolve inter-dependent launch properties.
 
@@ -246,10 +246,10 @@ class BaseVMAppPlugin(AppPlugin):
         net_id = cloudlaunch_config.get('network', None)
         subnet_id = cloudlaunch_config.get('subnet', None)
         placement = cloudlaunch_config.get('placementZone', '')
-        subnet = self.setup_networking(provider, net_id, subnet_id, placement)
+        subnet = self._setup_networking(provider, net_id, subnet_id, placement)
         vmf = None
         if cloudlaunch_config.get('firewall'):
-            vmf = self.configure_vm_firewalls(
+            vmf = self._configure_vm_firewalls(
                 provider, subnet, cloudlaunch_config['firewall'])
         return subnet, placement, vmf
 
@@ -299,7 +299,7 @@ class BaseVMAppPlugin(AppPlugin):
                                     'cloudlaunch-key-pair')
         task.update_state(state='PROGRESSING',
                           meta={'action': "Applying firewall settings"})
-        subnet, placement_zone, vmfl = self.resolve_launch_properties(
+        subnet, placement_zone, vmfl = self._resolve_launch_properties(
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
@@ -355,7 +355,7 @@ runcmd:"""
         results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
         results['instance'] = {'id': inst.id}
         # Support for legacy NeCTAR
-        results['publicIP'] = self.attach_public_ip(
+        results['publicIP'] = self._attach_public_ip(
             provider, inst, subnet.network_id if subnet else None)
         task.update_state(
             state='PROGRESSING',
@@ -460,7 +460,7 @@ runcmd:"""
         Delete resource(s) associated with the supplied deployment.
 
         This is a blocking call that will wait until the instance is marked
-        as deleted or dissapears from the provider.
+        as deleted or disappears from the provider.
 
         *Note* that this method will delete resource(s) associated with
         the deployment - this is an un-recoverable action.
