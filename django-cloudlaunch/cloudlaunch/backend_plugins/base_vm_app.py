@@ -199,8 +199,8 @@ class BaseVMAppPlugin(AppPlugin):
         return sn
 
     def _setup_networking(self, provider, net_id, subnet_id, placement):
-        log.debug("Setting up networking for net %s, sn %s, in zone %s", (
-            net_id, subnet_id, placement))
+        log.debug("Setting up networking for net %s, sn %s, in zone %s",
+                  net_id, subnet_id, placement)
         if subnet_id:
             subnet = provider.networking.subnets.get(subnet_id)
         else:
@@ -211,25 +211,30 @@ class BaseVMAppPlugin(AppPlugin):
             found_routers = [router for router in provider.networking.routers
                              if router.network_id == subnet.network_id]
             # Check if the subnet's network is connected to a router
-            for router in found_routers:
-                for sn in router.subnets:
-                    if sn.id == subnet.id:
-                        log.debug("Returning sn %s" % sn.id)
-                        return subnet
-            else:
+            router = None
+            for r in found_routers:
+                is_attached = bool([sn for sn in r.subnets
+                                    if sn.id == subnet.id])
+                if is_attached:
+                    router = r
+                    break
+            # Create a new router if not
+            if not router:
                 router_name = 'cl-router-%s' % subnet._network.name
                 log.debug("Creating CloudLaunch router %s", router_name)
                 router = provider.networking.routers.create(
                     label=router_name, network=subnet.network_id)
-                net = provider.networking.networks.get(subnet.network_id)
-                log.debug("Creating inet gateway for net %s", net.id)
-                gw = net.gateways.get_or_create_inet_gateway()
-                router.attach_gateway(gw)
-                try:
-                    for sn in subnet.network.subnets:
-                        router.attach_subnet(sn)
-                except Exception as e:
-                    log.debug("Couldn't attach subnet; ignoring: %s", e)
+
+            # Attach a gateway to the router
+            net = provider.networking.networks.get(subnet.network_id)
+            log.debug("Creating inet gateway for net %s", net.id)
+            gw = net.gateways.get_or_create_inet_gateway()
+            router.attach_gateway(gw)
+            try:
+                for sn in subnet.network.subnets:
+                    router.attach_subnet(sn)
+            except Exception as e:
+                log.debug("Couldn't attach subnet; ignoring: %s", e)
         except Exception as e:
             # Creating a router/gateway may not work with classic
             # networking so ignore errors if they occur.
