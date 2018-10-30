@@ -360,19 +360,6 @@ class PublicKey(cb_models.DateNameAwareModel):
         return super(PublicKey, self).save()
 
 
-class UserProfile(models.Model):
-    """User profile specific to CloudLaunch."""
-
-    # Link UserProfile to a User model instance
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, models.CASCADE, related_name="cloudlaunch_user_profile")
-
-    def __str__(self):
-        """Set default display for objects."""
-        return "{0} ({1} {2})".format(self.user.username, self.user.first_name,
-                                      self.user.last_name)
-
-
 # Based on: https://consideratecode.com/2016/10/06/multiple-authentication-toke
 # ns-per-user-with-django-rest-framework/
 # TODO: Consider using knox if this PR is merged:
