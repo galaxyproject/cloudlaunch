@@ -1,6 +1,5 @@
 from django.apps import AppConfig
 
-
 class CloudLaunchConfig(AppConfig):
     name = 'cloudlaunch'
 
