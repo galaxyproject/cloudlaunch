@@ -242,7 +242,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
         )
 
     def _create_credentials(self, target_cloud):
-        user_profile = cb_models.UserProfile.objects.create(user=self.user)
+        user_profile = cb_models.UserProfile.objects.get(user=self.user)
         return cb_models.AWSCredentials.objects.create(
             cloud=target_cloud,
             access_key='access_key',
@@ -392,7 +392,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
             name='Amazon US East 1 - N. Virginia',
             kind='cloud',
         )
-        user_profile = cb_models.UserProfile.objects.create(user=user)
+        user_profile = cb_models.UserProfile.objects.get(user=user)
         credentials = cb_models.AWSCredentials.objects.create(
             cloud=target_cloud,
             access_key='access_key',
@@ -527,7 +527,7 @@ class ApplicationDeploymentTaskModelTestCase(TestCase):
             name='Amazon US East 1 - N. Virginia',
             kind='cloud',
         )
-        user_profile = cb_models.UserProfile.objects.create(user=user)
+        user_profile = cb_models.UserProfile.objects.get(user=user)
         credentials = cb_models.AWSCredentials.objects.create(
             cloud=target_cloud,
             access_key='access_key',
