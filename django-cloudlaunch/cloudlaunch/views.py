@@ -122,7 +122,7 @@ class DeploymentFilter(dj_filters.FilterSet):
     status = dj_filters.CharFilter(method='deployment_status_filter')
 
     def deployment_status_filter(self, queryset, name, value):
-        return queryset.filter(tasks__action='LAUNCH').filter(tasks___status=value)
+        return queryset.filter(tasks__action='LAUNCH', tasks___status=value)
 
     class Meta:
         model = models.ApplicationDeployment
