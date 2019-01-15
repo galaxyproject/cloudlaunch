@@ -44,6 +44,21 @@ def migrate_launch_task(task_id):
     task.forget()
 
 
+@shared_task(time_limit=120)
+def update_status_task(task_id):
+    """
+    Update task result to a persistent model table.
+
+    This task is intended to be called as soon as the launch task is over so
+    we have a fairly up-to-date _status field in the model.
+    """
+    adt = models.ApplicationDeploymentTask.objects.get(celery_id=task_id)
+    task = AsyncResult(task_id)
+    task_meta = task.backend.get_task_meta(task.id)
+    adt.status = task_meta.get('status')
+    adt.save()
+
+
 @shared_task(expires=120)
 def create_appliance(name, cloud_version_config_id, credentials, app_config,
                      user_data):
@@ -66,6 +81,9 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
                  "cloud config: %s", name, app_config, provider_config)
         deploy_result = plugin.deploy(name, Task(create_appliance), app_config,
                                       provider_config)
+        # Upgrade task result immediately
+        update_status_task.apply_async([create_appliance.request.id],
+                                        countdown=1)
         # Schedule a task to migrate result one hour from now
         migrate_launch_task.apply_async([create_appliance.request.id],
                                         countdown=3600)
