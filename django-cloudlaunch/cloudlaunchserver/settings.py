@@ -9,13 +9,13 @@ https://docs.djangoproject.com/en/1.9/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
-from django.conf import settings as django_settings
 import os
-import sys
+
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
@@ -100,7 +100,6 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_countries',
     'django_filters',
-    'raven.contrib.django.raven_compat',
     'cloudlaunchserver'
 ]
 
@@ -223,9 +222,12 @@ REST_SESSION_LOGIN = True
 
 REST_SCHEMA_BASE_URL = CLOUDLAUNCH_PATH_PREFIX + '/'
 
-RAVEN_CONFIG = {
-    'dsn': os.environ.get('SENTRY_DSN', '')
-}
+SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+sentry_sdk.init(
+    # dsn="https://<key>@sentry.io/<project>",
+    dsn=SENTRY_DSN,
+    integrations=[DjangoIntegration()]
+)
 
 LOGGING = {
     'version': 1,
@@ -258,38 +260,33 @@ LOGGING = {
             'formatter': 'verbose',
             'level': 'WARNING',
             'filename': 'cloudlaunch-django.log',
-        },
-        'sentry': {
-            'formatter': 'verbose',
-            'level': 'WARNING',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler'
         }
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file-django', 'sentry'],
+            'handlers': ['console', 'file-django'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
         },
         'django.db.backends': {
-            'handlers': ['file-django', 'sentry'],
+            'handlers': ['file-django'],
             'level': 'INFO',
         },
         'django.template': {
-            'handlers': ['console', 'file-django', 'sentry'],
+            'handlers': ['console', 'file-django'],
             'level': 'INFO',
             'propagate': True,
         },
         'django.server': {
-            'handlers': ['console', 'file-django', 'sentry'],
+            'handlers': ['console', 'file-django'],
             'level': 'ERROR',
             'propagate': True,
         },
         'cloudlaunch': {
-            'handlers': ['console', 'file-cloudlaunch', 'sentry'],
+            'handlers': ['console', 'file-cloudlaunch'],
             'level': 'DEBUG',
             'propagate': False
-        },
-    },
+        }
+    }
 }
 
 # Allow settings to be overridden in a cloudlaunch/settings_local.py

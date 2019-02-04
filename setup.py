@@ -87,7 +87,7 @@ REQS_BASE = [
     # For commandline option handling
     'click',
     # Integration with Sentry
-    'raven',
+    'sentry-sdk==0.6.9',
     # For CloudMan2 plugin
     'gitpython',
     'ansible',

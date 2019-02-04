@@ -1,4 +1,3 @@
-raven
 git+git://github.com/CloudVE/cloudbridge#egg=cloudbridge
 git+git://github.com/CloudVE/djcloudbridge#egg=djcloudbridge
 -e ".[prod]"
