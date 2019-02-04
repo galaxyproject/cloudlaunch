@@ -25,7 +25,7 @@ ADD . /app
 
 # Install requirements. Move this above ADD as 'pip install cloudlaunch-server'
 # asap so caching works
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -U pip==18.1 && pip install --no-cache-dir -r requirements.txt
 
 #RUN python django-cloudlaunch/manage.py collectstatic --no-input
 
