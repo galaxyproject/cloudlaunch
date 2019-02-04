@@ -49,7 +49,7 @@ REQS_BASE = [
     # celery results backend which uses the django DB
     'django-celery-results>=1.0.1',
     # celery background task monitor which uses the django DB
-    'django-celery-beat>=1.1.0',
+    'django-celery-beat>=1.3.0',
     # ======== DRF =========
     'djangorestframework>=3.7.3',
     # login support for DRF through restful endpoints
