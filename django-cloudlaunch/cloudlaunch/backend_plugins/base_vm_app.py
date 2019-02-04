@@ -53,13 +53,25 @@ class BaseVMAppPlugin(AppPlugin):
         """
         # Check for None in case of NeCTAR
         network_id = subnet.network_id if subnet else None
-        for vmf in provider.security.vm_firewalls.find(label=vmf_name):
-            # OpenStack doesn't have a network_id associated with the firewall, so
-            # just return the first match
-            if vmf.network_id is None or vmf.network_id == network_id:
-                return vmf
+        vmfs = provider.security.vm_firewalls.find(label=vmf_name)
+        # First, look for firewall with the same associated network
+        vm = None
+        if vmfs:
+            for vmf in vmfs:
+                if vmf.network_id == network_id:
+                    return vmf
+                if not vmf.network_id and not vm:
+                    vm = vmf
+            # If none are found with the same network id, return the first one
+            # with no associated network
+            if vm:
+                return vm
+            # If none are found with no associated network, return the first
+            # with the same label disregarding network association
+            return vmfs[0]
+        # If none are found, create one
         return provider.security.vm_firewalls.create(
-            label=vmf_name, network_id=network_id, description=description)
+            label=vmf_name, network=network_id, description=description)
 
     def _get_cb_launch_config(self, provider, image, cloudlaunch_config):
         """Compose a CloudBridge launch config object."""
