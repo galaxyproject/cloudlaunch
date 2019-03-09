@@ -1,20 +1,18 @@
 from celery.result import AsyncResult
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.template.defaultfilters import slugify
 import rest_framework.authtoken.models as drf_models
 
 from djcloudbridge import models as cb_models
+
+from polymorphic.models import PolymorphicModel
 
 from smart_selects.db_fields import ChainedForeignKey
 
 import json
 import jsonmerge
 import djcloudbridge
-from django.core.exceptions import ObjectDoesNotExist
 
 
 class Image(cb_models.DateNameAwareModel):
@@ -31,10 +29,44 @@ class Image(cb_models.DateNameAwareModel):
 
 
 class CloudImage(Image):
-    cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, blank=True, null=True)
+    cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE,
+                              blank=True, null=True)
 
     def __str__(self):
         return "{0} (on {1})".format(self.name, self.cloud.name)
+
+
+class DeploymentTarget(PolymorphicModel):
+
+    class Meta:
+        verbose_name = "Deployment Target"
+        verbose_name_plural = "Deployment Targets"
+
+
+class HostDeploymentTarget(DeploymentTarget):
+
+    class Meta:
+        verbose_name = "Host"
+        verbose_name_plural = "Hosts"
+
+
+class KubernetesDeploymentTarget(DeploymentTarget):
+    kube_config = models.CharField(
+        max_length=1024 * 16, blank=False, null=False)
+
+    class Meta:
+        verbose_name = "Kubernetes Cluster"
+        verbose_name_plural = "Kubernetes Clusters"
+
+
+class CloudDeploymentTarget(DeploymentTarget):
+    target_zone = models.ForeignKey(
+        cb_models.Zone, on_delete=models.CASCADE, null=False)
+
+    class Meta:
+        unique_together = (("deploymenttarget_ptr", "target_zone"),)
+        verbose_name = "Cloud"
+        verbose_name_plural = "Clouds"
 
 
 class AppCategory(models.Model):
@@ -82,12 +114,15 @@ class Application(cb_models.DateNameAwareModel):
     info_url = models.URLField(max_length=2048, blank=True, null=True)
     icon_url = models.URLField(max_length=2048, blank=True, null=True)
     # Userdata max length is 16KB
-    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Application-wide "
-                                   "initial configuration data to parameterize the launch with.",
-                                   blank=True, null=True)
-    default_version = models.ForeignKey('ApplicationVersion', on_delete=models.SET_NULL,
-                                        related_name='+', blank=True, null=True)
-    display_order = models.IntegerField(blank=False, null=False, default="10000")
+    default_launch_config = models.TextField(
+        max_length=1024 * 16, blank=True, null=True,
+        help_text="Application-wide initial configuration data to parameterize"
+                  " the launch with.")
+    default_version = models.ForeignKey(
+        'ApplicationVersion', on_delete=models.SET_NULL, related_name='+',
+        blank=True, null=True)
+    display_order = models.IntegerField(blank=False, null=False,
+                                        default="10000")
 
     def __str__(self):
         return "{0} [{1}]".format(self.name, self.get_status_display())
@@ -101,25 +136,34 @@ class Application(cb_models.DateNameAwareModel):
             try:
                 json.loads(self.default_launch_config)
             except Exception as e:
-                raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
-        if self.default_version and not self.versions.filter(application=self, version=self.default_version).exists():
-            raise Exception("The default application version must be a version belonging to this application")
+                raise Exception("Invalid JSON syntax. Launch config must be in"
+                                "JSON format. Cause: {0}".format(e))
+        if self.default_version and not self.versions.filter(
+                application=self, version=self.default_version).exists():
+            raise Exception("The default application version must be a version"
+                            " belonging to this application")
 
         super(Application, self).save(*args, **kwargs)
 
 
 class ApplicationVersion(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="versions")
+    application = models.ForeignKey(Application, on_delete=models.CASCADE,
+                                    related_name="versions")
     version = models.CharField(max_length=30)
-    frontend_component_path = models.CharField(max_length=255, blank=True, null=True)
-    frontend_component_name = models.CharField(max_length=255, blank=True, null=True)
-    backend_component_name = models.CharField(max_length=255, blank=True, null=True)
+    frontend_component_path = models.CharField(max_length=255, blank=True,
+                                               null=True)
+    frontend_component_name = models.CharField(max_length=255, blank=True,
+                                               null=True)
+    backend_component_name = models.CharField(max_length=255, blank=True,
+                                              null=True)
     # Userdata max length is 16KB
-    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Version "
-                                   "specific configuration data to parameterize the launch with.",
-                                   blank=True, null=True)
-    default_cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.SET_NULL, related_name='+',
-                                      blank=True, null=True)
+    default_launch_config = models.TextField(
+        max_length=1024 * 16, blank=True, null=True,
+        help_text="Version specific configuration data to parameterize the"
+                  " launch with.")
+    default_target = models.ForeignKey(
+        DeploymentTarget, blank=True, null=True, on_delete=models.SET_NULL,
+        related_name='+')
 
     def save(self, *args, **kwargs):
         # validate user data
@@ -127,9 +171,12 @@ class ApplicationVersion(models.Model):
             try:
                 json.loads(self.default_launch_config)
             except Exception as e:
-                raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
-        if self.default_cloud and not self.app_version_config.filter(application_version=self, cloud=self.default_cloud).exists():
-            raise Exception("The default cloud must be a cloud that this version of the application is supported on.")
+                raise Exception("Invalid JSON syntax. Launch config must be"
+                                " in JSON format. Cause: {0}".format(e))
+        if self.default_cloud and not self.app_version_config.filter(
+                application_version=self, cloud=self.default_cloud).exists():
+            raise Exception("The default cloud must be a cloud that this"
+                            " version of the application is supported on.")
 
         return super(ApplicationVersion, self).save()
 
@@ -140,17 +187,20 @@ class ApplicationVersion(models.Model):
         unique_together = (("application", "version"),)
 
 
-class ApplicationVersionCloudConfig(models.Model):
-    application_version = models.ForeignKey(ApplicationVersion, on_delete=models.CASCADE, related_name="app_version_config")
-    cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, related_name="app_version_config")
-    image = ChainedForeignKey(CloudImage, chained_field="cloud", chained_model_field="cloud")
-    default_instance_type = models.CharField(max_length=256, blank=True, null=True)
+class ApplicationVersionTargetConfig(PolymorphicModel):
+    application_version = models.ForeignKey(
+        ApplicationVersion, on_delete=models.CASCADE,
+        related_name="app_version_config")
+    target = models.ForeignKey(DeploymentTarget, on_delete=models.CASCADE,
+                               related_name="app_version_config")
     # Userdata max length is 16KB
-    default_launch_config = models.TextField(max_length=1024 * 16, help_text="Cloud "
-                                   "specific initial configuration data to parameterize the launch with.",
-                                   blank=True, null=True)
+    default_launch_config = models.TextField(
+        max_length=1024 * 16, blank=True, null=True,
+        help_text="Target specific initial configuration data to parameterize"
+                  " the launch with.")
+
     class Meta:
-        unique_together = (("application_version", "cloud"),)
+        unique_together = (("application_version", "target"),)
 
     def save(self, *args, **kwargs):
         # validate user data
@@ -158,31 +208,43 @@ class ApplicationVersionCloudConfig(models.Model):
             try:
                 json.loads(self.default_launch_config)
             except Exception as e:
-                raise Exception("Invalid JSON syntax. Launch config must be in JSON format. Cause: {0}".format(e))
-        return super(ApplicationVersionCloudConfig, self).save()
+                raise Exception("Invalid JSON syntax. Launch config must be "
+                                "in JSON format. Cause: {0}".format(e))
+        return super(ApplicationVersionTargetConfig, self).save()
 
     def compute_merged_config(self):
-        default_appwide_config = json.loads(self.application_version.application.default_launch_config or "{}")
-        default_version_config = json.loads(self.application_version.default_launch_config or "{}")
-        default_cloud_config = json.loads(self.default_launch_config or "{}")
-        default_combined_config = jsonmerge.merge(default_appwide_config, default_version_config)
+        default_appwide_config = json.loads(
+            self.application_version.application.default_launch_config or "{}")
+        default_version_config = json.loads(
+            self.application_version.default_launch_config or "{}")
+        default_cloud_config = json.loads(
+            self.default_launch_config or "{}")
+        default_combined_config = jsonmerge.merge(
+            default_appwide_config, default_version_config)
         return jsonmerge.merge(default_combined_config, default_cloud_config)
+
+
+class ApplicationVersionCloudConfig(ApplicationVersionTargetConfig):
+    image = ChainedForeignKey(CloudImage, chained_field="target",
+                              chained_model_field="target__zone__region")
 
 
 class ApplicationDeployment(cb_models.DateNameAwareModel):
     """Application deployment details."""
 
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                              null=False)
     archived = models.BooleanField(blank=True, default=False)
-    application_version = models.ForeignKey(ApplicationVersion, on_delete=models.CASCADE, null=False)
-    target_cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE, null=False)
-    provider_settings = models.TextField(
-        max_length=1024 * 16, help_text="Cloud provider specific settings "
-        "used for this launch.", blank=True, null=True)
+    application_version = models.ForeignKey(
+        ApplicationVersion, on_delete=models.CASCADE, null=False)
+    deployment_target = models.ForeignKey(
+        DeploymentTarget, on_delete=models.CASCADE, null=False)
+    credentials = models.ForeignKey(
+        cb_models.Credentials, on_delete=models.CASCADE,
+        related_name="target_creds", null=True)
     application_config = models.TextField(
         max_length=1024 * 16, help_text="Application configuration data used "
         "for this launch.", blank=True, null=True)
-    credentials = models.ForeignKey(cb_models.Credentials, on_delete=models.CASCADE, related_name="deployment_creds", null=True)
 
 
 class ApplicationDeploymentTask(models.Model):
@@ -201,8 +263,9 @@ class ApplicationDeploymentTask(models.Model):
 
     added = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    deployment = models.ForeignKey(ApplicationDeployment, on_delete=models.CASCADE,
-                                   null=False, related_name="tasks")
+    deployment = models.ForeignKey(
+        ApplicationDeployment, on_delete=models.CASCADE, null=False,
+        related_name="tasks")
     celery_id = models.TextField(
         max_length=64, help_text="Celery task id for any background jobs "
         "running on this deployment", blank=True, null=True, unique=True)
@@ -227,7 +290,8 @@ class ApplicationDeploymentTask(models.Model):
                     deployment=self.deployment,
                     action=self.LAUNCH):
                 raise ValueError(
-                    "Duplicate LAUNCH action for deployment %s" % self.deployment.name)
+                    "Duplicate LAUNCH action for deployment %s"
+                    % self.deployment.name)
         return super(ApplicationDeploymentTask, self).save(*args, **kwargs)
 
     @property
@@ -241,8 +305,8 @@ class ApplicationDeploymentTask(models.Model):
         to this table. By wrapping this field as a property, we ensure proper
         data is returned.
 
-        In the process, we have data types to deal with. Some task results
-        return a ``dict`` while others a ``bool``. In addition, result
+        In the process, we have several data types to deal with. Some task
+        results return a ``dict`` while others a ``bool``. In addition, result
         returned from the task broker is returned as a native ``dict`` while,
         after migration, the result for the same task is stored in the database
         as a ``str``. This method tries to standardize on the value returned
@@ -250,7 +314,7 @@ class ApplicationDeploymentTask(models.Model):
         More specifically, Celery task results are returned in native format as
         returned from the broker. For the result stored in the database, an
         attempt it made to de-serialize the value from JSON. If that does not
-        work, raw value is returned. It is hence desirable to serialize
+        work, the raw value is returned. It is hence desirable to serialize
         the result value before saving it here.
         """
         r = None
@@ -264,7 +328,7 @@ class ApplicationDeploymentTask(models.Model):
                     r = str(r)
             except Exception as exc:
                 return {'exc_message': str(exc)}
-        else:  # This is an older task whose task ID has been removed so return DB value
+        else:  # This is an older task which has been migrated so return DB val
             try:
                 r = json.loads(self._result)
             except (ValueError, TypeError):
@@ -297,13 +361,14 @@ class ApplicationDeploymentTask(models.Model):
 
         Available status values include: PENDING, STARTED, RETRY, FAILURE,
         SUCCESS, and "UNKNOWN - `Exception value`".
-        See http://docs.celeryproject.org/en/latest/reference/celery.result.html#celery.result.AsyncResult.status
+        See http://docs.celeryproject.org/en/latest/reference/celery.result
+        .html#celery.result.AsyncResult.status
         """
         try:
             if self.celery_id:
                 task = AsyncResult(self.celery_id)
                 return task.backend.get_task_meta(task.id).get('status')
-            else:  # This is an older task whose task ID has been removed so return DB value
+            else:  # An older task which has been migrated so return DB val
                 return self._status
         except Exception as exc:
             return 'UNKNOWN - %s' % exc
@@ -317,15 +382,17 @@ class Usage(models.Model):
     """
     Keep some usage information about instances that are being launched.
     """
-    #automatically add timestamps when object is created
+    # automatically add timestamps when object is created
     added = models.DateTimeField(auto_now_add=True)
-    app_version_cloud_config = models.ForeignKey(ApplicationVersionCloudConfig, on_delete=models.CASCADE,
-                                                 related_name="app_version_cloud_config", null=False)
-    app_deployment = models.ForeignKey(ApplicationDeployment, on_delete=models.SET_NULL,
-                                       related_name="app_version_cloud_config",
-                                       null=True)
-    app_config =  models.TextField(max_length=1024 * 16, blank=True, null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False)
+    app_version_target_config = models.ForeignKey(
+        ApplicationVersionTargetConfig, on_delete=models.CASCADE,
+        related_name="+", null=False)
+    app_deployment = models.ForeignKey(
+        ApplicationDeployment, on_delete=models.SET_NULL, related_name="+",
+        null=True)
+    app_config = models.TextField(max_length=1024 * 16, blank=True, null=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=False)
 
     class Meta:
         ordering = ['added']
@@ -344,8 +411,9 @@ class PublicKey(cb_models.DateNameAwareModel):
     # methods of generating it, making the autogeneration impractical:
     # http://bit.ly/2EIs0kR
     fingerprint = models.CharField(max_length=100, blank=True, null=True)
-    user_profile = models.ForeignKey(djcloudbridge.models.UserProfile, models.CASCADE,
-                                     related_name='public_key')
+    user_profile = models.ForeignKey(
+        djcloudbridge.models.UserProfile, models.CASCADE,
+        related_name='public_key')
 
     def save(self, *args, **kwargs):
         # Ensure only 1 public key is selected as the 'default'
@@ -367,7 +435,8 @@ class PublicKey(cb_models.DateNameAwareModel):
 class AuthToken(drf_models.Token):
     # key is no longer primary key, but still indexed and unique
     key = models.CharField("Key", max_length=40, db_index=True, unique=True)
-    # relation to user is a ForeignKey, so each user can have more than one token
+    # relation to user is a ForeignKey, so each user can have more than one
+    # token
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='auth_tokens',
         on_delete=models.CASCADE, verbose_name="User"
