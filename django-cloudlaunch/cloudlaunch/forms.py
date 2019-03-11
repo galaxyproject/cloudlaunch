@@ -21,7 +21,7 @@ class ApplicationVersionForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(ApplicationVersionForm, self).__init__(*args, **kwargs)
         if self.instance:
-            self.fields['default_cloud'].queryset = cb_models.Cloud.objects.filter(app_version_config__application_version=self.instance)
+            self.fields['default_target'].queryset = models.DeploymentTarget.objects.filter(app_version_config__application_version=self.instance)
             
     class Meta:
         model = models.ApplicationVersion

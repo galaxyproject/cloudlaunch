@@ -67,11 +67,11 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
         log.debug("Creating appliance %s", name)
         cloud_version_conf = models.ApplicationVersionCloudConfig.objects.get(
             pk=cloud_version_config_id)
+        zone = cloud_version_conf.target.target_zone
         plugin = util.import_class(
             cloud_version_conf.application_version.backend_component_name)()
-        provider = domain_model.get_cloud_provider(
-            cloud_version_conf.cloud, credentials)
-        cloud_config = util.serialize_cloud_config(cloud_version_conf)
+        provider = domain_model.get_cloud_provider(zone, credentials)
+        cloud_config = cloud_version_conf.to_dict()
         # TODO: Add keys (& support) for using existing, user-supplied hosts
         provider_config = {'cloud_provider': provider,
                            'cloud_config': cloud_config,
@@ -106,11 +106,11 @@ def _get_app_plugin(deployment):
     :return: An instance of the plugin class corresponding to the
              deployment app.
     """
-    cloud = deployment.target_cloud
-    cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
-        application_version=deployment.application_version.id, cloud=cloud.slug)
+    target = deployment.deployment_target
+    target_version_config = models.ApplicationVersionTargetConfig.objects.get(
+        application_version=deployment.application_version.id, target=target.pk)
     return util.import_class(
-        cloud_version_config.application_version.backend_component_name)()
+        target_version_config.application_version.backend_component_name)()
 
 
 @shared_task(time_limit=120)
@@ -163,7 +163,9 @@ def health_check(self, deployment_id, credentials):
         log.debug("Checking health of deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
+        # FIXME: Should not be instantiating provider here
+        target_cloud = deployment.deployment_target.zone.region.cloud
+        provider = domain_model.get_cloud_provider(target_cloud,
                                                    credentials)
         result = plugin.health_check(provider, dpl)
     except Exception as e:
@@ -191,6 +193,7 @@ def restart_appliance(self, deployment_id, credentials):
         log.debug("Performing restart on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
+        # FIXME: Should not be instantiating provider here
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
         result = plugin.restart(provider, dpl)
@@ -217,6 +220,7 @@ def delete_appliance(self, deployment_id, credentials):
         log.debug("Performing delete on deployment %s", deployment.name)
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
+        # FIXME: Should not be instantiating provider here
         provider = domain_model.get_cloud_provider(deployment.target_cloud,
                                                    credentials)
         result = plugin.delete(provider, dpl)

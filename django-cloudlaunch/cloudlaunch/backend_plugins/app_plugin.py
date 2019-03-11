@@ -7,7 +7,8 @@ class AppPlugin():
 
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abc.abstractmethod
     def validate_app_config(provider, name, cloud_config, app_config):
         """
         Validate and build an internal app config.
@@ -41,7 +42,8 @@ class AppPlugin():
         """
         pass
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abc.abstractmethod
     def sanitise_app_config(app_config):
         """
         Sanitise values in the app_config.

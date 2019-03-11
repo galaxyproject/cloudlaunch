@@ -3,17 +3,21 @@ import jsonmerge
 import logging
 
 from bioblend.cloudman.launch import CloudManLauncher
+
 from cloudbridge.cloud.factory import ProviderList
+
 from rest_framework import serializers
+
+from rest_polymorphic.serializers import PolymorphicSerializer
+
+from djcloudbridge import models as cb_models
+from djcloudbridge import serializers as cb_serializers
+from djcloudbridge import view_helpers as cb_view_helpers
+from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
 
 from . import models
 from . import tasks
 from . import util
-
-from djcloudbridge import models as cb_models
-from djcloudbridge import serializers as cb_serializers
-from djcloudbridge import view_helpers
-from djcloudbridge.drf_helpers import CustomHyperlinkedIdentityField
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +39,7 @@ class CloudManSerializer(serializers.Serializer):
         This only fetches saved clusters that used AWS since it appears that
         was the only place this feature was actively used.
         """
-        provider = view_helpers.get_cloud_provider(self.context.get('view'))
+        provider = cb_view_helpers.get_cloud_provider(self.context.get('view'))
         if provider.PROVIDER_ID != ProviderList.AWS:
             return []
         # Since we're only working with the AWS, there's no need to specify
@@ -50,9 +54,8 @@ class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
     cloud = serializers.HyperlinkedRelatedField(
         view_name='djcloudbridge:cloud-detail', many=False, read_only=True)
 
-
     class Meta:
-        model = models.CloudImage
+        model = models.Image
         fields = ('name', 'cloud', 'image_id', 'description')
 
 
@@ -70,23 +73,70 @@ class StoredJSONField(serializers.JSONField):
             return value
 
 
-class AppVersionCloudConfigSerializer(serializers.HyperlinkedModelSerializer):
-    cloud = cb_serializers.CloudSerializer(read_only=True)
-    image = CloudImageSerializer(read_only=True)
+class DeploymentTargetSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.DeploymentTarget
+        exclude = ('polymorphic_ctype',)
+
+
+class DeploymentZoneSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    zone_id = serializers.CharField(read_only=True)
+    region = cb_serializers.CloudRegionListSerializer(read_only=True)
+    cloud = cb_serializers.CloudPolymorphicSerializer(read_only=True, source="region.cloud")
+
+    class Meta:
+        model = cb_models.Zone
+        fields = ('cloud', 'region', 'zone_id', 'name')
+
+
+class CloudDeploymentTargetSerializer(DeploymentTargetSerializer):
+    target_zone = DeploymentZoneSerializer()
+
+    class Meta(DeploymentTargetSerializer.Meta):
+        model = models.CloudDeploymentTarget
+
+
+class DeploymentTargetPolymorphicSerializer(PolymorphicSerializer):
+    model_serializer_mapping = {
+        models.CloudDeploymentTarget: CloudDeploymentTargetSerializer,
+        models.HostDeploymentTarget: DeploymentTargetSerializer,
+        models.KubernetesDeploymentTarget: DeploymentTargetSerializer,
+    }
+
+
+class AppVersionTargetConfigSerializer(serializers.HyperlinkedModelSerializer):
+    target = DeploymentTargetPolymorphicSerializer(read_only=True)
     default_launch_config = serializers.JSONField(source='compute_merged_config')
 
     class Meta:
+        model = models.ApplicationVersionTargetConfig
+        fields = ('target', 'default_launch_config')
+
+
+class AppVersionCloudConfigSerializer(AppVersionTargetConfigSerializer):
+    image = CloudImageSerializer(read_only=True)
+
+    class Meta(AppVersionTargetConfigSerializer.Meta):
         model = models.ApplicationVersionCloudConfig
-        fields = ('cloud', 'image', 'default_launch_config', 'default_instance_type')
+        fields = ('target', 'image', 'default_launch_config')
+
+
+class AppVersionCloudConfigPolymorphicSerializer(PolymorphicSerializer):
+    model_serializer_mapping = {
+        models.ApplicationVersionCloudConfig: AppVersionCloudConfigSerializer,
+    }
 
 
 class AppVersionSerializer(serializers.HyperlinkedModelSerializer):
-    cloud_config = AppVersionCloudConfigSerializer(many=True, read_only=True, source='app_version_config')
-    default_cloud = serializers.PrimaryKeyRelatedField(read_only=True)
+    target_config = AppVersionCloudConfigPolymorphicSerializer(
+        many=True, read_only=True, source='app_version_config')
+    default_target = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = models.ApplicationVersion
-        fields = ('version','cloud_config', 'frontend_component_path', 'frontend_component_name', 'default_cloud')
+        fields = ('version', 'target_config', 'frontend_component_path', 'frontend_component_name', 'default_target')
 
 
 class ApplicationSerializer(serializers.HyperlinkedModelSerializer):
@@ -105,6 +155,7 @@ class DeploymentAppSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Application
         fields = ('slug', 'name')
+
 
 class DeploymentAppVersionSerializer(serializers.ModelSerializer):
     application = DeploymentAppSerializer(read_only=True)
@@ -133,6 +184,16 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         exclude = ('_result', '_status')
         read_only_fields = ('deployment',)
 
+    @staticmethod
+    def _resolve_credentials(deployment, request):
+        if deployment.credentials:
+            return deployment.credentials
+        elif isinstance(deployment, cb_models.CloudDeploymentTarget):
+            return cb_view_helpers.get_credentials(
+                deployment.deployment_target.zone.region.cloud, request)
+        else:
+            return None
+
     def create(self, validated_data):
         """
         Fire off a new task for the supplied action.
@@ -151,17 +212,14 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         request = self.context.get('view').request
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
-        creds = (cb_models.Credentials.objects.get_subclass(
-            id=dpl.credentials.id).as_dict()
-                 if dpl.credentials
-                 else view_helpers.get_credentials(dpl.target_cloud, request))
+        creds = self._resolve_credentials(dpl, request)
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
-                async_result = tasks.health_check.delay(dpl.pk, creds)
+                async_result = tasks.health_check.delay(dpl.id, creds)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.restart_appliance.delay(dpl.pk, creds)
+                async_result = tasks.restart_appliance.delay(dpl.id, creds)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.delete_appliance.delay(dpl.pk, creds)
+                async_result = tasks.delete_appliance.delay(dpl.id, creds)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
         except serializers.ValidationError as ve:
@@ -181,6 +239,7 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
                     "Duplicate LAUNCH action for deployment %s" % dpl.name)
         return value.upper()
 
+
 class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
@@ -195,13 +254,15 @@ class DeploymentSerializer(serializers.ModelSerializer):
     tasks = CustomHyperlinkedIdentityField(view_name='deployment_task-list',
                                            lookup_field='id',
                                            lookup_url_kwarg='deployment_pk')
+    deployment_target = DeploymentTargetPolymorphicSerializer(read_only=True)
+    deployment_target_id = serializers.CharField(write_only=True)
     credentials = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = models.ApplicationDeployment
-        fields = ('id','name', 'application', 'application_version', 'target_cloud', 'provider_settings',
-                  'application_config', 'added', 'updated', 'owner', 'config_app', 'app_version_details',
-                  'tasks', 'latest_task', 'launch_task', 'archived', 'credentials')
+        fields = ('id','name', 'application', 'application_version', 'deployment_target', 'deployment_target_id',
+                  'provider_settings', 'application_config', 'added', 'updated', 'owner', 'config_app',
+                  'app_version_details', 'tasks', 'latest_task', 'launch_task', 'archived', 'credentials')
 
     def get_latest_task(self, obj):
         """Provide task info about the most recenly updated deployment task."""
@@ -242,27 +303,28 @@ class DeploymentSerializer(serializers.ModelSerializer):
         log.debug("Creating a new deployment: {0}".format(
             validated_data.get("name")))
         name = validated_data.get("name")
-        cloud = validated_data.get("target_cloud")
+        target = validated_data.get("deployment_target_id")
         version = validated_data.get("application_version")
-        cloud_version_config = models.ApplicationVersionCloudConfig.objects.get(
-            application_version=version.id, cloud=cloud.slug)
-        default_combined_config = cloud_version_config.compute_merged_config()
+        target_version_config = models.ApplicationVersionTargetConfig.objects.get(
+            application_version=version, target=target)
+        default_combined_config = target_version_config.compute_merged_config()
         request = self.context.get('view').request
-        provider = view_helpers.get_cloud_provider(
-            self.context.get('view'), cloud_id=cloud.slug)
-        credentials = view_helpers.get_credentials(cloud, request)
+        # FIXME: The target may not be a cloud, and therefore, the provider should not
+        # be instantiated here
+        if isinstance(target_version_config, models.ApplicationVersionCloudConfig):
+            cloud = target_version_config.target.target_zone.region.cloud
+            credentials = cb_view_helpers.get_credentials(cloud, request)
+        else:
+            # FIXME: For now, we don't handle non-cloud credentials
+            credentials = None
         try:
-            handler = util.import_class(version.backend_component_name)()
             app_config = validated_data.get("config_app", {})
-
             merged_app_config = jsonmerge.merge(
                 default_combined_config, app_config)
-            cloud_config = util.serialize_cloud_config(cloud_version_config)
-            final_ud_config = handler.validate_app_config(
-                provider, name, cloud_config, merged_app_config)
-            sanitised_app_config = handler.sanitise_app_config(merged_app_config)
+            final_ud_config, sanitised_app_config = self._validate_and_sanitise(
+                target_version_config, merged_app_config, name, version)
             async_result = tasks.create_appliance.delay(
-                name, cloud_version_config.pk, credentials, merged_app_config,
+                name, target_version_config.pk, credentials, merged_app_config,
                 final_ud_config)
 
             del validated_data['application']
@@ -272,7 +334,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
             validated_data['application_config'] = json.dumps(merged_app_config)
             validated_data['credentials_id'] = credentials.get('id') or None
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
-            self.log_usage(cloud_version_config, app_deployment, sanitised_app_config, request.user)
+            self.log_usage(target_version_config, app_deployment, sanitised_app_config, request.user)
             models.ApplicationDeploymentTask.objects.create(
                 action=models.ApplicationDeploymentTask.LAUNCH,
                 deployment=app_deployment, celery_id=async_result.task_id)
@@ -284,13 +346,32 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 {"error": "An exception creating a deployment of %s: %s)" %
                  (version.backend_component_name, e)})
 
+    def _validate_and_sanitise(self, target_version_config, merged_app_config, name, version):
+        handler = util.import_class(version.backend_component_name)()
+
+        if isinstance(target_version_config, models.ApplicationVersionCloudConfig):
+            zone = target_version_config.target.target_zone
+            # FIXME: provider should not be instantiated here, since the target may not
+            # be a cloud. In addition, all parameters to external plugins should be
+            # simple JSON. Therefore, we should pass in the provider config here, instead
+            # of the provider. The plugin will need to instantiate the appropriate provider
+            # depending on the type of target.
+            provider = cb_view_helpers.get_cloud_provider(
+                self.context.get('view'), zone=zone)
+            target_config = target_version_config.to_dict()
+            final_ud_config = handler.validate_app_config(
+                provider, name, target_config, merged_app_config)
+            sanitised_app_config = handler.sanitise_app_config(merged_app_config)
+            return final_ud_config, sanitised_app_config
+        return None, None
+
     def update(self, instance, validated_data):
         instance.archived = validated_data.get('archived', instance.archived)
         instance.save()
         return instance
 
-    def log_usage(self, app_version_cloud_config, app_deployment, sanitised_app_config, user):
-        u = models.Usage(app_version_cloud_config=app_version_cloud_config,
+    def log_usage(self, target_version_config, app_deployment, sanitised_app_config, user):
+        u = models.Usage(app_version_target_config=target_version_config,
                          app_deployment=app_deployment, app_config=sanitised_app_config, user=user)
         u.save()
 
