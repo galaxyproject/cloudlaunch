@@ -16,24 +16,17 @@ import djcloudbridge
 
 
 class Image(cb_models.DateNameAwareModel):
-    """
-    A base Image model used by a virtual appliance.
-
-    Applications will use Images and the same application may be available
-    on multiple infrastructures so we need this base class so a single
-    application field can be used to retrieve all images across
-    infrastructures.
-    """
     image_id = models.CharField(max_length=50, verbose_name="Image ID")
     description = models.CharField(max_length=255, blank=True, null=True)
+    region = models.ForeignKey(cb_models.Region, on_delete=models.CASCADE,
+                               null=False)
 
-
-class CloudImage(Image):
-    cloud = models.ForeignKey(cb_models.Cloud, on_delete=models.CASCADE,
-                              blank=True, null=True)
+    # Cannot be unique together because Azure images are global, not regional
+    # class Meta:
+    #     unique_together = (("region", "image_id"),)
 
     def __str__(self):
-        return "{0} (on {1})".format(self.name, self.cloud.name)
+        return "{0} (on {1})".format(self.name, self.region)
 
 
 class DeploymentTarget(PolymorphicModel):
@@ -41,6 +34,9 @@ class DeploymentTarget(PolymorphicModel):
     class Meta:
         verbose_name = "Deployment Target"
         verbose_name_plural = "Deployment Targets"
+
+    def __str__(self):
+        return "{0}: {1}".format(self._meta.verbose_name, self.id)
 
 
 class HostDeploymentTarget(DeploymentTarget):
@@ -67,6 +63,9 @@ class CloudDeploymentTarget(DeploymentTarget):
         unique_together = (("deploymenttarget_ptr", "target_zone"),)
         verbose_name = "Cloud"
         verbose_name_plural = "Clouds"
+
+    def __str__(self):
+        return "{0}: {1}".format(self._meta.verbose_name, self.target_zone)
 
 
 class AppCategory(models.Model):
@@ -223,10 +222,33 @@ class ApplicationVersionTargetConfig(PolymorphicModel):
             default_appwide_config, default_version_config)
         return jsonmerge.merge(default_combined_config, default_cloud_config)
 
+    def to_dict(self):
+        """
+        Serialize the supplied model to a dict.
+
+        A subset of the the model fields is returned as used by current
+        plugins but more fields can be serialized as needed.
+
+        @rtype: ``dict``
+        @return: A serialized version of the supplied model.
+        """
+        return {
+            'id': self.id,
+            'default_launch_config': self.default_launch_config,
+            'target': self.target.pk,
+            'application_version': self.application_version.pk
+        }
+
 
 class ApplicationVersionCloudConfig(ApplicationVersionTargetConfig):
-    image = ChainedForeignKey(CloudImage, chained_field="target",
+    image = ChainedForeignKey(Image, chained_field="target",
                               chained_model_field="target__zone__region")
+
+    def to_dict(self):
+        return {
+            **super(ApplicationVersionCloudConfig, self).to_dict(),
+            **{'image_id': self.image.image_id}
+        }
 
 
 class ApplicationDeployment(cb_models.DateNameAwareModel):
