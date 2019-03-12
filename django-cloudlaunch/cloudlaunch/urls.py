@@ -86,4 +86,7 @@ urlpatterns = [
     # Public services
     url(public_services_regex_pattern, include('public_appliances.urls')),
     url(r'api/v1/schema/$', schema_view),
+    url(r'^image-autocomplete/$', views.ImageAutocomplete.as_view(),
+        name='image-autocomplete',
+    ),
 ]

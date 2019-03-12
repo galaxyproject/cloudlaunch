@@ -72,6 +72,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Application definition
 
 INSTALLED_APPS = [
+    # Django auto complete light - for autocompleting foreign keys in admin
+    'dal',
+    'dal_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
