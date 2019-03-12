@@ -100,6 +100,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_countries',
     'django_filters',
+    'polymorphic',
     'cloudlaunchserver'
 ]
 

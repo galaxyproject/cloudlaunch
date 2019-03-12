@@ -3,14 +3,18 @@ import ast
 from django.contrib import admin
 import nested_admin
 
+import djcloudbridge
+
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
+
 from . import forms
 from . import models
-import djcloudbridge
 
 
 class AppVersionCloudConfigInline(nested_admin.NestedTabularInline):
     model = models.ApplicationVersionCloudConfig
     extra = 1
+    form = forms.ApplicationVersionCloudConfigForm
 
 
 class AppVersionInline(nested_admin.NestedStackedInline):
@@ -63,6 +67,28 @@ class AppDeploymentsAdmin(admin.ModelAdmin):
     list_display = ('name', 'archived', 'owner')
     list_filter = ('archived', 'owner__username')
     inlines = [AppDeployTaskAdmin]
+
+
+@admin.register(models.CloudDeploymentTarget)
+class AWSCloudAdmin(PolymorphicChildModelAdmin):
+    base_model = models.CloudDeploymentTarget
+
+
+@admin.register(models.HostDeploymentTarget)
+class AWSCloudAdmin(PolymorphicChildModelAdmin):
+    base_model = models.HostDeploymentTarget
+
+
+@admin.register(models.KubernetesDeploymentTarget)
+class AWSCloudAdmin(PolymorphicChildModelAdmin):
+    base_model = models.KubernetesDeploymentTarget
+
+
+@admin.register(models.DeploymentTarget)
+class DeploymentTargetAdmin(PolymorphicParentModelAdmin):
+    base_model = models.DeploymentTarget
+    child_models = (models.CloudDeploymentTarget, models.HostDeploymentTarget,
+                    models.KubernetesDeploymentTarget)
 
 
 class UsageAdmin(admin.ModelAdmin):

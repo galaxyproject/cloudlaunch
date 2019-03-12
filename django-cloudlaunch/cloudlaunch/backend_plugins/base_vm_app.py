@@ -104,7 +104,7 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             fip = None
             net = provider.networking.networks.get(network_id)
-            gateway = net.gateways.get_or_create_inet_gateway()
+            gateway = net.gateways.get_or_create()
             for ip in gateway.floating_ips:
                 if not ip.in_use:
                     fip = ip
@@ -241,7 +241,7 @@ class BaseVMAppPlugin(AppPlugin):
             # Attach a gateway to the router
             net = provider.networking.networks.get(subnet.network_id)
             log.debug("Creating inet gateway for net %s", net.id)
-            gw = net.gateways.get_or_create_inet_gateway()
+            gw = net.gateways.get_or_create()
             router.attach_gateway(gw)
             try:
                 for sn in subnet.network.subnets:
