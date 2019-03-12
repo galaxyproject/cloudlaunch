@@ -16,6 +16,8 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 import requests
 
+from dal import autocomplete
+
 from djcloudbridge import drf_helpers
 from . import models
 from . import serializers
@@ -218,3 +220,15 @@ class CustomRegisterView(RegisterView):
             return JWTSerializer(data).data
         else:
             return TokenSerializer(self.get_default_user_token(user)).data
+
+
+class ImageAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = models.Image.objects.all()
+
+        target_id = self.forwarded.get('target', None)
+        if target_id:
+            target = models.CloudDeploymentTarget.objects.get(id=target_id)
+            return qs.filter(region=target.target_zone.region)
+        else:
+            return qs.none()

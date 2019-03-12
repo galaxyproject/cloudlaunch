@@ -3,14 +3,18 @@ import ast
 from django.contrib import admin
 import nested_admin
 
+import djcloudbridge
+
+from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
+
 from . import forms
 from . import models
-import djcloudbridge
 
 
 class AppVersionCloudConfigInline(nested_admin.NestedTabularInline):
     model = models.ApplicationVersionCloudConfig
     extra = 1
+    form = forms.ApplicationVersionCloudConfigForm
 
 
 class AppVersionInline(nested_admin.NestedStackedInline):
@@ -32,9 +36,9 @@ class AppCategoryAdmin(admin.ModelAdmin):
 
 
 class CloudImageAdmin(admin.ModelAdmin):
-    model = models.CloudImage
-    list_display = ('name', 'cloud', 'image_id')
-    list_filter = ('name', 'cloud')
+    model = models.Image
+    list_display = ('name', 'region', 'image_id')
+    list_filter = ('name', 'region')
     ordering = ('name',)
 
 
@@ -65,34 +69,57 @@ class AppDeploymentsAdmin(admin.ModelAdmin):
     inlines = [AppDeployTaskAdmin]
 
 
+@admin.register(models.CloudDeploymentTarget)
+class AWSCloudAdmin(PolymorphicChildModelAdmin):
+    base_model = models.CloudDeploymentTarget
+
+
+@admin.register(models.HostDeploymentTarget)
+class AWSCloudAdmin(PolymorphicChildModelAdmin):
+    base_model = models.HostDeploymentTarget
+
+
+@admin.register(models.KubernetesDeploymentTarget)
+class AWSCloudAdmin(PolymorphicChildModelAdmin):
+    base_model = models.KubernetesDeploymentTarget
+
+
+@admin.register(models.DeploymentTarget)
+class DeploymentTargetAdmin(PolymorphicParentModelAdmin):
+    base_model = models.DeploymentTarget
+    child_models = (models.CloudDeploymentTarget, models.HostDeploymentTarget,
+                    models.KubernetesDeploymentTarget)
+
+
 class UsageAdmin(admin.ModelAdmin):
     models = models.Usage
-    # Enable column-based display&filtering of entries
-    list_display = ('added', 'target_cloud', 'instance_type', 'application',
-                    'user')
-    # Enable filtering of displayed entries
-    list_filter = ('added', 'app_deployment__target_cloud', 'user',
-                   'app_deployment__application_version__application__name')
-    # Enable hierarchical navigation by date
-    date_hierarchy = 'added'
-    ordering = ('-added',)
-    # Add search
-    search_fields = ['user']
+
+    def deployment_target(self, obj):
+        if obj.app_deployment:
+            return obj.app_deployment.deployment_target
+        return None
+    deployment_target.short_description = 'Deployment Target'
 
     def application(self, obj):
         if obj.app_deployment:
             return obj.app_deployment.application_version.application.name
         return None
 
-    def target_cloud(self, obj):
-        if obj.app_deployment:
-            return obj.app_deployment.target_cloud.name
-        return None
-    target_cloud.short_description = 'Target cloud'
-
     def instance_type(self, obj):
         app_config = ast.literal_eval(obj.app_config)
         return app_config.get('config_cloudlaunch', {}).get('instanceType')
+
+    # Enable column-based display&filtering of entries
+    list_display = ('added', 'deployment_target', 'instance_type', 'application',
+                    'user')
+    # Enable filtering of displayed entries
+    list_filter = ('added', 'app_deployment__deployment_target', 'user',
+                   'app_deployment__application_version__application__name')
+    # Enable hierarchical navigation by date
+    date_hierarchy = 'added'
+    ordering = ('-added',)
+    # Add search
+    search_fields = ['user']
 
 
 class PublicKeyInline(admin.StackedInline):
@@ -107,7 +134,7 @@ class UserProfileAdmin(djcloudbridge.admin.UserProfileAdmin):
 admin.site.register(models.Application, AppAdmin)
 admin.site.register(models.AppCategory, AppCategoryAdmin)
 admin.site.register(models.ApplicationDeployment, AppDeploymentsAdmin)
-admin.site.register(models.CloudImage, CloudImageAdmin)
+admin.site.register(models.Image, CloudImageAdmin)
 admin.site.register(models.Usage, UsageAdmin)
 
 # Add public key to existing UserProfile

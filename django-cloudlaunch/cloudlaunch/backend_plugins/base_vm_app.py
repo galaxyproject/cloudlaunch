@@ -104,7 +104,7 @@ class BaseVMAppPlugin(AppPlugin):
         else:
             fip = None
             net = provider.networking.networks.get(network_id)
-            gateway = net.gateways.get_or_create_inet_gateway()
+            gateway = net.gateways.get_or_create()
             for ip in gateway.floating_ips:
                 if not ip.in_use:
                     fip = ip
@@ -190,6 +190,7 @@ class BaseVMAppPlugin(AppPlugin):
                     log.error("Exception applying firewall rules: %s" % e)
             return vmfl
 
+
     def _get_or_create_default_subnet(self, provider, network_id, placement):
         """
         Figure out a subnet matching the supplied constraints.
@@ -207,7 +208,7 @@ class BaseVMAppPlugin(AppPlugin):
                     return sn
         if not placement:
             placement = ''  # placement needs to be a str
-        sn = provider.networking.subnets.get_or_create_default(placement)
+        sn = provider.networking.subnets.get_or_create_default()
         return sn
 
     def _setup_networking(self, provider, net_id, subnet_id, placement):
@@ -240,7 +241,7 @@ class BaseVMAppPlugin(AppPlugin):
             # Attach a gateway to the router
             net = provider.networking.networks.get(subnet.network_id)
             log.debug("Creating inet gateway for net %s", net.id)
-            gw = net.gateways.get_or_create_inet_gateway()
+            gw = net.gateways.get_or_create()
             router.attach_gateway(gw)
             try:
                 for sn in subnet.network.subnets:
@@ -262,7 +263,7 @@ class BaseVMAppPlugin(AppPlugin):
         """
         net_id = cloudlaunch_config.get('network', None)
         subnet_id = cloudlaunch_config.get('subnet', None)
-        placement = cloudlaunch_config.get('placementZone', '')
+        placement = provider.zone_name
         subnet = self._setup_networking(provider, net_id, subnet_id, placement)
         vmf = None
         if cloudlaunch_config.get('firewall'):
@@ -320,8 +321,7 @@ class BaseVMAppPlugin(AppPlugin):
             provider, cloudlaunch_config)
         cb_launch_config = self._get_cb_launch_config(provider, img,
                                                       cloudlaunch_config)
-        vm_type = cloudlaunch_config.get(
-            'vmType', cloud_config.get('default_instance_type'))
+        vm_type = cloudlaunch_config.get('vmType')
 
         log.debug("Launching with subnet %s and VM firewalls %s", subnet, vmfl)
 
@@ -352,7 +352,7 @@ runcmd:"""
                                           (vm_type, kp.name, placement_zone)})
         inst = provider.compute.instances.create(
             label=name, image=img, vm_type=vm_type, subnet=subnet,
-            key_pair=kp, vm_firewalls=vmfl, zone=placement_zone,
+            key_pair=kp, vm_firewalls=vmfl,
             user_data=user_data, launch_config=cb_launch_config)
         task.update_state(state="PROGRESSING",
                           meta={"action": "Waiting for instance %s" % inst.id})

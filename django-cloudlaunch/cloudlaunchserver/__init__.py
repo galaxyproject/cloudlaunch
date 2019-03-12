@@ -9,7 +9,7 @@ __all__ = ['celery_app']
 default_app_config = 'cloudlaunchserver.apps.CloudLaunchServerConfig'
 
 # Current version of the library
-__version__ = '2.0.2'
+__version__ = '3.0.0'
 
 
 def get_version():

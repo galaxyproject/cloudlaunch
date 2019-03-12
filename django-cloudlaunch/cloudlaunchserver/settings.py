@@ -72,6 +72,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # Application definition
 
 INSTALLED_APPS = [
+    # Django auto complete light - for autocompleting foreign keys in admin
+    'dal',
+    'dal_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -80,7 +83,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'nested_admin',
-    'smart_selects',
     'corsheaders',
     'rest_auth',
     'allauth',
@@ -100,6 +102,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_countries',
     'django_filters',
+    'polymorphic',
     'cloudlaunchserver'
 ]
 
