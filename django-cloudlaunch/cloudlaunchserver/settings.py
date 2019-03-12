@@ -80,7 +80,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'nested_admin',
-    'smart_selects',
     'corsheaders',
     'rest_auth',
     'allauth',

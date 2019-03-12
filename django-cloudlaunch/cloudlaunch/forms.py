@@ -26,3 +26,19 @@ class ApplicationVersionForm(ModelForm):
     class Meta:
         model = models.ApplicationVersion
         fields = '__all__'
+
+
+class ApplicationVersionCloudConfigForm(ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(ApplicationVersionCloudConfigForm, self).__init__(*args, **kwargs)
+        try:
+            if self.instance and self.instance.target:
+                self.fields['image'].queryset = models.Image.objects.filter(
+                    region=self.instance.target.target_zone.region)
+        except models.ApplicationVersionTargetConfig.target.RelatedObjectDoesNotExist:
+            pass
+
+    class Meta:
+        model = models.ApplicationVersionCloudConfig
+        fields = '__all__'

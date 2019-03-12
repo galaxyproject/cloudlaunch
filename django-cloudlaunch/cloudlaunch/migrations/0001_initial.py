@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
-import smart_selects.db_fields
 
 
 class Migration(migrations.Migration):
@@ -163,7 +162,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='applicationversioncloudconfig',
             name='image',
-            field=smart_selects.db_fields.ChainedForeignKey(chained_field='cloud', chained_model_field='cloud', on_delete=django.db.models.deletion.CASCADE, to='cloudlaunch.CloudImage'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='cloudlaunch.CloudImage'),
         ),
         migrations.AlterUniqueTogether(
             name='applicationversion',

@@ -8,8 +8,6 @@ from djcloudbridge import models as cb_models
 
 from polymorphic.models import PolymorphicModel
 
-from smart_selects.db_fields import ChainedForeignKey
-
 import json
 import jsonmerge
 import djcloudbridge
@@ -241,8 +239,7 @@ class ApplicationVersionTargetConfig(PolymorphicModel):
 
 
 class ApplicationVersionCloudConfig(ApplicationVersionTargetConfig):
-    image = ChainedForeignKey(Image, chained_field="target",
-                              chained_model_field="target__zone__region")
+    image = models.ForeignKey(Image, on_delete=models.CASCADE, null=False)
 
     def to_dict(self):
         return {

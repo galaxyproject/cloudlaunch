@@ -2,7 +2,6 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import smart_selects.db_fields
 
 
 def create_target_data(apps, schema_editor):
@@ -222,10 +221,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='applicationversioncloudconfig',
             name='image',
-            field=smart_selects.db_fields.ChainedForeignKey(chained_field='target',
-                                                            chained_model_field='target__zone__region',
-                                                            on_delete=django.db.models.deletion.CASCADE,
-                                                            to='cloudlaunch.CloudImage'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    to='cloudlaunch.CloudImage'),
         ),
         migrations.AlterField(
             model_name='usage',

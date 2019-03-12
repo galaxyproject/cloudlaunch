@@ -74,8 +74,6 @@ REQS_BASE = [
     'django-cors-headers>=2.1.0',
     # for nested object editing in django admin
     'django-nested-admin>=3.0.21',
-    # For dependencies between key fields in django admin
-    'django-smart-selects>=1.5.3',
     # ======== Public Appliances =========
     # Used by public_appliances for retrieving country data
     'django-countries>=5.0',
