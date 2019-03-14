@@ -4,7 +4,7 @@ import logging
 
 from bioblend.cloudman.launch import CloudManLauncher
 
-from cloudbridge.cloud.factory import ProviderList
+from cloudbridge.factory import ProviderList
 
 from rest_framework import serializers
 

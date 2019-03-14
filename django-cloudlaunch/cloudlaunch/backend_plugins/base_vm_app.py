@@ -5,9 +5,9 @@ import yaml
 import ipaddress
 
 from celery.utils.log import get_task_logger
-from cloudbridge.cloud.base.helpers import generate_key_pair
-from cloudbridge.cloud.interfaces import InstanceState
-from cloudbridge.cloud.interfaces.resources import TrafficDirection
+from cloudbridge.base.helpers import generate_key_pair
+from cloudbridge.interfaces import InstanceState
+from cloudbridge.interfaces.resources import TrafficDirection
 
 from cloudlaunch import configurers
 
