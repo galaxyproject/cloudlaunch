@@ -1,8 +1,5 @@
-import yaml
-from cloudbridge.cloud import CloudProviderFactory
+from cloudbridge.factory import CloudProviderFactory
 from cloudbridge.interfaces import TestMockHelperMixin
-from rest_framework.serializers import ValidationError
-from .cloudman_app import CloudManAppPlugin
 from .base_vm_app import BaseVMAppPlugin
 
 

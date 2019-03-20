@@ -2,6 +2,8 @@
 Django settings used during cloudlaunch testing
 """
 import signal
+import sys
+
 
 # The integration test script sends a SIGINT to terminate the django server
 # after the tests are complete. Handle the SIGINT here and terminate
