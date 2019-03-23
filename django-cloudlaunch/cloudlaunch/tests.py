@@ -1,4 +1,5 @@
 import json
+from contextlib import contextmanager
 from unittest.mock import patch
 import uuid
 
@@ -19,28 +20,16 @@ from .models import (Application,
                      Image)
 
 
-class MockedCeleryTaskCall:
-    """Mock a call to a celery task."""
-
-    def __init__(self, task, *args, **kwargs):
-        """Specify task, as string, and expected arguments to be passed."""
-        self.task = task
-        self.args = args
-        self.kwargs = kwargs
-
-    def __enter__(self):
-        self.patcher = patch(self.task)
-        self.mocked_task = self.patcher.start()
-        celery_id = str(uuid.uuid4())
-        return_value = AsyncResult(celery_id)
-        self.mocked_task.return_value = return_value
-        return return_value
-
-    def __exit__(self, *exc):
-        self.patcher.stop()
-        self.mocked_task.assert_called_with(
-            *self.args, **self.kwargs)
-        return False
+@contextmanager
+def mocked_celery_task_call(task, *args, **kwargs):
+    patcher = patch(task)
+    mocked_task = patcher.start()
+    celery_id = str(uuid.uuid4())
+    return_value = AsyncResult(celery_id)
+    mocked_task.return_value = return_value
+    yield return_value
+    patcher.stop()
+    mocked_task.assert_called_with(*args, **kwargs)
 
 
 class BaseAPITestCase(APITestCase):
@@ -292,7 +281,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
 
     def test_create_deployment(self):
         """Create deployment from 'application' and 'application_version'."""
-        with MockedCeleryTaskCall(
+        with mocked_celery_task_call(
                 "cloudlaunch.tasks.create_appliance.delay",
                 'test-deployment',
                 self.app_version_cloud_config.id,
@@ -340,7 +329,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
 
     def test_merging_app_config(self):
         """Specify app_config and verify it is merged correctly."""
-        with MockedCeleryTaskCall(
+        with mocked_celery_task_call(
                 "cloudlaunch.tasks.create_appliance.delay",
                 'test-deployment',
                 self.app_version_cloud_config.id,
@@ -443,7 +432,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
 
     def test_create_health_check_task(self):
         """Test creating a HEALTH_CHECK type task."""
-        with MockedCeleryTaskCall(
+        with mocked_celery_task_call(
                 "cloudlaunch.tasks.health_check.delay",
                 self.app_deployment.id,
                 self.app_deployment.credentials.as_dict()) as async_result:
@@ -466,7 +455,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
 
     def test_create_restart_task(self):
         """Test creating a RESTART type task."""
-        with MockedCeleryTaskCall(
+        with mocked_celery_task_call(
                 "cloudlaunch.tasks.restart_appliance.delay",
                 self.app_deployment.id,
                 self.app_deployment.credentials.as_dict()) as async_result:
@@ -489,7 +478,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
 
     def test_create_delete_task(self):
         """Test creating a DELETE type task."""
-        with MockedCeleryTaskCall(
+        with mocked_celery_task_call(
                 "cloudlaunch.tasks.delete_appliance.delay",
                 self.app_deployment.id,
                 self.app_deployment.credentials.as_dict()) as async_result:
