@@ -170,9 +170,9 @@ class ApplicationVersion(models.Model):
             except Exception as e:
                 raise Exception("Invalid JSON syntax. Launch config must be"
                                 " in JSON format. Cause: {0}".format(e))
-        if self.default_cloud and not self.app_version_config.filter(
-                application_version=self, cloud=self.default_cloud).exists():
-            raise Exception("The default cloud must be a cloud that this"
+        if self.default_target and not self.app_version_config.filter(
+                application_version=self, target=self.default_target).exists():
+            raise Exception("The default target must be a target that this"
                             " version of the application is supported on.")
 
         return super(ApplicationVersion, self).save()

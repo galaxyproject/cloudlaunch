@@ -7,20 +7,18 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.test import TestCase
 from djcloudbridge import models as cb_models
-from djcloudbridge import serializers as cb_serializers
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from . import tasks
 from .models import (Application,
                      ApplicationDeployment,
                      ApplicationVersion,
                      ApplicationVersionCloudConfig,
                      ApplicationDeploymentTask,
-                     CloudImage)
+                     CloudDeploymentTarget,
+                     Image)
 
 
-# Create your tests here.
 class MockedCeleryTaskCall:
     """Mock a call to a celery task."""
 
@@ -235,11 +233,19 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
         )
         return application_version
 
-    def _create_cloud(self):
-        return cb_models.AWS.objects.create(
-            name='Amazon US East 1 - N. Virginia',
-            kind='cloud',
+    def _create_cloud_region_zone(self):
+        cloud = cb_models.AWSCloud.objects.create(
+            name='AWS'
         )
+        region = cb_models.AWSRegion.objects.create(
+            cloud=cloud,
+            name='us-east-1'
+        )
+        zone = cb_models.Zone.objects.create(
+            region=region,
+            name='default'
+        )
+        return zone
 
     def _create_credentials(self, target_cloud):
         user_profile = cb_models.UserProfile.objects.get(user=self.user)
@@ -251,20 +257,20 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
             default=True,
         )
 
-    def _create_image(self, target_cloud):
-        return CloudImage.objects.create(
+    def _create_image(self, target_region):
+        return Image.objects.create(
             image_id='abc123',
-            cloud=target_cloud,
+            region=target_region,
         )
 
     def _create_app_version_cloud_config(self,
                                          application_version,
-                                         cloud,
+                                         target,
                                          image,
                                          launch_config=DEFAULT_LAUNCH_CONFIG):
         return ApplicationVersionCloudConfig.objects.create(
                 application_version=application_version,
-                cloud=cloud,
+                target=target,
                 image=image,
                 default_launch_config=json.dumps(launch_config),
             )
@@ -273,11 +279,16 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
         super().setUp()
         # Create test data
         self.application_version = self._create_application_version()
-        self.target_cloud = self._create_cloud()
-        self.ubuntu_image = self._create_image(self.target_cloud)
+        self.target_zone = self._create_cloud_region_zone()
+        self.target_region = self.target_zone.region
+        self.target_cloud = self.target_region.cloud
+        self.ubuntu_image = self._create_image(self.target_region)
         self.credentials = self._create_credentials(self.target_cloud)
+        self.credentials = self._create_credentials(self.target_cloud)
+        self.deployment_target = CloudDeploymentTarget.objects.get(
+            target_zone=self.target_zone)
         self.app_version_cloud_config = self._create_app_version_cloud_config(
-            self.application_version, self.target_cloud, self.ubuntu_image)
+            self.application_version, self.deployment_target, self.ubuntu_image)
 
     def test_create_deployment(self):
         """Create deployment from 'application' and 'application_version'."""
@@ -293,12 +304,17 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 'name': 'test-deployment',
                 'application': self.application_version.application.slug,
                 'application_version': self.application_version.version,
-                'target_cloud': self.target_cloud.slug,
+                'deployment_target_id': self.deployment_target.id,
             })
             self.assertResponse(response, status=201, data_contains={
                 'name': 'test-deployment',
                 'application_version': self.application_version.id,
-                'target_cloud': self.target_cloud.slug,
+                'deployment_target': {
+                    'id': self.deployment_target.id,
+                    'target_zone': {
+                        'zone_id': self.target_zone.name
+                    }
+                },
                 'application_config': self.DEFAULT_LAUNCH_CONFIG,
                 'app_version_details': {
                     'version': self.application_version.version,
@@ -337,13 +353,18 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 'name': 'test-deployment',
                 'application': self.application_version.application.slug,
                 'application_version': self.application_version.version,
-                'target_cloud': self.target_cloud.slug,
+                'deployment_target_id': self.deployment_target.id,
                 'config_app': json.dumps(self.DEFAULT_APP_CONFIG),
             })
             self.assertResponse(response, status=201, data_contains={
                 'name': 'test-deployment',
                 'application_version': self.application_version.id,
-                'target_cloud': self.target_cloud.slug,
+                'deployment_target': {
+                    'id': self.deployment_target.id,
+                    'target_zone': {
+                        'zone_id': self.target_zone.name
+                    }
+                },
                 'application_config': {
                     'foo': 1,  # default from DEFAULT_LAUNCH_CONFIG
                     'bar': 3,  # config_app overrides DEFAULT_LAUNCH_CONFIG
@@ -388,9 +409,16 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
             application=application,
             version="1.0",
         )
-        target_cloud = cb_models.AWS.objects.create(
-            name='Amazon US East 1 - N. Virginia',
-            kind='cloud',
+        target_cloud = cb_models.AWSCloud.objects.create(
+            name='AWS'
+        )
+        target_region = cb_models.AWSRegion.objects.create(
+            cloud=target_cloud,
+            name='us-east',
+        )
+        target_zone = cb_models.Zone.objects.create(
+            region=target_region,
+            name='default',
         )
         user_profile = cb_models.UserProfile.objects.get(user=user)
         credentials = cb_models.AWSCredentials.objects.create(
@@ -399,11 +427,12 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
             secret_key='secret_key',
             user_profile=user_profile,
         )
+        deployment_target = CloudDeploymentTarget.objects.get(target_zone=target_zone)
         app_deployment = ApplicationDeployment.objects.create(
             owner=user,
             name=self.DEPLOYMENT_NAME,
             application_version=application_version,
-            target_cloud=target_cloud,
+            deployment_target=deployment_target,
             credentials=credentials
         )
         return app_deployment
@@ -523,9 +552,16 @@ class ApplicationDeploymentTaskModelTestCase(TestCase):
             application=application,
             version="1.0",
         )
-        target_cloud = cb_models.AWS.objects.create(
-            name='Amazon US East 1 - N. Virginia',
-            kind='cloud',
+        target_cloud = cb_models.AWSCloud.objects.create(
+            name='AWS',
+        )
+        target_region = cb_models.AWSRegion.objects.create(
+            cloud=target_cloud,
+            name='us-east',
+        )
+        target_zone = cb_models.Zone.objects.create(
+            region=target_region,
+            name='default',
         )
         user_profile = cb_models.UserProfile.objects.get(user=user)
         credentials = cb_models.AWSCredentials.objects.create(
@@ -534,11 +570,12 @@ class ApplicationDeploymentTaskModelTestCase(TestCase):
             secret_key='secret_key',
             user_profile=user_profile,
         )
+        deployment_target = CloudDeploymentTarget.objects.get(target_zone=target_zone)
         app_deployment = ApplicationDeployment.objects.create(
             owner=user,
             name='test-deployment',
             application_version=application_version,
-            target_cloud=target_cloud,
+            deployment_target=deployment_target,
             credentials=credentials
         )
         return app_deployment

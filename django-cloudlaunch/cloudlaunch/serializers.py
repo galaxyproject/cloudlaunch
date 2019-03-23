@@ -213,13 +213,14 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
         creds = self._resolve_credentials(dpl, request)
+        cred_dict = creds.as_dict() if creds else {}
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
-                async_result = tasks.health_check.delay(dpl.id, creds)
+                async_result = tasks.health_check.delay(dpl.id, cred_dict)
             elif action == models.ApplicationDeploymentTask.RESTART:
-                async_result = tasks.restart_appliance.delay(dpl.id, creds)
+                async_result = tasks.restart_appliance.delay(dpl.id, cred_dict)
             elif action == models.ApplicationDeploymentTask.DELETE:
-                async_result = tasks.delete_appliance.delay(dpl.id, creds)
+                async_result = tasks.delete_appliance.delay(dpl.id, cred_dict)
             return models.ApplicationDeploymentTask.objects.create(
                 action=action, deployment=dpl, celery_id=async_result.task_id)
         except serializers.ValidationError as ve:
