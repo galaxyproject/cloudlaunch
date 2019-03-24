@@ -91,9 +91,9 @@ class Migration(migrations.Migration):
         ('cloudlaunch', '0007_delete_user_profile'),
     ]
 
-    run_before = [
-        ('djcloudbridge', '0007_delete_cloudold'),
-    ]
+    # run_before = [
+    #     ('djcloudbridge', '0007_delete_cloudold'),
+    # ]
 
     operations = [
         migrations.AlterField(
