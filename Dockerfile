@@ -1,21 +1,26 @@
-FROM python:3.6-alpine
+FROM ubuntu:18.04 as stage1
 
+ARG DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED 1
 
-RUN apk update \
-    # psycopg2 dependencies
-    && apk add --virtual build-deps gcc python3-dev musl-dev \
-    && apk add postgresql-dev \
-    # CFFI dependencies
-    && apk add libffi-dev py-cffi \
-    # git for cloning requirements dependencies
-    && apk add git \
-    # For pynacl
-    && apk add make linux-headers
-
-# Create cloudlaunch user environment
-RUN adduser -D -g '' cloudlaunch \
-    && mkdir -p /app
+RUN set -xe; \
+    apt-get -qq update && apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        git-core \
+        make \
+        software-properties-common \
+        gcc \
+        python3-dev \
+        libffi-dev \
+        libpq-dev \
+        python-psycopg2 \
+        python3-pip \
+        python3-setuptools \
+    && apt-get autoremove -y && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* \
+    && mkdir -p /app \
+    && pip3 install virtualenv \
+    && virtualenv -p python3 --prompt "(cloudlaunch)" /app/venv
 
 # Set working directory to /app/
 WORKDIR /app/
@@ -25,12 +30,25 @@ ADD . /app
 
 # Install requirements. Move this above ADD as 'pip install cloudlaunch-server'
 # asap so caching works
-RUN pip install -U pip==18.1 && pip install --no-cache-dir -r requirements.txt
+RUN /app/venv/bin/pip3 install -U pip && /app/venv/bin/pip3 install --no-cache-dir -r requirements.txt
 
-#RUN python django-cloudlaunch/manage.py collectstatic --no-input
+RUN cd django-cloudlaunch && /app/venv/bin/python manage.py collectstatic --no-input
 
-# Change ownership to cloudlaunch
-RUN chown -R cloudlaunch:cloudlaunch /app
+
+# Stage-2
+# FROM ubuntu:18.04
+
+# Create cloudlaunch user environment
+RUN useradd -ms /bin/bash cloudlaunch \
+    && mkdir -p /app \
+    && chown cloudlaunch:cloudlaunch /app -R
+
+WORKDIR /app/
+
+# Copy cloudlaunch files to final image
+# COPY --chown=cloudlaunch:cloudlaunch --from=stage1 /app /app
+
+# RUN chmod a+x /app/venv/bin/*
 
 # Switch to new, lower-privilege user
 USER cloudlaunch
@@ -38,4 +56,4 @@ USER cloudlaunch
 # gunicorn will listen on this port
 EXPOSE 8000
 
-CMD gunicorn -b :8000 --access-logfile - --error-logfile - --log-level debug cloudlaunchserver.wsgi
+CMD /app/venv/bin/gunicorn -b :8000 --access-logfile - --error-logfile - --log-level debug cloudlaunchserver.wsgi
