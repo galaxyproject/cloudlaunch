@@ -70,6 +70,7 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
         zone = cloud_version_conf.target.target_zone
         plugin = util.import_class(
             cloud_version_conf.application_version.backend_component_name)()
+        # FIXME: Should not be instantiating provider here
         provider = domain_model.get_cloud_provider(zone, credentials)
         cloud_config = cloud_version_conf.to_dict()
         # TODO: Add keys (& support) for using existing, user-supplied hosts
@@ -164,9 +165,8 @@ def health_check(self, deployment_id, credentials):
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         # FIXME: Should not be instantiating provider here
-        target_cloud = deployment.deployment_target.zone.region.cloud
-        provider = domain_model.get_cloud_provider(target_cloud,
-                                                   credentials)
+        target_zone = deployment.deployment_target.target_zone
+        provider = domain_model.get_cloud_provider(target_zone, credentials)
         result = plugin.health_check(provider, dpl)
     except Exception as e:
         msg = "Health check failed: %s" % str(e)
@@ -194,8 +194,8 @@ def restart_appliance(self, deployment_id, credentials):
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         # FIXME: Should not be instantiating provider here
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
+        target_zone = deployment.deployment_target.target_zone
+        provider = domain_model.get_cloud_provider(target_zone, credentials)
         result = plugin.restart(provider, dpl)
     except Exception as e:
         msg = "Restart task failed: %s" % str(e)
@@ -221,8 +221,8 @@ def delete_appliance(self, deployment_id, credentials):
         plugin = _get_app_plugin(deployment)
         dpl = _serialize_deployment(deployment)
         # FIXME: Should not be instantiating provider here
-        provider = domain_model.get_cloud_provider(deployment.target_cloud,
-                                                   credentials)
+        target_zone = deployment.deployment_target.target_zone
+        provider = domain_model.get_cloud_provider(target_zone, credentials)
         result = plugin.delete(provider, dpl)
         if result is True:
             deployment.archived = True
