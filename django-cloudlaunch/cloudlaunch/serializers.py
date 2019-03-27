@@ -188,9 +188,9 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
     def _resolve_credentials(deployment, request):
         if deployment.credentials:
             return deployment.credentials
-        elif isinstance(deployment, cb_models.CloudDeploymentTarget):
+        elif isinstance(deployment, models.CloudDeploymentTarget):
             return cb_view_helpers.get_credentials(
-                deployment.deployment_target.zone.region.cloud, request)
+                deployment.deployment_target.target_zone.region.cloud, request)
         else:
             return None
 
