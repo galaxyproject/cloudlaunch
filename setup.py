@@ -104,6 +104,7 @@ REQS_PROD = ([
 )
 
 REQS_TEST = ([
+    'pydevd',
     'sqlalchemy',  # for celery results backend
     'tox>=2.9.1',
     'coverage>=4.4.1',
