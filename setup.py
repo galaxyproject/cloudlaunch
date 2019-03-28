@@ -92,7 +92,9 @@ REQS_BASE = [
     'gitpython',
     'ansible',
     # Utility package for retrying operations
-    'retrying'
+    'retrying',
+    # For serving static files in production mode
+    'whitenoise[brotli]'
 ]
 
 REQS_PROD = ([

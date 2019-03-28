@@ -25,4 +25,4 @@ urlpatterns = [
     url(r'admin/', admin.site.urls),
     url(r'nested_admin/', include('nested_admin.urls')),
     url(r'', include('cloudlaunch.urls'))
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]
