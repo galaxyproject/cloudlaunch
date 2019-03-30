@@ -7,6 +7,7 @@ import ipaddress
 from celery.utils.log import get_task_logger
 from cloudbridge.base.helpers import generate_key_pair
 from cloudbridge.interfaces import InstanceState
+from cloudbridge.interfaces.exceptions import CloudBridgeBaseException
 from cloudbridge.interfaces.resources import TrafficDirection
 
 from cloudlaunch import configurers
@@ -264,7 +265,18 @@ class BaseVMAppPlugin(AppPlugin):
         net_id = cloudlaunch_config.get('network', None)
         subnet_id = cloudlaunch_config.get('subnet', None)
         placement = provider.zone_name
-        subnet = self._setup_networking(provider, net_id, subnet_id, placement)
+        try:
+            subnet = self._setup_networking(provider, net_id, subnet_id, placement)
+        except CloudBridgeBaseException as e:
+            if provider.PROVIDER_ID == 'openstack':
+                # On OpenStack NeCTAR for example, legacy networking may
+                # be able to continue despite the exception, so try with empty
+                # subnet
+                log.exception(e)
+                subnet = None
+            else:
+                raise
+
         vmf = None
         if cloudlaunch_config.get('firewall'):
             vmf = self._configure_vm_firewalls(
