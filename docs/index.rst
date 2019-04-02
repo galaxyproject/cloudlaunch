@@ -71,6 +71,7 @@ Documentation
 
    topics/overview.rst
    topics/social_auth.rst
+   topics/production_server_mgmt.rst
 
 
 Indices and tables
