@@ -36,19 +36,25 @@ RUN cd django-cloudlaunch && /app/venv/bin/python manage.py collectstatic --no-i
 
 
 # Stage-2
-# FROM ubuntu:18.04
+FROM ubuntu:18.04
 
 # Create cloudlaunch user environment
 RUN useradd -ms /bin/bash cloudlaunch \
     && mkdir -p /app \
-    && chown cloudlaunch:cloudlaunch /app -R
+    && chown cloudlaunch:cloudlaunch /app -R \
+    && apt-get -qq update && apt-get install -y --no-install-recommends \
+        python-psycopg2 \
+        python3-pip \
+        python3-setuptools \
+    && apt-get autoremove -y && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
 
 WORKDIR /app/
 
 # Copy cloudlaunch files to final image
-# COPY --chown=cloudlaunch:cloudlaunch --from=stage1 /app /app
+COPY --chown=cloudlaunch:cloudlaunch --from=stage1 /app /app
 
-# RUN chmod a+x /app/venv/bin/*
+RUN chmod a+x /app/venv/bin/*
 
 # Switch to new, lower-privilege user
 USER cloudlaunch
