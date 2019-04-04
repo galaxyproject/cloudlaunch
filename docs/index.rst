@@ -8,7 +8,7 @@ Welcome to the CloudLaunch documentation!
 
 CloudLaunch is a ReSTful, extensible Django app for discovering and launching
 applications on cloud, container, or local infrastructure. A live version is
-available at https://beta.launch.usegalaxy.org/.
+available at https://launch.usegalaxy.org/.
 
 CloudLaunch can be extended with your own plug-ins which can provide custom
 launch logic for arbitrary custom applications. Visit the live site to see
