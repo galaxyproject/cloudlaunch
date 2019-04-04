@@ -1,4 +1,4 @@
-moto
+git+git://github.com/spulec/moto#egg=moto
 git+git://github.com/CloudVE/cloudlaunch-cli#egg=cloudlaunch-cli
 git+git://github.com/CloudVE/cloudbridge#egg=cloudbridge[dev]
 git+git://github.com/CloudVE/djcloudbridge#egg=djcloudbridge[dev]
