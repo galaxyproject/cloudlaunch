@@ -27,7 +27,7 @@ echo "Waiting for cloudlaunch to start..."
 while ! nc -z localhost 8000; do
   if [[ $TIMEOUT -lt 0 ]]; then
         echo "Timeout waiting for cloudlaunch to start"
-        exit
+        exit 124
   fi
   sleep 0.1
   TIMEOUT=$((TIMEOUT-1))
