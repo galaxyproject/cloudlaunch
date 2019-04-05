@@ -42,7 +42,10 @@
     "updated": "2017-11-15T03:26:16.880Z",
     "name": "aws_dummy_creds",
     "user_profile": "test_user",
-    "polymorphic_ctype": 1
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "awscredentials"
+    ]
   }
 },
 {
@@ -67,7 +70,10 @@
   "fields": {
     "name": "Amazon Web Services",
     "access_instructions_url": "https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key",
-    "polymorphic_ctype": 26
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "awscloud"
+    ]
   }
 },
 {
@@ -76,7 +82,10 @@
   "fields": {
     "name": "Jetstream",
     "access_instructions_url": "https://galaxyproject.org/cloud/jetstream/allocation/#api-access",
-    "polymorphic_ctype": 29
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "openstackcloud"
+    ]
   }
 },
 {
@@ -85,7 +94,10 @@
   "fields": {
     "name": "NeCTAR",
     "access_instructions_url": "http://vlsci.github.io/lscc_docs/tutorials/gvl_launch/gvl_launch/",
-    "polymorphic_ctype": 29
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "openstackcloud"
+    ]
   }
 },
 {
@@ -117,7 +129,10 @@
     "name": "ap-southeast-2",
     "region_id": "amazon-ap-sydney",
     "cloud": "aws",
-    "polymorphic_ctype": 21
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "awsregion"
+    ]
   }
 },
 {
@@ -127,7 +142,10 @@
     "name": "us-east-1",
     "region_id": "amazon-us-east",
     "cloud": "aws",
-    "polymorphic_ctype": 21
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "awsregion"
+    ]
   }
 },
 {
@@ -137,7 +155,10 @@
     "name": "RegionOne",
     "region_id": "jetstream-region",
     "cloud": "jetstream",
-    "polymorphic_ctype": 25
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "openstackregion"
+    ]
   }
 },
 {
@@ -147,7 +168,10 @@
     "name": "Melbourne",
     "region_id": "nectar-mel",
     "cloud": "nectar",
-    "polymorphic_ctype": 25
+    "polymorphic_ctype": [
+        "djcloudbridge",
+        "openstackregion"
+    ]
   }
 },
 {
@@ -274,21 +298,30 @@
   "model": "cloudlaunch.deploymenttarget",
   "pk": 1,
   "fields": {
-    "polymorphic_ctype": 46
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "clouddeploymenttarget"
+    ]
   }
 },
 {
   "model": "cloudlaunch.deploymenttarget",
   "pk": 2,
   "fields": {
-    "polymorphic_ctype": 46
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "clouddeploymenttarget"
+    ]
   }
 },
 {
   "model": "cloudlaunch.deploymenttarget",
   "pk": 3,
   "fields": {
-    "polymorphic_ctype": 46
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "clouddeploymenttarget"
+    ]
   }
 },
 {
@@ -415,7 +448,10 @@
     "application_version": 5,
     "target_id": 3,
     "default_launch_config": "{\r\n   \"config_cloudlaunch\": {\r\n       \"instanceType\": \"m1.small\",\r\n       \"firewall\": [\r\n          {\r\n             \"securityGroup\": \"cloudlaunch-vm\",\r\n             \"rules\": [\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"80\",\r\n                   \"to\": \"80\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"22\",\r\n                   \"to\": \"22\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"20\",\r\n                   \"to\": \"21\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"30000\",\r\n                   \"to\": \"30100\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                }\r\n             ]\r\n          }\r\n       ]\r\n    }\r\n}",
-    "polymorphic_ctype": 49
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "applicationversioncloudconfig"
+    ]
   }
 },
 {
@@ -425,7 +461,10 @@
     "application_version": 5,
     "target_id": 2,
     "default_launch_config": "{\r\n   \"config_cloudlaunch\": {\r\n        \"instanceType\": \"m1.tiny\",\r\n       \"firewall\": [\r\n          {\r\n             \"securityGroup\": \"cloudlaunch-vm\",\r\n             \"rules\": [\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"80\",\r\n                   \"to\": \"80\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"22\",\r\n                   \"to\": \"22\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                }\r\n             ]\r\n          }\r\n       ]\r\n    }\r\n}",
-    "polymorphic_ctype": 49
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "applicationversioncloudconfig"
+    ]
   }
 },
 {
@@ -435,7 +474,10 @@
     "application_version": 5,
     "target_id": 1,
     "default_launch_config": "{\r\n   \"config_cloudlaunch\": {\r\n       \"instanceType\": \"t2.small\",\r\n       \"firewall\": [\r\n          {\r\n             \"securityGroup\": \"cloudlaunch-vm\",\r\n             \"rules\": [\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"80\",\r\n                   \"to\": \"80\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                },\r\n                {\r\n                   \"protocol\": \"tcp\",\r\n                   \"from\": \"22\",\r\n                   \"to\": \"22\",\r\n                   \"cidr\": \"0.0.0.0/0\"\r\n                }\r\n             ]\r\n          }\r\n       ]\r\n    }\r\n}",
-    "polymorphic_ctype": 49
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "applicationversioncloudconfig"
+    ]
   }
 },
 {
@@ -445,7 +487,10 @@
     "application_version": 24,
     "target_id": 2,
     "default_launch_config": "",
-    "polymorphic_ctype": 49
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "applicationversioncloudconfig"
+    ]
   }
 },
 {
@@ -455,7 +500,10 @@
     "application_version": 31,
     "target_id": 1,
     "default_launch_config": "{\r\n   \"config_gvl\": {\r\n      \"config_cloudman\": {\r\n         \"masterPostStartScript\": \"file:///opt/gvl/scripts/triggers;file:///mnt/galaxy/gvl/poststart.d\",\r\n         \"defaultBucket\": \"cloudman-gvl-430\",\r\n         \"storageType\": \"volume\",\r\n         \"storageSize\": 100,\r\n         \"clusterType\": \"Galaxy\",\r\n         \"gvl_config\": { \"install\" : [\"gvl_cmdline_utilities\"] },\r\n         \"cluster_templates\": [\r\n            {\r\n               \"name\": \"Galaxy\",\r\n               \"filesystem_templates\": [\r\n                  {\r\n                     \"data_source\": \"archive\",\r\n                     \"archive_md5\": \"7c252fd983b52fcc358c62895b22eed4\",\r\n                     \"name\": \"galaxy\",\r\n                     \"roles\": \"galaxyTools,galaxyData\",\r\n                     \"type\": \"volume\",\r\n                     \"size\": 62,\r\n                     \"archive_url\": \"https://s3.amazonaws.com/cloudman-gvl-430/filesystems/gvl-galaxyfs-4.3.0.tar.gz\"\r\n                  },\r\n                 {\r\n                    \"name\": \"galaxyIndices\",\r\n                    \"roles\": \"galaxyIndices\",\r\n                    \"type\": \"cvmfs\",\r\n                    \"mount_point\": \"/cvmfs/data.galaxyproject.org\"\r\n                 }\r\n               ]\r\n            }\r\n         ]\r\n      },\r\n      \"gvl_cmdline_utilities\": true,\r\n      \"gvl_package_registry_url\": \"https://swift.rc.nectar.org.au:8888/v1/AUTH_377/cloudman-gvl-430/packages/package_registry.yml\"\r\n   },\r\n   \"config_cloudlaunch\": {\r\n       \"instanceType\": \"c5.large\"\r\n    }\r\n}",
-    "polymorphic_ctype": 49
+    "polymorphic_ctype": [
+        "cloudlaunch",
+        "applicationversioncloudconfig"
+    ]
   }
 },
 {
