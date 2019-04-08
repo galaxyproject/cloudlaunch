@@ -60,8 +60,8 @@
   "model": "djcloudbridge.awscredentials",
   "pk": 11,
   "fields": {
-    "access_key": "AKIAJW2XCYO4AF55XFEQ",
-    "secret_key": "duBG5EHH5eD9H/wgqF+nNKB1xRjISTVs9L/DummY"
+    "aws_access_key": "AKIAJW2XCYO4AF55XFEQ",
+    "aws_secret_key": "duBG5EHH5eD9H/wgqF+nNKB1xRjISTVs9L/DummY"
   }
 },
 {

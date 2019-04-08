@@ -240,8 +240,8 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
         user_profile = cb_models.UserProfile.objects.get(user=self.user)
         return cb_models.AWSCredentials.objects.create(
             cloud=target_cloud,
-            access_key='access_key',
-            secret_key='secret_key',
+            aws_access_key='access_key',
+            aws_secret_key='secret_key',
             user_profile=user_profile,
             default=True,
         )
@@ -412,8 +412,8 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
         user_profile = cb_models.UserProfile.objects.get(user=user)
         credentials = cb_models.AWSCredentials.objects.create(
             cloud=target_cloud,
-            access_key='access_key',
-            secret_key='secret_key',
+            aws_access_key='access_key',
+            aws_secret_key='secret_key',
             user_profile=user_profile,
         )
         deployment_target = CloudDeploymentTarget.objects.get(target_zone=target_zone)
@@ -555,8 +555,8 @@ class ApplicationDeploymentTaskModelTestCase(TestCase):
         user_profile = cb_models.UserProfile.objects.get(user=user)
         credentials = cb_models.AWSCredentials.objects.create(
             cloud=target_cloud,
-            access_key='access_key',
-            secret_key='secret_key',
+            aws_access_key='access_key',
+            aws_secret_key='secret_key',
             user_profile=user_profile,
         )
         deployment_target = CloudDeploymentTarget.objects.get(target_zone=target_zone)

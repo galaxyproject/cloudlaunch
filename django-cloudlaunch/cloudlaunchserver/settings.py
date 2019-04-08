@@ -60,6 +60,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'cl-azure-storage-account',
     'cl-azure-vm-default-username',
     'cl-gcp-credentials-json',
+    'cl-gcp-vm-default-username',
 )
 # End: django-cors-headers settings
 
