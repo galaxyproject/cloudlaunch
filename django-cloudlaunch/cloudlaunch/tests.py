@@ -285,7 +285,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 "cloudlaunch.tasks.create_appliance.delay",
                 'test-deployment',
                 self.app_version_cloud_config.id,
-                self.credentials.as_dict(),
+                self.credentials.to_dict(),
                 self.DEFAULT_LAUNCH_CONFIG,
                 None) as async_result:
 
@@ -333,7 +333,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 "cloudlaunch.tasks.create_appliance.delay",
                 'test-deployment',
                 self.app_version_cloud_config.id,
-                self.credentials.as_dict(),
+                self.credentials.to_dict(),
                 {'foo': 1, 'bar': 3, 'baz': 4,
                  'config_cloudlaunch': {'instance_user_data': "userdata"}},
                 'userdata') as async_result:
@@ -435,7 +435,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
         with mocked_celery_task_call(
                 "cloudlaunch.tasks.health_check.delay",
                 self.app_deployment.id,
-                self.app_deployment.credentials.as_dict()) as async_result:
+                self.app_deployment.credentials.to_dict()) as async_result:
 
             response = self.client.post(
                 reverse('deployment_task-list',
@@ -458,7 +458,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
         with mocked_celery_task_call(
                 "cloudlaunch.tasks.restart_appliance.delay",
                 self.app_deployment.id,
-                self.app_deployment.credentials.as_dict()) as async_result:
+                self.app_deployment.credentials.to_dict()) as async_result:
 
             response = self.client.post(
                 reverse('deployment_task-list',
@@ -481,7 +481,7 @@ class ApplicationDeploymentTaskTests(BaseAuthenticatedAPITestCase):
         with mocked_celery_task_call(
                 "cloudlaunch.tasks.delete_appliance.delay",
                 self.app_deployment.id,
-                self.app_deployment.credentials.as_dict()) as async_result:
+                self.app_deployment.credentials.to_dict()) as async_result:
 
             response = self.client.post(
                 reverse('deployment_task-list',

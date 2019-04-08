@@ -213,7 +213,7 @@ class DeploymentTaskSerializer(serializers.ModelSerializer):
         dpk = self.context['view'].kwargs.get('deployment_pk')
         dpl = models.ApplicationDeployment.objects.get(id=dpk)
         creds = self._resolve_credentials(dpl, request)
-        cred_dict = creds.as_dict() if creds else {}
+        cred_dict = creds.to_dict() if creds else {}
         try:
             if action == models.ApplicationDeploymentTask.HEALTH_CHECK:
                 async_result = tasks.health_check.delay(dpl.id, cred_dict)
