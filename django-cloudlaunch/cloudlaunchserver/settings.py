@@ -199,7 +199,7 @@ USE_TZ = True
 
 
 CLOUDLAUNCH_PATH_PREFIX = os.environ.get('CLOUDLAUNCH_PATH_PREFIX', '')
-FORCE_SCRIPT_NAME = CLOUDLAUNCH_PATH_PREFIX
+# FORCE_SCRIPT_NAME = CLOUDLAUNCH_PATH_PREFIX
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/

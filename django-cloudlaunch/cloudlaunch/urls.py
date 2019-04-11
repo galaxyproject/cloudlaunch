@@ -48,9 +48,9 @@ deployments_router.register(r'tasks', views.DeploymentTaskViewSet,
 # Extend djcloudbridge endpoints
 cl_zone_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
 
-infrastructure_regex_pattern = r'api/v1/infrastructure/'
-auth_regex_pattern = r'api/v1/auth/'
-public_services_regex_pattern = r'api/v1/public_services/'
+infrastructure_regex_pattern = r'^api/v1/infrastructure/'
+auth_regex_pattern = r'^api/v1/auth/'
+public_services_regex_pattern = r'^api/v1/public_services/'
 
 schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_BASE_URL,
                               urlconf='cloudlaunch.urls')
@@ -62,8 +62,8 @@ registration_urls = [
 ]
 
 urlpatterns = [
-    url(r'api/v1/', include(router.urls)),
-    url(r'api/v1/', include(deployments_router.urls)),
+    url(r'^api/v1/', include(router.urls)),
+    url(r'^api/v1/', include(deployments_router.urls)),
     # This generates a duplicate url set with the cloudman url included
     # get_urls() must be called or a cached set of urls will be returned.
     url(infrastructure_regex_pattern, include(cl_zone_router.get_urls())),
@@ -71,10 +71,10 @@ urlpatterns = [
     url(auth_regex_pattern, include(('rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
 
     # Override default register view
-    url(r'%sregistration' % auth_regex_pattern, include((registration_urls, 'rest_auth_reg'), namespace='rest_auth_reg')),
-    url(r'%suser/public-keys/$' %
+    url(r'^%sregistration' % auth_regex_pattern, include((registration_urls, 'rest_auth_reg'), namespace='rest_auth_reg')),
+    url(r'^%suser/public-keys/$' %
         auth_regex_pattern, views.PublicKeyList.as_view()),
-    url(r'%suser/public-keys/(?P<pk>[0-9]+)/$' %
+    url(r'^%suser/public-keys/(?P<pk>[0-9]+)/$' %
         auth_regex_pattern, views.PublicKeyDetail.as_view(),
         name='public-key-detail'),
     url(auth_regex_pattern, include(('rest_framework.urls', 'rest_framework'),
@@ -82,11 +82,11 @@ urlpatterns = [
     url(auth_regex_pattern, include('djcloudbridge.profile.urls')),
     # The following is required because rest_auth calls allauth internally and
     # reverse urls need to be resolved.
-    url(r'accounts/', include('allauth.urls')),
+    url(r'^accounts/', include('allauth.urls')),
     # Public services
     url(public_services_regex_pattern, include('public_appliances.urls')),
-    url(r'api/v1/schema/$', schema_view),
+    url(r'^api/v1/schema/$', schema_view),
     url(r'^image-autocomplete/$', views.ImageAutocomplete.as_view(),
         name='image-autocomplete',
-    ),
+    )
 ]
