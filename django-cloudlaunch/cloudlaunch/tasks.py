@@ -12,6 +12,7 @@ from djcloudbridge import domain_model
 from . import models
 from . import signals
 from . import util
+from . import serializers
 
 log = get_task_logger('cloudlaunch')
 # Limit how much these libraries log
@@ -72,7 +73,9 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
             cloud_version_conf.application_version.backend_component_name)()
         # FIXME: Should not be instantiating provider here
         provider = domain_model.get_cloud_provider(zone, credentials)
-        cloud_config = cloud_version_conf.to_dict()
+        cloud_config = serializers.CloudConfigPluginSerializer(
+            cloud_version_conf).data
+        cloud_config['credentials'] = credentials
         # TODO: Add keys (& support) for using existing, user-supplied hosts
         provider_config = {'cloud_provider': provider,
                            'cloud_config': cloud_config,

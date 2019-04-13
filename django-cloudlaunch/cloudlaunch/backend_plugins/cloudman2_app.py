@@ -7,8 +7,6 @@ from urllib.parse import urljoin
 
 from cloudlaunch.configurers import AnsibleAppConfigurer
 
-from djcloudbridge.view_helpers import get_credentials_from_dict
-
 from .simple_web_app import SimpleWebAppPlugin
 
 
@@ -53,9 +51,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
     """Add CloudMan2 specific vars to playbook."""
 
     def configure(self, app_config, provider_config):
-        host = provider_config.get('host_address')
-        cloud_info = get_credentials_from_dict(
-            provider_config['cloud_provider'].config.copy())
+        host = provider_config.get('host_config').get('host_address')
         # Create a random token for Pulsar if it's set to be used
         token_length = 40  # chars
         token_contents = (string.ascii_lowercase + string.ascii_uppercase +
@@ -65,17 +61,21 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             'config_cloudman2', {}).get('pulsarOnly') else None
         if pulsar_token:
             app_config['config_cloudman2']['pulsar_token'] = pulsar_token
-        # Combine bootstrap data to have the following keys: `config_app`,
-        # `credentials`, and `cloud`
-        cm_bd = {'config_app': app_config, **cloud_info}
+        # rancher config will be added to cluster_data in the helm chart, once rancher
+        # details are available
+        cm_initial_cluster_data = {
+            'cloud_config': provider_config.get('cloud_config'),
+            'host_config': provider_config.get('host_config'),
+            'app_config': app_config
+        }
         playbook_vars = [
             ('cm_boot_image', app_config.get('config_cloudman2', {}).get(
                 'cm_boot_image')),
             ('rancher_server', host),
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
-            ('cm_bootstrap_data', base64.b64encode(
-                json.dumps(cm_bd).encode('utf-8')).decode('utf-8'))
+            ('cm_initial_cluster_data', base64.b64encode(
+                json.dumps(cm_initial_cluster_data).encode('utf-8')).decode('utf-8'))
         ]
         return super().configure(app_config, provider_config,
                                  playbook_vars=playbook_vars)
