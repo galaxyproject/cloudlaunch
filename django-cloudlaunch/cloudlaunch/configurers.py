@@ -71,9 +71,10 @@ class SSHBasedConfigurer(AppConfigurer):
 
     def validate(self, app_config, provider_config):
         # Validate SSH connection info in provider_config
-        host = provider_config.get('host_address')
-        user = provider_config.get('ssh_user')
-        ssh_private_key = provider_config.get('ssh_private_key')
+        host_config = provider_config.get('host_config')
+        host = host_config.get('host_address')
+        user = host_config.get('ssh_user')
+        ssh_private_key = host_config.get('ssh_private_key')
         log.debug("Using config ssh key:\n%s", ssh_private_key)
         try:
             self._check_ssh(host, pk=ssh_private_key, user=user)
@@ -155,9 +156,10 @@ class ScriptAppConfigurer(SSHBasedConfigurer):
                             "config_script")
 
     def configure(self, app_config, provider_config):
-        host = provider_config.get('host_address')
-        user = provider_config.get('ssh_user')
-        ssh_private_key = provider_config.get('ssh_private_key')
+        host_config = provider_config.get('host_config')
+        host = host_config.get('host_address')
+        user = host_config.get('ssh_user')
+        ssh_private_key = host_config.get('ssh_private_key')
         # TODO: maybe add support for running multiple commands, but how to
         # distinguish from run_cmd?
         config_script = app_config.get('config_appliance', {}).get(
@@ -192,9 +194,10 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                             "repository")
 
     def configure(self, app_config, provider_config, playbook_vars=None):
-        host = provider_config.get('host_address')
-        user = provider_config.get('ssh_user')
-        ssh_private_key = provider_config.get('ssh_private_key')
+        host_config = provider_config.get('host_config')
+        host = host_config.get('host_address')
+        user = host_config.get('ssh_user')
+        ssh_private_key = host_config.get('ssh_private_key')
         playbook = app_config.get('config_appliance', {}).get('repository')
         if 'inventoryTemplate' in app_config.get('config_appliance', {}):
             inventory = app_config.get(

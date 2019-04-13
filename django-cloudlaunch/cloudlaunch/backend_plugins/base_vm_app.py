@@ -287,22 +287,25 @@ class BaseVMAppPlugin(AppPlugin):
         """See the parent class in ``app_plugin.py`` for the docstring."""
         p_result = {}
         c_result = {}
-        if provider_config.get('host_address'):
+        if provider_config.get('host_config'):
             # A host is provided; use CloudLaunch's default published ssh key
             pass  # Implement this once we actually support it
         else:
             if app_config.get('config_appliance'):
                 # Host config will take place; generate a tmp ssh config key
                 public_key, private_key = generate_key_pair()
-                provider_config['ssh_private_key'] = private_key
-                provider_config['ssh_public_key'] = public_key
-                provider_config['ssh_user'] = app_config.get(
-                    'config_appliance', {}).get('sshUser')
-                provider_config['run_cmd'] = app_config.get(
-                    'config_appliance', {}).get('runCmd')
+                host_config = {
+                    'ssh_private_key': private_key,
+                    'ssh_public_key': public_key,
+                    'ssh_user': app_config.get(
+                        'config_appliance', {}).get('sshUser'),
+                    'run_cmd': app_config.get(
+                        'config_appliance', {}).get('runCmd')
+                }
+                provider_config['host_config'] = host_config
             p_result = self._provision_host(name, task, app_config,
                                             provider_config)
-            provider_config['host_address'] = p_result['cloudLaunch'].get(
+            host_config['host_address'] = p_result['cloudLaunch'].get(
                 'publicIP')
 
         if app_config.get('config_appliance'):
@@ -317,11 +320,12 @@ class BaseVMAppPlugin(AppPlugin):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = provider_config.get('cloud_provider')
         cloud_config = provider_config.get('cloud_config')
+        host_config = provider_config.get('host_config')
         user_data = provider_config.get('cloud_user_data') or ""
 
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
-            custom_image_id or cloud_config.get('image_id'))
+            custom_image_id or cloud_config.get('image', {}).get('image_id'))
         task.update_state(state='PROGRESSING',
                           meta={'action': "Retrieving or creating a key pair"})
         kp = self._get_or_create_kp(provider,
@@ -337,22 +341,22 @@ class BaseVMAppPlugin(AppPlugin):
 
         log.debug("Launching with subnet %s and VM firewalls %s", subnet, vmfl)
 
-        if provider_config.get('ssh_public_key') or provider_config.get(
+        if host_config.get('ssh_public_key') or host_config.get(
                 'run_cmd'):
             user_data += """
 #cloud-config
 """
-        if provider_config.get('ssh_public_key'):
+        if host_config.get('ssh_public_key'):
             # cloud-init config to allow login w/ the config ssh key
             # http://cloudinit.readthedocs.io/en/latest/topics/examples.html
             log.info("Adding a cloud-init config public ssh key to user data")
             user_data += """
 ssh_authorized_keys:
-    - {0}""".format(provider_config['ssh_public_key'])
-        if provider_config.get('run_cmd'):
+    - {0}""".format(host_config['ssh_public_key'])
+        if host_config.get('run_cmd'):
             user_data += """
 runcmd:"""
-            for rc in provider_config.get('run_cmd'):
+            for rc in host_config.get('run_cmd'):
                 user_data += """
  - {0}
  """.format(rc.split(" "))
