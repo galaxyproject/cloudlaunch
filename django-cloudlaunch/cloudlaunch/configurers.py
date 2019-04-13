@@ -251,32 +251,34 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             shutil.rmtree(repo_path)
         except FileNotFoundError:
             pass
-        # Ensure the playbook is available
-        log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
-        Repo.clone_from(playbook, to_path=repo_path)
-        # Create a private ssh key file
-        pkf = os.path.join(repo_path, 'pk')
-        with os.fdopen(os.open(pkf, os.O_WRONLY | os.O_CREAT, 0o600),
-                       'w') as f:
-            f.writelines(pk)
-        # Create an inventory file
-        r = requests.get(inventory)
-        inv = Template((r.content).decode('utf-8'))
-        inventory_path = os.path.join(repo_path, 'inventory')
-        with open(inventory_path, 'w') as f:
-            log.info("Creating inventory file %s", inventory_path)
-            f.writelines(inv.substitute({'host': host, 'user': user}))
-        # Run the playbook
-        cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
-        for pev in playbook_vars or []:
-            cmd += ["--extra-vars", "{0}={1}".format(pev[0], pev[1])]
-        log.info("Running Ansible with command %s", cmd)
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                             universal_newlines=True, cwd=repo_path)
-        (out, _) = p.communicate()
-        p_status = p.wait()
-        log.info("Playbook stdout: %s\nstatus: %s", out, p_status)
-        if not settings.DEBUG:
-            log.info("Deleting ansible playbook %s", repo_path)
-            shutil.rmtree(repo_path)
+        try:
+            # Ensure the playbook is available
+            log.info("Cloning Ansible playbook %s to %s", playbook, repo_path)
+            Repo.clone_from(playbook, to_path=repo_path)
+            # Create a private ssh key file
+            pkf = os.path.join(repo_path, 'pk')
+            with os.fdopen(os.open(pkf, os.O_WRONLY | os.O_CREAT, 0o600),
+                           'w') as f:
+                f.writelines(pk)
+            # Create an inventory file
+            r = requests.get(inventory)
+            inv = Template((r.content).decode('utf-8'))
+            inventory_path = os.path.join(repo_path, 'inventory')
+            with open(inventory_path, 'w') as f:
+                log.info("Creating inventory file %s", inventory_path)
+                f.writelines(inv.substitute({'host': host, 'user': user}))
+            # Run the playbook
+            cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
+            for pev in playbook_vars or []:
+                cmd += ["--extra-vars", "{0}={1}".format(pev[0], pev[1])]
+            log.info("Running Ansible with command %s", cmd)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                 universal_newlines=True, cwd=repo_path)
+            (out, _) = p.communicate()
+            p_status = p.wait()
+            log.info("Playbook stdout: %s\nstatus: %s", out, p_status)
+        finally:
+            if not settings.DEBUG:
+                log.info("Deleting ansible playbook %s", repo_path)
+                shutil.rmtree(repo_path)
         return (p_status, out)
