@@ -403,3 +403,116 @@ class AuthTokenSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context.get('view').request.user
         return models.AuthToken.objects.create(user=user, **validated_data)
+
+
+############
+# Serializers for data sent to Plugins
+############
+
+class CloudImagePluginSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Image
+        fields = ('name', 'image_id', 'description')
+
+
+class DeploymentTargetPluginSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.DeploymentTarget
+        exclude = ('polymorphic_ctype',)
+
+
+class BaseCloudPluginSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField()
+
+    class Meta:
+        model = cb_models.Cloud
+        exclude = ('polymorphic_ctype',)
+
+
+class OpenStackCloudSerializer(BaseCloudPluginSerializer):
+    auth_url = serializers.CharField(allow_blank=True)
+    identity_api_version = serializers.BooleanField()
+
+
+class CloudPluginSerializer(PolymorphicSerializer):
+    model_serializer_mapping = {
+        cb_models.Cloud: BaseCloudPluginSerializer,
+        cb_models.AWSCloud: BaseCloudPluginSerializer,
+        cb_models.AzureCloud: BaseCloudPluginSerializer,
+        cb_models.GCPCloud: BaseCloudPluginSerializer,
+        cb_models.OpenStackCloud: OpenStackCloudSerializer
+    }
+
+
+class BaseCloudRegionSerializer(serializers.ModelSerializer):
+    region_id = serializers.CharField(read_only=True)
+    name = serializers.CharField(allow_blank=False)
+
+    class Meta:
+        model = cb_models.Region
+        exclude = ('polymorphic_ctype',)
+
+
+class AWSRegionSerializer(BaseCloudRegionSerializer):
+    ec2_endpoint_url = serializers.CharField(allow_blank=True)
+    ec2_is_secure = serializers.BooleanField()
+    ec2_validate_certs = serializers.BooleanField()
+    s3_endpoint_url = serializers.CharField(allow_blank=True)
+    s3_is_secure = serializers.BooleanField()
+    s3_validate_certs = serializers.BooleanField()
+
+
+class CloudRegionPluginSerializer(PolymorphicSerializer):
+    model_serializer_mapping = {
+        cb_models.Region: BaseCloudRegionSerializer,
+        cb_models.AWSRegion: AWSRegionSerializer,
+        cb_models.AzureRegion: BaseCloudRegionSerializer,
+        cb_models.GCPRegion: BaseCloudRegionSerializer,
+        cb_models.OpenStackRegion: BaseCloudRegionSerializer
+    }
+
+
+class DeploymentZonePluginSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True)
+    zone_id = serializers.CharField(read_only=True)
+    region = CloudRegionPluginSerializer(read_only=True)
+    cloud = CloudPluginSerializer(read_only=True, source="region.cloud")
+
+    class Meta:
+        model = cb_models.Zone
+        fields = ('cloud', 'region', 'zone_id', 'name')
+
+
+class CloudDeploymentTargetPluginSerializer(DeploymentTargetSerializer):
+    target_zone = DeploymentZonePluginSerializer()
+
+    class Meta(DeploymentTargetSerializer.Meta):
+        model = models.CloudDeploymentTarget
+
+
+class DeploymentTargetPluginSerializer(PolymorphicSerializer):
+    model_serializer_mapping = {
+        models.CloudDeploymentTarget: CloudDeploymentTargetPluginSerializer,
+        models.HostDeploymentTarget: DeploymentTargetPluginSerializer,
+        models.KubernetesDeploymentTarget: DeploymentTargetPluginSerializer,
+    }
+
+
+class TargetConfigPluginSerializer(serializers.ModelSerializer):
+    target = DeploymentTargetPluginSerializer()
+#    default_launch_config = serializers.JSONField(source='compute_merged_config')
+
+    class Meta:
+        model = models.ApplicationVersionTargetConfig
+        fields = ('target', 'default_launch_config')
+
+
+class CloudConfigPluginSerializer(TargetConfigPluginSerializer):
+    image = CloudImagePluginSerializer()
+
+    class Meta(AppVersionTargetConfigSerializer.Meta):
+        model = models.ApplicationVersionCloudConfig
+        fields = ('target', 'image')
