@@ -203,7 +203,7 @@ CLOUDLAUNCH_PATH_PREFIX = os.environ.get('CLOUDLAUNCH_PATH_PREFIX', '')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
-
+WHITENOISE_STATIC_PREFIX = CLOUDLAUNCH_PATH_PREFIX
 STATIC_URL = CLOUDLAUNCH_PATH_PREFIX + '/static/'
 
 
