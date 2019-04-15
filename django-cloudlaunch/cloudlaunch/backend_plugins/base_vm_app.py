@@ -291,6 +291,7 @@ class BaseVMAppPlugin(AppPlugin):
             # A host is provided; use CloudLaunch's default published ssh key
             pass  # Implement this once we actually support it
         else:
+            host_config = {}
             if app_config.get('config_appliance'):
                 # Host config will take place; generate a tmp ssh config key
                 public_key, private_key = generate_key_pair()
@@ -320,7 +321,7 @@ class BaseVMAppPlugin(AppPlugin):
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = provider_config.get('cloud_provider')
         cloud_config = provider_config.get('cloud_config')
-        host_config = provider_config.get('host_config')
+        host_config = provider_config.get('host_config', {})
         user_data = provider_config.get('cloud_user_data') or ""
 
         custom_image_id = cloudlaunch_config.get("customImageID", None)

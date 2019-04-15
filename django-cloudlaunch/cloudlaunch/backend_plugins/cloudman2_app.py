@@ -28,7 +28,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
 
     def _configure_host(self, name, task, app_config, provider_config):
         result = super()._configure_host(name, task, app_config, provider_config)
-        host = provider_config.get('host_config').get('host_address')
+        host = provider_config.get('host_config', {}).get('host_address')
         pulsar_token = app_config['config_cloudman2'].get('pulsar_token')
         result['cloudLaunch'] = {'applicationURL':
                                  'https://{0}/'.format(host),
@@ -51,7 +51,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
     """Add CloudMan2 specific vars to playbook."""
 
     def configure(self, app_config, provider_config):
-        host = provider_config.get('host_config').get('host_address')
+        host = provider_config.get('host_config', {}).get('host_address')
         # Create a random token for Pulsar if it's set to be used
         token_length = 40  # chars
         token_contents = (string.ascii_lowercase + string.ascii_uppercase +

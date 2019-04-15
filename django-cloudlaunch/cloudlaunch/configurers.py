@@ -71,7 +71,7 @@ class SSHBasedConfigurer(AppConfigurer):
 
     def validate(self, app_config, provider_config):
         # Validate SSH connection info in provider_config
-        host_config = provider_config.get('host_config')
+        host_config = provider_config.get('host_config', {})
         host = host_config.get('host_address')
         user = host_config.get('ssh_user')
         ssh_private_key = host_config.get('ssh_private_key')
@@ -156,7 +156,7 @@ class ScriptAppConfigurer(SSHBasedConfigurer):
                             "config_script")
 
     def configure(self, app_config, provider_config):
-        host_config = provider_config.get('host_config')
+        host_config = provider_config.get('host_config', {})
         host = host_config.get('host_address')
         user = host_config.get('ssh_user')
         ssh_private_key = host_config.get('ssh_private_key')
@@ -194,7 +194,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                             "repository")
 
     def configure(self, app_config, provider_config, playbook_vars=None):
-        host_config = provider_config.get('host_config')
+        host_config = provider_config.get('host_config', {})
         host = host_config.get('host_address')
         user = host_config.get('ssh_user')
         ssh_private_key = host_config.get('ssh_private_key')
