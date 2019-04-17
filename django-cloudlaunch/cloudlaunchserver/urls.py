@@ -22,7 +22,7 @@ from django.contrib import admin
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^nested_admin/', include('nested_admin.urls')),
-    url(r'^', include('cloudlaunch.urls'))
+    url(r'^cloudlaunch/admin/', admin.site.urls),
+    url(r'^cloudlaunch/nested_admin/', include('nested_admin.urls')),
+    url(r'^cloudlaunch/', include('cloudlaunch.urls'))
 ]
