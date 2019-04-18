@@ -13,7 +13,7 @@ Upgrading running chart
 .. code-block:: bash
 
     sudo docker pull cloudve/cloudlaunch-server:latest
-    sudo docker pull cloudve/cloudlaunch-ui:latest`
+    sudo docker pull cloudve/cloudlaunch-ui:latest
 
 
 3. Upgrade then helm chart

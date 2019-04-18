@@ -226,7 +226,7 @@ REST_AUTH_TOKEN_CREATOR = 'cloudlaunch.authentication.default_create_token'
 
 REST_SESSION_LOGIN = True
 
-REST_SCHEMA_BASE_URL = CLOUDLAUNCH_PATH_PREFIX + '/'
+REST_SCHEMA_BASE_URL = CLOUDLAUNCH_PATH_PREFIX + '/cloudlaunch/'
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
 sentry_sdk.init(

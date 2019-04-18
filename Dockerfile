@@ -43,6 +43,7 @@ RUN useradd -ms /bin/bash cloudlaunch \
     && mkdir -p /app \
     && chown cloudlaunch:cloudlaunch /app -R \
     && apt-get -qq update && apt-get install -y --no-install-recommends \
+        git-core \
         python-psycopg2 \
         python3-pip \
         python3-setuptools \
