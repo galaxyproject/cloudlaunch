@@ -75,7 +75,7 @@ class SSHBasedConfigurer(AppConfigurer):
         host = host_config.get('host_address')
         user = host_config.get('ssh_user')
         ssh_private_key = host_config.get('ssh_private_key')
-        log.debug("Using config ssh key:\n%s", ssh_private_key)
+        log.debug("Config ssh key:\n%s", ssh_private_key)
         try:
             self._check_ssh(host, pk=ssh_private_key, user=user)
         except RetryError as rte:
@@ -137,7 +137,8 @@ class SSHBasedConfigurer(AppConfigurer):
         pkey = None
         if private_key:
             if 'RSA' not in private_key:
-                # AWS at least does not specify key type yet paramiko requires
+                # Paramiko requires key type so add it
+                log.info("Agumenting private key with RSA type")
                 private_key = private_key.replace(' PRIVATE', ' RSA PRIVATE')
             key_file_object = StringIO(private_key)
             pkey = paramiko.RSAKey.from_private_key(key_file_object)
@@ -198,6 +199,10 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
         host = host_config.get('host_address')
         user = host_config.get('ssh_user')
         ssh_private_key = host_config.get('ssh_private_key')
+        if 'RSA' not in ssh_private_key:
+            ssh_private_key = ssh_private_key.replace(
+                ' PRIVATE', ' RSA PRIVATE')
+            log.info("Agumented ssh key with RSA type: %s" % ssh_private_key)
         playbook = app_config.get('config_appliance', {}).get('repository')
         if 'inventoryTemplate' in app_config.get('config_appliance', {}):
             inventory = app_config.get(
