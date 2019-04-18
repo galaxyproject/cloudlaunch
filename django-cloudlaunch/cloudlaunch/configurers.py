@@ -289,9 +289,9 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                 raise Exception("An error occurred while running the ansible playbook to"
                                 "configure instance. Check the logs. Last output lines"
                                 "were: %s".format(output.split("\n")[-10:]))
-            log.info("Playbook stdout: %s\nstatus: %s", out, p_status)
+            log.info("Playbook status: %s", process.poll())
         finally:
             if not settings.DEBUG:
                 log.info("Deleting ansible playbook %s", repo_path)
                 shutil.rmtree(repo_path)
-        return (0, out)
+        return 0, output_buffer
