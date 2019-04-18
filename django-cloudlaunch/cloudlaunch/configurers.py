@@ -276,14 +276,22 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
             for pev in playbook_vars or []:
                 cmd += ["--extra-vars", "{0}={1}".format(pev[0], pev[1])]
-            log.info("Running Ansible with command %s", cmd)
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                 universal_newlines=True, cwd=repo_path)
-            (out, _) = p.communicate()
-            p_status = p.wait()
+            log.info("Running Ansible with command %s", " ".join(cmd))
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                       universal_newlines=True, cwd=repo_path)
+            output_buffer = ""
+            while process.poll() is None:
+                output = process.stdout.readline()
+                output_buffer += output
+                if output:
+                    log.info(output)
+            if process.poll() != 0:
+                raise Exception("An error occurred while running the ansible playbook to"
+                                "configure instance. Check the logs. Last output lines"
+                                "were: %s".format(output.split("\n")[-10:]))
             log.info("Playbook stdout: %s\nstatus: %s", out, p_status)
         finally:
             if not settings.DEBUG:
                 log.info("Deleting ansible playbook %s", repo_path)
                 shutil.rmtree(repo_path)
-        return (p_status, out)
+        return (0, out)

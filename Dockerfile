@@ -38,6 +38,9 @@ RUN cd django-cloudlaunch && /app/venv/bin/python manage.py collectstatic --no-i
 # Stage-2
 FROM ubuntu:18.04
 
+ARG DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED 1
+
 # Create cloudlaunch user environment
 RUN useradd -ms /bin/bash cloudlaunch \
     && mkdir -p /app \
