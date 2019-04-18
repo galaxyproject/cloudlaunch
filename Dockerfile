@@ -66,4 +66,4 @@ USER cloudlaunch
 # gunicorn will listen on this port
 EXPOSE 8000
 
-CMD /app/venv/bin/gunicorn -b :8000 --access-logfile - --error-logfile - --log-level debug cloudlaunchserver.wsgi
+CMD /app/venv/bin/gunicorn -k gevent -b :8000 --access-logfile - --error-logfile - --log-level debug cloudlaunchserver.wsgi
