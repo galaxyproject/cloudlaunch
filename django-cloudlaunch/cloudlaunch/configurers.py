@@ -275,7 +275,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             # Run the playbook
             cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
             for pev in playbook_vars or []:
-                cmd += ["--extra-vars", "{0}={1}".format(pev[0], pev[1])]
+                cmd += ["--extra-vars", "{0}=\"{1}\"".format(pev[0], pev[1])]
             log.info("Running Ansible with command %s", " ".join(cmd))
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                        universal_newlines=True, cwd=repo_path)
