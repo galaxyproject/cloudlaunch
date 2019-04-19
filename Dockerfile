@@ -50,8 +50,12 @@ RUN useradd -ms /bin/bash cloudlaunch \
         python-psycopg2 \
         python3-pip \
         python3-setuptools \
+    # Remove Python 2
+    && apt remove -y python \
     && apt-get autoremove -y && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* \
+    # Set Python 3 as the default Python installation
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
 
 WORKDIR /app/
 
