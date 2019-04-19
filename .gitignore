@@ -8,11 +8,12 @@ local
 *.pyc
 
 django-cloudlaunch/cloudlaunchserver/settings_local.py
-db.sqlite3*
-cloudlaunch*.log
-cloudlaunch-django.log
+django-cloudlaunch/db.sqlite3*
+django-cloudlaunch/cloudlaunch*.log
+django-cloudlaunch/cloudlaunch-django.log
+django-cloudlaunch/cloudlaunchserver/db.sqlite3
+django-cloudlaunch/baselaunch/backend_plugins/rancher_ansible*
 django-cloudlaunch/.coverage
-django-cloudlaunch/cloudlaunch_server.egg-info
 
 .idea
 
@@ -25,3 +26,4 @@ docs/_build/
 codecloud.html
 dump.rdb
 .vscode/
+
