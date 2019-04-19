@@ -323,6 +323,7 @@ class BaseVMAppPlugin(AppPlugin):
         cloud_config = provider_config.get('cloud_config')
         host_config = provider_config.get('host_config', {})
         user_data = provider_config.get('cloud_user_data') or ""
+        user_data = user_data if isinstance(user_data, str) else ""
 
         custom_image_id = cloudlaunch_config.get("customImageID", None)
         img = provider.compute.images.get(
