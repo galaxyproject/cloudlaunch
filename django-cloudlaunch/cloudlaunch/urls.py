@@ -71,10 +71,10 @@ urlpatterns = [
     url(auth_regex_pattern, include(('rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
 
     # Override default register view
-    url(r'^%sregistration' % auth_regex_pattern, include((registration_urls, 'rest_auth_reg'), namespace='rest_auth_reg')),
-    url(r'^%suser/public-keys/$' %
+    url(r'%sregistration' % auth_regex_pattern, include((registration_urls, 'rest_auth_reg'), namespace='rest_auth_reg')),
+    url(r'%suser/public-keys/$' %
         auth_regex_pattern, views.PublicKeyList.as_view()),
-    url(r'^%suser/public-keys/(?P<pk>[0-9]+)/$' %
+    url(r'%suser/public-keys/(?P<pk>[0-9]+)/$' %
         auth_regex_pattern, views.PublicKeyDetail.as_view(),
         name='public-key-detail'),
     url(auth_regex_pattern, include(('rest_framework.urls', 'rest_framework'),
