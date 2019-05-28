@@ -308,6 +308,8 @@ class BaseVMAppPlugin(AppPlugin):
                                             provider_config)
             host_config['host_address'] = p_result['cloudLaunch'].get(
                 'publicIP')
+            host_config['instance_id'] = p_result['cloudLaunch'].get(
+                'instance').get('id')
 
         if app_config.get('config_appliance'):
             c_result = self._configure_host(name, task, app_config,

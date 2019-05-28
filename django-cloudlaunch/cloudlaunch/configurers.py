@@ -138,7 +138,7 @@ class SSHBasedConfigurer(AppConfigurer):
         if private_key:
             if 'RSA' not in private_key:
                 # Paramiko requires key type so add it
-                log.info("Agumenting private key with RSA type")
+                log.info("Augmenting private key with RSA type")
                 private_key = private_key.replace(' PRIVATE', ' RSA PRIVATE')
             key_file_object = StringIO(private_key)
             pkey = paramiko.RSAKey.from_private_key(key_file_object)
