@@ -18,6 +18,8 @@ log = get_task_logger('cloudlaunch')
 def get_iam_handler_for(provider_id):
     if provider_id == "aws":
         return AWSKubeIAMPolicyHandler
+    elif provider_id == "gcp":
+        return GCPKubeIAMPolicyHandler
     else:
         return None
 
@@ -105,6 +107,23 @@ class AWSKubeIAMPolicyHandler(object):
             'iam_instance_profile': {
                 'Name': inst_profile
             }
+        }
+
+
+class GCPKubeIAMPolicyHandler(object):
+
+    def __init__(self, provider):
+        self.provider = provider
+
+    def create_iam_policy(self):
+        return {
+            'service_accounts': [{
+                # pylint:disable=protected-access
+                'email': self.provider._credentials.service_account_email,
+                'scopes': [
+                    'https://www.googleapis.com/auth/cloud-platform'
+                ]
+            }]
         }
 
 
