@@ -81,39 +81,31 @@ class AWSKubeIAMPolicyHandler(object):
         try:
             response = self.iam_client.create_instance_profile(
                 InstanceProfileName=profile_name)
-            return response.get('InstanceProfile').get('Arn')
+            return response.get('InstanceProfile').get('Name')
         except self.iam_client.exceptions.EntityAlreadyExistsException:
-            sts = self.provider.session.client('sts')
-            account_id = sts.get_caller_identity()['Account']
-            profile_arn = f'arn:aws:iam::{account_id}:instance-profile/{profile_name}'
-            return profile_arn
+            return profile_name
 
-    def _attach_role_to_instance_profile(self, profile, role):
+    def _attach_role_to_instance_profile(self, profile_name, role):
         try:
             self.iam_client.add_role_to_instance_profile(
-                InstanceProfileName=profile.split("/")[1],
+                InstanceProfileName=profile_name,
                 RoleName=role
             )
         except self.iam_client.exceptions.LimitExceededException:
             log.debug("Instance profile is already associated with role.")
             pass
 
-    def _attach_instance_profile_to_instance(self, instance_id, profile):
-        ec2_client = self.provider.session.client('ec2')
-        ec2_client.associate_iam_instance_profile(
-            IamInstanceProfile={
-                'Arn': profile
-            },
-            InstanceId=instance_id
-        )
-
-    def attach_iam_policy(self, instance_id):
+    def create_iam_policy(self):
         role = self._get_or_create_iam_role()
         policy = self._get_or_create_iam_policy()
         self._attach_policy_to_role(role, policy)
         inst_profile = self._get_or_create_instance_profile()
         self._attach_role_to_instance_profile(inst_profile, role)
-        self._attach_instance_profile_to_instance(instance_id, inst_profile)
+        return {
+            'iam_instance_profile': {
+                'Name': inst_profile
+            }
+        }
 
 
 class CloudMan2AppPlugin(SimpleWebAppPlugin):
@@ -133,15 +125,14 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
                      CloudMan2AppPlugin).sanitise_app_config(app_config)
 
     def _provision_host(self, name, task, app_config, provider_config):
-        result = super()._provision_host(name, task, app_config, provider_config)
         provider = provider_config.get('cloud_provider')
         handler_class = get_iam_handler_for(provider.PROVIDER_ID)
         if handler_class:
             provider = provider_config.get('cloud_provider')
             handler = handler_class(provider)
-            instance_id = result['cloudLaunch'].get('instance').get('id')
-            handler.attach_iam_policy(instance_id)
-        return result
+            provider_config['extra_provider_args'] = \
+                handler.create_iam_policy()
+        return super()._provision_host(name, task, app_config, provider_config)
 
     def _configure_host(self, name, task, app_config, provider_config):
         result = super()._configure_host(name, task, app_config, provider_config)
@@ -194,6 +185,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             conf_template = AWS_CLOUD_CONF
             values = {}
         elif cloud_provider == "azure":
+            # https://gist.github.com/jgreat/a0b57ddcdc1dc1d9aaef52d6dd4c9c6a
             conf_template = AZURE_CLOUD_CONF
             values = {}
         elif cloud_provider == "gcp":
@@ -201,6 +193,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             conf_template = GCP_CLOUD_CONF
             values = {}
         elif cloud_provider == "openstack":
+            # http://henriquetruta.github.io/openstack-cloud-provider/
             conf_template = OPENSTACK_CLOUD_CONF
             values = {
                 'os_username': creds.get('os_username'),

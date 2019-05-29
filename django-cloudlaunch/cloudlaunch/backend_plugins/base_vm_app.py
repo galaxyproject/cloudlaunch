@@ -322,6 +322,7 @@ class BaseVMAppPlugin(AppPlugin):
         """Provision a host using the provider_config info."""
         cloudlaunch_config = app_config.get("config_cloudlaunch", {})
         provider = provider_config.get('cloud_provider')
+        extra_provider_args = provider_config.get('extra_provider_args') or {}
         cloud_config = provider_config.get('cloud_config')
         host_config = provider_config.get('host_config', {})
         user_data = provider_config.get('cloud_user_data') or ""
@@ -373,7 +374,8 @@ runcmd:"""
         inst = provider.compute.instances.create(
             label=name, image=img, vm_type=vm_type, subnet=subnet,
             key_pair=kp, vm_firewalls=vmfl,
-            user_data=user_data, launch_config=cb_launch_config)
+            user_data=user_data, launch_config=cb_launch_config,
+            **extra_provider_args)
         task.update_state(state="PROGRESSING",
                           meta={"action": "Waiting for instance %s" % inst.id})
         log.debug("Waiting for instance {0} to be ready...".format(inst.id))
