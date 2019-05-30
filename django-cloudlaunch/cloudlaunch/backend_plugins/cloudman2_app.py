@@ -206,14 +206,14 @@ OPENSTACK_CLOUD_CONF = \
 class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
     """Add CloudMan2 specific vars to playbook."""
 
-    def _gen_cloud_conf(self, cloud_provider, cloud_config):
+    def _gen_cloud_conf(self, provider_id, cloud_config):
         zone = cloud_config.get('target', {}).get('target_zone', {})
         creds = cloud_config.get('credentials', {})
 
-        if cloud_provider == "aws":
+        if provider_id == "aws":
             conf_template = AWS_CLOUD_CONF
             values = {}
-        elif cloud_provider == "azure":
+        elif provider_id == "azure":
             # https://gist.github.com/jgreat/a0b57ddcdc1dc1d9aaef52d6dd4c9c6a
             # https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/cloud-providers/
             conf_template = AZURE_CLOUD_CONF
@@ -224,12 +224,12 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
                 'subscriptionId': creds.get('azure_subscription_id'),
                 'resourceGroup': creds.get('azure_resource_group')
             }
-        elif cloud_provider == "gcp":
+        elif provider_id == "gcp":
             # https://github.com/rancher/rke/issues/1329
             # https://github.com/rancher/rancher/issues/4711
             conf_template = GCP_CLOUD_CONF
             values = {}
-        elif cloud_provider == "openstack":
+        elif provider_id == "openstack":
             # http://henriquetruta.github.io/openstack-cloud-provider/
             conf_template = OPENSTACK_CLOUD_CONF
             values = {
@@ -242,16 +242,16 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             }
         return string.Template(conf_template).substitute(values)
 
-    def _get_kube_cloud_settings(self, cloud_config):
-        cb_cloud_provider = cloud_config.get('credentials', {}).get('cloud_id')
+    def _get_kube_cloud_settings(self, provider_config, cloud_config):
+        provider_id = provider_config.get('cloud_provider').PROVIDER_ID
         CB_CLOUD_TO_KUBE_CLOUD_MAP = {
             'aws': 'aws',
             'openstack': 'openstack',
             'azure': 'azure',
             'gcp': 'gce'
         }
-        return (CB_CLOUD_TO_KUBE_CLOUD_MAP.get(cb_cloud_provider),
-                self._gen_cloud_conf(cb_cloud_provider, cloud_config))
+        return (CB_CLOUD_TO_KUBE_CLOUD_MAP.get(provider_id),
+                self._gen_cloud_conf(provider_id, cloud_config))
 
     def configure(self, app_config, provider_config):
         host = provider_config.get('host_config', {}).get('host_address')
@@ -273,7 +273,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             'app_config': app_config
         }
         kube_cloud_provider, kube_cloud_conf = self._get_kube_cloud_settings(
-            cloud_config)
+            provider_config, cloud_config)
         playbook_vars = [
             ('cm_boot_image', app_config.get('config_cloudman2', {}).get(
                 'cm_boot_image')),
