@@ -183,7 +183,12 @@ AWS_CLOUD_CONF = \
     "[Global]\n"
 
 AZURE_CLOUD_CONF = \
-    "[Global]\n"
+    "[Global]\n" \
+    "tenantId=$tenantId\n" \
+    "aadClientID=$aadClientID\n" \
+    "aadClientSecret=$aadClientSecret\n" \
+    "subscriptionId-name=$subscriptionId\n" \
+    "resourceGroup=$resourceGroup\n"
 
 GCP_CLOUD_CONF = \
     "[Global]\n"
@@ -212,7 +217,13 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             # https://gist.github.com/jgreat/a0b57ddcdc1dc1d9aaef52d6dd4c9c6a
             # https://rancher.com/docs/rancher/v2.x/en/cluster-provisioning/rke-clusters/options/cloud-providers/
             conf_template = AZURE_CLOUD_CONF
-            values = {}
+            values = {
+                'tenantId': creds.get('azure_tenant'),
+                'aadClientID': creds.get('azure_client_id'),
+                'aadClientSecret': creds.get('azure_secret'),
+                'subscriptionId': creds.get('azure_subscription_id'),
+                'resourceGroup': creds.get('azure_resource_group')
+            }
         elif cloud_provider == "gcp":
             # https://github.com/rancher/rke/issues/1329
             # https://github.com/rancher/rancher/issues/4711
