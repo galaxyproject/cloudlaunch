@@ -12,8 +12,6 @@ RUN set -xe; \
         gcc \
         python3-dev \
         libffi-dev \
-        libpq-dev \
-        python-psycopg2 \
         python3-pip \
         python3-setuptools \
     && apt-get autoremove -y && apt-get clean \
@@ -47,7 +45,6 @@ RUN useradd -ms /bin/bash cloudlaunch \
     && chown cloudlaunch:cloudlaunch /app -R \
     && apt-get -qq update && apt-get install -y --no-install-recommends \
         git-core \
-        python-psycopg2 \
         python3-pip \
         python3-setuptools \
     # Remove Python 2
