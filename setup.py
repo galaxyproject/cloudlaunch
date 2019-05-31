@@ -132,6 +132,9 @@ setup(
     url='https://github.com/galaxyproject/cloudlaunch',
     package_dir={'': 'django-cloudlaunch'},
     packages=find_packages('django-cloudlaunch'),
+    package_data={
+        'cloudlaunch': ['backend_plugins/cloudman2/rancher2_aws_iam_policy.json'],
+    },
     include_package_data=True,
     install_requires=REQS_BASE,
     extras_require={
