@@ -74,20 +74,32 @@ Install Development Version
 ----------------------------
 
 CloudLaunch is based on Python 3.6 and although it may work on older Python
-versions, 3.6 is the only supported version. Use of virtualenv is also highly advised.
+versions, 3.6 is the only supported version. Use of Conda or virtualenv is also highly advised.
 
 1. Checkout cloudlaunch and create environment
 
 .. code-block:: bash
 
-    $ mkdir launcher && cd launcher
-    $ virtualenv venv -p python3.6 --prompt "(cloudlaunch)" && source venv/bin/activate
+    $ conda create --name cl python=3.6
+    $ conda activate cl
     $ git clone -b dev https://github.com/galaxyproject/cloudlaunch.git
     $ cd cloudlaunch
     $ python setup.py develop
     $ cd django-cloudlaunch
+   
+2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
+   ``cloudlaunchserver/settings_local.py`` and make any desired configuration changes.
+   
+3. Run the migrations and create a superuser:
+
+.. code-block:: bash
+
     $ python manage.py migrate
-    $ python manage.py runserver
     $ python manage.py createsuperuser
 
-2. Follow step 2 onwards from the production instructions above
+4. Start the web server and Celery
+
+.. code-block:: bash
+
+    $ python manage.py runserver
+    $ redis-server & celery -A cloudlaunchserver worker -l info --beat
