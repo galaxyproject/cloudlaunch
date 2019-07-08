@@ -277,6 +277,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         playbook_vars = [
             ('cm_boot_image', app_config.get('config_cloudman2', {}).get(
                 'cm_boot_image')),
+            ('cm_skip_cloudman', app_config.get('config_cloudman2', {}).get(
+                'cm_skip_cloudman')),
             ('rancher_server', host),
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
