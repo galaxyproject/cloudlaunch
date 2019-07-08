@@ -286,5 +286,10 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             ('kube_cloud_conf', base64.b64encode(
                 kube_cloud_conf.encode('utf-8')).decode('utf-8'))
         ]
+        if app_config.get('config_cloudman2', {}).get('cm_helm_values'):
+            playbook_vars += [('cm_helm_values', base64.b64encode(
+                json.dumps(app_config.get('config_cloudman2', {}).get(
+                    'cm_helm_values')).encode('utf-8')).decode('utf-8'))]
+
         return super().configure(app_config, provider_config,
                                  playbook_vars=playbook_vars)
