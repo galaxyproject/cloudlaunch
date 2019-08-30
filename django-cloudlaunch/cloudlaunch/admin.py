@@ -5,7 +5,9 @@ import nested_admin
 
 import djcloudbridge
 
-from polymorphic.admin import PolymorphicChildModelAdmin, PolymorphicParentModelAdmin
+from polymorphic.admin import PolymorphicChildModelAdmin
+from polymorphic.admin import PolymorphicParentModelAdmin
+from polymorphic.admin import PolymorphicChildModelFilter
 
 from . import forms
 from . import models
@@ -28,6 +30,7 @@ class AppAdmin(nested_admin.NestedModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
     inlines = [AppVersionInline]
     form = forms.ApplicationForm
+    list_display = ('name', 'default_version')
     ordering = ('display_order',)
 
 
@@ -38,8 +41,8 @@ class AppCategoryAdmin(admin.ModelAdmin):
 class CloudImageAdmin(admin.ModelAdmin):
     model = models.Image
     list_display = ('name', 'region', 'image_id')
-    list_filter = ('name', 'region')
-    ordering = ('name',)
+    list_filter = ('region__cloud', 'region', 'name')
+    ordering = ('region',)
 
 
 # Utility class for read-only fields
@@ -72,15 +75,16 @@ class AppDeploymentsAdmin(admin.ModelAdmin):
 @admin.register(models.CloudDeploymentTarget)
 class AWSCloudAdmin(PolymorphicChildModelAdmin):
     base_model = models.CloudDeploymentTarget
+    show_in_index = True
 
 
 @admin.register(models.HostDeploymentTarget)
-class AWSCloudAdmin(PolymorphicChildModelAdmin):
+class HostCloudAdmin(PolymorphicChildModelAdmin):
     base_model = models.HostDeploymentTarget
 
 
 @admin.register(models.KubernetesDeploymentTarget)
-class AWSCloudAdmin(PolymorphicChildModelAdmin):
+class K8sCloudAdmin(PolymorphicChildModelAdmin):
     base_model = models.KubernetesDeploymentTarget
 
 
@@ -89,7 +93,12 @@ class DeploymentTargetAdmin(PolymorphicParentModelAdmin):
     base_model = models.DeploymentTarget
     child_models = (models.CloudDeploymentTarget, models.HostDeploymentTarget,
                     models.KubernetesDeploymentTarget)
+    list_display = ('id', 'custom_column')
+    list_filter = (PolymorphicChildModelFilter,)
 
+    def custom_column(self, obj):
+        return models.DeploymentTarget.objects.get(pk=obj.id).__str__()
+    custom_column.short_description = ("Deployment Target")
 
 class UsageAdmin(admin.ModelAdmin):
     models = models.Usage
