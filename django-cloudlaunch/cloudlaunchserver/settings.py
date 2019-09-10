@@ -291,6 +291,11 @@ LOGGING = {
             'handlers': ['console', 'file-cloudlaunch'],
             'level': 'DEBUG',
             'propagate': False
+        },
+        'django.utils.autoreload': {
+            'handlers': ['console', 'file-django'],
+            'level': 'ERROR',
+            'propagate': True,
         }
     }
 }
