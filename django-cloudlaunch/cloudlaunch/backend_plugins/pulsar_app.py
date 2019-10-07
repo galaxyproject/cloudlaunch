@@ -15,7 +15,7 @@ class PulsarAppPlugin(BaseVMAppPlugin):
         result = super(PulsarAppPlugin, self).deploy(
             name, task, app_config, provider_config)
         result['pulsar'] = {
-            'api_url': 'http://{0}:8913'.format(result['cloudLaunch']['publicIP']),
+            'api_url': 'http://{0}:8913'.format(result['cloudLaunch']['hostname']),
             'auth_token': token}
         return result
 

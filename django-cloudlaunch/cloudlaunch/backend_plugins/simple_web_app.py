@@ -54,11 +54,11 @@ class SimpleWebAppPlugin(BaseVMAppPlugin):
         result = super(SimpleWebAppPlugin, self).deploy(
             name, task, app_config, provider_config)
         check_http = kwargs.get('check_http', True)
-        if check_http and result.get('cloudLaunch', {}).get('publicIP') and \
+        if check_http and result.get('cloudLaunch', {}).get('hostname') and \
            not result.get('cloudLaunch', {}).get('applicationURL'):
             log.info("Simple web app going to wait for http")
             result['cloudLaunch']['applicationURL'] = \
-                'http://%s/' % result['cloudLaunch']['publicIP']
+                'http://%s/' % result['cloudLaunch']['hostname']
             task.update_state(
                 state='PROGRESSING',
                 meta={"action": "Waiting for application to become ready at %s"

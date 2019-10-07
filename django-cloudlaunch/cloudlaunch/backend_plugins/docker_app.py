@@ -56,5 +56,5 @@ class DockerAppPlugin(BaseVMAppPlugin):
         result = super(DockerAppPlugin, self).deploy(
             name, task, app_config, provider_config)
         result['cloudLaunch']['applicationURL'] = 'http://{0}'.format(
-            result['cloudLaunch']['publicIP'])
+            result['cloudLaunch']['hostname'])
         return result
