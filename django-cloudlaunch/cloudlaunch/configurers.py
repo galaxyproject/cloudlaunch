@@ -202,7 +202,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
         if 'RSA' not in ssh_private_key:
             ssh_private_key = ssh_private_key.replace(
                 ' PRIVATE', ' RSA PRIVATE')
-            log.info("Agumented ssh key with RSA type: %s" % ssh_private_key)
+            log.debug("Augmented ssh key with RSA type: %s" % ssh_private_key)
         playbook = app_config.get('config_appliance', {}).get('repository')
         if 'inventoryTemplate' in app_config.get('config_appliance', {}):
             inventory = app_config.get(

@@ -138,7 +138,7 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
         result = super(CloudManAppPlugin, self).deploy(
             name, task, app_config, provider_config, check_http=False)
         result['cloudLaunch']['applicationURL'] = 'http://{0}/cloud'.format(
-            result['cloudLaunch']['publicIP'])
+            result['cloudLaunch']['hostname'])
         task.update_state(
             state='PROGRESSING',
             meta={'action': "Waiting for CloudMan to become ready at %s"

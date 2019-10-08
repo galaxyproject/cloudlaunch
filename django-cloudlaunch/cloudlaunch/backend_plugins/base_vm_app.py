@@ -1,13 +1,12 @@
 """Base VM plugin implementations."""
 import copy
-import time
-import yaml
 import ipaddress
 
 from celery.utils.log import get_task_logger
 from cloudbridge.base.helpers import generate_key_pair
 from cloudbridge.interfaces import InstanceState
 from cloudbridge.interfaces.exceptions import CloudBridgeBaseException
+from cloudbridge.interfaces.resources import DnsRecordType
 from cloudbridge.interfaces.resources import TrafficDirection
 
 from cloudlaunch import configurers
@@ -307,7 +306,7 @@ class BaseVMAppPlugin(AppPlugin):
             p_result = self._provision_host(name, task, app_config,
                                             provider_config)
             host_config['host_address'] = p_result['cloudLaunch'].get(
-                'publicIP')
+                'hostname')
             host_config['instance_id'] = p_result['cloudLaunch'].get(
                 'instance').get('id')
 
@@ -396,11 +395,33 @@ runcmd:"""
         # Support for legacy NeCTAR
         results['publicIP'] = self._attach_public_ip(
             provider, inst, subnet.network_id if subnet else None)
+        # Configure hostname (if set)
+        results['hostname'] = self._configure_hostname(
+            provider, results['publicIP'], cloudlaunch_config.get('hostnameConfig'))
         task.update_state(
             state='PROGRESSING',
             meta={"action": "Instance created successfully. " +
                             "Public IP: %s" % results.get('publicIP') or ""})
         return {"cloudLaunch": results}
+
+    def _configure_hostname(self, provider, public_ip, hostname_config):
+        if not hostname_config:
+            return public_ip
+        elif hostname_config.get('hostnameType') == 'cloud_dns':
+            dns_zone = hostname_config.get('dnsZone')
+            dns_rec_name = hostname_config.get('dnsRecordName')
+            try:
+                dns_zone = provider.dns.host_zones.get(dns_zone.get('id'))
+                host_name = (dns_rec_name + "." + dns_zone.name
+                             if dns_rec_name else dns_zone.name)
+                dns_zone.records.create(host_name, DnsRecordType.A, [public_ip])
+                return host_name.rstrip(".")
+            except CloudBridgeBaseException:
+                return public_ip
+        elif hostname_config.get('hostnameType') == 'manual':
+            return hostname_config.get('hostName') or public_ip
+        else:
+            return public_ip
 
     def _configure_host(self, name, task, app_config, provider_config):
         try:
