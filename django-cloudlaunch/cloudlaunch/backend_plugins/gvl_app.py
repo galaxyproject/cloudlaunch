@@ -33,8 +33,8 @@ class GVLAppPlugin(SimpleWebAppPlugin):
 
     def deploy(self, name, task, app_config, provider_config):
         user_data = provider_config.get('cloud_user_data')
-        ud = yaml.dump(user_data, default_flow_style=False,
-                       allow_unicode=False)
+        ud = yaml.safe_dump(user_data, default_flow_style=False,
+                            allow_unicode=False)
         provider_config['cloud_user_data'] = ud
         result = super(GVLAppPlugin, self).deploy(
             name, task, app_config, provider_config)

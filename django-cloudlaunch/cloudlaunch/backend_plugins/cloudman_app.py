@@ -124,8 +124,8 @@ class CloudManAppPlugin(SimpleWebAppPlugin):
     def deploy(self, name, task, app_config, provider_config):
         """See the parent class in ``app_plugin.py`` for the docstring."""
         user_data = provider_config.get('cloud_user_data')
-        ud = yaml.dump(user_data, default_flow_style=False,
-                       allow_unicode=False)
+        ud = yaml.safe_dump(user_data, default_flow_style=False,
+                            allow_unicode=False)
         provider_config['cloud_user_data'] = ud
         # Make sure the placement and image ID propagate
         # (eg from a saved cluster)

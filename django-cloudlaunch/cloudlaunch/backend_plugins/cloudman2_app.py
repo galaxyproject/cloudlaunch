@@ -1,9 +1,10 @@
 """CloudMan 2.0 application plugin implementation."""
+import base64
 import json
 import pathlib
 import random
 import string
-import base64
+import yaml
 from urllib.parse import urljoin
 
 from celery.utils.log import get_task_logger
@@ -283,15 +284,17 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
                 'clusterPassword')),
             ('cm_initial_cluster_data', base64.b64encode(
-                json.dumps(cm_initial_cluster_data).encode('utf-8')).decode('utf-8')),
+                yaml.safe_dump(
+                    cm_initial_cluster_data,
+                    default_flow_style=False).encode('utf-8')).decode('utf-8')),
             ('kube_cloud_provider', kube_cloud_provider),
             ('kube_cloud_conf', base64.b64encode(
                 kube_cloud_conf.encode('utf-8')).decode('utf-8'))
         ]
         if app_config.get('config_cloudman2', {}).get('cm_helm_values'):
             playbook_vars += [('cm_helm_values', base64.b64encode(
-                json.dumps(app_config.get('config_cloudman2', {}).get(
-                    'cm_helm_values')).encode('utf-8')).decode('utf-8'))]
+                app_config.get('config_cloudman2', {}).get('cm_helm_values')
+                    .encode('utf-8')).decode('utf-8'))]
 
         return super().configure(app_config, provider_config,
                                  playbook_vars=playbook_vars)

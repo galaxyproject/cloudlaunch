@@ -1,7 +1,7 @@
-import json
 from contextlib import contextmanager
 from unittest.mock import patch
 import uuid
+import yaml
 
 from celery.result import AsyncResult
 from django.contrib.auth.models import User
@@ -261,7 +261,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 application_version=application_version,
                 target=target,
                 image=image,
-                default_launch_config=json.dumps(launch_config),
+                default_launch_config=yaml.safe_dump(launch_config),
             )
 
     def setUp(self):
@@ -343,7 +343,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 'application': self.application_version.application.slug,
                 'application_version': self.application_version.version,
                 'deployment_target_id': self.deployment_target.id,
-                'config_app': json.dumps(self.DEFAULT_APP_CONFIG),
+                'config_app': yaml.safe_dump(self.DEFAULT_APP_CONFIG),
             })
             self.assertResponse(response, status=201, data_contains={
                 'name': 'test-deployment',

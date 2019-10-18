@@ -1,6 +1,7 @@
-import json
-import jsonmerge
 import logging
+import yaml
+
+import jsonmerge
 
 from bioblend.cloudman.launch import CloudManLauncher
 
@@ -59,14 +60,14 @@ class CloudImageSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'cloud', 'image_id', 'description')
 
 
-class StoredJSONField(serializers.JSONField):
+class StoredYAMLField(serializers.JSONField):
     def __init__(self, *args, **kwargs):
-        super(StoredJSONField, self).__init__(*args, **kwargs)
+        super(StoredYAMLField, self).__init__(*args, **kwargs)
 
     def to_representation(self, value):
         try:
             if value:
-                return json.loads(value)
+                return yaml.safe_load(value)
             else:
                 return value
         except Exception:
@@ -245,7 +246,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
     owner = serializers.CharField(read_only=True)
     name = serializers.CharField(required=True)
     provider_settings = serializers.CharField(read_only=True)
-    application_config = StoredJSONField(read_only=True)
+    application_config = StoredYAMLField(read_only=True)
     # 'application' id is only used when creating a deployment
     application = serializers.CharField(write_only=True, required=False)
     config_app = serializers.JSONField(write_only=True, required=False)
@@ -332,7 +333,8 @@ class DeploymentSerializer(serializers.ModelSerializer):
             if 'config_app' in validated_data:
                 del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
-            validated_data['application_config'] = json.dumps(merged_app_config)
+            validated_data['application_config'] = yaml.safe_dump(
+                merged_app_config, default_flow_style=False)
             validated_data['credentials_id'] = credentials.get('id') or None
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
             self.log_usage(target_version_config, app_deployment, sanitised_app_config, request.user)

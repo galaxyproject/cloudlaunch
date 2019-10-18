@@ -1,3 +1,7 @@
+import json
+import jsonmerge
+import yaml
+
 from celery.result import AsyncResult
 from django.conf import settings
 from django.db import models
@@ -8,8 +12,6 @@ from djcloudbridge import models as cb_models
 
 from polymorphic.models import PolymorphicModel
 
-import json
-import jsonmerge
 import djcloudbridge
 
 
@@ -131,10 +133,10 @@ class Application(cb_models.DateNameAwareModel):
 
         if self.default_launch_config:
             try:
-                json.loads(self.default_launch_config)
+                yaml.safe_load(self.default_launch_config)
             except Exception as e:
-                raise Exception("Invalid JSON syntax. Launch config must be in"
-                                "JSON format. Cause: {0}".format(e))
+                raise Exception("Invalid YAML syntax. Launch config must be in"
+                                "YAML format. Cause: {0}".format(e))
         if self.default_version and not self.versions.filter(
                 application=self, version=self.default_version).exists():
             raise Exception("The default application version must be a version"
@@ -166,10 +168,10 @@ class ApplicationVersion(models.Model):
         # validate user data
         if self.default_launch_config:
             try:
-                json.loads(self.default_launch_config)
+                yaml.safe_load(self.default_launch_config)
             except Exception as e:
-                raise Exception("Invalid JSON syntax. Launch config must be"
-                                " in JSON format. Cause: {0}".format(e))
+                raise Exception("Invalid YAML syntax. Launch config must be"
+                                " in YAML format. Cause: {0}".format(e))
         if self.default_target and not self.app_version_config.filter(
                 application_version=self, target=self.default_target).exists():
             raise Exception("The default target must be a target that this"
@@ -203,18 +205,18 @@ class ApplicationVersionTargetConfig(PolymorphicModel):
         # validate user data
         if self.default_launch_config:
             try:
-                json.loads(self.default_launch_config)
+                yaml.safe_load(self.default_launch_config)
             except Exception as e:
-                raise Exception("Invalid JSON syntax. Launch config must be "
-                                "in JSON format. Cause: {0}".format(e))
+                raise Exception("Invalid YAML syntax. Launch config must be "
+                                "in YAML format. Cause: {0}".format(e))
         return super(ApplicationVersionTargetConfig, self).save()
 
     def compute_merged_config(self):
-        default_appwide_config = json.loads(
+        default_appwide_config = yaml.safe_load(
             self.application_version.application.default_launch_config or "{}")
-        default_version_config = json.loads(
+        default_version_config = yaml.safe_load(
             self.application_version.default_launch_config or "{}")
-        default_cloud_config = json.loads(
+        default_cloud_config = yaml.safe_load(
             self.default_launch_config or "{}")
         default_combined_config = jsonmerge.merge(
             default_appwide_config, default_version_config)

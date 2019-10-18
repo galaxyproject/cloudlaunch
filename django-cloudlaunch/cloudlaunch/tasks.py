@@ -73,8 +73,9 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
             cloud_version_conf.application_version.backend_component_name)()
         # FIXME: Should not be instantiating provider here
         provider = domain_model.get_cloud_provider(zone, credentials)
-        cloud_config = serializers.CloudConfigPluginSerializer(
-            cloud_version_conf).data
+        # Dump and reload to convert to standard dict
+        cloud_config = json.loads(json.dumps(serializers.CloudConfigPluginSerializer(
+            cloud_version_conf).data))
         cloud_config['credentials'] = credentials
         # TODO: Add keys (& support) for using existing, user-supplied hosts
         provider_config = {'cloud_provider': provider,
