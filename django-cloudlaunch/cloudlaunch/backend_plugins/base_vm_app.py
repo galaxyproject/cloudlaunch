@@ -432,7 +432,7 @@ runcmd:"""
                 meta={'action':
                       "Unable to create app configurer: {}".format(e)}
             )
-            return {}
+            raise
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Validating provider connection info...'}
@@ -445,7 +445,7 @@ runcmd:"""
                 meta={'action': "Validation of provider connection info "
                                 "failed: {}".format(e)}
             )
-            return {}
+            raise
         task.update_state(
             state='PROGRESSING',
             meta={'action': 'Configuring application...'}
@@ -463,7 +463,7 @@ runcmd:"""
                 state='ERROR',
                 meta={'action': "Configuration failed: {}".format(e)}
             )
-            return {}
+            raise
 
     def _get_configurer(self, app_config):
         return configurers.create_configurer(app_config)
