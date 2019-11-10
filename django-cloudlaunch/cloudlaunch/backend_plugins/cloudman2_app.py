@@ -276,6 +276,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         kube_cloud_provider, kube_cloud_conf = self._get_kube_cloud_settings(
             provider_config, cloud_config)
         playbook_vars = [
+            ('cm_deployment_name', app_config.get('deployment_config', {}).get(
+                'name')),
             ('cm_boot_image', app_config.get('config_cloudman2', {}).get(
                 'cm_boot_image')),
             ('cm_skip_cloudman', app_config.get('config_cloudman2', {}).get(

@@ -286,6 +286,9 @@ class BaseVMAppPlugin(AppPlugin):
         """See the parent class in ``app_plugin.py`` for the docstring."""
         p_result = {}
         c_result = {}
+        app_config['deployment_config'] = {
+            'name': name
+        }
         if provider_config.get('host_config'):
             # A host is provided; use CloudLaunch's default published ssh key
             pass  # Implement this once we actually support it
