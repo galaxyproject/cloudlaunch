@@ -75,7 +75,6 @@ class AppDeploymentsAdmin(admin.ModelAdmin):
 @admin.register(models.CloudDeploymentTarget)
 class AWSCloudAdmin(PolymorphicChildModelAdmin):
     base_model = models.CloudDeploymentTarget
-    show_in_index = True
 
 
 @admin.register(models.HostDeploymentTarget)
@@ -99,6 +98,7 @@ class DeploymentTargetAdmin(PolymorphicParentModelAdmin):
     def custom_column(self, obj):
         return models.DeploymentTarget.objects.get(pk=obj.id).__str__()
     custom_column.short_description = ("Deployment Target")
+
 
 class UsageAdmin(admin.ModelAdmin):
     models = models.Usage

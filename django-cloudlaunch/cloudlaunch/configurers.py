@@ -287,8 +287,8 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                     log.info(output)
             if process.poll() != 0:
                 raise Exception("An error occurred while running the ansible playbook to"
-                                "configure instance. Check the logs. Last output lines"
-                                "were: %s".format(output.split("\n")[-10:]))
+                                " configure instance. Check the logs. Last output lines"
+                                " were: {0}".format(output.split("\n")[-10:]))
             log.info("Playbook status: %s", process.poll())
         finally:
             if not settings.DEBUG:
