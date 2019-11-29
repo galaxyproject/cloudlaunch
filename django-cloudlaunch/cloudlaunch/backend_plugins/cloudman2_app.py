@@ -1,6 +1,5 @@
 """CloudMan 2.0 application plugin implementation."""
 import base64
-import json
 import pathlib
 import random
 import string
