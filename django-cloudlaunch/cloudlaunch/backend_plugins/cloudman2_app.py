@@ -32,11 +32,8 @@ class AWSKubeIAMPolicyHandler(object):
         iam_resource = self.provider.session.resource('iam')
         self.iam_client = iam_resource.meta.client
 
-    def _get_or_create_iam_policy(self):
-        policy_name = 'cloudman2-kube-policy'
+    def _get_or_create_iam_policy(self, policy_name, policy_path):
         try:
-            policy_path = (pathlib.Path(__file__).parent /
-                          'cloudman2/rancher2_aws_iam_policy.json')
             with open(policy_path) as f:
                 policy_doc = json.load(f)
                 response = self.iam_client.create_policy(
@@ -50,7 +47,23 @@ class AWSKubeIAMPolicyHandler(object):
             policy_arn = f'arn:aws:iam::{account_id}:policy/{policy_name}'
             return policy_arn
 
-    def _get_or_create_iam_role(self):
+    def _get_or_create_cm2_iam_policy(self):
+        policy_name = 'cloudman2-kube-policy'
+        policy_path = (pathlib.Path(__file__).parent /
+                       'cloudman2/rancher2_aws_iam_policy.json')
+        return self._get_or_create_iam_policy(policy_name, policy_path)
+
+    def _get_or_create_iam_role(self, role_name, trust_policy):
+        try:
+            self.iam_client.create_role(
+                RoleName=role_name,
+                AssumeRolePolicyDocument=json.dumps(trust_policy),
+                Description="CloudMan2 IAM role for rancher/kubernetes")
+        except self.iam_client.exceptions.EntityAlreadyExistsException:
+            pass
+        return role_name
+
+    def _get_or_create_cm2_iam_role(self):
         role_name = "cloudman2-kube-role"
         trust_policy = {
             "Version": "2012-10-17",
@@ -64,14 +77,7 @@ class AWSKubeIAMPolicyHandler(object):
                 }
             ]
         }
-        try:
-            self.iam_client.create_role(
-                RoleName=role_name,
-                AssumeRolePolicyDocument=json.dumps(trust_policy),
-                Description="CloudMan2 IAM role for rancher/kubernetes")
-        except self.iam_client.exceptions.EntityAlreadyExistsException:
-            pass
-        return role_name
+        return self._get_or_create_iam_role(role_name, trust_policy)
 
     def _attach_policy_to_role(self, role, policy):
         self.iam_client.attach_role_policy(
@@ -79,14 +85,17 @@ class AWSKubeIAMPolicyHandler(object):
             PolicyArn=policy
         )
 
-    def _get_or_create_instance_profile(self):
-        profile_name = 'cloudman2-kube-inst-profile'
+    def _get_or_create_instance_profile(self, profile_name):
         try:
             response = self.iam_client.create_instance_profile(
                 InstanceProfileName=profile_name)
             return response.get('InstanceProfile').get('Name')
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             return profile_name
+
+    def _get_or_create_cm2_instance_profile(self):
+        profile_name = 'cloudman2-kube-inst-profile'
+        return self._get_or_create_instance_profile(profile_name)
 
     def _attach_role_to_instance_profile(self, profile_name, role):
         try:
@@ -98,12 +107,16 @@ class AWSKubeIAMPolicyHandler(object):
             log.debug("Instance profile is already associated with role.")
             pass
 
-    def create_iam_policy(self):
-        role = self._get_or_create_iam_role()
-        policy = self._get_or_create_iam_policy()
+    def _configure_instance_profile(self):
+        role = self._get_or_create_cm2_iam_role()
+        policy = self._get_or_create_cm2_iam_policy()
         self._attach_policy_to_role(role, policy)
-        inst_profile = self._get_or_create_instance_profile()
+        inst_profile = self._get_or_create_cm2_instance_profile()
         self._attach_role_to_instance_profile(inst_profile, role)
+        return inst_profile
+
+    def create_iam_policy(self):
+        inst_profile = self._configure_instance_profile()
         return {
             'iam_instance_profile': {
                 'Name': inst_profile
@@ -149,9 +162,13 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         return super(CloudMan2AppPlugin,
                      CloudMan2AppPlugin).sanitise_app_config(app_config)
 
+    def _get_iam_handler(self, provider):
+        """ This function is used to enable subclassses to override behaviour"""
+        return get_iam_handler_for(provider.PROVIDER_ID)
+
     def _provision_host(self, name, task, app_config, provider_config):
         provider = provider_config.get('cloud_provider')
-        handler_class = get_iam_handler_for(provider.PROVIDER_ID)
+        handler_class = self._get_iam_handler(provider)
         if handler_class:
             provider = provider_config.get('cloud_provider')
             handler = handler_class(provider)
