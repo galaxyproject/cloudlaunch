@@ -27,37 +27,41 @@ def get_iam_handler_for(provider_id):
 
 class AWSKubeIAMPolicyHandler(object):
 
-    def __init__(self, provider):
+    def __init__(self, provider, app_config):
         self.provider = provider
+        self.app_config = app_config
         iam_resource = self.provider.session.resource('iam')
         self.iam_client = iam_resource.meta.client
 
-    def _get_or_create_iam_policy(self, policy_name, policy_path):
+    def _get_or_create_iam_policy(self, policy_name, policy_doc):
         try:
-            with open(policy_path) as f:
-                policy_doc = json.load(f)
-                response = self.iam_client.create_policy(
-                    PolicyName=policy_name,
-                    PolicyDocument=json.dumps(policy_doc)
-                )
-                return response.get('Policy').get('Arn')
+            response = self.iam_client.create_policy(
+                PolicyName=policy_name,
+                PolicyDocument=policy_doc
+            )
+            return response.get('Policy').get('Arn')
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             sts = self.provider.session.client('sts')
             account_id = sts.get_caller_identity()['Account']
             policy_arn = f'arn:aws:iam::{account_id}:policy/{policy_name}'
             return policy_arn
 
+    def _load_policy_relative(self, policy_path_relative):
+        path = (pathlib.Path(__file__).parent / policy_path_relative)
+        with open(path) as f:
+            return f.read()
+
     def _get_or_create_cm2_iam_policy(self):
         policy_name = 'cloudman2-kube-policy'
-        policy_path = (pathlib.Path(__file__).parent /
-                       'cloudman2/rancher2_aws_iam_policy.json')
-        return self._get_or_create_iam_policy(policy_name, policy_path)
+        policy_doc = self._load_policy_relative(
+            'cloudman2/rancher2_aws_iam_policy.json')
+        return self._get_or_create_iam_policy(policy_name, policy_doc)
 
     def _get_or_create_iam_role(self, role_name, trust_policy):
         try:
             self.iam_client.create_role(
                 RoleName=role_name,
-                AssumeRolePolicyDocument=json.dumps(trust_policy),
+                AssumeRolePolicyDocument=trust_policy,
                 Description="CloudMan2 IAM role for rancher/kubernetes")
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             pass
@@ -65,18 +69,8 @@ class AWSKubeIAMPolicyHandler(object):
 
     def _get_or_create_cm2_iam_role(self):
         role_name = "cloudman2-kube-role"
-        trust_policy = {
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {
-                        "Service": "ec2.amazonaws.com"
-                    },
-                    "Action": "sts:AssumeRole"
-                }
-            ]
-        }
+        trust_policy = self._load_policy_relative(
+            'cloudman2/rancher2_aws_iam_trust_policy.json')
         return self._get_or_create_iam_role(role_name, trust_policy)
 
     def _attach_policy_to_role(self, role, policy):
@@ -126,8 +120,9 @@ class AWSKubeIAMPolicyHandler(object):
 
 class GCPKubeIAMPolicyHandler(object):
 
-    def __init__(self, provider):
+    def __init__(self, provider, app_config):
         self.provider = provider
+        self.app_config = app_config
 
     def create_iam_policy(self):
         return {
@@ -171,7 +166,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         handler_class = self._get_iam_handler(provider)
         if handler_class:
             provider = provider_config.get('cloud_provider')
-            handler = handler_class(provider)
+            handler = handler_class(provider, app_config)
             provider_config['extra_provider_args'] = \
                 handler.create_iam_policy()
         return super()._provision_host(name, task, app_config, provider_config)
