@@ -81,9 +81,10 @@ def create_appliance(name, cloud_version_config_id, credentials, app_config,
         provider_config = {'cloud_provider': provider,
                            'cloud_config': cloud_config,
                            'cloud_user_data': user_data}
-        log.info("Provider_config: %s", provider_config)
-        log.info("Creating app %s with the follwing app config: %s \n and "
-                 "cloud config: %s", name, app_config, provider_config)
+        # TODO: Sanitize even in debug mode
+        log.debug("Provider_config: %s", provider_config)
+        log.info("Creating app %s with the following app config: %s",
+                 name, plugin.sanitise_app_config(app_config))
         deploy_result = plugin.deploy(name, Task(create_appliance), app_config,
                                       provider_config)
         # Upgrade task result immediately
