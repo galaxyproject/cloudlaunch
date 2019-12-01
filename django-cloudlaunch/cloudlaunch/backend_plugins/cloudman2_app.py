@@ -29,10 +29,14 @@ class AWSKubeIAMPolicyHandler(object):
     def __init__(self, provider, app_config):
         self.provider = provider
         self.app_config = app_config
-        self.dpl_name = self.app_config.get(
+        self._dpl_name = self.app_config.get(
             'deployment_config', {}).get('name')
         iam_resource = self.provider.session.resource('iam')
         self.iam_client = iam_resource.meta.client
+
+    @property
+    def dpl_name(self):
+        return self._dpl_name
 
     def _get_or_create_iam_policy(self, policy_name, policy_doc):
         try:
@@ -84,7 +88,7 @@ class AWSKubeIAMPolicyHandler(object):
         try:
             response = self.iam_client.create_instance_profile(
                 InstanceProfileName=profile_name)
-            return response.get('InstanceProfile').get('Name')
+            return response['InstanceProfile']['InstanceProfileName']
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             return profile_name
 
