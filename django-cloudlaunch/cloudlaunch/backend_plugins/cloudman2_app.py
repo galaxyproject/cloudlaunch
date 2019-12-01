@@ -159,8 +159,9 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
     @staticmethod
     def sanitise_app_config(app_config):
         """Sanitize any app-specific data that will be stored in the DB."""
-        return super(CloudMan2AppPlugin,
-                     CloudMan2AppPlugin).sanitise_app_config(app_config)
+        app_config = super(CloudMan2AppPlugin, CloudMan2AppPlugin).sanitise_app_config(app_config)
+        app_config['config_cloudman2']['clusterPassword'] = '********'
+        return app_config
 
     def _get_iam_handler(self, provider):
         """ This function is used to enable subclassses to override behaviour"""
