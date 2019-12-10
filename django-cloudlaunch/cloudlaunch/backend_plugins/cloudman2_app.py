@@ -26,11 +26,10 @@ def get_iam_handler_for(provider_id):
 
 class AWSKubeIAMPolicyHandler(object):
 
-    def __init__(self, provider, app_config):
+    def __init__(self, provider, dpl_name, app_config):
         self.provider = provider
+        self._dpl_name = dpl_name
         self.app_config = app_config
-        self._dpl_name = self.app_config.get(
-            'deployment_config', {}).get('name')
         iam_resource = self.provider.session.resource('iam')
         self.iam_client = iam_resource.meta.client
 
@@ -125,8 +124,9 @@ class AWSKubeIAMPolicyHandler(object):
 
 class GCPKubeIAMPolicyHandler(object):
 
-    def __init__(self, provider, app_config):
+    def __init__(self, provider, dpl_name, app_config):
         self.provider = provider
+        self._dpl_name = dpl_name
         self.app_config = app_config
 
     def create_iam_policy(self):
@@ -172,7 +172,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         handler_class = self._get_iam_handler(provider)
         if handler_class:
             provider = provider_config.get('cloud_provider')
-            handler = handler_class(provider, app_config)
+            handler = handler_class(provider, name, app_config)
             provider_config['extra_provider_args'] = \
                 handler.create_iam_policy()
         return super()._provision_host(name, task, app_config, provider_config)
