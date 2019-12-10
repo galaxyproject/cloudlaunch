@@ -43,7 +43,10 @@ class AWSKubeIAMPolicyHandler(object):
                 PolicyName=policy_name,
                 PolicyDocument=policy_doc
             )
-            return response.get('Policy').get('Arn')
+            policy_arn = response.get('Policy').get('Arn')
+            waiter = self.iam_client.get_waiter('policy_exists')
+            waiter.wait(PolicyArn=policy_arn)
+            return policy_arn
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             sts = self.provider.session.client('sts')
             account_id = sts.get_caller_identity()['Account']
@@ -67,6 +70,8 @@ class AWSKubeIAMPolicyHandler(object):
                 RoleName=role_name,
                 AssumeRolePolicyDocument=trust_policy,
                 Description="CloudMan2 IAM role for rancher/kubernetes")
+            waiter = self.iam_client.get_waiter('role_exists')
+            waiter.wait(RoleName=role_name)
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             pass
         return role_name
@@ -87,6 +92,8 @@ class AWSKubeIAMPolicyHandler(object):
         try:
             response = self.iam_client.create_instance_profile(
                 InstanceProfileName=profile_name)
+            waiter = self.iam_client.get_waiter('instance_profile_exists')
+            waiter.wait(InstanceProfileName=profile_name)
             return response['InstanceProfile']['InstanceProfileName']
         except self.iam_client.exceptions.EntityAlreadyExistsException:
             return profile_name
