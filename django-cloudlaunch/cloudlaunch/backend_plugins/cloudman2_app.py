@@ -38,20 +38,31 @@ class AWSKubeIAMPolicyHandler(object):
         return self._dpl_name
 
     def _get_or_create_iam_policy(self, policy_name, policy_doc):
+        # To require lower IAM permissions, explicitly check whether
+        # the policy exists, rather than trying to create it and catching
+        # the EntityAlreadyExistsException. This way, the create permission
+        # is not needed for worker nodes since the master would have already
+        # created the policy. Yet, check for the EntityAlreadyExistsException
+        # anyway to avoid race conditions.
+        policy_arn = None
         try:
-            response = self.iam_client.create_policy(
-                PolicyName=policy_name,
-                PolicyDocument=policy_doc
-            )
-            policy_arn = response.get('Policy').get('Arn')
-            waiter = self.iam_client.get_waiter('policy_exists')
-            waiter.wait(PolicyArn=policy_arn)
-            return policy_arn
-        except self.iam_client.exceptions.EntityAlreadyExistsException:
             sts = self.provider.session.client('sts')
             account_id = sts.get_caller_identity()['Account']
             policy_arn = f'arn:aws:iam::{account_id}:policy/{policy_name}'
-            return policy_arn
+            response = self.iam_client.get_policy(PolicyArn=policy_arn)
+            return response['Policy']['Arn']
+        except self.iam_client.exceptions.NoSuchEntity:
+            try:
+                response = self.iam_client.create_policy(
+                    PolicyName=policy_name,
+                    PolicyDocument=policy_doc
+                )
+                policy_arn = response.get('Policy').get('Arn')
+                waiter = self.iam_client.get_waiter('policy_exists')
+                waiter.wait(PolicyArn=policy_arn)
+                return policy_arn
+            except self.iam_client.exceptions.EntityAlreadyExistsException:
+                return policy_arn
 
     def _load_policy_relative(self, policy_path_relative):
         path = (pathlib.Path(__file__).parent / policy_path_relative)
@@ -66,15 +77,18 @@ class AWSKubeIAMPolicyHandler(object):
 
     def _get_or_create_iam_role(self, role_name, trust_policy):
         try:
-            self.iam_client.create_role(
-                RoleName=role_name,
-                AssumeRolePolicyDocument=trust_policy,
-                Description="CloudMan2 IAM role for rancher/kubernetes")
-            waiter = self.iam_client.get_waiter('role_exists')
-            waiter.wait(RoleName=role_name)
-        except self.iam_client.exceptions.EntityAlreadyExistsException:
-            pass
-        return role_name
+            response = self.iam_client.get_role(RoleName=role_name)
+            return response['Role']['RoleName']
+        except self.iam_client.exceptions.NoSuchEntity:
+            try:
+                self.iam_client.create_role(
+                    RoleName=role_name,
+                    AssumeRolePolicyDocument=trust_policy,
+                    Description="CloudMan2 IAM role for rancher/kubernetes")
+                waiter = self.iam_client.get_waiter('role_exists')
+                waiter.wait(RoleName=role_name)
+            except self.iam_client.exceptions.EntityAlreadyExistsException:
+                return role_name
 
     def _get_or_create_cm2_iam_role(self):
         role_name = "cm2-kube-role-" + self.dpl_name
@@ -90,13 +104,18 @@ class AWSKubeIAMPolicyHandler(object):
 
     def _get_or_create_instance_profile(self, profile_name):
         try:
-            response = self.iam_client.create_instance_profile(
+            response = self.iam_client.get_instance_profile(
                 InstanceProfileName=profile_name)
-            waiter = self.iam_client.get_waiter('instance_profile_exists')
-            waiter.wait(InstanceProfileName=profile_name)
             return response['InstanceProfile']['InstanceProfileName']
-        except self.iam_client.exceptions.EntityAlreadyExistsException:
-            return profile_name
+        except self.iam_client.exceptions.NoSuchEntity:
+            try:
+                response = self.iam_client.create_instance_profile(
+                    InstanceProfileName=profile_name)
+                waiter = self.iam_client.get_waiter('instance_profile_exists')
+                waiter.wait(InstanceProfileName=profile_name)
+                return response['InstanceProfile']['InstanceProfileName']
+            except self.iam_client.exceptions.EntityAlreadyExistsException:
+                return profile_name
 
     def _get_or_create_cm2_instance_profile(self):
         profile_name = 'cm2-inst-profile-' + self.dpl_name
