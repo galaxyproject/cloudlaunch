@@ -114,7 +114,7 @@ class AWSKubeIAMPolicyHandler(object):
                     InstanceProfileName=profile_name)
                 waiter = self.iam_client.get_waiter('instance_profile_exists')
                 waiter.wait(InstanceProfileName=profile_name)
-                return response['InstanceProfile']['InstanceProfileName']
+                return profile_name
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return profile_name
 
