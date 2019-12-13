@@ -87,6 +87,7 @@ class AWSKubeIAMPolicyHandler(object):
                     Description="CloudMan2 IAM role for rancher/kubernetes")
                 waiter = self.iam_client.get_waiter('role_exists')
                 waiter.wait(RoleName=role_name)
+                return role_name
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return role_name
 
