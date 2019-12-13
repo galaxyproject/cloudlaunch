@@ -51,7 +51,7 @@ class AWSKubeIAMPolicyHandler(object):
             policy_arn = f'arn:aws:iam::{account_id}:policy/{policy_name}'
             response = self.iam_client.get_policy(PolicyArn=policy_arn)
             return response['Policy']['Arn']
-        except self.iam_client.exceptions.NoSuchEntity:
+        except self.iam_client.exceptions.NoSuchEntityException:
             try:
                 response = self.iam_client.create_policy(
                     PolicyName=policy_name,
@@ -79,7 +79,7 @@ class AWSKubeIAMPolicyHandler(object):
         try:
             response = self.iam_client.get_role(RoleName=role_name)
             return response['Role']['RoleName']
-        except self.iam_client.exceptions.NoSuchEntity:
+        except self.iam_client.exceptions.NoSuchEntityException:
             try:
                 self.iam_client.create_role(
                     RoleName=role_name,
@@ -107,7 +107,7 @@ class AWSKubeIAMPolicyHandler(object):
             response = self.iam_client.get_instance_profile(
                 InstanceProfileName=profile_name)
             return response['InstanceProfile']['InstanceProfileName']
-        except self.iam_client.exceptions.NoSuchEntity:
+        except self.iam_client.exceptions.NoSuchEntityException:
             try:
                 response = self.iam_client.create_instance_profile(
                     InstanceProfileName=profile_name)
