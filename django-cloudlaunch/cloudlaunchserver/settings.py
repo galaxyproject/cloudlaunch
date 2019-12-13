@@ -215,7 +215,8 @@ REST_FRAMEWORK = {
 #         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'cloudlaunch.authentication.TokenAuthentication'
-    )
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
 }
 
 REST_AUTH_SERIALIZERS = {

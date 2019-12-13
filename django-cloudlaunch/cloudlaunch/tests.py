@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import json
 from unittest.mock import patch
 import uuid
 import yaml
@@ -343,7 +344,7 @@ class ApplicationDeploymentTests(BaseAuthenticatedAPITestCase):
                 'application': self.application_version.application.slug,
                 'application_version': self.application_version.version,
                 'deployment_target_id': self.deployment_target.id,
-                'config_app': yaml.safe_dump(self.DEFAULT_APP_CONFIG),
+                'config_app': json.dumps(self.DEFAULT_APP_CONFIG),
             })
             self.assertResponse(response, status=201, data_contains={
                 'name': 'test-deployment',
