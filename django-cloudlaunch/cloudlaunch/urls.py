@@ -30,23 +30,23 @@ from djcloudbridge.urls import cl_zone_router
 # from django.contrib import admin
 router = HybridDefaultRouter()
 router.register(r'infrastructure', views.InfrastructureView,
-                base_name='infrastructure')
+                basename='infrastructure')
 router.register(r'applications', views.ApplicationViewSet)
 # router.register(r'images', views.ImageViewSet)
-router.register(r'deployments', views.DeploymentViewSet, base_name='deployments')
+router.register(r'deployments', views.DeploymentViewSet, basename='deployments')
 
-router.register(r'auth', views.AuthView, base_name='auth')
+router.register(r'auth', views.AuthView, basename='auth')
 router.register(r'auth/tokens', views.AuthTokenViewSet,
-                base_name='auth_token')
+                basename='auth_token')
 
-router.register(r'cors_proxy', views.CorsProxyView, base_name='corsproxy')
+router.register(r'cors_proxy', views.CorsProxyView, basename='corsproxy')
 deployments_router = HybridNestedRouter(router, r'deployments',
                                         lookup='deployment')
 deployments_router.register(r'tasks', views.DeploymentTaskViewSet,
-                            base_name='deployment_task')
+                            basename='deployment_task')
 
 # Extend djcloudbridge endpoints
-cl_zone_router.register(r'cloudman', views.CloudManViewSet, base_name='cloudman')
+cl_zone_router.register(r'cloudman', views.CloudManViewSet, basename='cloudman')
 
 infrastructure_regex_pattern = r'^api/v1/infrastructure/'
 auth_regex_pattern = r'^api/v1/auth/'
