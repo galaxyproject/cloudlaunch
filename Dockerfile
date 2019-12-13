@@ -23,15 +23,16 @@ RUN set -xe; \
 # Set working directory to /app/
 WORKDIR /app/
 
-# Add files to /app/
-ADD . /app
+# Only add files required for installation to improve build caching
+ADD requirements.txt /app
+ADD setup.py /app
+ADD README.rst /app
+ADD HISTORY.rst /app
+ADD django-cloudlaunch/cloudlaunchserver/__init__.py /app/django-cloudlaunch/cloudlaunchserver/__init__.py
 
 # Install requirements. Move this above ADD as 'pip install cloudlaunch-server'
 # asap so caching works
 RUN /app/venv/bin/pip3 install -U pip && /app/venv/bin/pip3 install --no-cache-dir -r requirements.txt
-
-RUN cd django-cloudlaunch && /app/venv/bin/python manage.py collectstatic --no-input
-
 
 # Stage-2
 FROM ubuntu:18.04
@@ -59,7 +60,12 @@ WORKDIR /app/
 # Copy cloudlaunch files to final image
 COPY --chown=cloudlaunch:cloudlaunch --from=stage1 /app /app
 
-RUN chmod a+x /app/venv/bin/*
+# Add the source files last to minimize layer cache invalidation
+ADD --chown=cloudlaunch:cloudlaunch . /app
+
+RUN chmod a+x /app/venv/bin/* \
+    && cd django-cloudlaunch \
+    && /app/venv/bin/python manage.py collectstatic --no-input
 
 # Switch to new, lower-privilege user
 USER cloudlaunch
