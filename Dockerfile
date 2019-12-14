@@ -63,12 +63,12 @@ COPY --chown=cloudlaunch:cloudlaunch --from=stage1 /app /app
 # Add the source files last to minimize layer cache invalidation
 ADD --chown=cloudlaunch:cloudlaunch . /app
 
+# Switch to new, lower-privilege user
+USER cloudlaunch
+
 RUN chmod a+x /app/venv/bin/* \
     && cd django-cloudlaunch \
     && /app/venv/bin/python manage.py collectstatic --no-input
-
-# Switch to new, lower-privilege user
-USER cloudlaunch
 
 # gunicorn will listen on this port
 EXPOSE 8000
