@@ -105,12 +105,12 @@ class AWSKubeIAMPolicyHandler(object):
 
     def _get_or_create_instance_profile(self, profile_name):
         try:
-            response = self.iam_client.get_instance_profile(
+            self.iam_client.get_instance_profile(
                 InstanceProfileName=profile_name)
-            return response['InstanceProfile']['InstanceProfileName']
+            return profile_name
         except self.iam_client.exceptions.NoSuchEntityException:
             try:
-                response = self.iam_client.create_instance_profile(
+                self.iam_client.create_instance_profile(
                     InstanceProfileName=profile_name)
                 waiter = self.iam_client.get_waiter('instance_profile_exists')
                 waiter.wait(InstanceProfileName=profile_name)
@@ -119,7 +119,7 @@ class AWSKubeIAMPolicyHandler(object):
                 return profile_name
 
     def _get_or_create_cm2_instance_profile(self):
-        profile_name = 'cm2-inst-profile-' + self.dpl_name
+        profile_name = 'cm2-kube-role-' + self.dpl_name
         return self._get_or_create_instance_profile(profile_name)
 
     def _attach_role_to_instance_profile(self, profile_name, role):
