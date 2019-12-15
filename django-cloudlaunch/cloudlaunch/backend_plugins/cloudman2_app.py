@@ -113,7 +113,10 @@ class AWSKubeIAMPolicyHandler(object):
                 self.iam_client.create_instance_profile(
                     InstanceProfileName=profile_name)
                 waiter = self.iam_client.get_waiter('instance_profile_exists')
-                waiter.wait(InstanceProfileName=profile_name)
+                waiter.wait(InstanceProfileName=profile_name,
+                            WaiterConfig={
+                                'Delay': 5
+                            })
                 return profile_name
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return profile_name
@@ -134,10 +137,10 @@ class AWSKubeIAMPolicyHandler(object):
 
     def _configure_instance_profile(self):
         role = self._get_or_create_cm2_iam_role()
-        policy = self._get_or_create_cm2_iam_policy()
-        self._attach_policy_to_role(role, policy)
         inst_profile = self._get_or_create_cm2_instance_profile()
         self._attach_role_to_instance_profile(inst_profile, role)
+        policy = self._get_or_create_cm2_iam_policy()
+        self._attach_policy_to_role(role, policy)
         return inst_profile
 
     def create_iam_policy(self):
