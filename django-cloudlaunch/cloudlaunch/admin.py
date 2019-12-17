@@ -1,6 +1,12 @@
 """Models exposed via Django Admin."""
 import ast
+from django.http import HttpResponse
+from django.core.management import call_command
+from django.conf import settings
 from django.contrib import admin
+from django.shortcuts import render
+from django.contrib import messages
+from django.utils.translation import gettext as _
 import nested_admin
 
 import djcloudbridge
@@ -149,3 +155,42 @@ admin.site.register(models.Usage, UsageAdmin)
 # Add public key to existing UserProfile
 admin.site.unregister(djcloudbridge.models.UserProfile)
 admin.site.register(djcloudbridge.models.UserProfile, UserProfileAdmin)
+
+
+# Django Site Admin import/export actions
+
+def import_app_data(modeladmin, request, queryset):
+    # All requests here will actually be of type POST
+    # so we will need to check for our special key 'apply'
+    # rather than the actual request type
+    if request.POST.get('post'):
+        # The user clicked submit on the intermediate form.
+        # Perform our update action:
+        app_registry_url = request.POST['app_registry_url']
+        call_command('import_app_data', '-u', app_registry_url)
+
+        modeladmin.message_user(
+            request,
+            _("Successfully imported registry from url: %(app_registry_url)s") % {
+                "app_registry_url": app_registry_url}, messages.SUCCESS)
+        return None
+
+    return render(request, 'admin/import_data.html',
+                  context={'app_registry_url': settings.CLOUDLAUNCH_APP_REGISTRY_URL,
+                           'rows': queryset})
+
+
+import_app_data.short_description = "Import app data from url"
+
+
+def export_app_data(modeladmin, request, queryset):
+    response = HttpResponse(content_type="application/yaml")
+    response['Content-Disposition'] = 'attachment; filename="app-registry.yaml"'
+    response.write(call_command('export_app_data'))
+    return response
+
+
+export_app_data.short_description = "Export app data to file"
+
+admin.site.add_action(import_app_data)
+admin.site.add_action(export_app_data)

@@ -296,6 +296,11 @@ LOGGING = {
     }
 }
 
+# CloudLaunch specific settings
+CLOUDLAUNCH_APP_REGISTRY_URL = 'https://raw.githubusercontent.com/galaxyproject/' \
+                               'cloudlaunch-registry/master/app-registry.yaml'
+
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Allow settings to be overridden in a cloudlaunch/settings_local.py
