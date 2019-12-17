@@ -12,13 +12,14 @@ from djcloudbridge import models as cb_models
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import (Application,
-                     ApplicationDeployment,
-                     ApplicationVersion,
-                     ApplicationVersionCloudConfig,
-                     ApplicationDeploymentTask,
-                     CloudDeploymentTarget,
-                     Image)
+from cloudlaunch.models import (
+    Application,
+    ApplicationDeployment,
+    ApplicationVersion,
+    ApplicationVersionCloudConfig,
+    ApplicationDeploymentTask,
+    CloudDeploymentTarget,
+    Image)
 
 
 @contextmanager
