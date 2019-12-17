@@ -1,5 +1,6 @@
 from io import StringIO
 import os
+from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
@@ -16,8 +17,7 @@ class ImportAppCommandTestCase(TestCase):
         TEST_DATA_PATH, 'apps_new.yaml')
     APP_DATA_PATH_UPDATED = os.path.join(
         TEST_DATA_PATH, 'apps_update.yaml')
-    APP_DATA_PATH_URL = 'https://raw.githubusercontent.com/CloudVE/' \
-                        'cloudlaunch-registry/master/app-registry.yaml'
+    APP_DATA_PATH_URL = settings.CLOUDLAUNCH_APP_REGISTRY_URL
 
     def test_import_app_data_no_args(self):
         with self.assertRaisesRegex(CommandError,
