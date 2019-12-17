@@ -16,6 +16,8 @@ class ImportAppCommandTestCase(TestCase):
         TEST_DATA_PATH, 'apps_new.yaml')
     APP_DATA_PATH_UPDATED = os.path.join(
         TEST_DATA_PATH, 'apps_update.yaml')
+    APP_DATA_PATH_URL = 'https://raw.githubusercontent.com/CloudVE/' \
+                        'cloudlaunch-registry/master/app-registry.yaml'
 
     def test_import_app_data_no_args(self):
         with self.assertRaisesRegex(CommandError,
@@ -38,6 +40,14 @@ class ImportAppCommandTestCase(TestCase):
         self.assertEquals(app_obj.name, 'CloudMan 2.0 Updated')
         self.assertEquals(app_obj.summary, 'A different summary')
         self.assertIn('some_new_text',
+                      app_obj.default_version.default_launch_config)
+
+    def test_import_new_app_data_from_url(self):
+        call_command('import_app_data', '--url', self.APP_DATA_PATH_URL)
+        app_obj = cl_models.Application.objects.get(
+            slug='pulsar-standalone')
+        self.assertEquals(app_obj.name, 'Galaxy Cloud Bursting')
+        self.assertIn('config_cloudlaunch',
                       app_obj.default_version.default_launch_config)
 
     def test_export_matches_import(self):

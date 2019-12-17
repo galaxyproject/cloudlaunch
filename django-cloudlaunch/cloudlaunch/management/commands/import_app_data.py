@@ -43,4 +43,4 @@ class Command(BaseCommand):
         if serializer.is_valid():
             serializer.save()
         else:
-            return serializer.errors
+            return str(serializer.errors)

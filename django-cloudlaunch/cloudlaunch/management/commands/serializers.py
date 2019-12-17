@@ -43,7 +43,8 @@ class AppVersionSerializer(serializers.ModelSerializer):
 class ApplicationSerializer(serializers.ModelSerializer):
     default_launch_config = StoredYAMLField(required=False, allow_null=True,
                                             validators=[])
-    default_version = serializers.CharField(source='default_version.version', default=None)
+    default_version = serializers.CharField(source='default_version.version', default=None,
+                                            allow_null=True, required=False)
     versions = AppVersionSerializer(many=True)
 
     def create(self, validated_data):
@@ -65,7 +66,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
                 application=app, version=ver_id, defaults=version)
 
         # Now set the default app version
-        if default_version:
+        if default_version and default_version['version']:
             app.default_version = cl_models.ApplicationVersion.objects.get(
                 application=app, version=default_version['version'])
             app.save()
