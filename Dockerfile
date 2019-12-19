@@ -48,12 +48,15 @@ RUN useradd -ms /bin/bash cloudlaunch \
         git-core \
         python3-pip \
         python3-setuptools \
+        locales locales-all \
     # Remove Python 2
     && apt remove -y python \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
     # Set Python 3 as the default Python installation
     && update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
+
+ENV LC_ALL en_US.UTF-8
 
 WORKDIR /app/
 

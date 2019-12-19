@@ -24,4 +24,4 @@ class Command(BaseCommand):
 
         serializer = mgmt_serializers.ApplicationSerializer(queryset, many=True)
         data = serializer.to_representation(serializer.instance)
-        return yaml.safe_dump(data, default_flow_style=False)
+        return yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)

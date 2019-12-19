@@ -337,7 +337,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             ('cm_initial_cluster_data', base64.b64encode(
                 yaml.safe_dump(
                     cm_initial_cluster_data,
-                    default_flow_style=False).encode('utf-8')).decode('utf-8')),
+                    default_flow_style=False,
+                    allow_unicode=True).encode('utf-8')).decode('utf-8')),
             ('kube_cloud_provider', kube_cloud_provider),
             ('kube_cloud_conf', base64.b64encode(
                 kube_cloud_conf.encode('utf-8')).decode('utf-8'))

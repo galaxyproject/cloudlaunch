@@ -334,7 +334,7 @@ class DeploymentSerializer(serializers.ModelSerializer):
                 del validated_data['config_app']
             validated_data['owner_id'] = request.user.id
             validated_data['application_config'] = yaml.safe_dump(
-                merged_app_config, default_flow_style=False)
+                merged_app_config, default_flow_style=False, allow_unicode=True)
             validated_data['credentials_id'] = credentials.get('id') or None
             app_deployment = super(DeploymentSerializer, self).create(validated_data)
             self.log_usage(target_version_config, app_deployment, sanitised_app_config, request.user)

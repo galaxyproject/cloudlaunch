@@ -12,7 +12,11 @@ class StoredYAMLField(serializers.JSONField):
 
     def to_internal_value(self, data):
         try:
-            return yaml.safe_dump(data, default_flow_style=False)
+            if data:
+                return yaml.safe_dump(data, default_flow_style=False,
+                                      allow_unicode=True)
+            else:
+                return None
         except (TypeError, ValueError):
             self.fail('invalid')
         return data
