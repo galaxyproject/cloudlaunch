@@ -1,0 +1,2 @@
+recursive-include django-cloudlaunch/cloudlaunch/templates *
+recursive-include django-cloudlaunch/cloudlaunch/management *
