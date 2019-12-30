@@ -93,7 +93,7 @@ class AWSKubeIAMPolicyHandler(object):
                 return role_name
 
     def _get_or_create_cm2_iam_role(self):
-        role_name = "cm2-kube-role-" + self.dpl_name
+        role_name = self.dpl_name + "-cm2-kube-role"
         trust_policy = self._load_policy_relative(
             'cloudman2/rancher2_aws_iam_trust_policy.json')
         return self._get_or_create_iam_role(role_name, trust_policy)
@@ -123,7 +123,7 @@ class AWSKubeIAMPolicyHandler(object):
                 return profile_name
 
     def _get_or_create_cm2_instance_profile(self):
-        profile_name = 'cm2-kube-role-' + self.dpl_name
+        profile_name = self.dpl_name + '-cm2-kube-role'
         return self._get_or_create_instance_profile(profile_name)
 
     def _attach_role_to_instance_profile(self, profile_name, role):
