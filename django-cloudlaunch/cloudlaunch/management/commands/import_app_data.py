@@ -34,7 +34,8 @@ class Command(BaseCommand):
         else:
             content = options['url']
 
-        return self.import_app_data(yaml.safe_load(content))
+        registry = yaml.safe_load(content)
+        return self.import_app_data(registry.get('apps'))
 
     @staticmethod
     def import_app_data(yaml_data):

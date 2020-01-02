@@ -23,5 +23,7 @@ class Command(BaseCommand):
             queryset = cl_models.Application.objects.all()
 
         serializer = mgmt_serializers.ApplicationSerializer(queryset, many=True)
-        data = serializer.to_representation(serializer.instance)
+        data = {
+            'apps': serializer.to_representation(serializer.instance)
+        }
         return yaml.safe_dump(data, default_flow_style=False, allow_unicode=True)
