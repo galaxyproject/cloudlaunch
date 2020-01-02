@@ -324,29 +324,42 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         }
         kube_cloud_provider, kube_cloud_conf = self._get_kube_cloud_settings(
             provider_config, cloud_config)
-        playbook_vars = [
-            ('cm_deployment_name', app_config.get('deployment_config', {}).get(
-                'name')),
-            ('cm_boot_image', app_config.get('config_cloudman2', {}).get(
-                'cm_boot_image')),
-            ('cm_skip_cloudman', app_config.get('config_cloudman2', {}).get(
-                'cm_skip_cloudman')),
-            ('rancher_server', host),
-            ('rancher_pwd', app_config.get('config_cloudman2', {}).get(
-                'clusterPassword')),
-            ('cm_initial_cluster_data', base64.b64encode(
-                yaml.safe_dump(
-                    cm_initial_cluster_data,
-                    default_flow_style=False,
-                    allow_unicode=True).encode('utf-8')).decode('utf-8')),
-            ('kube_cloud_provider', kube_cloud_provider),
-            ('kube_cloud_conf', base64.b64encode(
-                kube_cloud_conf.encode('utf-8')).decode('utf-8'))
-        ]
+
+        cm_docker_env = {
+            'RANCHER_SERVER': host,
+            'RANCHER_PWD': app_config.get('config_cloudman2', {})
+                .get('clusterPassword', ''),
+            'KUBE_CLOUD_PROVIDER': kube_cloud_provider,
+            'KUBE_CLOUD_CONF': base64.b64encode(kube_cloud_conf.encode('utf-8'))
+                .decode('utf-8'),
+            'CM_SKIP_CLOUDMAN': str(app_config.get('config_cloudman2', {})
+                .get('cm_skip_cloudman', 'false')),
+            'CM_DEPLOYMENT_NAME': app_config.get('deployment_config', {})
+                .get('name', ''),
+            'CM_INITIAL_CLUSTER_DATA': base64.b64encode(
+                yaml.safe_dump(cm_initial_cluster_data,
+                               default_flow_style=False,
+                               allow_unicode=True).encode('utf-8'))
+                .decode('utf-8'),
+        }
         if app_config.get('config_cloudman2', {}).get('cm_helm_values'):
-            playbook_vars += [('cm_helm_values', base64.b64encode(
-                app_config.get('config_cloudman2', {}).get('cm_helm_values')
-                    .encode('utf-8')).decode('utf-8'))]
+            cm_docker_env.update({
+                'CM_HELM_VALUES': base64.b64encode(
+                    app_config.get('config_cloudman2', {})
+                        .get('cm_helm_values').encode('utf-8'))
+                    .decode('utf-8')
+            })
+        # Allow docker config to be overridden
+        cm_docker_env.update(app_config.get('config_cloudman2', {})
+                             .get('cm_docker_env', {}))
+
+        playbook_vars = [
+            ('docker_container_name', 'cloudman-boot'),
+            ('docker_boot_image', app_config.get('config_cloudman2', {}).get(
+                'cm_boot_image')),
+            ('docker_volumes', ['/var/run/docker.sock:/var/run/docker.sock']),
+            ('docker_env', cm_docker_env)
+        ]
 
         return super().configure(app_config, provider_config,
                                  playbook_vars=playbook_vars)
