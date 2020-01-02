@@ -99,7 +99,7 @@ class AppPlugin():
       "runCmd": ["docker run -v /var/run/docker.sock:/var/run/docker.sock afgane/cloudman-boot"],
       "runner": "ansible",
       "repository": "https://github.com/afgane/Rancher-Ansible",
-      "inventoryTemplate": "https://gist.githubusercontent.com/..."
+      "inventoryTemplate": ""
    },
    "config_cloudlaunch": {
        "vmType": "c3.large",

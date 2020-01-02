@@ -227,7 +227,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
         :param playbook: A URL of a git repository where the playbook resides.
 
         :type inventory: ``str``
-        :param inventory: A URL pointing to a string ``Template``-like file
+        :param inventory: A string ``Template``-like file
                           that will be used for running the playbook. The
                           file should have defined variables for ``host`` and
                           ``user``.
@@ -266,8 +266,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                            'w') as f:
                 f.writelines(pk)
             # Create an inventory file
-            r = requests.get(inventory)
-            inv = Template((r.content).decode('utf-8'))
+            inv = Template(inventory)
             inventory_path = os.path.join(repo_path, 'inventory')
             with open(inventory_path, 'w') as f:
                 log.info("Creating inventory file %s", inventory_path)
