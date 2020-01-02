@@ -1,406 +1,406 @@
 apps:
-  - slug: biodocklet
-    name: BioDocklet
-    status: LIVE
-    summary: |-
-      Modified. Abstract the complex data operations of multi-step, bioinformatics pipelines for NGS data analysis.
-    maintainer: thahmina.ali62@myhunter.cuny.edu
-    description: ''
-    info_url: https://www.youtube.com/watch?v=27HLdQVq7_g
-    icon_url: http://i.imgur.com/ViePkQP.jpg
-    display_order: 10000
-    default_version: RNA-Seq - paired
-    default_launch_config: null
-    versions:
-    - version: ChIP-Seq - paired
-      frontend_component_path: |-
-        app/marketplace/plugins/plugins.module#PluginsModule
-      frontend_component_name: clui-ubuntu-config
-      backend_component_name: |-
-        cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin
-      default_launch_config:
-        config_cloudlaunch:
-          firewall:
-          - rules:
-            - cidr: 0.0.0.0/0
-              from: '80'
-              protocol: tcp
-              to: '80'
-            - cidr: 0.0.0.0/0
-              from: '8090'
-              protocol: tcp
-              to: '8090'
-            - cidr: 0.0.0.0/0
-              from: '22'
-              protocol: tcp
-              to: '23'
-            - cidr: 0.0.0.0/0
-              from: '9010'
-              protocol: tcp
-              to: '9010'
-            securityGroup: cloudlaunch-biodocklet
-          instanceType: c3.large
-          instance_user_data: |-
-            #!/bin/bash
-            docker pull bcil/biodocklets:ChIPseq_paired
-            docker pull hello
-    - version: ChIP-Seq - single
-      frontend_component_path: |-
-        app/marketplace/plugins/plugins.module#PluginsModule
-      frontend_component_name: clui-ubuntu-config
-      backend_component_name: |-
-        cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin
-      default_launch_config:
-        config_cloudlaunch:
-          firewall:
-          - rules:
-            - cidr: 0.0.0.0/0
-              from: '80'
-              protocol: tcp
-              to: '80'
-            - cidr: 0.0.0.0/0
-              from: '8090'
-              protocol: tcp
-              to: '8090'
-            - cidr: 0.0.0.0/0
-              from: '22'
-              protocol: tcp
-              to: '22'
-            - cidr: 0.0.0.0/0
-              from: '9010'
-              protocol: tcp
-              to: '9010'
-            securityGroup: cloudlaunch-biodocklet
-          instanceType: c3.large
-          instance_user_data: |-
-            #!/bin/bash
-            docker pull bcil/biodocklets:ChIPseq_single
-    - version: RNA-Seq - paired
-      frontend_component_path: |-
-        app/marketplace/plugins/plugins.module#PluginsModule
-      frontend_component_name: clui-ubuntu-config
-      backend_component_name: |-
-        cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin
-      default_launch_config:
-        config_cloudlaunch:
-          firewall:
-          - rules:
-            - cidr: 0.0.0.0/0
-              from: '80'
-              protocol: tcp
-              to: '80'
-            - cidr: 0.0.0.0/0
-              from: '8090'
-              protocol: tcp
-              to: '8090'
-            - cidr: 0.0.0.0/0
-              from: '22'
-              protocol: tcp
-              to: '22'
-            - cidr: 0.0.0.0/0
-              from: '9010'
-              protocol: tcp
-              to: '9010'
-            securityGroup: cloudlaunch-biodocklet
-          instanceType: c3.large
-          instance_user_data: |-
-            #!/bin/bash
-            docker pull bcil/biodocklets:RNAseq_paired
-  - slug: cloudman-20
-    name: CloudMan 2.0
-    status: LIVE
-    summary: An all-new version of CloudMan
-    maintainer: |-
-      enis.afgan@jhu.edu, nuwan.goonasekera@unimelb.ed.au
-    description: |-
-      This appliance will launch a new version of CloudMan - at the moment, this is purely for development purposes and the application has no useful features yet.
-    info_url: |-
-      https://docs.google.com/presentation/d/1h9PVEGdVIHEat_JWTjYZWuU1R23IeGlMW8PZd8yJVuE/edit#slide=id.p
-    icon_url: https://i.imgur.com/4cJu1lC.png
-    display_order: 1050
-    default_version: dev
-    default_launch_config: null
-    versions:
-    - version: dev
-      frontend_component_path: |-
-        app/marketplace/plugins/plugins.module#PluginsModule
-      frontend_component_name: clui-cm2-config
-      backend_component_name: |-
-        cloudlaunch.backend_plugins.cloudman2_app.CloudMan2AppPlugin
-      default_launch_config:
-        config_appliance:
-          inventoryTemplate: |-
-            ${host}
+- slug: biodocklet
+  name: BioDocklet
+  status: LIVE
+  summary: |-
+    Modified. Abstract the complex data operations of multi-step, bioinformatics pipelines for NGS data analysis.
+  maintainer: thahmina.ali62@myhunter.cuny.edu
+  description: ''
+  info_url: https://www.youtube.com/watch?v=27HLdQVq7_g
+  icon_url: http://i.imgur.com/ViePkQP.jpg
+  display_order: 10000
+  default_version: RNA-Seq - paired
+  default_launch_config: null
+  versions:
+  - version: ChIP-Seq - paired
+    frontend_component_path: |-
+      app/marketplace/plugins/plugins.module#PluginsModule
+    frontend_component_name: clui-ubuntu-config
+    backend_component_name: |-
+      cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin
+    default_launch_config:
+      config_cloudlaunch:
+        firewall:
+        - rules:
+          - cidr: 0.0.0.0/0
+            from: '80'
+            protocol: tcp
+            to: '80'
+          - cidr: 0.0.0.0/0
+            from: '8090'
+            protocol: tcp
+            to: '8090'
+          - cidr: 0.0.0.0/0
+            from: '22'
+            protocol: tcp
+            to: '23'
+          - cidr: 0.0.0.0/0
+            from: '9010'
+            protocol: tcp
+            to: '9010'
+          securityGroup: cloudlaunch-biodocklet
+        instanceType: c3.large
+        instance_user_data: |-
+          #!/bin/bash
+          docker pull bcil/biodocklets:ChIPseq_paired
+          docker pull hello
+  - version: ChIP-Seq - single
+    frontend_component_path: |-
+      app/marketplace/plugins/plugins.module#PluginsModule
+    frontend_component_name: clui-ubuntu-config
+    backend_component_name: |-
+      cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin
+    default_launch_config:
+      config_cloudlaunch:
+        firewall:
+        - rules:
+          - cidr: 0.0.0.0/0
+            from: '80'
+            protocol: tcp
+            to: '80'
+          - cidr: 0.0.0.0/0
+            from: '8090'
+            protocol: tcp
+            to: '8090'
+          - cidr: 0.0.0.0/0
+            from: '22'
+            protocol: tcp
+            to: '22'
+          - cidr: 0.0.0.0/0
+            from: '9010'
+            protocol: tcp
+            to: '9010'
+          securityGroup: cloudlaunch-biodocklet
+        instanceType: c3.large
+        instance_user_data: |-
+          #!/bin/bash
+          docker pull bcil/biodocklets:ChIPseq_single
+  - version: RNA-Seq - paired
+    frontend_component_path: |-
+      app/marketplace/plugins/plugins.module#PluginsModule
+    frontend_component_name: clui-ubuntu-config
+    backend_component_name: |-
+      cloudlaunch.backend_plugins.base_vm_app.BaseVMAppPlugin
+    default_launch_config:
+      config_cloudlaunch:
+        firewall:
+        - rules:
+          - cidr: 0.0.0.0/0
+            from: '80'
+            protocol: tcp
+            to: '80'
+          - cidr: 0.0.0.0/0
+            from: '8090'
+            protocol: tcp
+            to: '8090'
+          - cidr: 0.0.0.0/0
+            from: '22'
+            protocol: tcp
+            to: '22'
+          - cidr: 0.0.0.0/0
+            from: '9010'
+            protocol: tcp
+            to: '9010'
+          securityGroup: cloudlaunch-biodocklet
+        instanceType: c3.large
+        instance_user_data: |-
+          #!/bin/bash
+          docker pull bcil/biodocklets:RNAseq_paired
+- slug: cloudman-20
+  name: CloudMan 2.0
+  status: LIVE
+  summary: An all-new version of CloudMan
+  maintainer: |-
+    enis.afgan@jhu.edu, nuwan.goonasekera@unimelb.ed.au
+  description: |-
+    This appliance will launch a new version of CloudMan - at the moment, this is purely for development purposes and the application has no useful features yet.
+  info_url: |-
+    https://docs.google.com/presentation/d/1h9PVEGdVIHEat_JWTjYZWuU1R23IeGlMW8PZd8yJVuE/edit#slide=id.p
+  icon_url: https://i.imgur.com/4cJu1lC.png
+  display_order: 1050
+  default_version: dev
+  default_launch_config: null
+  versions:
+  - version: dev
+    frontend_component_path: |-
+      app/marketplace/plugins/plugins.module#PluginsModule
+    frontend_component_name: clui-cm2-config
+    backend_component_name: |-
+      cloudlaunch.backend_plugins.cloudman2_app.CloudMan2AppPlugin
+    default_launch_config:
+      config_appliance:
+        inventoryTemplate: |-
+          ${host}
 
-            [all:vars]
-            ansible_ssh_port=22
-            ansible_user='${user}'
-            ansible_ssh_private_key_file=pk
-            ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
-          repository: https://github.com/CloudVE/ansible-cloudman2
-          runner: ansible
-          sshUser: ubuntu
-        config_cloudlaunch:
-          firewall:
-          - rules:
-            - cidr: 0.0.0.0/0
-              from: '22'
-              protocol: tcp
-              to: '22'
-            - cidr: 0.0.0.0/0
-              from: '80'
-              protocol: tcp
-              to: '80'
-            - cidr: 0.0.0.0/0
-              from: '443'
-              protocol: tcp
-              to: '443'
-            - cidr: 0.0.0.0/0
-              from: '4430'
-              protocol: tcp
-              to: '4430'
-            - cidr: 0.0.0.0/0
-              from: '6443'
-              protocol: tcp
-              to: '6443'
-            - cidr: 0.0.0.0/0
-              from: '2379'
-              protocol: tcp
-              to: '2380'
-            - cidr: 0.0.0.0/0
-              from: '10250'
-              protocol: tcp
-              to: '10250'
-            - cidr: 0.0.0.0/0
-              from: '10251'
-              protocol: tcp
-              to: '10251'
-            - cidr: 0.0.0.0/0
-              from: '10252'
-              protocol: tcp
-              to: '10252'
-            - cidr: 0.0.0.0/0
-              from: '10256'
-              protocol: tcp
-              to: '10256'
-            - cidr: 0.0.0.0/0
-              from: '30000'
-              protocol: tcp
-              to: '32767'
-            - from: '1'
-              protocol: tcp
-              src_group: cloudlaunch-cm2
-              to: '65535'
-            - from: '1'
-              protocol: udp
-              src_group: cloudlaunch-cm2
-              to: '65535'
-            securityGroup: cloudlaunch-cm2
-          vmType: m1.medium
-        config_cloudman2:
-          cm_boot_image: cloudve/cloudman-boot
-          cm_helm_values: |-
-            cluster_type: KUBE_RANCHER
-            rancher_url: "https://{{ rancher_server }}:{{ rancher_port }}"
-            rancher_api_key: "{{ token }}"
-            rancher_cluster_id: "{{ cluster_id }}"
-            rancher_project_id: "{{ project_id }}"
-            cm_initial_cluster_data: "{{ cm_initial_cluster_data|default('') }}"
+          [all:vars]
+          ansible_ssh_port=22
+          ansible_user='${user}'
+          ansible_ssh_private_key_file=pk
+          ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
+        repository: https://github.com/CloudVE/ansible-cloudman2
+        runner: ansible
+        sshUser: ubuntu
+      config_cloudlaunch:
+        firewall:
+        - rules:
+          - cidr: 0.0.0.0/0
+            from: '22'
+            protocol: tcp
+            to: '22'
+          - cidr: 0.0.0.0/0
+            from: '80'
+            protocol: tcp
+            to: '80'
+          - cidr: 0.0.0.0/0
+            from: '443'
+            protocol: tcp
+            to: '443'
+          - cidr: 0.0.0.0/0
+            from: '4430'
+            protocol: tcp
+            to: '4430'
+          - cidr: 0.0.0.0/0
+            from: '6443'
+            protocol: tcp
+            to: '6443'
+          - cidr: 0.0.0.0/0
+            from: '2379'
+            protocol: tcp
+            to: '2380'
+          - cidr: 0.0.0.0/0
+            from: '10250'
+            protocol: tcp
+            to: '10250'
+          - cidr: 0.0.0.0/0
+            from: '10251'
+            protocol: tcp
+            to: '10251'
+          - cidr: 0.0.0.0/0
+            from: '10252'
+            protocol: tcp
+            to: '10252'
+          - cidr: 0.0.0.0/0
+            from: '10256'
+            protocol: tcp
+            to: '10256'
+          - cidr: 0.0.0.0/0
+            from: '30000'
+            protocol: tcp
+            to: '32767'
+          - from: '1'
+            protocol: tcp
+            src_group: cloudlaunch-cm2
+            to: '65535'
+          - from: '1'
+            protocol: udp
+            src_group: cloudlaunch-cm2
+            to: '65535'
+          securityGroup: cloudlaunch-cm2
+        vmType: m1.medium
+      config_cloudman2:
+        cm_boot_image: cloudve/cloudman-boot
+        cm_helm_values: |-
+          cluster_type: KUBE_RANCHER
+          rancher_url: "https://{{ rancher_server }}:{{ rancher_port }}"
+          rancher_api_key: "{{ token }}"
+          rancher_cluster_id: "{{ cluster_id }}"
+          rancher_project_id: "{{ project_id }}"
+          cm_initial_cluster_data: "{{ cm_initial_cluster_data|default('') }}"
 
-            helmsman_config:
-              repositories:
-                 - name: cloudve
-                   url: https://raw.githubusercontent.com/CloudVE/helm-charts/master/
-                 - name: jupyterhub
-                   url: https://jupyterhub.github.io/helm-chart/
-              charts:
-                dashboard:
-                  name: stable/kubernetes-dashboard
-                  namespace: kube-system
-                  values:
-                    rbac:
-                      clusterAdminRole: true
-                    ingress:
-                      enabled: true
-                      annotations:
-                         kubernetes.io/tls-acme: "true"
-                         certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-                         nginx.ingress.kubernetes.io/secure-backends: "true"
-                      hosts:
-                         - ~
-            {% if not (rancher_server | ipaddr) %}
-                         - "{{ rancher_server }}"
-                      tls:
-                         - secretName: "{{ rancher_server | replace('.', '-') }}-key"
-                           hosts:
-                             - "{{ rancher_server }}"
-            {% endif %}
-                      paths:
-                        - /dashboard
-                        - /dashboard/*
-                    enableInsecureLogin: true
-                cvmfs:
-                  name: cloudve/galaxy-cvmfs-csi
-                  namespace: cvmfs
-                galaxy:
-                  name: cloudve/galaxy
-                  namespace: default
-                  oidc_client:
-                    client_secret: {{ random_client_secret }}
-                    redirect_uris:
-                      - '{{ '{{' }} include "cloudman.root_url" . {{ '}}{{' }} .Values.helmsman_config.charts.galaxy.values.ingress.path {{ '}}' }}/authnz/custos/callback'
-                  tplValues:
-                    configs:
-                      oidc_backends_config.xml: |
-                        <?xml version="1.0"?>
-                        <OIDC>
-                            <provider name="custos">
-                                <url>https://{{ rancher_server }}/auth</url>
-                                <client_id>galaxy-auth</client_id>
-                                <client_secret>{{ '{{' }}.Values.helmsman_config.charts.galaxy.oidc_client.client_secret {{ '}}' }}</client_secret>
-                                <redirect_uri>https://{{ rancher_server }}{{ '{{' }} .Values.helmsman_config.charts.galaxy.values.ingress.path {{ '}}' }}/authnz/custos/callback</redirect_uri>
-                                <realm>master</realm>
-                            </provider>
-                        </OIDC>
-                  values:
-                    configs:
-                      galaxy.yml: |
-                        uwsgi:
-                          virtualenv: /galaxy/server/.venv
-                          processes: 1
-                          http: 0.0.0.0:8080
-                          static-map: /static/style=/galaxy/server/static/style/blue
-                          static-map: /static=/galaxy/server/static
-                          static-map: /favicon.ico=/galaxy/server/static/favicon.ico
-                          pythonpath: /galaxy/server/lib
-                          thunder-lock: true
-                          manage-script-name: true
-                          mount: {{ '{{' }}.Values.ingress.path{{ '}}' }}=galaxy.webapps.galaxy.buildapp:uwsgi_app()
-                          buffer-size: 16384
-                          offload-threads: 2
-                          threads: 4
-                          die-on-term: true
-                          master: true
-                          hook-master-start: unix_signal:2 gracefully_kill_them_all
-                          enable-threads: true
-                          py-call-osafterfork: true
-                        galaxy:
-                          database_connection: 'postgresql://{{ '{{' }}.Values.postgresql.galaxyDatabaseUser{{ '}}' }}:{{ '{{' }}.Values.postgresql.galaxyDatabasePassword{{ '}}' }}@{{ '{{' }} template "galaxy-postgresql.fullname" . {{ '}}' }}/galaxy'
-                          integrated_tool_panel_config: "/galaxy/server/config/mutable/integrated_tool_panel.xml"
-                          sanitize_whitelist_file: "/galaxy/server/config/mutable/sanitize_whitelist.txt"
-                          tool_config_file: "/galaxy/server/config/tool_conf.xml,{{ '{{' }}.Values.cvmfs.main.mountPath {{ '}}' }}/config/shed_tool_conf.xml"
-                          shed_tool_config_file: "{{ '{{' }}.Values.persistence.mountPath{{ '}}' }}/config/editable_shed_tool_conf.xml"
-                          tool_data_table_config_path: "{{ '{{' }}.Values.cvmfs.main.mountPath {{ '}}' }}/config/shed_tool_data_table_conf.xml,{{ '{{' }}.Values.cvmfs.data.mountPath{{ '}}' }}/managed/location/tool_data_table_conf.xml,{{ '{{' }}.Values.cvmfs.data.mountPath{{ '}}' }}/byhand/location/tool_data_table_conf.xml"
-                          tool_dependency_dir: "{{ '{{' }}.Values.persistence.mountPath{{ '}}' }}/deps"
-                          builds_file_path: "{{ '{{' }}.Values.cvmfs.data.mountPath{{ '}}' }}/managed/location/builds.txt"
-                          datatypes_config_file: "{{ '{{' }}.Values.cvmfs.main.mountPath {{ '}}' }}/config/datatypes_conf.xml"
-                          containers_resolvers_config_file: "/galaxy/server/config/container_resolvers_conf.xml"
-                          workflow_schedulers_config_file: "/galaxy/server/config/workflow_schedulers_conf.xml"
-                          build_sites_config_file: "/galaxy/server/config/build_sites.yml"
-                          enable_oidc: true
-                          oidc_config_file: /galaxy/server/config/oidc_config.xml
-                          oidc_backends_config_file: /galaxy/server/config/oidc_backends_config.xml
-                      oidc_config.xml: |
-                        <?xml version="1.0"?>
-                        <OIDC>
-                            <Setter Property="VERIFY_SSL" Value="False" Type="bool"/>
-                            <Setter Property="REQUESTS_TIMEOUT" Value="3600" Type="float"/>
-                            <Setter Property="ID_TOKEN_MAX_AGE" Value="3600" Type="float"/>
-                        </OIDC>
-                    persistence:
-                      storageClass: nfs-provisioner
-                      size: 95Gi
-                    postgresql:
-                      persistence:
-                        storageClass: ebs-provisioner
-                    ingress:
-                      enabled: true
-                      annotations:
-                         kubernetes.io/tls-acme: "true"
-                         certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-                         nginx.ingress.kubernetes.io/secure-backends: "true"
-                      hosts:
-                         - ~
-            {% if not (rancher_server | ipaddr) %}
-                         - "{{ rancher_server }}"
-                      tls:
-                         - secretName: "{{ rancher_server | replace('.', '-') }}-key"
-                           hosts:
-                             - "{{ rancher_server }}"
-            {% endif %}
-                      path: /default/galaxy
-
-            cloudlaunch:
-               cloudlaunchserver:
-                  admin_password: "{{ rancher_password }}"
+          helmsman_config:
+            repositories:
+               - name: cloudve
+                 url: https://raw.githubusercontent.com/CloudVE/helm-charts/master/
+               - name: jupyterhub
+                 url: https://jupyterhub.github.io/helm-chart/
+            charts:
+              dashboard:
+                name: stable/kubernetes-dashboard
+                namespace: kube-system
+                values:
+                  rbac:
+                    clusterAdminRole: true
+                  ingress:
+                    enabled: true
+                    annotations:
+                       kubernetes.io/tls-acme: "true"
+                       certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+                       nginx.ingress.kubernetes.io/secure-backends: "true"
+                    hosts:
+                       - ~
+          {% if not (rancher_server | ipaddr) %}
+                       - "{{ rancher_server }}"
+                    tls:
+                       - secretName: "{{ rancher_server | replace('.', '-') }}-key"
+                         hosts:
+                           - "{{ rancher_server }}"
+          {% endif %}
+                    paths:
+                      - /dashboard
+                      - /dashboard/*
+                  enableInsecureLogin: true
+              cvmfs:
+                name: cloudve/galaxy-cvmfs-csi
+                namespace: cvmfs
+              galaxy:
+                name: cloudve/galaxy
+                namespace: default
+                oidc_client:
+                  client_secret: {{ random_client_secret }}
+                  redirect_uris:
+                    - '{{ '{{' }} include "cloudman.root_url" . {{ '}}{{' }} .Values.helmsman_config.charts.galaxy.values.ingress.path {{ '}}' }}/authnz/custos/callback'
+                tplValues:
+                  configs:
+                    oidc_backends_config.xml: |
+                      <?xml version="1.0"?>
+                      <OIDC>
+                          <provider name="custos">
+                              <url>https://{{ rancher_server }}/auth</url>
+                              <client_id>galaxy-auth</client_id>
+                              <client_secret>{{ '{{' }}.Values.helmsman_config.charts.galaxy.oidc_client.client_secret {{ '}}' }}</client_secret>
+                              <redirect_uri>https://{{ rancher_server }}{{ '{{' }} .Values.helmsman_config.charts.galaxy.values.ingress.path {{ '}}' }}/authnz/custos/callback</redirect_uri>
+                              <realm>master</realm>
+                          </provider>
+                      </OIDC>
+                values:
+                  configs:
+                    galaxy.yml: |
+                      uwsgi:
+                        virtualenv: /galaxy/server/.venv
+                        processes: 1
+                        http: 0.0.0.0:8080
+                        static-map: /static/style=/galaxy/server/static/style/blue
+                        static-map: /static=/galaxy/server/static
+                        static-map: /favicon.ico=/galaxy/server/static/favicon.ico
+                        pythonpath: /galaxy/server/lib
+                        thunder-lock: true
+                        manage-script-name: true
+                        mount: {{ '{{' }}.Values.ingress.path{{ '}}' }}=galaxy.webapps.galaxy.buildapp:uwsgi_app()
+                        buffer-size: 16384
+                        offload-threads: 2
+                        threads: 4
+                        die-on-term: true
+                        master: true
+                        hook-master-start: unix_signal:2 gracefully_kill_them_all
+                        enable-threads: true
+                        py-call-osafterfork: true
+                      galaxy:
+                        database_connection: 'postgresql://{{ '{{' }}.Values.postgresql.galaxyDatabaseUser{{ '}}' }}:{{ '{{' }}.Values.postgresql.galaxyDatabasePassword{{ '}}' }}@{{ '{{' }} template "galaxy-postgresql.fullname" . {{ '}}' }}/galaxy'
+                        integrated_tool_panel_config: "/galaxy/server/config/mutable/integrated_tool_panel.xml"
+                        sanitize_whitelist_file: "/galaxy/server/config/mutable/sanitize_whitelist.txt"
+                        tool_config_file: "/galaxy/server/config/tool_conf.xml,{{ '{{' }}.Values.cvmfs.main.mountPath {{ '}}' }}/config/shed_tool_conf.xml"
+                        shed_tool_config_file: "{{ '{{' }}.Values.persistence.mountPath{{ '}}' }}/config/editable_shed_tool_conf.xml"
+                        tool_data_table_config_path: "{{ '{{' }}.Values.cvmfs.main.mountPath {{ '}}' }}/config/shed_tool_data_table_conf.xml,{{ '{{' }}.Values.cvmfs.data.mountPath{{ '}}' }}/managed/location/tool_data_table_conf.xml,{{ '{{' }}.Values.cvmfs.data.mountPath{{ '}}' }}/byhand/location/tool_data_table_conf.xml"
+                        tool_dependency_dir: "{{ '{{' }}.Values.persistence.mountPath{{ '}}' }}/deps"
+                        builds_file_path: "{{ '{{' }}.Values.cvmfs.data.mountPath{{ '}}' }}/managed/location/builds.txt"
+                        datatypes_config_file: "{{ '{{' }}.Values.cvmfs.main.mountPath {{ '}}' }}/config/datatypes_conf.xml"
+                        containers_resolvers_config_file: "/galaxy/server/config/container_resolvers_conf.xml"
+                        workflow_schedulers_config_file: "/galaxy/server/config/workflow_schedulers_conf.xml"
+                        build_sites_config_file: "/galaxy/server/config/build_sites.yml"
+                        enable_oidc: true
+                        oidc_config_file: /galaxy/server/config/oidc_config.xml
+                        oidc_backends_config_file: /galaxy/server/config/oidc_backends_config.xml
+                    oidc_config.xml: |
+                      <?xml version="1.0"?>
+                      <OIDC>
+                          <Setter Property="VERIFY_SSL" Value="False" Type="bool"/>
+                          <Setter Property="REQUESTS_TIMEOUT" Value="3600" Type="float"/>
+                          <Setter Property="ID_TOKEN_MAX_AGE" Value="3600" Type="float"/>
+                      </OIDC>
+                  persistence:
+                    storageClass: nfs-provisioner
+                    size: 95Gi
                   postgresql:
-                     persistence:
-                        storageClass: "ebs-provisioner"
+                    persistence:
+                      storageClass: ebs-provisioner
                   ingress:
-                     annotations:
-                        kubernetes.io/tls-acme: "true"
-                        certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-                        nginx.ingress.kubernetes.io/secure-backends: "true"
+                    enabled: true
+                    annotations:
+                       kubernetes.io/tls-acme: "true"
+                       certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+                       nginx.ingress.kubernetes.io/secure-backends: "true"
+                    hosts:
+                       - ~
+          {% if not (rancher_server | ipaddr) %}
+                       - "{{ rancher_server }}"
+                    tls:
+                       - secretName: "{{ rancher_server | replace('.', '-') }}-key"
+                         hosts:
+                           - "{{ rancher_server }}"
+          {% endif %}
+                    path: /default/galaxy
+
+          cloudlaunch:
+             cloudlaunchserver:
+                admin_password: "{{ rancher_password }}"
+                postgresql:
+                   persistence:
+                      storageClass: "ebs-provisioner"
+                ingress:
+                   annotations:
+                      kubernetes.io/tls-acme: "true"
+                      certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+                      nginx.ingress.kubernetes.io/secure-backends: "true"
+                   hosts:
+                      - ~
+          {% if not (rancher_server | ipaddr) %}
+                      - "{{ rancher_server }}"
+                   tls:
+                      - secretName: "{{ rancher_server | replace('.', '-') }}-key"
+                        hosts:
+                          - "{{ rancher_server }}"
+          {% endif %}
+             ingress:
+                annotations:
+                   kubernetes.io/tls-acme: "true"
+                   certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+                   nginx.ingress.kubernetes.io/secure-backends: "true"
+                hosts:
+                   - ~
+          {% if not (rancher_server | ipaddr) %}
+                   - "{{ rancher_server }}"
+                tls:
+                   - secretName: "{{ rancher_server | replace('.', '-') }}-key"
                      hosts:
-                        - ~
-            {% if not (rancher_server | ipaddr) %}
-                        - "{{ rancher_server }}"
-                     tls:
-                        - secretName: "{{ rancher_server | replace('.', '-') }}-key"
-                          hosts:
-                            - "{{ rancher_server }}"
-            {% endif %}
-               ingress:
-                  annotations:
-                     kubernetes.io/tls-acme: "true"
-                     certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-                     nginx.ingress.kubernetes.io/secure-backends: "true"
-                  hosts:
-                     - ~
-            {% if not (rancher_server | ipaddr) %}
-                     - "{{ rancher_server }}"
-                  tls:
-                     - secretName: "{{ rancher_server | replace('.', '-') }}-key"
-                       hosts:
-                         - "{{ rancher_server }}"
-            {% endif %}
-            prometheus:
-               persistence:
-                  storageClass: "nfs-provisioner"
-               grafana:
-                  domain: "{{ rancher_server }}"
-                  ingress:
-                     annotations:
-                        kubernetes.io/tls-acme: "true"
-                        certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-                        nginx.ingress.kubernetes.io/secure-backends: "true"
-                     hosts:
-                        - ~
-            {% if not (rancher_server | ipaddr) %}
-                        - "{{ rancher_server }}"
-                     tls:
-                        - secretName: "{{ rancher_server | replace('.', '-') }}-key"
-                          hosts:
-                            - "{{ rancher_server }}"
-            {% endif %}
-            keycloak:
-               keycloak:
-                   password: "{{ rancher_password }}"
-                   ingress:
-                     enabled: true
-                     path: /auth
-                     annotations:
-                        kubernetes.io/tls-acme: "true"
-                        certmanager.k8s.io/cluster-issuer: letsencrypt-prod
-                        nginx.ingress.kubernetes.io/secure-backends: "true"
-                     hosts:
-                        - ~
-            {% if not (rancher_server | ipaddr) %}
-                        - "{{ rancher_server }}"
-                     tls:
-                        - secretName: "{{ rancher_server | replace('.', '-') }}-key"
-                          hosts:
-                            - "{{ rancher_server }}"
-            {% endif %}
-            global:
-               domain: "{{ rancher_server }}"
+                       - "{{ rancher_server }}"
+          {% endif %}
+          prometheus:
+             persistence:
+                storageClass: "nfs-provisioner"
+             grafana:
+                domain: "{{ rancher_server }}"
+                ingress:
+                   annotations:
+                      kubernetes.io/tls-acme: "true"
+                      certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+                      nginx.ingress.kubernetes.io/secure-backends: "true"
+                   hosts:
+                      - ~
+          {% if not (rancher_server | ipaddr) %}
+                      - "{{ rancher_server }}"
+                   tls:
+                      - secretName: "{{ rancher_server | replace('.', '-') }}-key"
+                        hosts:
+                          - "{{ rancher_server }}"
+          {% endif %}
+          keycloak:
+             keycloak:
+                 password: "{{ rancher_password }}"
+                 ingress:
+                   enabled: true
+                   path: /auth
+                   annotations:
+                      kubernetes.io/tls-acme: "true"
+                      certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+                      nginx.ingress.kubernetes.io/secure-backends: "true"
+                   hosts:
+                      - ~
+          {% if not (rancher_server | ipaddr) %}
+                      - "{{ rancher_server }}"
+                   tls:
+                      - secretName: "{{ rancher_server | replace('.', '-') }}-key"
+                        hosts:
+                          - "{{ rancher_server }}"
+          {% endif %}
+          global:
+             domain: "{{ rancher_server }}"
