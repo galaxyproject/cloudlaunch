@@ -17,10 +17,9 @@ from paramiko.ssh_exception import AuthenticationException
 from paramiko.ssh_exception import BadHostKeyException
 from paramiko.ssh_exception import SSHException
 
+import tenacity
+
 import requests
-
-from retrying import RetryError, retry
-
 
 log = logging.getLogger(__name__)
 
@@ -78,7 +77,7 @@ class SSHBasedConfigurer(AppConfigurer):
         log.debug("Config ssh key:\n%s", ssh_private_key)
         try:
             self._check_ssh(host, pk=ssh_private_key, user=user)
-        except RetryError as rte:
+        except tenacity.RetryError as rte:
             raise Exception("Error trying to ssh to host {}: {}".format(
                 host, rte))
 
@@ -101,8 +100,9 @@ class SSHBasedConfigurer(AppConfigurer):
             return True
         return False
 
-    @retry(retry_on_result=lambda result: result is False, wait_fixed=5000,
-           stop_max_delay=180000)
+    @tenacity.retry(stop=tenacity.stop_after_delay(180),
+                    retry=tenacity.retry_if_result(lambda result: result is False),
+                    wait=tenacity.wait_fixed(5))
     def _check_ssh(self, host, pk=None, user='ubuntu'):
         """
         Check for ssh availability on a host.
