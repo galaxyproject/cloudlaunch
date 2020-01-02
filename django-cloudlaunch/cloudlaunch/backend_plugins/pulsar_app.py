@@ -28,11 +28,13 @@ class PulsarAnsibleAppConfigurer(AnsibleAppConfigurer):
 
     def configure(self, app_config, provider_config):
         playbook_vars = [
-            ('pulsar_image', app_config.get('config_pulsar', {}).get(
+            ('docker_container_name', 'Pulsar'),
+            ('docker_boot_image', app_config.get('config_pulsar', {}).get(
                 'pulsar_image', 'galaxy/pulsar:cvmfs')),
-            ('pulsar_port', app_config.get('config_pulsar', {}).get(
-                'pulsar_port', '8913')),
-            ('pulsar_token', app_config['config_pulsar']['auth_token'])
+            ('docker_ports', ['8913:8913']),
+            ('docker_env', {
+                'PULSAR_CONFIG_PRIVATE_TOKEN': app_config['config_pulsar']['auth_token']
+            })
         ]
         return super().configure(app_config, provider_config,
                                  playbook_vars=playbook_vars)
