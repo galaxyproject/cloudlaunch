@@ -9,6 +9,8 @@ from urllib.parse import urljoin
 
 from celery.utils.log import get_task_logger
 
+from cloudbridge.base.helpers import cleanup_action
+
 from cloudlaunch.configurers import AnsibleAppConfigurer
 
 from .simple_web_app import SimpleWebAppPlugin
@@ -65,6 +67,9 @@ class AWSKubeIAMPolicyHandler(object):
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return policy_arn
 
+    def _delete_iam_policy(self, policy_arn):
+        self.iam_client.delete_policy(PolicyArn=policy_arn)
+
     def _load_policy_relative(self, policy_path_relative):
         path = (pathlib.Path(__file__).parent / policy_path_relative)
         with open(path) as f:
@@ -92,6 +97,9 @@ class AWSKubeIAMPolicyHandler(object):
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return role_name
 
+    def _delete_iam_role(self, role_name):
+        self.iam_client.delete_role(RoleName=role_name)
+
     def _get_or_create_cm2_iam_role(self):
         role_name = self.dpl_name + "-cm2-kube-role"
         trust_policy = self._load_policy_relative(
@@ -102,6 +110,12 @@ class AWSKubeIAMPolicyHandler(object):
         self.iam_client.attach_role_policy(
             RoleName=role,
             PolicyArn=policy
+        )
+
+    def _detach_policy_from_role(self, role, policy_arn):
+        self.iam_client.detach_role_policy(
+            RoleName=role,
+            PolicyArn=policy_arn
         )
 
     def _get_or_create_instance_profile(self, profile_name):
@@ -122,6 +136,10 @@ class AWSKubeIAMPolicyHandler(object):
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return profile_name
 
+    def _delete_instance_profile(self, profile_name):
+        self.iam_client.delete_instance_profile(
+            InstanceProfileName=profile_name)
+
     def _get_or_create_cm2_instance_profile(self):
         profile_name = self.dpl_name + '-cm2-kube-role'
         return self._get_or_create_instance_profile(profile_name)
@@ -135,6 +153,12 @@ class AWSKubeIAMPolicyHandler(object):
         except self.iam_client.exceptions.LimitExceededException:
             log.debug("Instance profile is already associated with role.")
             pass
+
+    def _detach_role_from_instance_profile(self, profile_name, role):
+        self.iam_client.remove_role_from_instance_profile(
+            InstanceProfileName=profile_name,
+            RoleName=role
+        )
 
     def _configure_instance_profile(self):
         role = self._get_or_create_cm2_iam_role()
@@ -151,6 +175,27 @@ class AWSKubeIAMPolicyHandler(object):
                 'Name': inst_profile
             }
         }
+
+    def cleanup_iam_policy(self):
+        sts = self.provider.session.client('sts')
+        account_id = sts.get_caller_identity()['Account']
+        policy_arn = f'arn:aws:iam::{account_id}:policy/cm2-kube-policy'
+        role_name = self.dpl_name + "-cm2-kube-role"
+        profile_name = self.dpl_name + '-cm2-kube-role'
+
+        with cleanup_action(lambda: self._delete_iam_role(
+                self.dpl_name + "-cm2-kube-role")):
+            with cleanup_action(lambda: self._delete_instance_profile(
+                    self.dpl_name + '-cm2-kube-role')):
+                with cleanup_action(
+                        lambda: self._detach_role_from_instance_profile(
+                            profile_name, role_name)):
+                    with cleanup_action(lambda: self._delete_iam_policy(
+                            policy_arn)):
+                        with cleanup_action(
+                                lambda: self._detach_policy_from_role(
+                                    role_name, policy_arn)):
+                            pass
 
 
 class GCPKubeIAMPolicyHandler(object):
@@ -227,6 +272,14 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
     def _get_configurer(self, app_config):
         # CloudMan2 can only be configured with ansible
         return CloudMan2AnsibleAppConfigurer()
+
+    def delete(self, provider, deployment):
+        result = super().delete(provider, deployment)
+        handler_class = self._get_iam_handler(provider)
+        if handler_class:
+            handler = handler_class(provider, deployment.get('name'), {})
+            handler.cleanup_iam_policy()
+        return result
 
 
 AWS_CLOUD_CONF = \

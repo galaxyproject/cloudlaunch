@@ -3,6 +3,7 @@ import copy
 import ipaddress
 
 from celery.utils.log import get_task_logger
+from cloudbridge.base.helpers import cleanup_action
 from cloudbridge.base.helpers import generate_key_pair
 from cloudbridge.interfaces import InstanceState
 from cloudbridge.interfaces.exceptions import CloudBridgeBaseException
@@ -518,6 +519,19 @@ runcmd:"""
         # Instance does not exist so default to False
         return False
 
+    def _cleanup_hostname(self, provider, deployment):
+        hostname_config = deployment.get('launch_result', {}).get(
+            'cloudLaunch', {}).get('hostNameConfig', {})
+        if hostname_config.get('hostnameType') == 'cloud_dns':
+            dns_zone = hostname_config.get('dnsZone')
+            dns_rec_name = hostname_config.get('dnsRecordName')
+            dns_zone = provider.dns.host_zones.get(dns_zone.get('id'))
+            host_name = (dns_rec_name + "." + dns_zone.name
+                         if dns_rec_name else dns_zone.name)
+            dns_rec = dns_zone.records.find(name=host_name)
+            if dns_rec:
+                dns_rec.delete()
+
     def delete(self, provider, deployment):
         """
         Delete resource(s) associated with the supplied deployment.
@@ -528,6 +542,9 @@ runcmd:"""
         *Note* that this method will delete resource(s) associated with
         the deployment - this is an un-recoverable action.
         """
+        with cleanup_action(lambda: self._cleanup_hostname(
+                provider, deployment)):
+            pass
         iid = self._get_deployment_iid(deployment)
         if not iid:
             return False

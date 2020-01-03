@@ -147,11 +147,14 @@ def _serialize_deployment(deployment):
     """
     launch_task = deployment.tasks.filter(
         action=models.ApplicationDeploymentTask.LAUNCH).first()
+    result = {'name': deployment.name,
+              'launch_status': None,
+              'launch_result': {}
+              }
     if launch_task:
-        return {'launch_status': launch_task.status,
-                'launch_result': launch_task.result}
-    else:
-        return {'launch_status': None, 'launch_result': {}}
+        result['launch_status'] = launch_task.status
+        result['launch_result'] = launch_task.result
+    return result
 
 
 @shared_task(bind=True, time_limit=60, expires=300)
