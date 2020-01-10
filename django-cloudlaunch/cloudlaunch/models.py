@@ -114,7 +114,7 @@ class Application(cb_models.DateNameAwareModel):
     icon_url = models.URLField(max_length=2048, blank=True, null=True)
     # Userdata max length is 16KB
     default_launch_config = models.TextField(
-        max_length=1024 * 16, blank=True, null=True,
+        max_length=1024 * 1024, blank=True, null=True,
         help_text="Application-wide initial configuration data to parameterize"
                   " the launch with.")
     default_version = models.ForeignKey(
@@ -157,7 +157,7 @@ class ApplicationVersion(models.Model):
                                               null=True)
     # Userdata max length is 16KB
     default_launch_config = models.TextField(
-        max_length=1024 * 16, blank=True, null=True,
+        max_length=1024 * 1024, blank=True, null=True,
         help_text="Version specific configuration data to parameterize the"
                   " launch with.")
     default_target = models.ForeignKey(
