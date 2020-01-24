@@ -1,4 +1,4 @@
-Django>=2.0,<3.0
+Django>=2.2.9,<3.0
 git+git://github.com/CloudVE/cloudbridge#egg=cloudbridge[dev]
 git+git://github.com/CloudVE/djcloudbridge#egg=djcloudbridge[dev]
 -e ".[dev]"
