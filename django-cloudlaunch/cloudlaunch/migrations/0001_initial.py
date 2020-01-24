@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0002_remove_content_type_name'),
-        ('djcloudbridge', '0002_auto_20200124_1508'),
+        ('djcloudbridge', '0001_initial'),
     ]
 
     operations = [
