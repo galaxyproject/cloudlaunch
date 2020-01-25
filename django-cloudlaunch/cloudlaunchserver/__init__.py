@@ -13,6 +13,7 @@ default_app_config = 'cloudlaunchserver.apps.CloudLaunchServerConfig'
 __version__ = '4.0.0'
 
 
+
 def get_version():
     """
     Return a string with the current version of the library.

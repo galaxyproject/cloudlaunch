@@ -10,8 +10,8 @@ CloudLaunch is a ReSTful, extensible Django app for discovering and launching
 applications on cloud, container, or local infrastructure. A live version is
 available at https://launch.usegalaxy.org/.
 
-CloudLaunch can be extended with your own plug-ins which can provide custom
-launch logic for arbitrary custom applications. Visit the live site to see
+CloudLaunch can be extended with your own plug-ins, which can provide custom
+launch logic for arbitrary applications. Visit the live site to see
 currently available applications in the Catalog. CloudLaunch is also tightly
 integrated with `CloudBridge <https://github.com/gvlproject/cloudbridge>`_,
 which makes CloudLaunch natively multi-cloud.
@@ -21,20 +21,25 @@ CloudLaunch has a web and commandline front-end. The Web UI is maintained in the
 The commandline client is maintained in the
 `cloudlaunch-cli <https://github.com/CloudVE/cloudlaunch-cli>`_ repository.
 
-This is an all-new version of CloudLaunch that replaces the original
-BioCloudCentral launcher. Code for that version is available in the
-`BioCloudCentral branch <https://github.com/galaxyproject/cloudlaunch/tree/BioCloudCentral>`_.
+Installation
+------------
 
-Install Production Version
---------------------------
+On Kuberneets, via Helm
+***********************
+The recommended way to install CloudLaunch is via a Helm Chart:
+https://github.com/cloudve/cloudlaunch-helm
 
-1. Install the cloudlaunch django server
+
+Locally, via commandline
+************************
+
+1. Install the CloudLaunch Django server
 
 .. code-block:: bash
 
     $ pip install cloudlaunch-server
 
-Once installed, You can run django admin commands as follows:
+Once installed, you can run Django admin commands as follows:
 
 .. code-block:: bash
 
@@ -51,7 +56,6 @@ Once installed, You can run django admin commands as follows:
 
     $ cloudlaunch-server django migrate
     $ cloudlaunch-server django createsuperuser
-    $ cloudlaunch-server django runserver
 
 4. Start the development server and celery task queue (along with a Redis
    server as the message broker), each process in its own tab.
@@ -74,17 +78,18 @@ Install Development Version
 ---------------------------
 
 CloudLaunch is based on Python 3.6 and although it may work on older Python
-versions, 3.6 is the only supported version. Use of Conda or virtualenv is also highly advised.
+versions, 3.6 is the only supported version. Use of Conda or virtualenv is also
+highly advised.
 
-1. Checkout cloudlaunch and create environment
+1. Checkout CloudLaunch and create an isolated environment
 
 .. code-block:: bash
 
     $ conda create --name cl python=3.6
     $ conda activate cl
-    $ git clone -b dev https://github.com/galaxyproject/cloudlaunch.git
+    $ git clone https://github.com/galaxyproject/cloudlaunch.git
     $ cd cloudlaunch
-    $ python setup.py develop
+    $ pip install -r requirements_dev.txt
     $ cd django-cloudlaunch
 
 2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
@@ -97,7 +102,7 @@ versions, 3.6 is the only supported version. Use of Conda or virtualenv is also 
     $ python manage.py migrate
     $ python manage.py createsuperuser
 
-4. Start the web server and Celery
+4. Start the web server and Celery in separate tabs
 
 .. code-block:: bash
 
