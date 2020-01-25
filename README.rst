@@ -71,7 +71,7 @@ is available at https://github.com/galaxyproject/cloudlaunch-ui.
 
 
 Install Development Version
-----------------------------
+---------------------------
 
 CloudLaunch is based on Python 3.6 and although it may work on older Python
 versions, 3.6 is the only supported version. Use of Conda or virtualenv is also highly advised.
@@ -86,10 +86,10 @@ versions, 3.6 is the only supported version. Use of Conda or virtualenv is also 
     $ cd cloudlaunch
     $ python setup.py develop
     $ cd django-cloudlaunch
-   
+
 2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
    ``cloudlaunchserver/settings_local.py`` and make any desired configuration changes.
-   
+
 3. Run the migrations and create a superuser:
 
 .. code-block:: bash
@@ -103,3 +103,20 @@ versions, 3.6 is the only supported version. Use of Conda or virtualenv is also 
 
     $ python manage.py runserver
     $ redis-server & celery -A cloudlaunchserver worker -l info --beat
+
+
+Contributing
+------------
+
+Every PR should also bump the version or build number. Do this by running one
+of the following commands as part of the PR, which will create a commit:
+
+- For updating a dev version: ``bumpversion [major | minor | patch]``
+  eg, with current version 4.0.0, running ``bumpversion patch`` will result in
+  *4.0.1-dev0*
+
+- For updating a build version: ``bumpversion build`` will result in
+  *4.0.1-dev1*
+
+- For production version: ``bumpversion --tag release`` will result
+  in *4.0.1*, with a git tag
