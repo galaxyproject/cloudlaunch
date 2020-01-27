@@ -116,7 +116,7 @@ REQS_DEV = ([
     # As celery message broker during development
     'redis',
     'sphinx>=1.3.1',
-    'bumpversion>=0.5.3',
+    'bump2version',
     'pylint-django'] + REQS_TEST
 )
 
