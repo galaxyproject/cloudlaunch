@@ -2,12 +2,13 @@
 import base64
 import pathlib
 import random
-import time
 import string
 import yaml
 from urllib.parse import urljoin
 
 from celery.utils.log import get_task_logger
+
+import tenacity
 
 from cloudbridge.base.helpers import cleanup_action
 
@@ -106,6 +107,9 @@ class AWSKubeIAMPolicyHandler(object):
             'cloudman2/rancher2_aws_iam_trust_policy.json')
         return self._get_or_create_iam_role(role_name, trust_policy)
 
+    @tenacity.retry(stop=tenacity.stop_after_attempt(5),
+                    wait=tenacity.wait_fixed(5),
+                    reraise=True)
     def _attach_policy_to_role(self, role, policy):
         self.iam_client.attach_role_policy(
             RoleName=role,
@@ -129,9 +133,6 @@ class AWSKubeIAMPolicyHandler(object):
                     InstanceProfileName=profile_name)
                 waiter = self.iam_client.get_waiter('instance_profile_exists')
                 waiter.wait(InstanceProfileName=profile_name)
-                # Despite the waiter, run_instances sometimes fails to recognize
-                # that the profile exists, so sleep manually as a workaround
-                time.sleep(5)
                 return profile_name
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return profile_name
@@ -144,6 +145,9 @@ class AWSKubeIAMPolicyHandler(object):
         profile_name = self.dpl_name + '-cm2-kube-role'
         return self._get_or_create_instance_profile(profile_name)
 
+    @tenacity.retry(stop=tenacity.stop_after_attempt(5),
+                    wait=tenacity.wait_fixed(5),
+                    reraise=True)
     def _attach_role_to_instance_profile(self, profile_name, role):
         try:
             self.iam_client.add_role_to_instance_profile(
@@ -274,12 +278,14 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         return CloudMan2AnsibleAppConfigurer()
 
     def delete(self, provider, deployment):
-        result = super().delete(provider, deployment)
-        handler_class = self._get_iam_handler(provider)
-        if handler_class:
-            handler = handler_class(provider, deployment.get('name'), {})
-            handler.cleanup_iam_policy()
-        return result
+        def delete_iam():
+            handler_class = self._get_iam_handler(provider)
+            if handler_class:
+                handler = handler_class(provider, deployment.get('name'), {})
+                handler.cleanup_iam_policy()
+
+        with cleanup_action(delete_iam):
+            return super().delete(provider, deployment)
 
 
 AWS_CLOUD_CONF = \
