@@ -278,12 +278,14 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
         return CloudMan2AnsibleAppConfigurer()
 
     def delete(self, provider, deployment):
-        result = super().delete(provider, deployment)
-        handler_class = self._get_iam_handler(provider)
-        if handler_class:
-            handler = handler_class(provider, deployment.get('name'), {})
-            handler.cleanup_iam_policy()
-        return result
+        def delete_iam():
+            handler_class = self._get_iam_handler(provider)
+            if handler_class:
+                handler = handler_class(provider, deployment.get('name'), {})
+                handler.cleanup_iam_policy()
+
+        with cleanup_action(delete_iam):
+            return super().delete(provider, deployment)
 
 
 AWS_CLOUD_CONF = \
