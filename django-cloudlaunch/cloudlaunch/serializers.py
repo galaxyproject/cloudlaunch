@@ -452,6 +452,7 @@ class CloudPluginSerializer(PolymorphicSerializer):
 class BaseCloudRegionSerializer(serializers.ModelSerializer):
     region_id = serializers.CharField(read_only=True)
     name = serializers.CharField(allow_blank=False)
+    cloudbridge_settings = serializers.CharField(read_only=True)
 
     class Meta:
         model = cb_models.Region
