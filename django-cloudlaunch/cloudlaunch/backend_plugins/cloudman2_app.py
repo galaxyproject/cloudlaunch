@@ -309,11 +309,28 @@ OPENSTACK_CLOUD_CONF = \
     "auth-url=$os_auth_url\n" \
     "domain-name=$os_domain\n" \
     "region=$os_region\n" \
-    "tenant-name=$os_tenant_name\n"
+    "tenant-name=$os_tenant_name\n" \
+    "[BlockStorage]\n" \
+    "ignore-volume-az=$os_ignore_volume_az\n"
 
 
 class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
     """Add CloudMan2 specific vars to playbook."""
+
+    def _os_ignore_az(self, compute_zone, cb_settings):
+        # We use a simple comparison here to determine whether or not k8s
+        # should match compute zone name and storage zone name when
+        # fulfilling PVCs. If they mismatch in our mappings, then k8s too
+        # should ignore az. However, this may not work for all openstack
+        # configurations, but should do for the two common cases, where there's
+        # either one storage zone for all compute zones, or a unique storage
+        # zone per compute zone.
+        settings = (yaml.safe_load(cb_settings)
+                    if cb_settings else {})
+        zone_mappings = settings.get('zone_mappings', {})
+        storage_zone = zone_mappings.get(compute_zone, {}).get(
+            'os_storage_zone_name')
+        return compute_zone != storage_zone
 
     def _gen_cloud_conf(self, provider_id, cloud_config):
         zone = cloud_config.get('target', {}).get('target_zone', {})
@@ -341,13 +358,18 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         elif provider_id == "openstack":
             # http://henriquetruta.github.io/openstack-cloud-provider/
             conf_template = OPENSTACK_CLOUD_CONF
+            os_ignore_az = self._os_ignore_az(
+                zone.get('zone_id'),
+                zone.get('region', {}).get('cloudbridge_settings'))
             values = {
                 'os_username': creds.get('os_username'),
                 'os_password': creds.get('os_password'),
                 'os_domain': creds.get('os_project_domain_name'),
                 'os_tenant_name': creds.get('os_project_name'),
                 'os_auth_url': zone.get('cloud', {}).get('auth_url'),
-                'os_region': zone.get('region', {}).get('name')
+                'os_region': zone.get('region', {}).get('name'),
+                # https://github.com/kubernetes/kubernetes/issues/53488
+                'os_ignore_volume_az': os_ignore_az
             }
         return string.Template(conf_template).substitute(values)
 
