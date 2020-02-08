@@ -2,6 +2,7 @@
 import base64
 import pathlib
 import random
+import time
 import string
 import yaml
 from urllib.parse import urljoin
@@ -133,6 +134,10 @@ class AWSKubeIAMPolicyHandler(object):
                     InstanceProfileName=profile_name)
                 waiter = self.iam_client.get_waiter('instance_profile_exists')
                 waiter.wait(InstanceProfileName=profile_name)
+                # Despite the waiter, aws run_instances sometimes take a while
+                # to recognize that the profile exists, so sleep manually as a
+                # workaround
+                time.sleep(5)
                 return profile_name
             except self.iam_client.exceptions.EntityAlreadyExistsException:
                 return profile_name
