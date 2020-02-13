@@ -301,7 +301,7 @@ AZURE_CLOUD_CONF = \
     "tenantId=$tenantId\n" \
     "aadClientID=$aadClientID\n" \
     "aadClientSecret=$aadClientSecret\n" \
-    "subscriptionId-name=$subscriptionId\n" \
+    "subscriptionId=$subscriptionId\n" \
     "resourceGroup=$resourceGroup\n"
 
 GCP_CLOUD_CONF = \
