@@ -66,8 +66,6 @@ COPY --chown=cloudlaunch:cloudlaunch --from=stage1 /app /app
 # Add the source files last to minimize layer cache invalidation
 ADD --chown=cloudlaunch:cloudlaunch . /app
 
-RUN chmod a+x /app/venv/bin/*
-
 # Switch to new, lower-privilege user
 USER cloudlaunch
 
