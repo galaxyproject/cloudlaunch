@@ -297,12 +297,38 @@ AWS_CLOUD_CONF = \
     "[Global]\n"
 
 AZURE_CLOUD_CONF = \
-    "[Global]\n" \
-    "tenantId=$tenantId\n" \
-    "aadClientID=$aadClientID\n" \
-    "aadClientSecret=$aadClientSecret\n" \
-    "subscriptionId=$subscriptionId\n" \
-    "resourceGroup=$resourceGroup\n"
+"""
+{
+  "cloud": "",
+  "tenantId": "$tenantId",
+  "subscriptionId": "$subscriptionId",
+  "resourceGroup": "$resourceGroup",
+  "aadClientId": "$aadClientID",
+  "aadClientSecret": "$aadClientSecret",
+  # "location": "eastus",
+  # "vnetName": "cloudbridge-net-d25005",
+  # "vnetResourceGroup": "$resourceGroup",
+  # "subnetName": "cloudbridge-subnet-09f56a",
+  # "securityGroupName": "cloudlaunch-cm2-3c7735",
+  # "routeTableName": "",
+  # "primaryAvailabilitySetName": "",
+  # "vmType": "",
+  # "primaryScaleSetName": "",
+  # "aadClientCertPath": "",
+  # "aadClientCertPassword": "",
+  # "cloudProviderBackoff": false,
+  # "cloudProviderBackoffRetries": 0,
+  # "cloudProviderBackoffExponent": 0,
+  # "cloudProviderBackoffDuration": 0,
+  # "cloudProviderBackoffJitter": 0,
+  # "cloudProviderRateLimit": false,
+  # "cloudProviderRateLimitQPS": 0,
+  # "cloudProviderRateLimitBucket": 0,
+  # "useInstanceMetadata": true,
+  # "useManagedIdentityExtension": false,
+  # "maximumLoadBalancerRuleCount": 0
+}\n
+"""
 
 GCP_CLOUD_CONF = \
     "[Global]\n"
