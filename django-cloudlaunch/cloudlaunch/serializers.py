@@ -82,6 +82,7 @@ class DeploymentTargetSerializer(serializers.ModelSerializer):
 
 
 class DeploymentZoneSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
     name = serializers.CharField(read_only=True)
     zone_id = serializers.CharField(read_only=True)
     region = cb_serializers.CloudRegionListSerializer(read_only=True)
@@ -89,7 +90,7 @@ class DeploymentZoneSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = cb_models.Zone
-        fields = ('cloud', 'region', 'zone_id', 'name')
+        fields = ('id', 'cloud', 'region', 'zone_id', 'name')
 
 
 class CloudDeploymentTargetSerializer(DeploymentTargetSerializer):
