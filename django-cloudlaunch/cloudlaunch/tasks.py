@@ -2,6 +2,7 @@
 import copy
 import json
 import logging
+import yaml
 
 from celery.app import shared_task
 from celery.exceptions import SoftTimeLimitExceeded
@@ -148,6 +149,7 @@ def _serialize_deployment(deployment):
     launch_task = deployment.tasks.filter(
         action=models.ApplicationDeploymentTask.LAUNCH).first()
     result = {'name': deployment.name,
+              'app_config': yaml.safe_load(deployment.application_config),
               'launch_status': None,
               'launch_result': {}
               }
