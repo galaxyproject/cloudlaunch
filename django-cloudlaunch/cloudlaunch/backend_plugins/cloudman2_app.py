@@ -453,6 +453,10 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
                                default_flow_style=False,
                                allow_unicode=True).encode('utf-8'))
                 .decode('utf-8'),
+            'CM_CHART_VERSION': str(app_config.get('config_cloudman2', {})
+                .get('cm_chart_version', '')),
+            'CM_CHARTS_REPO': str(app_config.get('config_cloudman2', {})
+                .get('cm_charts_repo', '')),
         }
         if app_config.get('config_cloudman2', {}).get('cm_helm_values'):
             cm_docker_env.update({
