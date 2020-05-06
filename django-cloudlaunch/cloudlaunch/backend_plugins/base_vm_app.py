@@ -401,7 +401,8 @@ runcmd:"""
             results['keyPair'] = {'id': kp.id, 'name': kp.name,
                                   'material': kp.material}
             # FIXME: this does not account for multiple VM fw and expects one
-            results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
+            if vmfl:
+                results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
             results['instance'] = {'id': inst.id}
             # Support for legacy NeCTAR
             results['publicIP'] = self._attach_public_ip(

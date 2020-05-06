@@ -8,3 +8,4 @@ result_backend = 'db+sqlite:///results.db'
 result_serializer = 'json'
 task_serializer = 'json'
 accept_content = ['json']
+task_always_eager = True
