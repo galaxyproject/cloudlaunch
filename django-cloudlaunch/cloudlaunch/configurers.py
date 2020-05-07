@@ -277,7 +277,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                 cmd += ["--extra-vars", "{0}=\"{1}\"".format(pev[0], pev[1])]
             # TODO: Sanitize before printing
             log.debug("Running Ansible with command %s", " ".join(cmd))
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                        universal_newlines=True, cwd=repo_path)
             output_buffer = ""
             while process.poll() is None:

@@ -315,8 +315,14 @@ class BaseVMAppPlugin(AppPlugin):
                 'instance').get('id')
 
         if app_config.get('config_appliance'):
-            c_result = self._configure_host(name, task, app_config,
-                                            provider_config)
+            try:
+                c_result = self._configure_host(name, task, app_config,
+                                                provider_config)
+            except Exception:
+                if host_config.get('instance_id'):
+                    provider = provider_config.get('cloud_provider')
+                    provider.compute.instances.delete(host_config['instance_id'])
+                raise
         # Merge result dicts; right-most dict keys take precedence
         return {'cloudLaunch': {**p_result.get('cloudLaunch', {}),
                                 **c_result.get('cloudLaunch', {})}}
@@ -382,31 +388,36 @@ runcmd:"""
         task.update_state(state="PROGRESSING",
                           meta={"action": "Waiting for instance %s" % inst.id})
         log.debug("Waiting for instance {0} to be ready...".format(inst.id))
-        inst.wait_till_ready()
-        static_ip = cloudlaunch_config.get('staticIP')
-        if static_ip:
-            task.update_state(state='PROGRESSING',
-                              meta={'action': "Assigning requested floating "
-                                              "IP: %s" % static_ip})
-            inst.add_floating_ip(static_ip)
-            inst.refresh()
-        results = {}
-        results['keyPair'] = {'id': kp.id, 'name': kp.name,
-                              'material': kp.material}
-        # FIXME: this does not account for multiple VM fw and expects one
-        results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
-        results['instance'] = {'id': inst.id}
-        # Support for legacy NeCTAR
-        results['publicIP'] = self._attach_public_ip(
-            provider, inst, subnet.network_id if subnet else None)
-        # Configure hostname (if set)
-        results['hostname'] = self._configure_hostname(
-            provider, results['publicIP'], cloudlaunch_config.get('hostnameConfig'))
-        task.update_state(
-            state='PROGRESSING',
-            meta={"action": "Instance created successfully. " +
-                            "Public IP: %s" % results.get('publicIP') or ""})
-        return {"cloudLaunch": results}
+        try:
+            inst.wait_till_ready()
+            static_ip = cloudlaunch_config.get('staticIP')
+            if static_ip:
+                task.update_state(state='PROGRESSING',
+                                  meta={'action': "Assigning requested floating "
+                                                  "IP: %s" % static_ip})
+                inst.add_floating_ip(static_ip)
+                inst.refresh()
+            results = {}
+            results['keyPair'] = {'id': kp.id, 'name': kp.name,
+                                  'material': kp.material}
+            # FIXME: this does not account for multiple VM fw and expects one
+            if vmfl:
+                results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
+            results['instance'] = {'id': inst.id}
+            # Support for legacy NeCTAR
+            results['publicIP'] = self._attach_public_ip(
+                provider, inst, subnet.network_id if subnet else None)
+            # Configure hostname (if set)
+            results['hostname'] = self._configure_hostname(
+                provider, results['publicIP'], cloudlaunch_config.get('hostnameConfig'))
+            task.update_state(
+                state='PROGRESSING',
+                meta={"action": "Instance created successfully. " +
+                                "Public IP: %s" % results.get('publicIP') or ""})
+            return {"cloudLaunch": results}
+        except Exception:
+            inst.delete()
+            raise
 
     def _configure_hostname(self, provider, public_ip, hostname_config):
         if not hostname_config:
