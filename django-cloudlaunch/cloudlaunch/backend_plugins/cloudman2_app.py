@@ -338,7 +338,8 @@ OPENSTACK_CLOUD_CONF = \
     "username=$os_username\n" \
     "password=$os_password\n" \
     "auth-url=$os_auth_url\n" \
-    "domain-name=$os_domain\n" \
+    "domain-id=$os_domain_id\n" \
+    "domain-name=$os_domain_name\n" \
     "region=$os_region\n" \
     "tenant-name=$os_tenant_name\n" \
     "[BlockStorage]\n" \
@@ -395,7 +396,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             values = {
                 'os_username': creds.get('os_username'),
                 'os_password': creds.get('os_password'),
-                'os_domain': creds.get('os_project_domain_name'),
+                'os_domain_id': creds.get('os_project_domain_id'),
+                'os_domain_name': creds.get('os_project_domain_name'),
                 'os_tenant_name': creds.get('os_project_name'),
                 'os_auth_url': zone.get('cloud', {}).get('auth_url'),
                 'os_region': zone.get('region', {}).get('name'),
