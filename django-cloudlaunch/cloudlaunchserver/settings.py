@@ -47,6 +47,7 @@ CORS_ALLOW_HEADERS = default_headers + (
     'cl-os-password',
     'cl-os-tenant-name',
     'cl-os-project-name',
+    'cl-os-project-domain-id',
     'cl-os-project-domain-name',
     'cl-os-user-domain-name',
     'cl-os-identity-api-version',
