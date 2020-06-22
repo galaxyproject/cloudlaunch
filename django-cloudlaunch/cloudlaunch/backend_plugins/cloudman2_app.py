@@ -335,12 +335,12 @@ GCP_CLOUD_CONF = \
 
 OPENSTACK_CLOUD_CONF = \
     "[Global]\n" \
-    "username='$os_username'\n" \
-    "password='$os_password'\n" \
+    "username=\"$os_username\"\n" \
+    "password=\"$os_password\"\n" \
     "auth-url=$os_auth_url\n" \
     "$domain_entry\n" \
     "region=$os_region\n" \
-    "tenant-name='$os_tenant_name'\n" \
+    "tenant-name=\"$os_tenant_name\"\n" \
     "[BlockStorage]\n" \
     "ignore-volume-az=$os_ignore_volume_az\n"
 
