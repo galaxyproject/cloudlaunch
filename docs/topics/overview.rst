@@ -9,7 +9,6 @@ is a virtual machine that packages a ready-to-run application(s), eliminating
 the need to install and configure complex stacks of software. (e.g. Galaxy,
 Genomics Virtual Lab, SLURM).
 
-
 Public Appliances
 -----------------
 Public Appliances are appliances which have been made publicly available by

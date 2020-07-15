@@ -1,5 +1,5 @@
-Notes on managing the production server
-=======================================
+Installing a production server
+==============================
 
 Upgrading running chart
 -----------------------
