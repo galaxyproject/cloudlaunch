@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the CloudLaunch documentation!
-=========================================
+Welcome to the CloudLaunch developer documentation
+==================================================
 
 CloudLaunch is a ReSTful, extensible Django app for discovering and launching
 applications on cloud, container, or local infrastructure. A live version is
@@ -21,62 +21,41 @@ CloudLaunch has a web and commandline front-end. The Web UI is maintained in the
 The commandline client is maintained in the
 `cloudlaunch-cli <https://github.com/CloudVE/cloudlaunch-cli>`_ repository.
 
-Install
--------
+Installation
+------------
 
-CloudLaunch is based on Python 3.6 and although it may work on older Python
-versions, 3.6 is the only supported version. Use of virtualenv is also highly
-recommended.
+The recommended method for installing CloudLaunch is via the
+`CloudLaunch Helm chart <topics/production_server_mgmt.html>`_.
 
-1. Checkout cloudlaunch and create environment
-
-.. code-block:: bash
-
-    $ mkdir launcher && cd launcher
-    $ virtualenv venv -p python3.6 --prompt "(cloudlaunch)" && source venv/bin/activate
-    $ git clone -b dev https://github.com/galaxyproject/cloudlaunch.git
-    $ cd cloudlaunch
-    $ pip install -r requirements.txt
-    $ cd django-cloudlaunch
-    $ python manage.py migrate
-    $ python manage.py runserver
-    $ python manage.py createsuperuser
-
-2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
-   ``cloudlaunchserver/settings_local.py`` and make any desired configuration
-   changes. **Make sure to change** the value for ``FERNET_KEYS`` variable
-   because it is used to encrypt sensitive database fields.
-
-3. Start the development server and celery task queue (along with a Redis
-   server as the message broker), each process in its own tab.
-
-.. code-block:: bash
-
-    $ python manage.py runserver
-    $ redis-server & celery -A cloudlaunchserver worker -l info --beat
-
-4. Visit http://127.0.0.1:8000/admin/ to define your application and
-   infrastructure properties.
-
-5. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
-
-You will probably also want to install the UI for the server. The default UI
-is available at https://github.com/galaxyproject/cloudlaunch-ui.
+To install a development version, take a look at
+`development installation page <topics/development_server_installation.html>`_.
 
 
-Documentation
--------------
+Application Configuration
+-------------------------
+
+Once the application components are installed and running (regardless of the
+method utilized), it is necessary to load appliance and cloud provider
+connection properties. See `this page <topics/configuration.html>`_ for how to
+do this.
+
+Authentication Configuration
+----------------------------
+
+User authentication to CloudLaunch should be managed via social auth. For
+development purposes, it is possible to use Django authentication in which
+case simply creating a superuser is sufficient. If you intend on having users
+of your CloudLaunch installation, you will want to configure
+`social auth <topics/social_auth.html>`_.
+
+
+Table of contents
+-----------------
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    topics/overview.rst
-   topics/social_auth.rst
    topics/production_server_mgmt.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   topics/development_server_installation.rst
+   topics/configuration.rst
+   topics/social_auth.rst

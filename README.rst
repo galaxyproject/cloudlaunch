@@ -14,7 +14,9 @@ CloudLaunch can be extended with your own plug-ins, which can provide custom
 launch logic for arbitrary applications. Visit the live site to see
 currently available applications in the Catalog. CloudLaunch is also tightly
 integrated with `CloudBridge <https://github.com/gvlproject/cloudbridge>`_,
-which makes CloudLaunch natively multi-cloud.
+which makes CloudLaunch natively multi-cloud. If you would like to have an
+additional cloud provider added as an available option for a given appliance,
+please create an issue in this repo.
 
 CloudLaunch has a web and commandline front-end. The Web UI is maintained in the
 `CloudLaunch-UI <https://github.com/galaxyproject/cloudlaunch-ui>`_ repository.
@@ -26,7 +28,7 @@ Installation
 
 On Kuberneets, via Helm
 ***********************
-The recommended way to install CloudLaunch is via a Helm Chart:
+The recommended way to install CloudLaunch is via the CloudLaunch Helm Chart:
 https://github.com/cloudve/cloudlaunch-helm
 
 
@@ -65,13 +67,11 @@ Once installed, you can run Django admin commands as follows:
     $ python manage.py runserver
     $ redis-server & celery -A cloudlaunchserver worker -l info --beat
 
-5. Visit http://127.0.0.1:8000/admin/ to define your application and
+5. Visit http://127.0.0.1:8000/cloudlaunch/admin/ to define your application and
    infrastructure properties.
 
-6. Visit http://127.0.0.1:8000/api/v1/ to explore the API.
-
-You will probably also want to install the UI for the server. The default UI
-is available at https://github.com/galaxyproject/cloudlaunch-ui.
+6 . Install the UI for the server by following instructions from
+    https://github.com/galaxyproject/cloudlaunch-ui.
 
 
 Install Development Version
@@ -85,7 +85,7 @@ highly advised.
 
 .. code-block:: bash
 
-    $ conda create --name cl python=3.6
+    $ conda create --name cl --yes python=3.6
     $ conda activate cl
     $ git clone https://github.com/galaxyproject/cloudlaunch.git
     $ cd cloudlaunch
@@ -108,6 +108,14 @@ highly advised.
 
     $ python manage.py runserver
     $ redis-server & celery -A cloudlaunchserver worker -l info --beat
+
+5. Visit http://127.0.0.1:8000/cloudlaunch/admin/ to define appliances and
+   add cloud providers.
+
+6. Visit http://127.0.0.1:8000/cloudlaunch/api/v1/ to explore the API.
+
+7 . Install the UI for the server by following instructions from
+    https://github.com/galaxyproject/cloudlaunch-ui.
 
 
 Contributing
