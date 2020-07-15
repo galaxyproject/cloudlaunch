@@ -42,8 +42,8 @@ do this.
 Authentication Configuration
 ----------------------------
 
-User authentication to CloudLaunch should managed via social auth. For
-development purposes, it is possible to use the Django authentication in which
+User authentication to CloudLaunch should be managed via social auth. For
+development purposes, it is possible to use Django authentication in which
 case simply creating a superuser is sufficient. If you intend on having users
 of your CloudLaunch installation, you will want to configure
 `social auth <topics/social_auth.html>`_.

@@ -26,7 +26,7 @@ highly advised.
 
 2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
    ``cloudlaunchserver/settings_local.py`` and make any desired configuration
-   changes. No change are required for the CloudLaunch to run.
+   changes. No change are required for CloudLaunch to run.
 
 3. Run the migrations and create a superuser:
 
