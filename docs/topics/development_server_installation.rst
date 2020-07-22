@@ -24,18 +24,22 @@ highly advised.
     $ pip install -r requirements_dev.txt
     $ cd django-cloudlaunch
 
-2. Copy ``cloudlaunchserver/settings_local.py.sample`` to
-   ``cloudlaunchserver/settings_local.py`` and make any desired configuration
-   changes. No change are required for CloudLaunch to run.
+2. Create a local copy of the settings file and make any desired configuration
+   changes. No changes are required for CloudLaunch to run but it is advisable
+   to at least update the value of the fernet key.
 
-3. Run the migrations and create a superuser:
+.. code-block:: bash
+    $ cp cloudlaunchserver/settings_local.py.sample cloudlaunchserver/settings_local.py
+
+3. Run the migrations and create a superuser
 
 .. code-block:: bash
 
     $ python manage.py migrate
     $ python manage.py createsuperuser
 
-4. Start the web server and Celery in separate tabs
+4. Start the web server and Celery in separate tabs. If you do not have Redis
+   installed, you can install it via Conda: ``conda install -c anaconda redis``
 
 .. code-block:: bash
 
@@ -60,8 +64,8 @@ Install the UI
 
 2. Install required libraries
 
-Make sure you have ``node`` (version 6.*) installed. Then install
-dependencies with the following commands:
+Make sure you have ``node`` (version 6.*) installed (eg, via Conda,
+``conda install -c conda-forge nodejs``). Then install the dependencies.
 
 .. code-block:: bash
 
@@ -84,3 +88,8 @@ Or if you use yarn as your preferred package manager, ``yarn start``.
 
 Access the server at ``http://localhost:4200/``. The app will
 automatically reload if you change any of the source files.
+
+If you are installing this on a VM instead your local machine and need to
+access the UI over the network, instead of using ``npm start``, use
+``ng serve --host 0.0.0.0 --disable-host-check --proxy-config proxy.conf.json``
+The UI should be availale on the host IP address, port 4200.
