@@ -392,10 +392,10 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             os_ignore_az = self._os_ignore_az(
                 zone.get('zone_id'),
                 zone.get('region', {}).get('cloudbridge_settings'))
-            if creds.get('os_project_domain_id'):
-                domain_entry = f"domain-id={creds.get('os_project_domain_id')}"
+            if creds.get('os_user_domain_id'):
+                domain_entry = f"domain-id={creds.get('os_user_domain_id')}"
             else:
-                domain_entry = f"domain-name={creds.get('os_project_domain_name')}"
+                domain_entry = f"domain-name={creds.get('os_user_domain_name')}"
 
             values = {
                 'os_username': creds.get('os_username'),
