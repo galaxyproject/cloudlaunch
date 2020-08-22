@@ -214,8 +214,8 @@
   "model": "djcloudbridge.zone",
   "pk": 1,
   "fields": {
-    "zone_id": "",
-    "name": "Default",
+    "zone_id": "default",
+    "name": "",
     "region": 1
   }
 },
@@ -223,8 +223,8 @@
   "model": "djcloudbridge.zone",
   "pk": 2,
   "fields": {
-    "zone_id": "",
-    "name": "Default",
+    "zone_id": "default",
+    "name": "",
     "region": 2
   }
 },
@@ -232,8 +232,8 @@
   "model": "djcloudbridge.zone",
   "pk": 3,
   "fields": {
-    "zone_id": "",
-    "name": "Default",
+    "zone_id": "default",
+    "name": "",
     "region": 3
   }
 },
@@ -241,8 +241,8 @@
   "model": "djcloudbridge.zone",
   "pk": 4,
   "fields": {
-    "zone_id": "",
-    "name": "Default",
+    "zone_id": "default",
+    "name": "",
     "region": 4
   }
 },

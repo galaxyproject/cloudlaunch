@@ -13,8 +13,7 @@ class CloudLaunchIntegrationTestApp(BaseVMAppPlugin):
         """
         Returns a mock version of a provider if available.
         """
-        provider_class = CloudProviderFactory().get_provider_class(
-            provider.PROVIDER_ID, get_mock=True)
+        provider_class = CloudProviderFactory().get_provider_class("mock")
         return provider_class(provider.config)
     
     def deploy(self, name, task, app_config, provider_config):
