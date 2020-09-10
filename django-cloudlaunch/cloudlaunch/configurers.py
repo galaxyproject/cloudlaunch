@@ -277,19 +277,19 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                 cmd += ["--extra-vars", "{0}=\"{1}\"".format(pev[0], pev[1])]
             # TODO: Sanitize before printing
             log.debug("Running Ansible with command %s", " ".join(cmd))
-            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       universal_newlines=True, cwd=repo_path)
-            output_buffer = ""
-            while process.poll() is None:
-                output = process.stdout.readline()
-                output_buffer += output
-                if output:
-                    log.info(output)
-            if process.poll() != 0:
-                raise Exception("An error occurred while running the ansible playbook to"
-                                " configure instance. Check the logs. Last output lines"
-                                " were: {0}".format(output.split("\n")[-10:]))
-            log.info("Playbook status: %s", process.poll())
+            with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                  universal_newlines=True, cwd=repo_path) as process:
+                output_buffer = ""
+                while process.stdout.readable():
+                    output = process.stdout.readline()
+                    output_buffer += output
+                    if output:
+                        log.info(output)
+                if process.poll() != 0:
+                    raise Exception("An error occurred while running the ansible playbook to"
+                                    " configure instance. Check the logs. Last output lines"
+                                    " were: {0}".format(output_buffer.split("\n")[-10:]))
+                log.info("Playbook status: %s", process.poll())
         finally:
             if not settings.DEBUG:
                 log.info("Deleting ansible playbook %s", repo_path)
