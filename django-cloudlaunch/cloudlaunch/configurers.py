@@ -280,11 +280,13 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   universal_newlines=True, cwd=repo_path) as process:
                 output_buffer = ""
-                while process.stdout.readable():
+                while process.poll() is None:
                     output = process.stdout.readline()
                     output_buffer += output
                     if output:
                         log.info(output)
+                # Read any remaining output
+                output_buffer += process.stdout.readline()
                 if process.poll() != 0:
                     raise Exception("An error occurred while running the ansible playbook to"
                                     " configure instance. Check the logs. Last output lines"
