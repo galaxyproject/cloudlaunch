@@ -15,7 +15,7 @@ from cloudbridge.base.helpers import cleanup_action
 
 from cloudlaunch.configurers import AnsibleAppConfigurer
 
-from .simple_web_app import SimpleWebAppPlugin
+from cloudlaunch.backend_plugins.simple_web_app import SimpleWebAppPlugin
 
 log = get_task_logger('cloudlaunch')
 
@@ -80,7 +80,7 @@ class AWSKubeIAMPolicyHandler(object):
     def _get_or_create_cm2_iam_policy(self):
         policy_name = 'cm2-kube-policy'
         policy_doc = self._load_policy_relative(
-            'cloudman2/rancher2_aws_iam_policy.json')
+            'rancher2_aws_iam_policy.json')
         return self._get_or_create_iam_policy(policy_name, policy_doc)
 
     def _get_or_create_iam_role(self, role_name, trust_policy):
@@ -105,7 +105,7 @@ class AWSKubeIAMPolicyHandler(object):
     def _get_or_create_cm2_iam_role(self):
         role_name = self.dpl_name + "-cm2-kube-role"
         trust_policy = self._load_policy_relative(
-            'cloudman2/rancher2_aws_iam_trust_policy.json')
+            'rancher2_aws_iam_trust_policy.json')
         return self._get_or_create_iam_role(role_name, trust_policy)
 
     @tenacity.retry(stop=tenacity.stop_after_attempt(5),
@@ -442,47 +442,25 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         kube_cloud_provider, kube_cloud_conf = self._get_kube_cloud_settings(
             provider_config, cloud_config)
 
-        cm_docker_env = {
-            'RANCHER_SERVER': host,
-            'RANCHER_PWD': app_config.get('config_cloudman2', {})
+        cm_playbook_vars = {
+            'cluster_hostname': host,
+            'cluster_password': app_config.get('config_cloudman2', {})
                 .get('clusterPassword', ''),
-            'KUBE_CLOUD_PROVIDER': kube_cloud_provider,
-            'KUBE_CLOUD_CONF': base64.b64encode(kube_cloud_conf.encode('utf-8'))
-                .decode('utf-8'),
-            'CM_SKIP_CLOUDMAN': str(app_config.get('config_cloudman2', {})
+            'kube_cloud_provider': kube_cloud_provider,
+            'kube_cloud_conf': kube_cloud_conf,
+            'cm_skip_cloudman': str(app_config.get('config_cloudman2', {})
                 .get('cm_skip_cloudman', 'false')),
-            'CM_DEPLOYMENT_NAME': app_config.get('deployment_config', {})
+            'cm_deployment_name': app_config.get('deployment_config', {})
                 .get('name', ''),
-            'CM_INITIAL_CLUSTER_DATA': base64.b64encode(
-                yaml.safe_dump(cm_initial_cluster_data,
-                               default_flow_style=False,
-                               allow_unicode=True).encode('utf-8'))
-                .decode('utf-8'),
-            'CM_CHART_VERSION': str(app_config.get('config_cloudman2', {})
+            'cm_initial_cluster_data': cm_initial_cluster_data,
+            'cm_chart_version': str(app_config.get('config_cloudman2', {})
                 .get('cm_chart_version', '')),
-            'CM_CHARTS_REPO': str(app_config.get('config_cloudman2', {})
+            'cm_charts_repo': str(app_config.get('config_cloudman2', {})
                 .get('cm_charts_repo', '')),
-            'CM_INITIAL_STORAGE_SIZE': str(app_config.get('config_cloudman2', {})
+            'cm_initial_storage_size': str(app_config.get('config_cloudman2', {})
                 .get('cm_initial_storage_size', '')),
+            'cm_helm_values': app_config.get('config_cloudman2', {})
+                .get('cm_helm_values', {})
         }
-        if app_config.get('config_cloudman2', {}).get('cm_helm_values'):
-            cm_docker_env.update({
-                'CM_HELM_VALUES': base64.b64encode(
-                    app_config.get('config_cloudman2', {})
-                        .get('cm_helm_values').encode('utf-8'))
-                    .decode('utf-8')
-            })
-        # Allow docker config to be overridden
-        cm_docker_env.update(app_config.get('config_cloudman2', {})
-                             .get('cm_docker_env', {}))
-
-        playbook_vars = {
-            'docker_container_name': 'cloudman-boot',
-            'docker_boot_image': app_config.get('config_cloudman2', {}).get(
-                'cm_boot_image'),
-            'docker_volumes': ['/var/run/docker.sock:/var/run/docker.sock'],
-            'docker_env': cm_docker_env
-        }
-
         return super().configure(app_config, provider_config,
-                                 playbook_vars=playbook_vars)
+                                 playbook_vars=cm_playbook_vars)

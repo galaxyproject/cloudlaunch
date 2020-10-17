@@ -7,6 +7,7 @@ import socket
 import subprocess
 from io import StringIO
 from string import Template
+import yaml
 
 from django.conf import settings
 
@@ -271,12 +272,19 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             with open(inventory_path, 'w') as f:
                 log.info("Creating inventory file %s", inventory_path)
                 f.writelines(inv.substitute({'host': host, 'user': user}))
+            # Write the ansible values file
+            values_file_path = os.path.join(repo_path, 'values.yml')
+            with open(values_file_path, 'w') as f:
+                log.info("Creating ansible values file %s", values_file_path)
+                yaml.dump(playbook_vars or {}, f, default_flow_style=False)
             # Run the playbook
             cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
-            for pev in playbook_vars or []:
-                cmd += ["--extra-vars", "{0}=\"{1}\"".format(pev[0], pev[1])]
+            if playbook_vars:
+                cmd += ["-e", "@{}".format(values_file_path)]
             # TODO: Sanitize before printing
-            log.debug("Running Ansible with command %s", " ".join(cmd))
+            log.debug("Running Ansible with values:\n%s",
+                      yaml.dump(playbook_vars or {}, default_flow_style=False))
+            log.debug("Running Ansible with command: %s", " ".join(cmd))
             with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                   universal_newlines=True, cwd=repo_path) as process:
                 output_buffer = ""
