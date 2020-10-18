@@ -1,10 +1,14 @@
 import os
+
 import threading
+
+from celery.worker import WorkController
 
 from django.apps import AppConfig
 from django.dispatch import Signal, receiver
 
 from .celery import app
+
 
 class CloudLaunchServerConfig(AppConfig):
     name = 'cloudlaunchserver'
@@ -18,9 +22,24 @@ class CloudLaunchServerConfig(AppConfig):
             # https://stackoverflow.com/questions/22233680/in-memory-broker-for-celery-unit-tests
             # Also refer: https://github.com/celery/celerytest
             app.control.purge()
-            worker_thread = threading.Thread(target=app.worker_main)
-            worker_thread.daemon = True
-            worker_thread.start()
+
+            def mock_import_module(*args, **kwargs):
+                return None
+
+            # ref: https://medium.com/@erayerdin/how-to-test-celery-in-django-927438757daf
+            app.loader.import_default_modules = mock_import_module
+
+            worker = WorkController(
+                app=app,
+                # not allowed to override TestWorkController.on_consumer_ready
+                ready_callback=None,
+                without_heartbeat=True,
+                without_mingle=True,
+                without_gossip=True)
+
+            t = threading.Thread(target=worker.start)
+            t.daemon = True
+            t.start()
 
             @receiver(django_server_shutdown)
             def on_shutdown(sender, **kwargs):
