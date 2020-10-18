@@ -90,7 +90,7 @@ REQS_BASE = [
     'sentry-sdk==0.6.9',
     # For CloudMan2 plugin
     'gitpython',
-    'ansible',
+    'ansible<2.10', # pin ansible due to: https://github.com/ansible/ansible/issues/68399
     'netaddr',
     # Utility package for retrying operations
     'tenacity',
