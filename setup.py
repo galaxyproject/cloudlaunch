@@ -91,6 +91,7 @@ REQS_BASE = [
     # For CloudMan2 plugin
     'gitpython',
     'ansible',
+    'netaddr',
     # Utility package for retrying operations
     'tenacity',
     # For serving static files in production mode
