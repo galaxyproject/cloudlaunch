@@ -462,5 +462,9 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             'cm_helm_values': app_config.get('config_cloudman2', {})
                 .get('cm_helm_values', {})
         }
+        # Allow playbook vars to be overridden
+        cm_playbook_vars.update(app_config.get('config_cloudman2', {})
+                                .get('cm_playbook_vars', {}))
+
         return super().configure(app_config, provider_config,
                                  playbook_vars=cm_playbook_vars)
