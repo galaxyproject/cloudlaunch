@@ -190,10 +190,12 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
         super().validate(app_config, provider_config)
 
         # validate required app_config values
-        playbook = app_config.get('config_appliance', {}).get('repository')
-        if not playbook:
+        playbooks = app_config.get('config_appliance', {}).get('playbooks')
+        # backward compatibility
+        repository = app_config.get('config_appliance', {}).get('repository')
+        if not playbooks and not repository:
             raise Exception("config_appliance missing required parameter: "
-                            "repository")
+                            "playbooks")
 
     def configure(self, app_config, provider_config, playbook_vars=None):
         host_config = provider_config.get('host_config', {})
@@ -204,14 +206,25 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             ssh_private_key = ssh_private_key.replace(
                 ' PRIVATE', ' RSA PRIVATE')
             log.debug("Augmented ssh key with RSA type: %s" % ssh_private_key)
-        playbook = app_config.get('config_appliance', {}).get('repository')
-        if 'inventoryTemplate' in app_config.get('config_appliance', {}):
-            inventory = app_config.get(
-                'config_appliance', {}).get('inventoryTemplate')
-        else:
-            inventory = DEFAULT_INVENTORY_TEMPLATE
-        self._run_playbook(playbook, inventory, host, ssh_private_key, user,
-                           playbook_vars)
+
+        playbooks = app_config.get('config_appliance', {}).get('playbooks', [])
+        # backward compatibility
+        if app_config.get('config_appliance', {}).get('repository'):
+            playbook_url = app_config.get('config_appliance', {}).get('repository')
+            if 'inventoryTemplate' in app_config.get('config_appliance', {}):
+                inventory = app_config.get(
+                    'config_appliance', {}).get('inventoryTemplate')
+            else:
+                inventory = DEFAULT_INVENTORY_TEMPLATE
+            playbooks += [{
+                'url': playbook_url,
+                'inventory_template': inventory
+            }]
+        for playbook in sorted(playbooks, key=lambda p: int(p.get('ordinal', 0))):
+            playbook_url = playbook.get('url')
+            inventory = playbook.get('inventory_template') or DEFAULT_INVENTORY_TEMPLATE
+            self._run_playbook(playbook_url, inventory, host, ssh_private_key, user,
+                               playbook_vars)
         return {}
 
     def _run_playbook(self, playbook, inventory, host, pk, user='ubuntu',
@@ -268,7 +281,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                 f.writelines(pk)
             # Create an inventory file
             inv = Template(inventory)
-            inventory_path = os.path.join(repo_path, 'inventory')
+            inventory_path = os.path.join(repo_path, 'inventory.ini')
             with open(inventory_path, 'w') as f:
                 log.info("Creating inventory file %s", inventory_path)
                 f.writelines(inv.substitute({'host': host, 'user': user}))
@@ -278,7 +291,7 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                 log.info("Creating ansible values file %s", values_file_path)
                 yaml.dump(playbook_vars or {}, f, default_flow_style=False)
             # Run the playbook
-            cmd = ["ansible-playbook", "-i", "inventory", "playbook.yml"]
+            cmd = ["ansible-playbook", "-i", "inventory.ini", "playbook.yml"]
             if playbook_vars:
                 cmd += ["-e", "@{}".format(values_file_path)]
             # TODO: Sanitize before printing
