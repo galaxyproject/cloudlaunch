@@ -319,13 +319,41 @@ class BaseVMAppPlugin(AppPlugin):
                 c_result = self._configure_host(name, task, app_config,
                                                 provider_config)
             except Exception:
+                # cleanup instance
                 if host_config.get('instance_id'):
                     provider = provider_config.get('cloud_provider')
-                    provider.compute.instances.delete(host_config['instance_id'])
+                    hostname_config = app_config.get(
+                        "config_cloudlaunch", {}).get('hostnameConfig')
+                    self._cleanup_host(
+                        provider, host_config['instance_id'], hostname_config)
                 raise
         # Merge result dicts; right-most dict keys take precedence
         return {'cloudLaunch': {**p_result.get('cloudLaunch', {}),
                                 **c_result.get('cloudLaunch', {})}}
+
+    def _cleanup_hostname(self, provider, hostname_config):
+        if hostname_config.get('hostnameType') == 'cloud_dns':
+            dns_zone = hostname_config.get('dnsZone')
+            dns_rec_name = hostname_config.get('dnsRecordName')
+            dns_zone = provider.dns.host_zones.get(dns_zone.get('id'))
+            host_name = (dns_rec_name + "." + dns_zone.name
+                         if dns_rec_name else dns_zone.name)
+            try:
+                # Also delete wildcard record
+                dns_recs = dns_zone.records.find(name="*." + host_name)
+                for dns_rec in dns_recs:
+                    dns_rec.delete()
+            finally:
+                dns_recs = dns_zone.records.find(name=host_name)
+                for dns_rec in dns_recs:
+                    dns_rec.delete()
+
+    def _cleanup_host(self, provider, instance_id, hostname_config):
+        log.debug("Deleting deployment instance %s", instance_id)
+        try:
+            self._cleanup_hostname(provider, hostname_config)
+        finally:
+            provider.compute.instances.delete(instance_id)
 
     def _provision_host(self, name, task, app_config, provider_config):
         """Provision a host using the provider_config info."""
@@ -430,8 +458,11 @@ runcmd:"""
                 host_name = (dns_rec_name + "." + dns_zone.name
                              if dns_rec_name else dns_zone.name)
                 dns_zone.records.create(host_name, DnsRecordType.A, [public_ip])
+                # Also create wildcard record
+                dns_zone.records.create("*." + host_name, DnsRecordType.A, [public_ip])
                 return host_name.rstrip(".")
             except CloudBridgeBaseException:
+                log.exception("Error while creating cloud dns records")
                 return public_ip
         elif hostname_config.get('hostnameType') == 'manual':
             return hostname_config.get('hostName') or public_ip
@@ -530,19 +561,6 @@ runcmd:"""
         # Instance does not exist so default to False
         return False
 
-    def _cleanup_hostname(self, provider, deployment):
-        hostname_config = deployment.get('launch_result', {}).get(
-            'cloudLaunch', {}).get('hostNameConfig', {})
-        if hostname_config.get('hostnameType') == 'cloud_dns':
-            dns_zone = hostname_config.get('dnsZone')
-            dns_rec_name = hostname_config.get('dnsRecordName')
-            dns_zone = provider.dns.host_zones.get(dns_zone.get('id'))
-            host_name = (dns_rec_name + "." + dns_zone.name
-                         if dns_rec_name else dns_zone.name)
-            dns_rec = dns_zone.records.find(name=host_name)
-            if dns_rec:
-                dns_rec.delete()
-
     def delete(self, provider, deployment):
         """
         Delete resource(s) associated with the supplied deployment.
@@ -553,16 +571,13 @@ runcmd:"""
         *Note* that this method will delete resource(s) associated with
         the deployment - this is an un-recoverable action.
         """
-        with cleanup_action(lambda: self._cleanup_hostname(
-                provider, deployment)):
-            pass
-        iid = self._get_deployment_iid(deployment)
-        if not iid:
+        instance_id = self._get_deployment_iid(deployment)
+        if not instance_id:
             return False
-        log.debug("Deleting deployment instance %s", iid)
-        inst = provider.compute.instances.get(iid)
+        hostname_config = deployment.get('launch_result', {}).get(
+            'cloudLaunch', {}).get('hostNameConfig', {})
+        inst = self._cleanup_host(provider, instance_id, hostname_config)
         if inst:
-            inst.delete()
             inst.wait_for([InstanceState.DELETED, InstanceState.UNKNOWN],
                           terminal_states=[InstanceState.ERROR])
             return True
