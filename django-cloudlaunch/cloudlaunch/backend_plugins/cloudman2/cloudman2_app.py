@@ -1,8 +1,8 @@
 """CloudMan 2.0 application plugin implementation."""
-import base64
 import pathlib
 import random
 import time
+import secrets
 import string
 import yaml
 from urllib.parse import urljoin
@@ -460,7 +460,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             'cm_initial_storage_size': str(app_config.get('config_cloudman2', {})
                 .get('cm_initial_storage_size', '')),
             'cm_helm_values': app_config.get('config_cloudman2', {})
-                .get('cm_helm_values', {})
+                .get('cm_helm_values', {}),
+            'rke_registration_token': secrets.token_urlsafe()
         }
         # Allow playbook vars to be overridden
         cm_playbook_vars.update(app_config.get('config_cloudman2', {})
