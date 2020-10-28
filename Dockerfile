@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as stage1
+FROM ubuntu:20.04 as stage1
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED 1
@@ -35,7 +35,7 @@ ADD django-cloudlaunch/cloudlaunchserver/__init__.py /app/django-cloudlaunch/clo
 RUN /app/venv/bin/pip3 install -U pip && /app/venv/bin/pip3 install --no-cache-dir -r requirements.txt
 
 # Stage-2
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED 1
@@ -49,12 +49,8 @@ RUN useradd -ms /bin/bash cloudlaunch \
         python3-pip \
         python3-setuptools \
         locales locales-all \
-    # Remove Python 2
-    && apt remove -y python \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
-    # Set Python 3 as the default Python installation
-    && update-alternatives --install /usr/bin/python python /usr/bin/python3.6 1
 
 ENV LC_ALL en_US.UTF-8
 
