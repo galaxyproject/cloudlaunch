@@ -104,8 +104,11 @@ class AWSKubeIAMPolicyHandler(object):
 
     def _get_or_create_cm2_iam_role(self):
         role_name = self.dpl_name + "-cm2-kube-role"
-        trust_policy = self._load_policy_relative(
-            'cloudman2/rancher2_aws_iam_trust_policy.json')
+        if "cn" in self.provider.region_name:
+            policy_path = 'cloudman2/rancher2_aws_iam_trust_policy-cn.json'
+        else:
+            policy_path = 'cloudman2/rancher2_aws_iam_trust_policy.json'
+        trust_policy = self._load_policy_relative(policy_path)
         return self._get_or_create_iam_role(role_name, trust_policy)
 
     @tenacity.retry(stop=tenacity.stop_after_attempt(5),
