@@ -205,7 +205,7 @@ apps:
           rancher_api_key: "{{ token }}"
           rancher_cluster_id: "{{ cluster_id }}"
           rancher_project_id: "{{ project_id }}"
-          cm_initial_cluster_data: "{{ cm_initial_cluster_data|default('') }}"
+          cm_initial_cluster_data: "{{ ("" + cm_initial_cluster_data)|default('') }}"
 
           helmsman_config:
             repositories:

@@ -274,7 +274,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             meta={'action': "Waiting for CloudMan to become available at %s"
                             % result['cloudLaunch']['applicationURL']})
         login_url = urljoin(result['cloudLaunch']['applicationURL'],
-                            'cloudman/openid/openid/KeyCloak')
+                            'cloudman/oidc/authenticate')
         self.wait_for_http(login_url, ok_status_codes=[302])
         return result
 
