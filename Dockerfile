@@ -39,6 +39,8 @@ FROM ubuntu:20.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED 1
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
 
 # Create cloudlaunch user environment
 RUN useradd -ms /bin/bash cloudlaunch \
@@ -48,11 +50,10 @@ RUN useradd -ms /bin/bash cloudlaunch \
         git-core \
         python3-pip \
         python3-setuptools \
-        locales locales-all \
+        locales \
+    && locale-gen $LANG && update-locale LANG=$LANG \
     && apt-get autoremove -y && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* \
-
-ENV LC_ALL en_US.UTF-8
 
 WORKDIR /app/
 

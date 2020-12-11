@@ -95,7 +95,8 @@ REQS_BASE = [
     # Utility package for retrying operations
     'tenacity',
     # For serving static files in production mode
-    'whitenoise[brotli]'
+    'whitenoise[brotli]',
+    'paramiko'
 ]
 
 REQS_PROD = ([
