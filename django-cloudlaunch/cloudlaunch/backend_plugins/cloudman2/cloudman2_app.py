@@ -268,7 +268,7 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
     def _configure_host(self, name, task, app_config, provider_config):
         result = super()._configure_host(name, task, app_config, provider_config)
         host = provider_config.get('host_config', {}).get('host_address')
-        pulsar_token = app_config['config_cloudman2'].get('pulsar_token')
+        pulsar_token = app_config.get('config_cloudman2', {}).get('pulsar_token')
         result['cloudLaunch'] = {'applicationURL':
                                  'https://{0}/'.format(host),
                                  'pulsar_token': pulsar_token}
@@ -277,8 +277,8 @@ class CloudMan2AppPlugin(SimpleWebAppPlugin):
             meta={'action': "Waiting for CloudMan to become available at %s"
                             % result['cloudLaunch']['applicationURL']})
         login_url = urljoin(result['cloudLaunch']['applicationURL'],
-                            'cloudman/openid/openid/KeyCloak')
-        self.wait_for_http(login_url, ok_status_codes=[302])
+                            'cloudman/oidc/authenticate')
+        self.wait_for_http(login_url, ok_status_codes=[302, 200])
         return result
 
     def _get_configurer(self, app_config):
