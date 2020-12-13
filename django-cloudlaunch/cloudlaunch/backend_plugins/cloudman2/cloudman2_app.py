@@ -469,6 +469,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         # Allow playbook vars to be overridden
         cm_playbook_vars.update(app_config.get('config_cloudman2', {})
                                 .get('cm_playbook_vars', {}))
+        # pop unneeded values to prevent recursion/self-referential jinja templates
+        app_config.pop('config_cloudman2')
 
         return super().configure(app_config, provider_config,
                                  playbook_vars=cm_playbook_vars)
