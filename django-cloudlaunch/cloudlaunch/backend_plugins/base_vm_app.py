@@ -311,6 +311,8 @@ class BaseVMAppPlugin(AppPlugin):
                                             provider_config)
             host_config['host_address'] = p_result['cloudLaunch'].get(
                 'hostname')
+            host_config['public_ip'] = p_result['cloudLaunch'].get(
+                'publicIP')
             host_config['instance_id'] = p_result['cloudLaunch'].get(
                 'instance').get('id')
 
@@ -332,7 +334,7 @@ class BaseVMAppPlugin(AppPlugin):
                                 **c_result.get('cloudLaunch', {})}}
 
     def _cleanup_hostname(self, provider, hostname_config):
-        if hostname_config.get('hostnameType') == 'cloud_dns':
+        if hostname_config and hostname_config.get('hostnameType') == 'cloud_dns':
             dns_zone = hostname_config.get('dnsZone')
             dns_rec_name = hostname_config.get('dnsRecordName')
             dns_zone = provider.dns.host_zones.get(dns_zone.get('id'))
