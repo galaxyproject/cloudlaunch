@@ -2,8 +2,9 @@
 import copy
 import ipaddress
 
+import tenacity
+
 from celery.utils.log import get_task_logger
-from cloudbridge.base.helpers import cleanup_action
 from cloudbridge.base.helpers import generate_key_pair
 from cloudbridge.interfaces import InstanceState
 from cloudbridge.interfaces.exceptions import CloudBridgeBaseException
@@ -15,6 +16,10 @@ from cloudlaunch import configurers
 from .app_plugin import AppPlugin
 
 log = get_task_logger('cloudlaunch')
+
+
+class InstanceNotDeleted(Exception):
+    pass
 
 
 class BaseVMAppPlugin(AppPlugin):
@@ -326,7 +331,7 @@ class BaseVMAppPlugin(AppPlugin):
                     provider = provider_config.get('cloud_provider')
                     hostname_config = app_config.get(
                         "config_cloudlaunch", {}).get('hostnameConfig')
-                    self._cleanup_host(
+                    self._cleanup_instance(
                         provider, host_config['instance_id'], hostname_config)
                 raise
         # Merge result dicts; right-most dict keys take precedence
@@ -350,12 +355,33 @@ class BaseVMAppPlugin(AppPlugin):
                 for dns_rec in dns_recs:
                     dns_rec.delete()
 
-    def _cleanup_host(self, provider, instance_id, hostname_config):
+    @tenacity.retry(stop=tenacity.stop_after_attempt(7),
+                    wait=tenacity.wait_exponential(multiplier=1, min=4, max=256),
+                    reraise=True,
+                    after=lambda *args: log.debug("Instance not deleted, retrying......"))
+    def _cleanup_instance(self, provider, instance_id, hostname_config):
         log.debug("Deleting deployment instance %s", instance_id)
         try:
             self._cleanup_hostname(provider, hostname_config)
-        finally:
-            provider.compute.instances.delete(instance_id)
+        except Exception:
+            log.exception("Could not cleanup DNS")
+
+        inst = provider.compute.instances.get(instance_id)
+        if inst:
+            inst.delete()
+            inst.wait_for([InstanceState.DELETED, InstanceState.UNKNOWN],
+                          terminal_states=[InstanceState.ERROR])
+
+        # instance should no longer exist
+
+        inst = provider.compute.instances.get(instance_id)
+        if not inst:
+            return True
+        elif inst.state in (InstanceState.DELETED, InstanceState.UNKNOWN):
+            return True
+        else:
+            raise InstanceNotDeleted(
+                f"Instance {instance_id} should have been deleted but still exists.")
 
     def _provision_host(self, name, task, app_config, provider_config):
         """Provision a host using the provider_config info."""
@@ -446,7 +472,9 @@ runcmd:"""
                                 "Public IP: %s" % results.get('publicIP') or ""})
             return {"cloudLaunch": results}
         except Exception:
-            inst.delete()
+            # We send a null hostname config since we don't want to delete existing
+            # hostnames
+            self._cleanup_instance(provider, inst.id, None)
             raise
 
     def _configure_hostname(self, provider, public_ip, hostname_config):
@@ -578,10 +606,4 @@ runcmd:"""
             return False
         hostname_config = deployment.get('launch_result', {}).get(
             'cloudLaunch', {}).get('hostNameConfig', {})
-        inst = self._cleanup_host(provider, instance_id, hostname_config)
-        if inst:
-            inst.wait_for([InstanceState.DELETED, InstanceState.UNKNOWN],
-                          terminal_states=[InstanceState.ERROR])
-            return True
-        # Instance does not exist so default to True
-        return True
+        return self._cleanup_instance(provider, instance_id, hostname_config)
