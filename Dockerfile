@@ -66,8 +66,9 @@ ADD --chown=cloudlaunch:cloudlaunch . /app
 # Switch to new, lower-privilege user
 USER cloudlaunch
 
-RUN cd django-cloudlaunch \
-    && /app/venv/bin/python manage.py collectstatic --no-input
+WORKDIR /app/django-cloudlaunch/
+
+RUN /app/venv/bin/python manage.py collectstatic --no-input
 
 # gunicorn will listen on this port
 EXPOSE 8000
