@@ -163,10 +163,10 @@ class ApplicationLaunchTests(CLLaunchTestBase):
             'application_version': self.application_version.version,
             'deployment_target_id': self.deployment_target.id,
         })
+        response = self._create_deployment()
 
     def test_create_deployment(self):
         with patch('cloudbridge.providers.aws.services.AWSInstanceService.delete') as mock_del:
-            mock_del.get.assert_not_called()
             response = self._create_deployment()
             self.assertResponse(response, status=201, data_contains={
                 'name': 'test-deployment',
@@ -188,18 +188,28 @@ class ApplicationLaunchTests(CLLaunchTestBase):
             # Check that deployment and its LAUNCH task were created
             app_deployment = ApplicationDeployment.objects.get()
             launch_task = ApplicationDeploymentTask.objects.get(
-                    action=ApplicationDeploymentTask.LAUNCH,
-                    deployment=app_deployment)
+                action=ApplicationDeploymentTask.LAUNCH,
+                deployment=app_deployment)
             self.assertIsNotNone(launch_task)
+            mock_del.get.assert_not_called()
 
     def test_launch_error_triggers_cleanup(self):
         """
         Checks whether an error during launch triggers a cleanup of the instance.
         """
-        with patch('cloudbridge.base.resources.BaseInstance.wait_till_ready') as mock_wait:
-            mock_wait.side_effect = Exception("Some exception occurred while waiting")
-            with patch('cloudbridge.providers.aws.services.AWSInstanceService.delete') as mock_del:
-                with self.assertRaises(Exception) as ex:
-                    self.test_create_deployment()
-                    mock_del.get.assert_called_once()
-                    self.assertContains(ex, "Some exception occurred while waiting")
+        counter_ref = [0]
+
+        def succeed_on_second_try(count_ref, *args, **kwargs):
+            count_ref[0] += 1
+            if count_ref[0] > 0 and count_ref[0] < 3:
+                raise Exception("Some exception occurred while waiting")
+
+        with patch('cloudbridge.base.resources.BaseInstance.wait_for',
+                   side_effect=lambda *args, **kwargs: succeed_on_second_try(
+                       counter_ref, *args, **kwargs)) as mock_wait:
+            self._create_deployment()
+            app_deployment = ApplicationDeployment.objects.get()
+            launch_task = ApplicationDeploymentTask.objects.get(
+                action=ApplicationDeploymentTask.LAUNCH,
+                deployment=app_deployment)
+            self.assertNotEquals(launch_task.status, "SUCCESS")

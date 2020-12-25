@@ -297,24 +297,28 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
             # TODO: Sanitize before printing
             log.debug("Running Ansible with values:\n%s",
                       yaml.dump(playbook_vars or {}, default_flow_style=False))
-            log.debug("Running Ansible with command: %s", " ".join(cmd))
-            with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                  universal_newlines=True, cwd=repo_path) as process:
-                output_buffer = ""
-                while process.poll() is None:
-                    output = process.stdout.readline()
-                    output_buffer += output
-                    if output:
-                        log.info(output)
-                # Read any remaining output
-                output_buffer += process.stdout.readline()
-                if process.poll() != 0:
-                    raise Exception("An error occurred while running the ansible playbook to"
-                                    " configure instance. Check the logs. Last output lines"
-                                    " were: {0}".format(output_buffer.split("\n")[-10:]))
-                log.info("Playbook status: %s", process.poll())
+            output_buffer = self._run_ansible_process(cmd, repo_path)
         finally:
             if not settings.DEBUG:
                 log.info("Deleting ansible playbook %s", repo_path)
                 shutil.rmtree(repo_path)
         return 0, output_buffer
+
+    def _run_ansible_process(self, cmd, repo_path):
+        log.debug("Running Ansible with command: %s", " ".join(cmd))
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              universal_newlines=True, cwd=repo_path) as process:
+            output_buffer = ""
+            while process.poll() is None:
+                output = process.stdout.readline()
+                output_buffer += output
+                if output:
+                    log.info(output)
+            # Read any remaining output
+            output_buffer += process.stdout.readline()
+            if process.poll() != 0:
+                raise Exception("An error occurred while running the ansible playbook to"
+                                " configure instance. Check the logs. Last output lines"
+                                " were: {0}".format(output_buffer.split("\n")[-10:]))
+            log.info("Playbook status: %s", process.poll())
+        return output_buffer
