@@ -460,9 +460,10 @@ runcmd:"""
             if vmfl:
                 results['securityGroup'] = {'id': vmfl[0].id, 'name': vmfl[0].name}
             results['instance'] = {'id': inst.id}
-            # Support for legacy NeCTAR
-            results['publicIP'] = self._attach_public_ip(
-                provider, inst, subnet.network_id if subnet else None)
+            if not cloudlaunch_config.get('skip_floating_ip'):
+                results['publicIP'] = self._attach_public_ip(
+                    provider, inst, subnet.network_id if subnet else None)
+            results['private_ip'] = inst.private_ips[0] if inst.private_ips else results['publicIP']
             # Configure hostname (if set)
             results['hostname'] = self._configure_hostname(
                 provider, results['publicIP'], cloudlaunch_config.get('hostnameConfig'))
