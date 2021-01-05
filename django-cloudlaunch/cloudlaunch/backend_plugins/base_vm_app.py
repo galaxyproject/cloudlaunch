@@ -318,6 +318,8 @@ class BaseVMAppPlugin(AppPlugin):
                 'hostname')
             host_config['public_ip'] = p_result['cloudLaunch'].get(
                 'publicIP')
+            host_config['private_ip'] = p_result['cloudLaunch'].get(
+                'private_ip')
             host_config['instance_id'] = p_result['cloudLaunch'].get(
                 'instance').get('id')
 
@@ -466,11 +468,11 @@ runcmd:"""
             results['private_ip'] = inst.private_ips[0] if inst.private_ips else results['publicIP']
             # Configure hostname (if set)
             results['hostname'] = self._configure_hostname(
-                provider, results['publicIP'], cloudlaunch_config.get('hostnameConfig'))
+                provider, results['private_ip'], cloudlaunch_config.get('hostnameConfig'))
             task.update_state(
                 state='PROGRESSING',
                 meta={"action": "Instance created successfully. " +
-                                "Public IP: %s" % results.get('publicIP') or ""})
+                                f"Public IP: {results.get('publicIP') or results.get('private_ip')}"})
             return {"cloudLaunch": results}
         except Exception:
             # We send a null hostname config since we don't want to delete existing
