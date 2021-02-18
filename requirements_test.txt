@@ -2,7 +2,9 @@
 git+https://github.com/encode/django-rest-framework
 # install edge till this is released: https://github.com/celery/django-celery-results/issues/157
 git+https://github.com/celery/django-celery-results
-git+git://github.com/spulec/moto#egg=moto
+# needed by moto
+sshpubkeys
+git+https://github.com/CloudVE/moto@fix_unknown_instance_type
 git+git://github.com/CloudVE/cloudlaunch-cli#egg=cloudlaunch-cli
 git+git://github.com/CloudVE/cloudbridge#egg=cloudbridge[dev]
 git+git://github.com/CloudVE/djcloudbridge#egg=djcloudbridge[dev]
