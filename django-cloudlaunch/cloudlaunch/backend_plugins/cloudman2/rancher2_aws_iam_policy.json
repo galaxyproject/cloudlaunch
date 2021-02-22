@@ -33,7 +33,6 @@
                 "elasticloadbalancing:AddTags",
                 "elasticloadbalancing:AttachLoadBalancerToSubnets",
                 "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
-                "elasticloadbalancing:CreateLoadBalancer",
                 "elasticloadbalancing:CreateLoadBalancerPolicy",
                 "elasticloadbalancing:CreateLoadBalancerListeners",
                 "elasticloadbalancing:ConfigureHealthCheck",
