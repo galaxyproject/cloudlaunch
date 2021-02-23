@@ -468,7 +468,7 @@ runcmd:"""
             results['private_ip'] = inst.private_ips[0] if inst.private_ips else results['publicIP']
             # Configure hostname (if set)
             results['hostname'] = self._configure_hostname(
-                provider, results['private_ip'], cloudlaunch_config.get('hostnameConfig'))
+                provider, results['publicIP'], cloudlaunch_config.get('hostnameConfig'))
             task.update_state(
                 state='PROGRESSING',
                 meta={"action": "Instance created successfully. " +
