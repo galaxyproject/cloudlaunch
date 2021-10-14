@@ -304,6 +304,10 @@ class AnsibleAppConfigurer(SSHBasedConfigurer):
                 shutil.rmtree(repo_path)
         return 0, output_buffer
 
+    @tenacity.retry(stop=tenacity.stop_after_attempt(3),
+                    wait=tenacity.wait_exponential(multiplier=1, min=4, max=256),
+                    reraise=True,
+                    after=lambda *args, **kwargs: log.debug("Error running ansible, rerunning playbook..."))
     def _run_ansible_process(self, cmd, repo_path):
         log.debug("Running Ansible with command: %s", " ".join(cmd))
         with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,

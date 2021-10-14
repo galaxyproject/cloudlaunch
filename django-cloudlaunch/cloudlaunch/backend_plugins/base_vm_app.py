@@ -360,7 +360,7 @@ class BaseVMAppPlugin(AppPlugin):
     @tenacity.retry(stop=tenacity.stop_after_attempt(7),
                     wait=tenacity.wait_exponential(multiplier=1, min=4, max=256),
                     reraise=True,
-                    after=lambda *args, **kwargs: log.debug("Node not registered, rerunning playbook..."))
+                    after=lambda *args, **kwargs: log.debug("Node not deleted, retrying..."))
     def _cleanup_instance(self, provider, instance_id, hostname_config):
         log.debug("Deleting deployment instance %s", instance_id)
         try:
