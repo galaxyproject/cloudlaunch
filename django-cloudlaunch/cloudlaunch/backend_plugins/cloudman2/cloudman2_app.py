@@ -432,6 +432,8 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
 
     def configure(self, app_config, provider_config):
         host = provider_config.get('host_config', {}).get('host_address')
+        host = f"{host}.nip.io" if self.is_ip_address(host) else host
+        provider_config.get('host_config', {})['host_address'] = host
         # Create a random token for Pulsar if it's set to be used
         token_length = 40  # chars
         token_contents = (string.ascii_lowercase + string.ascii_uppercase +
@@ -453,7 +455,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             provider_config, cloud_config)
 
         cm_playbook_vars = {
-            'cluster_hostname': f"{host}.nip.io" if self.is_ip_address(host) else host,
+            'cluster_hostname': host,
             'cluster_password': app_config.get('config_cloudman2', {})
                 .get('clusterPassword', ''),
             'kube_cloud_provider': kube_cloud_provider,
