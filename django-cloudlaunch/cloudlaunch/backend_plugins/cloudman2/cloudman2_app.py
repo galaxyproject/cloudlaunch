@@ -1,4 +1,5 @@
 """CloudMan 2.0 application plugin implementation."""
+import ipaddress
 import pathlib
 import random
 import time
@@ -423,6 +424,12 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         return (CB_CLOUD_TO_KUBE_CLOUD_MAP.get(provider_id),
                 self._gen_cloud_conf(provider_id, cloud_config))
 
+    def is_ip_address(self, host):
+        try:
+            return ipaddress.ip_address(host)
+        except ValueError:
+            return False
+
     def configure(self, app_config, provider_config):
         host = provider_config.get('host_config', {}).get('host_address')
         # Create a random token for Pulsar if it's set to be used
@@ -446,7 +453,7 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             provider_config, cloud_config)
 
         cm_playbook_vars = {
-            'cluster_hostname': host,
+            'cluster_hostname': f"{host}.nip.io" if self.is_ip_address(host) else host,
             'cluster_password': app_config.get('config_cloudman2', {})
                 .get('clusterPassword', ''),
             'kube_cloud_provider': kube_cloud_provider,
