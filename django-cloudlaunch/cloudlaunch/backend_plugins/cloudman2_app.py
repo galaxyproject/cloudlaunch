@@ -336,7 +336,7 @@ AZURE_CLOUD_CONF = \
 GCP_CLOUD_CONF = \
     "[Global]\n"
 
-OPENSTACK_CLOUD_CONF = \
+OPENSTACK_CLOUD_CONF_USER = \
     "[Global]\n" \
     "username=\"$os_username\"\n" \
     "password=\"$os_password\"\n" \
@@ -347,6 +347,15 @@ OPENSTACK_CLOUD_CONF = \
     "[BlockStorage]\n" \
     "ignore-volume-az=$os_ignore_volume_az\n"
 
+
+OPENSTACK_CLOUD_CONF_APP_CRED = \
+    "[Global]\n" \
+    "application-credential-id=\"$os_app_cred_id\"\n" \
+    "application-credential-secret=\"$os_app_cred_secret\"\n" \
+    "auth-url=$os_auth_url\n" \
+    "region=$os_region\n" \
+    "[BlockStorage]\n" \
+    "ignore-volume-az=$os_ignore_volume_az\n"
 
 class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
     """Add CloudMan2 specific vars to playbook."""
@@ -390,26 +399,44 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             conf_template = GCP_CLOUD_CONF
             values = {}
         elif provider_id == "openstack":
-            # http://henriquetruta.github.io/openstack-cloud-provider/
-            conf_template = OPENSTACK_CLOUD_CONF
-            os_ignore_az = self._os_ignore_az(
-                zone.get('zone_id'),
-                zone.get('region', {}).get('cloudbridge_settings'))
-            if creds.get('os_user_domain_id'):
-                domain_entry = f"domain-id={creds.get('os_user_domain_id')}"
-            else:
-                domain_entry = f"domain-name={creds.get('os_user_domain_name')}"
+            os_user = creds.get('os_username')
+            os_pass = creds.get('os_password')
+            if os_user and os_pass:
+                # http://henriquetruta.github.io/openstack-cloud-provider/
+                conf_template = OPENSTACK_CLOUD_CONF_USER
+                os_ignore_az = self._os_ignore_az(
+                    zone.get('zone_id'),
+                    zone.get('region', {}).get('cloudbridge_settings'))
+                if creds.get('os_user_domain_id'):
+                    domain_entry = f"domain-id={creds.get('os_user_domain_id')}"
+                else:
+                    domain_entry = f"domain-name={creds.get('os_user_domain_name')}"
 
-            values = {
-                'os_username': creds.get('os_username'),
-                'os_password': creds.get('os_password'),
-                'domain_entry': domain_entry,
-                'os_tenant_name': creds.get('os_project_name'),
-                'os_auth_url': zone.get('cloud', {}).get('auth_url'),
-                'os_region': zone.get('region', {}).get('name'),
-                # https://github.com/kubernetes/kubernetes/issues/53488
-                'os_ignore_volume_az': os_ignore_az
-            }
+                values = {
+                    'os_username': os_user,
+                    'os_password': os_pass,
+                    'domain_entry': domain_entry,
+                    'os_tenant_name': creds.get('os_project_name'),
+                    'os_auth_url': zone.get('cloud', {}).get('auth_url'),
+                    'os_region': zone.get('region', {}).get('name'),
+                    # https://github.com/kubernetes/kubernetes/issues/53488
+                    'os_ignore_volume_az': os_ignore_az
+                }
+            else:
+                # Assuming app credentials if no user and pass set
+                conf_template = OPENSTACK_CLOUD_CONF_APP_CRED
+                os_ignore_az = self._os_ignore_az(
+                    zone.get('zone_id'),
+                    zone.get('region', {}).get('cloudbridge_settings'))
+                values = {
+                    # https://github.com/kubernetes/cloud-provider-openstack/blob/master/manifests/controller-manager/cloud-config
+                    'os_app_cred_id': creds.get('os_application_credential_id'),
+                    'os_app_cred_secret': creds.get('os_application_credential_secret'),
+                    'os_auth_url': zone.get('cloud', {}).get('auth_url'),
+                    'os_region': zone.get('region', {}).get('name'),
+                    'os_ignore_volume_az': os_ignore_az
+                }
+
         return string.Template(conf_template).substitute(values)
 
     def _get_kube_cloud_settings(self, provider_config, cloud_config):
