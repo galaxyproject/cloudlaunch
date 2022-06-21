@@ -403,27 +403,30 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
         elif provider_id == "openstack":
             os_user = creds.get('os_username')
             os_pass = creds.get('os_password')
+            os_ignore_az = self._os_ignore_az(
+                zone.get('zone_id'),
+                zone.get('region', {}).get('cloudbridge_settings'))
+            values = {
+                'os_auth_url': zone.get('cloud', {}).get('auth_url'),
+                'os_region': zone.get('region', {}).get('name'),
+                # https://github.com/kubernetes/kubernetes/issues/53488
+                'os_ignore_volume_az': os_ignore_az
+            }
+
             if os_user and os_pass:
                 # http://henriquetruta.github.io/openstack-cloud-provider/
                 conf_template = OPENSTACK_CLOUD_CONF_USER
-                os_ignore_az = self._os_ignore_az(
-                    zone.get('zone_id'),
-                    zone.get('region', {}).get('cloudbridge_settings'))
                 if creds.get('os_user_domain_id'):
                     domain_entry = f"domain-id={creds.get('os_user_domain_id')}"
                 else:
                     domain_entry = f"domain-name={creds.get('os_user_domain_name')}"
 
-                values = {
+                values.update({
                     'os_username': os_user,
                     'os_password': os_pass,
                     'domain_entry': domain_entry,
                     'os_tenant_name': creds.get('os_project_name'),
-                    'os_auth_url': zone.get('cloud', {}).get('auth_url'),
-                    'os_region': zone.get('region', {}).get('name'),
-                    # https://github.com/kubernetes/kubernetes/issues/53488
-                    'os_ignore_volume_az': os_ignore_az
-                }
+                })
             else:
                 # Assuming app credentials if no user and pass set
                 conf_template = OPENSTACK_CLOUD_CONF_APP_CRED
