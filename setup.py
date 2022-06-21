@@ -43,7 +43,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 REQS_BASE = [
-    'Django>=3.0',
+    'Django<4.0',
     # ======== Celery =========
     'celery>=5.0',
     # celery results backend which uses the django DB
@@ -63,8 +63,8 @@ REQS_BASE = [
     # Provides REST API schema
     'coreapi>=2.2.3',
     # ======== CloudBridge =========
-    'cloudbridge',
-    'djcloudbridge',
+    'cloudbridge@git+https://github.com/CloudVE/cloudbridge@os_app_creds_support',
+    'djcloudbridge@git+https://github.com/almahmoud/djcloudbridge@os_app_creds',
     # ======== Django =========
     # Provides better inheritance support for django models
     'django-model-utils',
