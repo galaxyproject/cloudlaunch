@@ -430,17 +430,11 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             else:
                 # Assuming app credentials if no user and pass set
                 conf_template = OPENSTACK_CLOUD_CONF_APP_CRED
-                os_ignore_az = self._os_ignore_az(
-                    zone.get('zone_id'),
-                    zone.get('region', {}).get('cloudbridge_settings'))
-                values = {
+                values.update({
                     # https://github.com/kubernetes/cloud-provider-openstack/blob/master/manifests/controller-manager/cloud-config
                     'os_app_cred_id': creds.get('os_application_credential_id'),
                     'os_app_cred_secret': creds.get('os_application_credential_secret'),
-                    'os_auth_url': zone.get('cloud', {}).get('auth_url'),
-                    'os_region': zone.get('region', {}).get('name'),
-                    'os_ignore_volume_az': os_ignore_az
-                }
+                })
 
         return string.Template(conf_template).substitute(values)
 
