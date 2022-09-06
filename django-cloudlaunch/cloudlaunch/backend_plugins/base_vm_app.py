@@ -228,7 +228,8 @@ class BaseVMAppPlugin(AppPlugin):
         # Make sure the subnet has Internet connectivity
         try:
             found_routers = [router for router in provider.networking.routers
-                             if router.network_id == subnet.network_id]
+                             subnet.network_id in [port.network_id for port in
+                                                   router._provider.os_conn.list_ports(filters={'device_id': self.id})]]
             # Check if the subnet's network is connected to a router
             router = None
             for r in found_routers:
