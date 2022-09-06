@@ -227,9 +227,13 @@ class BaseVMAppPlugin(AppPlugin):
                 provider, net_id, placement)
         # Make sure the subnet has Internet connectivity
         try:
-            found_routers = [router for router in provider.networking.routers
-                             if subnet.network_id in [port.network_id for port in
-                                                   router._provider.os_conn.list_ports(filters={'device_id': self.id})]]
+            if provider.PROVIDER_ID == 'openstack':
+                found_routers = [router for router in provider.networking.routers
+                                 if subnet.network_id in [port.network_id for port in
+                                                          provider.os_conn.list_ports(filters={'device_id': self.id})]]
+            else:
+                found_routers = [router for router in provider.networking.routers
+                                 if router.network_id == subnet.network_id]
             # Check if the subnet's network is connected to a router
             router = None
             for r in found_routers:
