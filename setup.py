@@ -53,7 +53,7 @@ REQS_BASE = [
     # ======== DRF =========
     'djangorestframework>=3.7.3',
     # login support for DRF through restful endpoints
-    'django-rest-auth>=0.9.1',
+    'dj-rest-auth',
     # pluggable social auth for django login
     'django-allauth>=0.34.0',
     # Provides nested routing for DRF

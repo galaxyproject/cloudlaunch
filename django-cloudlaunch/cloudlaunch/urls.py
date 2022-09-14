@@ -57,7 +57,7 @@ schema_view = get_schema_view(title='CloudLaunch API', url=settings.REST_SCHEMA_
 
 registration_urls = [
     re_path(r'^$', views.CustomRegisterView.as_view(), name='rest_register'),
-    re_path(r'', include(('rest_auth.registration.urls', 'rest_auth_reg'),
+    re_path(r'', include(('dj_rest_auth.registration.urls', 'rest_auth_reg'),
                          namespace='rest_auth_reg'))
 ]
 
@@ -68,7 +68,7 @@ urlpatterns = [
     # get_urls() must be called or a cached set of urls will be returned.
     re_path(infrastructure_regex_pattern, include(cl_zone_router.get_urls())),
     re_path(infrastructure_regex_pattern, include('djcloudbridge.urls')),
-    re_path(auth_regex_pattern, include(('rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
+    re_path(auth_regex_pattern, include(('dj_rest_auth.urls', 'rest_auth'), namespace='rest_auth')),
 
     # Override default register view
     re_path(r'%sregistration' % auth_regex_pattern, include((registration_urls, 'rest_auth_reg'), namespace='rest_auth_reg')),
