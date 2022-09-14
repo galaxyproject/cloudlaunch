@@ -11,7 +11,7 @@ from . import models
 
 log = get_task_logger(__name__)
 
-health_check = Signal(providing_args=["deployment"])
+health_check = Signal()
 
 
 @receiver(health_check)
