@@ -2,6 +2,6 @@
 git+https://github.com/encode/django-rest-framework
 # install edge till this is released: https://github.com/celery/django-celery-results/issues/157
 git+https://github.com/celery/django-celery-results
-git+https://github.com/CloudVE/cloudbridge#egg=cloudbridge
+git+https://github.com/CloudVE/cloudbridge#egg=cloudbridge[full]
 git+https://github.com/CloudVE/djcloudbridge#egg=djcloudbridge
 -e ".[prod]"
