@@ -11,18 +11,17 @@ Class-based views
     2. Add a URL to urlpatterns:  url(r'^$', Home.as_view(), name='home')
 Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
-    2. Import the include() function: from django.conf.urls import url, include
+    2. Import the include() function: from django.urls import re_path, include
     3. Add a URL to urlpatterns:  url(r'^blog/', include(blog_urls))
 """
 from django.conf import settings  # noqa
-from django.conf.urls import include
-from django.conf.urls import url
-from django.conf.urls.static import static
+from django.urls import include
+from django.urls import re_path
 from django.contrib import admin
 
 
 urlpatterns = [
-    url(r'^cloudlaunch/admin/', admin.site.urls),
-    url(r'^cloudlaunch/nested_admin/', include('nested_admin.urls')),
-    url(r'^cloudlaunch/', include('cloudlaunch.urls'))
+    re_path(r'^cloudlaunch/admin/', admin.site.urls),
+    re_path(r'^cloudlaunch/nested_admin/', include('nested_admin.urls')),
+    re_path(r'^cloudlaunch/', include('cloudlaunch.urls'))
 ]

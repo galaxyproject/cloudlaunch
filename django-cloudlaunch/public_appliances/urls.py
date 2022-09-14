@@ -1,5 +1,5 @@
-from django.conf.urls import include
-from django.conf.urls import url
+from django.urls import include
+from django.urls import re_path
 
 from . import views
 
@@ -18,5 +18,5 @@ public_services_regex_pattern = r''
 app_name = 'pubapp'
 
 urlpatterns = [
-    url(public_services_regex_pattern, include(router.urls)),
+    re_path(public_services_regex_pattern, include(router.urls)),
 ]
