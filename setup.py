@@ -63,7 +63,7 @@ REQS_BASE = [
     # Provides REST API schema
     'coreapi>=2.2.3',
     # ======== CloudBridge =========
-    'cloudbridge',
+    'cloudbridge[full]',
     'djcloudbridge',
     # ======== Django =========
     # Provides better inheritance support for django models
