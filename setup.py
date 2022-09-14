@@ -69,7 +69,7 @@ REQS_BASE = [
     # Provides better inheritance support for django models
     'django-model-utils',
     # for encryption of user credentials
-    'django-fernet-fields>=0.5',
+    'djfernet',
     # Middleware for automatically adding CORS headers to responses
     'django-cors-headers>=2.1.0',
     # for nested object editing in django admin
