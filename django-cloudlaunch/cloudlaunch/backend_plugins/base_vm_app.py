@@ -228,6 +228,7 @@ class BaseVMAppPlugin(AppPlugin):
         # Make sure the subnet has Internet connectivity
         try:
             # This will allow to re-use a router when subnets from multiple networks are attached to it
+            # xref: https://github.com/galaxyproject/cloudlaunch/pull/261
             if provider.PROVIDER_ID == 'openstack':
                 found_routers = [router for router in provider.networking.routers
                                  if subnet.network_id in [port.network_id for port in
