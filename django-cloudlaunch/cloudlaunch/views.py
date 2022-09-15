@@ -1,13 +1,9 @@
 from django.http import HttpResponse
 from django_filters import rest_framework as dj_filters
-from rest_auth.registration.views import RegisterView
+from dj_rest_auth.registration.views import RegisterView
 from rest_framework import authentication
 from rest_framework import filters
 from rest_framework import generics
-from rest_framework import mixins
-from rest_framework import permissions
-from rest_framework import renderers
-from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -21,8 +17,6 @@ from dal import autocomplete
 from djcloudbridge import drf_helpers
 from . import models
 from . import serializers
-from . import view_helpers
-from django.core.exceptions import ObjectDoesNotExist
 
 
 class CustomApplicationPagination(PageNumberPagination):
@@ -195,7 +189,7 @@ class PublicKeyDetail(generics.RetrieveUpdateDestroyAPIView):
 # Override registration view so that it supports multiple tokens
 from django.conf import settings
 from allauth.account import app_settings as allauth_settings
-from rest_auth.app_settings import TokenSerializer
+from dj_rest_auth.app_settings import TokenSerializer
 
 class CustomRegisterView(RegisterView):
 

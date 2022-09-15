@@ -53,7 +53,7 @@ REQS_BASE = [
     # ======== DRF =========
     'djangorestframework>=3.7.3',
     # login support for DRF through restful endpoints
-    'django-rest-auth>=0.9.1',
+    'dj-rest-auth',
     # pluggable social auth for django login
     'django-allauth>=0.34.0',
     # Provides nested routing for DRF
@@ -63,13 +63,13 @@ REQS_BASE = [
     # Provides REST API schema
     'coreapi>=2.2.3',
     # ======== CloudBridge =========
-    'cloudbridge@git+https://github.com/CloudVE/cloudbridge@os_app_creds_support',
-    'djcloudbridge@git+https://github.com/almahmoud/djcloudbridge@os_app_creds',
+    'cloudbridge[full]',
+    'djcloudbridge',
     # ======== Django =========
     # Provides better inheritance support for django models
     'django-model-utils',
     # for encryption of user credentials
-    'django-fernet-fields>=0.5',
+    'djfernet',
     # Middleware for automatically adding CORS headers to responses
     'django-cors-headers>=2.1.0',
     # for nested object editing in django admin
