@@ -404,9 +404,6 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
             if os_user and os_pass:
                 # http://henriquetruta.github.io/openstack-cloud-provider/
                 conf_template = OPENSTACK_CLOUD_CONF_USER
-                os_ignore_az = self._os_ignore_az(
-                    zone.get('zone_id'),
-                    zone.get('region', {}).get('cloudbridge_settings'))
                 if creds.get('os_user_domain_id'):
                     domain_entry = f"domain-id={creds.get('os_user_domain_id')}"
                 else:
@@ -416,26 +413,24 @@ class CloudMan2AnsibleAppConfigurer(AnsibleAppConfigurer):
                     'os_username': os_user,
                     'os_password': os_pass,
                     'domain_entry': domain_entry,
-                    'os_tenant_name': creds.get('os_project_name'),
-                    'os_auth_url': zone.get('cloud', {}).get('auth_url'),
-                    'os_region': zone.get('region', {}).get('name'),
-                    # https://github.com/kubernetes/kubernetes/issues/53488
-                    'os_ignore_volume_az': os_ignore_az
+                    'os_tenant_name': creds.get('os_project_name')
                 }
             else:
                 # Assuming app credentials if no user and pass set
                 conf_template = OPENSTACK_CLOUD_CONF_APP_CRED
-                os_ignore_az = self._os_ignore_az(
-                    zone.get('zone_id'),
-                    zone.get('region', {}).get('cloudbridge_settings'))
                 values = {
                     # https://github.com/kubernetes/cloud-provider-openstack/blob/master/manifests/controller-manager/cloud-config
                     'os_app_cred_id': creds.get('os_application_credential_id'),
-                    'os_app_cred_secret': creds.get('os_application_credential_secret'),
-                    'os_auth_url': zone.get('cloud', {}).get('auth_url'),
-                    'os_region': zone.get('region', {}).get('name'),
-                    'os_ignore_volume_az': os_ignore_az
+                    'os_app_cred_secret': creds.get('os_application_credential_secret')
                 }
+            
+            # https://github.com/kubernetes/kubernetes/issues/53488
+            os_ignore_az = self._os_ignore_az(
+                zone.get('zone_id'),
+                zone.get('region', {}).get('cloudbridge_settings'))
+            values['os_auth_url'] = zone.get('cloud', {}).get('auth_url')
+            values['os_region'] = zone.get('region', {}).get('name')
+            values['os_ignore_volume_az'] = os_ignore_az
 
         return string.Template(conf_template).substitute(values)
 
