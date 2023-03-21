@@ -87,7 +87,7 @@ REQS_BASE = [
     # For commandline option handling
     'click',
     # Integration with Sentry
-    'sentry-sdk==0.6.9',
+    'sentry-sdk==1.14.0',
     # For CloudMan2 plugin
     'gitpython',
     'ansible<2.10', # pin ansible due to: https://github.com/ansible/ansible/issues/68399
