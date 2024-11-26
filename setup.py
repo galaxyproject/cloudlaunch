@@ -43,7 +43,7 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 REQS_BASE = [
-    'Django>=3.0',
+    'Django<4.0',
     # ======== Celery =========
     'celery>=5.0',
     # celery results backend which uses the django DB
